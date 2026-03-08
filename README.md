@@ -146,8 +146,12 @@ node index.js
 ---
 
 ## Screenshots
+<img width="1352" height="848" alt="Screenshot 2026-03-07 at 10 04 16 PM" src="https://github.com/user-attachments/assets/1c199453-c930-493f-93a1-0e08f633d82e" /><img width="1352" height="848" alt="Screenshot 2026-03-07 at 10 05 46 PM" src="https://github.com/user-attachments/assets/c5463dcc-7842-4883-b901-0ce34a7603d9" />
+<img width="1352" height="848" alt="Screenshot 2026-03-07 at 10 05 41 PM" src="https://github.com/user-attachments/assets/2e4e75a4-7520-456b-b561-5d26883ad6c9" />
+<img width="1352" height="848" alt="Screenshot 2026-03-07 at 10 05 12 PM" src="https://github.com/user-attachments/assets/16d0365a-21fc-4131-920b-5faa01dd171d" />
+<img width="1352" height="848" alt="Screenshot 2026-03-07 at 10 05 05 PM" src="https://github.com/user-attachments/assets/ffa0ec3b-81a8-49b1-92a8-8dc304ca9a34" />
+<img width="1352" height="848" alt="Screenshot 2026-03-07 at 10 04 26 PM" src="https://github.com/user-attachments/assets/5f99fe3b-5c73-4a7a-bd8d-0ab81d50d225" />
 
-> _Coming soon — sample posts, quote cards, and AI-generated images._
 
 ---
 
