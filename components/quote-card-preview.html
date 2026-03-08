@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QuoteCard Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      background: #2a2a2a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 40px;
+      box-sizing: border-box;
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+    }
+    #card-wrapper {
+      width: 100%;
+      max-width: 1200px;
+    }
+    /* Scale card to fit viewport */
+    #scale-box {
+      width: 1200px;
+      height: 675px;
+      transform-origin: top left;
+    }
+    label { color: #aaa; font-size: 13px; display: block; margin-bottom: 4px; }
+    input, textarea {
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid #444;
+      border-radius: 6px;
+      color: #eee;
+      padding: 8px 10px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+    }
+    textarea { resize: vertical; height: 80px; }
+    #controls {
+      width: 100%;
+      max-width: 1200px;
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    h1 { color: #FF6B00; font-size: 18px; margin: 0 0 20px; letter-spacing: 0.5px; }
+  </style>
+</head>
+<body>
+  <div id="card-wrapper">
+    <div id="scale-box">
+      <div id="root"></div>
+    </div>
+  </div>
+  <div id="controls">
+    <div>
+      <label>Quote</label>
+      <textarea id="inp-quote">Stop waiting for permission to build. The market doesn't care about your credentials.</textarea>
+      <label>Author</label>
+      <input id="inp-author" value="Drevon Bullock" />
+    </div>
+    <div>
+      <label>Title / Tagline</label>
+      <input id="inp-title" value="AI Consultant • Bullock Consulting Group" />
+      <label>Twitter Handle</label>
+      <input id="inp-handle" value="@DrevonBullock" />
+    </div>
+  </div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function QuoteCard({ quote, author, title, handle }) {
+      return (
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            overflow: "hidden",
+            width: 1200,
+            height: 675,
+            fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif',
+          }}
+        >
+          {/* Background */}
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(135deg, #0A0A0A 0%, #111111 60%, #1A1008 100%)",
+          }} />
+
+          {/* Orange corner glow */}
+          <div style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background: "radial-gradient(ellipse at 0% 0%, rgba(255,107,0,0.14) 0%, transparent 55%)",
+          }} />
+
+          {/* Left accent bar */}
+          <div style={{
+            position: "absolute", left: 0, top: 0, bottom: 0, width: 8,
+            background: "linear-gradient(180deg, #FF8C3A 0%, #FF6B00 100%)",
+          }} />
+
+          {/* Bottom border */}
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0, height: 4,
+            background: "#EA580C",
+          }} />
+
+          {/* Ghost quote mark */}
+          <div style={{
+            position: "absolute", top: -60, left: 28,
+            fontSize: 320, fontWeight: 700,
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            color: "#FF6B00", opacity: 0.06, lineHeight: 1,
+            userSelect: "none", pointerEvents: "none",
+          }}>
+            &ldquo;
+          </div>
+
+          {/* Quote text */}
+          <div style={{
+            position: "relative", flex: 1,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "40px 80px 8px",
+          }}>
+            <p style={{
+              color: "#FFFFFF", textAlign: "center", fontWeight: 700,
+              fontSize: "clamp(2.6rem, 4.5vw, 4rem)", lineHeight: 1.25,
+              textShadow: "0 0 40px rgba(255,107,0,0.25)",
+              maxWidth: 920, margin: 0,
+            }}>
+              {quote}
+            </p>
+          </div>
+
+          {/* Bottom strip */}
+          <div style={{ position: "relative", height: 90 }}>
+            <div style={{
+              position: "absolute", top: 0, left: 36, right: 36, height: 1,
+              background: "rgba(255,107,0,0.35)",
+            }} />
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} />
+            <div style={{
+              position: "relative", display: "flex",
+              alignItems: "center", justifyContent: "space-between",
+              height: "100%", padding: "0 36px",
+            }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ color: "#FFFFFF", fontWeight: 700, fontSize: 22 }}>{author}</span>
+                <span style={{ color: "#FF8C3A", fontWeight: 400, fontSize: 18 }}>{title}</span>
+              </div>
+              <span style={{ color: "#FF6B00", fontWeight: 600, fontSize: 20 }}>{handle}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [quote, setQuote] = useState("Stop waiting for permission to build. The market doesn't care about your credentials.");
+      const [author, setAuthor] = useState("Drevon Bullock");
+      const [title, setTitle] = useState("AI Consultant • Bullock Consulting Group");
+      const [handle, setHandle] = useState("@DrevonBullock");
+
+      // Scale card to fit wrapper
+      useEffect(() => {
+        function scaleCard() {
+          const wrapper = document.getElementById("card-wrapper");
+          const box = document.getElementById("scale-box");
+          if (!wrapper || !box) return;
+          const scale = wrapper.offsetWidth / 1200;
+          box.style.transform = `scale(${scale})`;
+          wrapper.style.height = `${675 * scale}px`;
+        }
+        scaleCard();
+        window.addEventListener("resize", scaleCard);
+        return () => window.removeEventListener("resize", scaleCard);
+      }, []);
+
+      // Wire up inputs
+      useEffect(() => {
+        const ids = ["inp-quote", "inp-author", "inp-title", "inp-handle"];
+        const setters = [setQuote, setAuthor, setTitle, setHandle];
+        const handlers = ids.map((id, i) => {
+          const el = document.getElementById(id);
+          const handler = (e) => setters[i](e.target.value);
+          el.addEventListener("input", handler);
+          return { el, handler };
+        });
+        return () => handlers.forEach(({ el, handler }) => el.removeEventListener("input", handler));
+      }, []);
+
+      return <QuoteCard quote={quote} author={author} title={title} handle={handle} />;
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

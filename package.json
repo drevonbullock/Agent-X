@@ -1,0 +1,24 @@
+{
+  "name": "agent-x",
+  "version": "1.0.0",
+  "description": "Agent X - Automated content generation and posting",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "schedule": "node scheduler.js"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "canvas": "^3.2.1",
+    "chartjs-node-canvas": "^5.0.0",
+    "dotenv": "^17.3.1",
+    "node-cron": "^4.2.1",
+    "openai": "^6.25.0",
+    "puppeteer": "^24.38.0",
+    "twitter-api-v2": "^1.29.0"
+  }
+}
