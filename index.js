@@ -10,7 +10,11 @@ function pickContentType() {
   return CONTENT_TYPE_LIST[Math.floor(Math.random() * CONTENT_TYPE_LIST.length)];
 }
 
-export async function runAgent() {
+function isShortPost(text) {
+  return text.split(/[.!?]+/).filter((s) => s.trim().length > 0).length < 6;
+}
+
+export async function runAgent(withImage = true) {
   const contentType = pickContentType();
   console.log(`\n[Agent X] Starting run`);
   console.log(`[Agent X] Content type: ${contentType}`);
@@ -19,13 +23,24 @@ export async function runAgent() {
   const postText = await generateLinkedInPost(contentType);
   console.log(`[Agent X] Post: "${postText}"`);
 
-  console.log(`[Agent X] Rendering quote card...`);
+  const short = isShortPost(postText);
+  const attachImage = withImage && !short;
+
+  if (!withImage) {
+    console.log(`[Agent X] Skipping image — text-only slot`);
+  } else if (short) {
+    console.log(`[Agent X] Skipping image — short post`);
+  }
+
   let imageBuffer = null;
-  try {
-    imageBuffer = await generateImage(postText);
-    console.log(`[Agent X] Quote card rendered (${(imageBuffer.length / 1024).toFixed(0)} KB)`);
-  } catch (err) {
-    console.warn(`[Agent X] Quote card render failed — posting text-only. Error: ${err.message}`);
+  if (attachImage) {
+    console.log(`[Agent X] Rendering quote card...`);
+    try {
+      imageBuffer = await generateImage(postText);
+      console.log(`[Agent X] Quote card rendered (${(imageBuffer.length / 1024).toFixed(0)} KB)`);
+    } catch (err) {
+      console.warn(`[Agent X] Quote card render failed — posting text-only. Error: ${err.message}`);
+    }
   }
 
   console.log(`[Agent X] Posting to LinkedIn...`);

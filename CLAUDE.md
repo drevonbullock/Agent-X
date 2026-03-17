@@ -6,7 +6,7 @@ Agent X is an automated content generation and posting bot. It runs on a Node.js
 ## Tech Stack
 - Runtime: Node.js (ES Modules, `"type": "module"` in package.json)
 - AI: Anthropic Claude via `@anthropic-ai/sdk` (text generation + image mode selection)
-- Images: Gemini Imagen 3 (VISUAL mode, via REST API); Puppeteer + inline HTML (QUOTE mode); `openai` DALL-E 3 (VISUAL fallback)
+- Images: Gemini Imagen 3 (VISUAL/DIAGRAM/COMIC mode, via REST API); Puppeteer + inline HTML (QUOTE mode)
 - Scheduler: `node-cron`
 - HTTP: Native `fetch` (Node 18+) — no Axios, no LinkedIn SDK
 - Auth: Custom OAuth 2.0 one-time flow in `auth/linkedin-auth.js`
@@ -17,11 +17,11 @@ agent/
   generate-post.js     — Generates text via Claude. Two exports:
                          generatePost(contentType)          → Twitter (280 chars, legacy)
                          generateLinkedInPost(contentType)  → LinkedIn (150–500 words)
-  generate-image.js    — Dual-mode image router. Exports generateImage(postText) → Buffer (PNG)
-                         1. Calls Claude to select QUOTE or VISUAL mode for the post
+  generate-image.js    — Multi-mode image router. Exports generateImage(postText) → Buffer | null
+                         1. Calls Claude to select QUOTE, DIAGRAM, COMIC, or VISUAL mode
                          2. QUOTE MODE → renderQuoteCard (Puppeteer, branded dark card)
-                         3. VISUAL MODE → generateGeminiImage (Imagen 3 cinematic illustration)
-                            Falls back to DALL-E 3 if Gemini is unavailable
+                         3. DIAGRAM/COMIC/VISUAL MODE → generateGeminiImage (Imagen 3)
+                            If Gemini fails for any reason → logs and returns null (text-only post)
   post-to-linkedin.js  — Uploads image + creates post via LinkedIn REST API
                          Returns { postId, postUrl }
 
@@ -32,7 +32,6 @@ auth/
 images/
   gemini.js            — Gemini Imagen 3 image generation (16:9, cinematic dark/orange aesthetic)
                          Uses GEMINI_API_KEY. Same model as nano-banana MCP tool.
-  dalle.js             — DALL-E 3 image generation (1792x1024, dark/cosmic aesthetic) — fallback
   render-quote-card.js — Puppeteer screenshot of inline HTML quote card (1200x675 @2x)
   quote-card.js        — Canvas quote card (legacy, unused in main flow)
   chart.js             — ChartJS chart (1200x675, picks from 4 preset datasets)
@@ -55,8 +54,7 @@ scheduler.js           — Runs runAgent() at 9 AM, 1 PM, 6 PM EST via node-cron
 ## Environment Variables Required
 ```
 ANTHROPIC_API_KEY=
-OPENAI_API_KEY=              ← DALL-E 3 fallback (VISUAL mode)
-GEMINI_API_KEY=              ← Imagen 3 primary (VISUAL mode) — from Google AI Studio
+GEMINI_API_KEY=              ← Imagen 3 (VISUAL/DIAGRAM/COMIC mode) — from Google AI Studio
 LINKEDIN_CLIENT_ID=          ← from LinkedIn Developer Portal
 LINKEDIN_CLIENT_SECRET=      ← from LinkedIn Developer Portal
 LINKEDIN_ACCESS_TOKEN=       ← set by auth/linkedin-auth.js
@@ -71,7 +69,7 @@ Claude reads each generated post and picks one of two visual modes:
   Best for: philosophy, opinions, build-in-public updates, punchy statements.
 
 - **VISUAL MODE** — Gemini Imagen 3 generates a cinematic thematic illustration (16:9).
-  Dark futuristic aesthetic, orange neon accents. Falls back to DALL-E 3 if Gemini fails.
+  Dark futuristic aesthetic, orange neon accents. Returns null (text-only post) if Gemini fails.
   Best for: ai_tips, technical explainers, concept-heavy posts.
 
 ## Content Types
@@ -91,10 +89,36 @@ node index.js --test
 node index.js
 ```
 
+## Post Format System
+Each post uses one of 6 structured formats, selected randomly in `generate-post.js`. The same format is never used twice in a row (`lastFormat` module variable tracks this).
+
+| Format | Structure | Length |
+|--------|-----------|--------|
+| **Insight** | One sharp observation. Ends with a provocative question or statement. | 3-5 sentences |
+| **Steps / How-To** | "Here's how I [did X]:" → 3-5 numbered steps → key takeaway | Medium |
+| **News + Take** | Trend/development (2 sentences context) → "My take:" (2-3 sentences opinion) | Medium |
+| **Myth vs Reality** | "Everyone says [X]." → "Here's what's actually true:" → real insight | Medium |
+| **Build Update** | What I built + problem it solves + what I learned. Specific, concrete. | 4-6 sentences |
+| **One-Liner Drop** | Single sentence. No explanation. No hashtags. | 1 sentence |
+
+## Image Frequency
+- **9:00 AM** — image attached (if post is long enough)
+- **1:00 PM** — text only, no image
+- **6:00 PM** — text only, no image
+
+Short posts (under 6 sentences) never get an image, regardless of slot. Logic lives in `index.js` (`isShortPost()`) and `scheduler.js` (`withImage` flag per slot).
+
+## Global Post Rules
+- No filler phrases: "In today's world", "Let's dive in", "Game changer", "Unpopular opinion", "Hot take", "Let's be honest", "This changes everything" — never
+- Max 2 hashtags per post
+- Posts under 6 sentences: 0 hashtags, no image
+- Every post must have one clear point — if you can't state it in one sentence, rewrite it
+- Never use the same format twice in a row
+
 ## Key Conventions
 - All files use ES Module syntax (`import`/`export`, no `require`)
 - No new npm packages unless strictly necessary — use native Node.js APIs
-- LinkedIn post text targets 150–400 words (max ~3000 chars)
+- LinkedIn post text targets 150–400 words for medium posts (max ~3000 chars)
 - `postToLinkedIn` returns `{ postId, postUrl }` — mirrors shape of old `postTweet` return
 - Errors logged with `[LinkedIn]` prefix, consistent with project-wide `[Agent X]` / `[Twitter]` pattern
 - `generatePost()` (Twitter/280 char) is kept in generate-post.js but not called by index.js

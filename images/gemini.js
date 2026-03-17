@@ -1,7 +1,7 @@
 // Gemini 2.0 Flash — cinematic thematic image generation for VISUAL mode posts
 // Uses generateContent endpoint with responseModalities: IMAGE
 
-const MODEL = "gemini-2.0-flash-exp-image-generation";
+const MODEL = "gemini-2.5-flash-image";
 
 export async function generateGeminiImage(imagePrompt) {
   const key = process.env.GEMINI_API_KEY;
@@ -14,13 +14,14 @@ export async function generateGeminiImage(imagePrompt) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ parts: [{ text: imagePrompt }] }],
-      generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+      generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
     }),
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gemini image generation failed (${res.status}): ${err}`);
+    const errorBody = await res.json().catch(() => res.text());
+    console.log('Gemini full error:', JSON.stringify(errorBody, null, 2));
+    throw new Error(`Gemini image generation failed (${res.status}): ${JSON.stringify(errorBody)}`);
   }
 
   const data = await res.json();
