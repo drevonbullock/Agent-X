@@ -6,6 +6,7 @@ import {
   Audio,
   staticFile,
   Sequence,
+  Img,
 } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { HookScreen } from "./HookScreen";
@@ -51,7 +52,6 @@ const Panel: React.FC<PanelProps> = ({
   return (
     <div
       style={{
-        backgroundColor: "#0A0A0A",
         width,
         height,
         display: "flex",
@@ -62,8 +62,13 @@ const Panel: React.FC<PanelProps> = ({
         opacity: opacity * fadeOut,
         position: "absolute",
         inset: 0,
+        overflow: "hidden",
       }}
     >
+      <Img
+        src={staticFile("dre_square_v3.png")}
+        style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", top: 0, left: 0 }}
+      />
       {hasAudio && <Audio src={staticFile(`voice_${screenNumber}.mp3`)} />}
 
       {/* Tint overlay */}
@@ -114,7 +119,7 @@ const Panel: React.FC<PanelProps> = ({
             fontFamily,
             fontSize: "28px",
             fontWeight: 400,
-            color: "#BBBBBB",
+            color: "#B4C8DA",
             textAlign: "center",
             maxWidth: "780px",
             lineHeight: 1.5,
@@ -146,7 +151,7 @@ const Wipe: React.FC<{ durationFrames: number }> = ({ durationFrames }) => {
         left: wipeX,
         width,
         height,
-        backgroundColor: "#FF6B00",
+        backgroundColor: "#00D2FF",
         zIndex: 20,
         pointerEvents: "none",
       }}

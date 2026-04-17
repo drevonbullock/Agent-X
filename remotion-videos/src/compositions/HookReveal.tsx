@@ -6,6 +6,7 @@ import {
   Audio,
   staticFile,
   Sequence,
+  Img,
 } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { HookScreen } from "./HookScreen";
@@ -59,7 +60,6 @@ const WordReveal: React.FC<WordRevealProps> = ({
   return (
     <div
       style={{
-        backgroundColor: "#0A0A0A",
         width,
         height,
         display: "flex",
@@ -69,8 +69,14 @@ const WordReveal: React.FC<WordRevealProps> = ({
         padding: "80px",
         gap: "36px",
         opacity: fadeOut,
+        position: "relative",
+        overflow: "hidden",
       }}
     >
+      <Img
+        src={staticFile("dre_square_v3.png")}
+        style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", top: 0, left: 0 }}
+      />
       {hasAudio && <Audio src={staticFile(`voice_${screenNumber}.mp3`)} />}
 
       <div
@@ -117,7 +123,7 @@ const WordReveal: React.FC<WordRevealProps> = ({
                     left: 0,
                     height: "5px",
                     width: `${underlineWidth}%`,
-                    backgroundColor: "#FF6B00",
+                    backgroundColor: "#00D2FF",
                     opacity: underlineOpacity,
                     borderRadius: "2px",
                   }}
@@ -134,7 +140,7 @@ const WordReveal: React.FC<WordRevealProps> = ({
             fontFamily,
             fontSize: "28px",
             fontWeight: 400,
-            color: "#AAAAAA",
+            color: "#B4C8DA",
             textAlign: "center",
             maxWidth: "780px",
             lineHeight: 1.5,

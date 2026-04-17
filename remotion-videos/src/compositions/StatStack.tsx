@@ -6,6 +6,7 @@ import {
   Audio,
   staticFile,
   Sequence,
+  Img,
 } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { HookScreen } from "./HookScreen";
@@ -57,7 +58,6 @@ const StatPanel: React.FC<StatPanelProps> = ({
   return (
     <div
       style={{
-        backgroundColor: "#0A0A0A",
         width,
         height,
         display: "flex",
@@ -67,8 +67,14 @@ const StatPanel: React.FC<StatPanelProps> = ({
         padding: "80px",
         opacity: opacity * fadeOut,
         transform: `translateX(${translateX}px)`,
+        position: "relative",
+        overflow: "hidden",
       }}
     >
+      <Img
+        src={staticFile("dre_square_v3.png")}
+        style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", top: 0, left: 0 }}
+      />
       {hasAudio && <Audio src={staticFile(`voice_${screenNumber}.mp3`)} />}
 
       <div
@@ -76,7 +82,7 @@ const StatPanel: React.FC<StatPanelProps> = ({
           fontFamily,
           fontSize: "130px",
           fontWeight: 700,
-          color: "#FF6B00",
+          color: "#00D2FF",
           lineHeight: 1,
           marginBottom: "16px",
         }}
@@ -105,7 +111,7 @@ const StatPanel: React.FC<StatPanelProps> = ({
             fontFamily,
             fontSize: "30px",
             fontWeight: 400,
-            color: "#AAAAAA",
+            color: "#B4C8DA",
             textAlign: "center",
             maxWidth: "760px",
             lineHeight: 1.5,
