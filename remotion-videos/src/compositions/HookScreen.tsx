@@ -6,6 +6,7 @@ import {
   spring,
   Audio,
   staticFile,
+  Img,
 } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Inter";
 
@@ -64,7 +65,6 @@ export const HookScreen: React.FC<HookScreenProps> = ({
       style={{
         width,
         height,
-        backgroundColor: "#0A0A0A",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -79,13 +79,26 @@ export const HookScreen: React.FC<HookScreenProps> = ({
         <Audio src={staticFile(`voice_${screenNumber}.mp3`)} />
       )}
 
-      {/* Radial orange glow behind text — 8% opacity, subtle */}
+      {/* Signature background frame */}
+      <Img
+        src={staticFile("dre_square_v3.png")}
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          top: 0,
+          left: 0,
+        }}
+      />
+
+      {/* Radial cyan glow behind text — 10% opacity, subtle */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           backgroundImage:
-            "radial-gradient(circle at 50% 50%, rgba(255, 107, 0, 0.08) 0%, transparent 65%)",
+            "radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.10) 0%, transparent 65%)",
           pointerEvents: "none",
         }}
       />
@@ -116,12 +129,12 @@ export const HookScreen: React.FC<HookScreenProps> = ({
           {heading}
         </div>
 
-        {/* Orange accent line */}
+        {/* Cyan accent line */}
         <div
           style={{
             height: "5px",
             width: lineWidth,
-            backgroundColor: "#FF6B00",
+            backgroundColor: "#00D2FF",
             borderRadius: "3px",
           }}
         />

@@ -6,6 +6,7 @@ import {
   Audio,
   staticFile,
   Sequence,
+  Img,
 } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { HookScreen } from "./HookScreen";
@@ -67,7 +68,6 @@ const CountdownItem: React.FC<CountdownItemProps> = ({
   return (
     <div
       style={{
-        backgroundColor: "#0A0A0A",
         width,
         height,
         display: "flex",
@@ -77,51 +77,69 @@ const CountdownItem: React.FC<CountdownItemProps> = ({
         padding: "80px",
         opacity: opacity * fadeOut,
         transform: `translateY(${translateY}px)`,
+        position: "relative",
+        overflow: "hidden",
       }}
     >
+      {/* Signature background frame */}
+      <Img
+        src={staticFile("dre_square_v3.png")}
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          top: 0,
+          left: 0,
+        }}
+      />
+
       {hasAudio && <Audio src={staticFile(`voice_${screenNumber}.mp3`)} />}
 
-      {/* Countdown number */}
+      {/* Countdown number — cyan accent */}
       <div
         style={{
           fontFamily,
           fontSize: "120px",
           fontWeight: 700,
-          color: "#FF6B00",
+          color: "#00D2FF",
           lineHeight: 1,
           marginBottom: "20px",
+          position: "relative",
         }}
       >
         {number}
       </div>
 
-      {/* Heading */}
+      {/* Heading — white */}
       <div
         style={{
           fontFamily,
           fontSize: "48px",
           fontWeight: 700,
-          color: "white",
+          color: "#FFFFFF",
           textAlign: "center",
           maxWidth: "860px",
           lineHeight: 1.3,
           marginBottom: "20px",
+          position: "relative",
         }}
       >
         {heading}
       </div>
 
-      {/* Body */}
+      {/* Body — silver */}
       {body && (
         <div
           style={{
             fontFamily,
             fontSize: "30px",
             fontWeight: 400,
-            color: "#AAAAAA",
+            color: "#B4C8DA",
             textAlign: "center",
             maxWidth: "780px",
             lineHeight: 1.5,
+            position: "relative",
           }}
         >
           {body}
