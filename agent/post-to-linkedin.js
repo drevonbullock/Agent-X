@@ -1,4 +1,5 @@
 import "dotenv/config";
+import fs from "fs";
 
 const API_BASE = "https://api.linkedin.com";
 
@@ -45,7 +46,83 @@ async function uploadImageToLinkedIn(imageBuffer, personUrn) {
   return imageUrn;
 }
 
-export async function postToLinkedIn(postText, imageBuffer = null) {
+async function uploadVideoToLinkedIn(videoPath, personUrn) {
+  const fileBuffer = fs.readFileSync(videoPath);
+  const fileSizeBytes = fileBuffer.length;
+
+  // Step 1: Initialize upload
+  const initRes = await fetch(`${API_BASE}/rest/videos?action=initializeUpload`, {
+    method: "POST",
+    headers: linkedInHeaders(),
+    body: JSON.stringify({
+      initializeUploadRequest: {
+        owner: personUrn,
+        fileSizeBytes,
+        uploadCaptions: false,
+        uploadThumbnail: false,
+      },
+    }),
+  });
+
+  if (!initRes.ok) {
+    const body = await initRes.text();
+    throw Object.assign(new Error(`Video upload init failed (${initRes.status})`), {
+      status: initRes.status,
+      data: body,
+    });
+  }
+
+  const { value } = await initRes.json();
+  const { uploadInstructions, video: videoUrn, uploadToken } = value;
+
+  // Step 2: PUT each chunk to its signed URL (no Authorization header)
+  const uploadedPartIds = [];
+  for (const instruction of uploadInstructions) {
+    const { uploadUrl, firstByte, lastByte } = instruction;
+    const chunk = fileBuffer.slice(firstByte, lastByte + 1);
+
+    const putRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": "application/octet-stream" },
+      body: chunk,
+    });
+
+    if (!putRes.ok) {
+      throw new Error(`Video chunk upload failed (${putRes.status}) for bytes ${firstByte}-${lastByte}`);
+    }
+
+    // Grab ETag from response (needed for finalize)
+    const etag = putRes.headers.get("etag") || putRes.headers.get("ETag") || `part-${uploadedPartIds.length + 1}`;
+    uploadedPartIds.push(etag);
+  }
+
+  // Step 3: Finalize upload
+  const finalizeRes = await fetch(`${API_BASE}/rest/videos?action=finalizeUpload`, {
+    method: "POST",
+    headers: linkedInHeaders(),
+    body: JSON.stringify({
+      finalizeUploadRequest: {
+        video: videoUrn,
+        uploadToken,
+        uploadedPartIds,
+      },
+    }),
+  });
+
+  if (!finalizeRes.ok) {
+    const body = await finalizeRes.text();
+    throw Object.assign(new Error(`Video finalize failed (${finalizeRes.status})`), {
+      status: finalizeRes.status,
+      data: body,
+    });
+  }
+
+  console.log(`[LinkedIn] Video uploaded. URN: ${videoUrn}`);
+  return videoUrn;
+}
+
+// videoAsset: { type: 'video', path: 'generated_imgs/output.mp4' } or null
+export async function postToLinkedIn(postText, imageBuffer = null, videoAsset = null) {
   const personUrn = process.env.LINKEDIN_PERSON_URN;
 
   if (!process.env.LINKEDIN_ACCESS_TOKEN) {
@@ -56,7 +133,16 @@ export async function postToLinkedIn(postText, imageBuffer = null) {
   }
 
   let imageUrn = null;
-  if (imageBuffer) {
+  let videoUrn = null;
+
+  if (videoAsset && videoAsset.type === "video") {
+    console.log(`[LinkedIn] Uploading video...`);
+    try {
+      videoUrn = await uploadVideoToLinkedIn(videoAsset.path, personUrn);
+    } catch (err) {
+      console.warn(`[LinkedIn] Video upload failed — falling back to text-only. Error: ${err.message}`);
+    }
+  } else if (imageBuffer) {
     console.log(`[LinkedIn] Uploading quote card image...`);
     try {
       imageUrn = await uploadImageToLinkedIn(imageBuffer, personUrn);
@@ -76,9 +162,9 @@ export async function postToLinkedIn(postText, imageBuffer = null) {
       targetEntities: [],
       thirdPartyDistributionChannels: [],
     },
-    ...(imageUrn && {
+    ...((videoUrn || imageUrn) && {
       content: {
-        media: { id: imageUrn },
+        media: { id: videoUrn || imageUrn },
       },
     }),
   };

@@ -1,2 +1,5 @@
 .env
 node_modules/
+post_count.json
+generated_imgs/*.mp4
+generated_imgs/*.mov

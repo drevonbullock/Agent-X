@@ -2,15 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic();
 
-const CONTENT_TYPES = {
-  AUTOMATION: "automation",
-  AGENTS: "agents",
-  VIBE_CODING: "vibe_coding",
-  GENERATIVE_MEDIA: "generative_media",
-  PHILOSOPHY: "philosophy",
-};
-
-const VOICE = `You are Drevon Bullock — an AI systems builder based in New York. You build real automation pipelines, autonomous agents, and generative media tools. You post about what you actually experience building.
+const VOICE = `You are Drevon Bullock — an AI automation builder in New York. You build real systems for real businesses. Your audience is founders, agency owners, and small business operators who are curious about AI but not technical.
 
 Voice rules (non-negotiable):
 - Conversational, like texting a smart friend who happens to know a lot
@@ -18,67 +10,106 @@ Voice rules (non-negotiable):
 - Raw and direct — if something is weird, frustrating, or surprising, say it exactly that way
 - No filler phrases: never use "In today's world", "Let's dive in", "Game changer", "Unpopular opinion", "Hot take", "Let's be honest", "This changes everything", or any hype opener
 - Do not sound like AI wrote this. Do not sound like a LinkedIn thought leader. Sound like a real person
-- Spiritual and philosophical perspective (Hermeticism, Carl Jung, Alan Watts, Neville Goddard, universal laws, consciousness) can bleed in naturally when it fits — this is what makes your voice distinct
+- Spiritual and philosophical perspective (Hermeticism, Carl Jung, Alan Watts, Neville Goddard) can bleed in naturally when it fits — this is what makes your voice distinct
 - Max 2 hashtags total. Posts under 6 sentences get 0 hashtags
 - Every post must have one clear point. If you can't state it in one sentence, rewrite it
-- No quotes around the post`;
+- No quotes around the post
+- Never write for developers or tech people. Write for the business owner who is curious but not technical`;
 
-const CONTENT_TOPICS = {
-  [CONTENT_TYPES.AUTOMATION]: `Topic: Automation — something you noticed while building, a workflow insight, a frustration, a realization about what automation actually means, a specific thing that surprised you.`,
-  [CONTENT_TYPES.AGENTS]: `Topic: AI Agents — the real difference between a bot and an agent, something you experienced building one, how agents actually think, what it feels like to watch something you built make its own decisions, where this is all going.`,
-  [CONTENT_TYPES.VIBE_CODING]: `Topic: Vibe Coding — what it actually feels like to describe a thing and watch it get built, a moment where it worked or didn't, what traditional developers get wrong about this shift, what vibe coding reveals about where programming is going.`,
-  [CONTENT_TYPES.GENERATIVE_MEDIA]: `Topic: Generative AI and creative media — AI film, AI art, what it means for storytelling, what it opens up for people who couldn't afford traditional production, what gets lost or gained, what this says about creativity itself.`,
-  [CONTENT_TYPES.PHILOSOPHY]: `Topic: Philosophy — building, AI, consciousness, reality, the nature of creation, what it means to be a builder in this era, the relationship between inner work and outer results, the intersection of the technical and the spiritual.`,
+const FORMATS = {
+  contrarian: {
+    weight: 4,
+    instruction: `FORMAT — Contrarian Take:
+Open with "Everyone says [X]." or "The common belief is [X]." or "Most people think [X]."
+Then write "Here's what's actually true:" and deliver the real insight in 3-4 sentences.
+The topic must challenge a common belief that business owners hold about AI, automation, hiring, or growth.
+No client stories. No partner mentions. Speak directly to the business owner reading this.
+End with a single punchy sentence that lands like a conclusion.`,
+  },
+
+  one_liner: {
+    weight: 3,
+    instruction: `FORMAT — One-Liner Drop:
+Single sentence. No explanation. No hashtags. Just a sharp observation about AI automation, building systems, or what it means to run a business in this era.
+Make it land. Make it feel like something you actually think — not something a LinkedIn account would say.
+Examples of the energy (do not copy these):
+"Vibe coding is just manifestation with a compiler."
+"The automation isn't the product. The time it gives back is."`,
+  },
+
+  build_update: {
+    weight: 2,
+    instruction: `FORMAT — System Breakdown:
+Describe a specific AI automation system a business could run — what it does, what problem it solves, what it replaces.
+Frame it as a real operational upgrade, not a product pitch.
+4-6 sentences. Business owner language only — no code, no tech jargon.
+End with the single business outcome it creates.`,
+  },
+
+  insight: {
+    weight: 1,
+    instruction: `FORMAT — Sharp Insight:
+One observation about how AI automation is changing what it means to run a small business or agency.
+3-5 sentences. No fluff.
+End with a provocative question or statement that makes a founder stop and think about their own business.`,
+  },
 };
 
-const FORMAT_INSTRUCTIONS = {
-  insight: `FORMAT — Insight Post:
-One sharp observation. 3-5 sentences. No fluff. End with a provocative question or statement that makes the reader stop and think.`,
+const TOPICS = [
+  "The specific tasks inside a business that AI automation eliminates first — and why those tasks are costing more than owners realize",
+  "Why most small businesses are still doing manually what could run on autopilot right now",
+  "The operational difference between a business that uses AI tools and one that has AI systems",
+  "What happens to your capacity when you remove the 2-hour daily tasks that don't require a human",
+  "The three places in any service business where leads fall through the cracks — and how automation seals them",
+  "Why response time is the silent killer of small business revenue and what fixes it",
+  "What a fully automated lead-to-booking pipeline looks like and what it actually costs to build",
+  "The difference between saving time and creating leverage — why most automation advice gets this wrong",
+  "What business owners discover after their first 30 days running an AI system they didn't have to babysit",
+  "Why the businesses winning right now aren't bigger — they just have fewer bottlenecks",
+  "The follow-up sequence most service businesses never send — and how much revenue that silence costs",
+  "What it actually means to run a business that operates while you sleep",
+  "The real reason small businesses lose to larger competitors — and why AI closes that gap faster than hiring",
+  "How automating one intake process changes the entire client experience from the first touchpoint",
+  "What founders stop doing manually once they see what an AI system can handle — and what that unlocks",
+];
 
-  steps: `FORMAT — Steps / How-To:
-Open with "Here's how I [did X]:" — then 3-5 numbered steps. Each step is one clear sentence. Close with the single key takeaway.`,
-
-  news_take: `FORMAT — News + Take:
-State a real, current trend or development in AI/automation. 2 sentences of context — what it is and why it matters. Then write exactly "My take:" followed by 2-3 sentences of direct, unfiltered opinion.`,
-
-  myth_reality: `FORMAT — Myth vs Reality:
-Open with "Everyone says [X]." or "The common belief is [X]." Then write "Here's what's actually true:" and follow with the real insight in 3-4 sentences.`,
-
-  build_update: `FORMAT — Build Update:
-What I built, what problem it solves, what I learned. 4-6 sentences max. Specific and concrete — name the actual thing, not a vague reference. No hype, just what happened.`,
-
-  one_liner: `FORMAT — One-Liner Drop:
-Single sentence. No explanation. Just truth. No hashtags. Make it land.`,
-};
-
-const FORMAT_KEYS = Object.keys(FORMAT_INSTRUCTIONS);
-let lastFormat = null;
-
-function pickFormat() {
-  let picked;
-  do {
-    picked = FORMAT_KEYS[Math.floor(Math.random() * FORMAT_KEYS.length)];
-  } while (picked === lastFormat && FORMAT_KEYS.length > 1);
-  lastFormat = picked;
-  return picked;
+function pickWeighted() {
+  const entries = Object.entries(FORMATS);
+  const pool = [];
+  for (const [key, val] of entries) {
+    for (let i = 0; i < val.weight; i++) pool.push(key);
+  }
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export async function generateLinkedInPost(contentType) {
-  const topic = CONTENT_TOPICS[contentType];
-  if (!topic) {
-    throw new Error(
-      `Invalid content type: ${contentType}. Use one of: ${Object.values(CONTENT_TYPES).join(", ")}`
-    );
-  }
+let lastFormat = null;
+let lastTopic = null;
 
-  const format = pickFormat();
-  console.log(`[Agent X] Post format: ${format}`);
+function pick() {
+  let format;
+  do {
+    format = pickWeighted();
+  } while (format === lastFormat && Object.keys(FORMATS).length > 1);
+  lastFormat = format;
+
+  let topic;
+  do {
+    topic = TOPICS[Math.floor(Math.random() * TOPICS.length)];
+  } while (topic === lastTopic && TOPICS.length > 1);
+  lastTopic = topic;
+
+  return { format, topic };
+}
+
+export async function generateLinkedInPost() {
+  const { format, topic } = pick();
+  console.log(`[Agent X] Format: ${format} | Topic: ${topic}`);
 
   const prompt = `${VOICE}
 
-${topic}
+Today's topic angle: ${topic}
 
-${FORMAT_INSTRUCTIONS[format]}
+${FORMATS[format].instruction}
 
 Write only the post text. Follow the format exactly.`;
 
@@ -88,7 +119,96 @@ Write only the post text. Follow the format exactly.`;
     messages: [{ role: "user", content: prompt }],
   });
 
-  return message.content[0].text.trim();
+  const postText = message.content[0].text.trim();
+  return { postText, format };
 }
 
-export { CONTENT_TYPES };
+// ─── VIDEO MODE ──────────────────────────────────────────────────────────────
+// Returns { caption, videoScript, videoStyle } for Remotion rendering.
+// caption   → short hook posted as the LinkedIn caption above the video
+// videoScript → array of { screen, heading, body } rendered inside the video
+// videoStyle  → which Remotion composition to use
+
+const VIDEO_SYSTEM_PROMPT = `You are writing a LinkedIn video post for a business owner audience — founders, agency owners, and small business operators who are curious about AI but not technical.
+
+You are writing as Drevon Bullock — an AI automation builder in New York. Direct. Confident. Real. Not a LinkedIn thought leader.
+
+Your job is to generate THREE things:
+1. caption — A 1-2 sentence HOOK posted above the video on LinkedIn. Stops the scroll. Does NOT explain — opens a curiosity gap.
+2. videoScript — The video itself. 4-5 screens total (screen 1 is always the hook, screens 2-5 teach).
+3. videoStyle — Which visual layout to use.
+
+SCREEN 1 IS ALWAYS THE HOOK SCREEN:
+- It is a pattern interrupt or curiosity gap. Maximum 8 words.
+- It replaces what would otherwise say "X things to know" — never write that.
+- Examples of the right energy:
+  "What they don't tell you about AI"
+  "Your competitors already know this"
+  "This is why you're staying stuck"
+  "The real cost of doing it manually"
+  "Most businesses are leaking money here"
+- The body for screen 1 should be empty string "" — the heading stands alone.
+
+SCREENS 2-5 TEACH and EXPLAIN what the hook teased:
+- Each screen is one clear idea. Heading 6 words max. Body 1-2 sentences.
+- Business owner language. No code, no jargon. Concrete and specific.
+
+Rules:
+- Caption and videoScript screen 1 must be DIFFERENT hooks — two separate angles.
+- Never use filler: "game changer", "let's dive in", "unpopular opinion", "hot take"
+- Every screen has exactly ONE point.
+- videoStyle: always use "list_countdown" — teaching a concept step by step with a numbered countdown on each screen.
+
+Return ONLY valid JSON. No explanation, no markdown fences.`;
+
+export async function generateVideoPost() {
+  const topic = TOPICS[Math.floor(Math.random() * TOPICS.length)];
+  console.log(`[Agent X] VIDEO MODE | Topic: ${topic}`);
+
+  const prompt = `${VIDEO_SYSTEM_PROMPT}
+
+Today's topic: ${topic}
+
+Return valid JSON matching this EXACT schema (screen 1 is always the hook, screens 2-5 teach):
+{
+  "caption": "1-2 sentence LinkedIn hook. Different from screen 1.",
+  "videoScript": [
+    { "screen": 1, "heading": "Curiosity gap hook, 8 words max", "body": "" },
+    { "screen": 2, "heading": "First teaching point", "body": "1-2 sentence explanation." },
+    { "screen": 3, "heading": "Second teaching point", "body": "1-2 sentence explanation." },
+    { "screen": 4, "heading": "Third teaching point", "body": "1-2 sentence explanation." }
+  ],
+  "videoStyle": "list_countdown"
+}
+
+Always use "list_countdown" for videoStyle — no other value is valid.`;
+
+  const message = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const raw = message.content[0].text.trim();
+  const json = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+
+  let parsed;
+  try {
+    parsed = JSON.parse(json);
+  } catch (err) {
+    throw new Error(`generateVideoPost: failed to parse Claude JSON: ${err.message}\nRaw: ${raw}`);
+  }
+
+  if (!parsed.caption || !Array.isArray(parsed.videoScript) || !parsed.videoStyle) {
+    throw new Error(`generateVideoPost: missing required fields in: ${json}`);
+  }
+
+  const hookScreen = parsed.videoScript[0];
+  console.log(`[Agent X] Hook screen: ${hookScreen?.heading ?? "(missing)"}`);
+
+  return {
+    caption: parsed.caption.trim(),
+    videoScript: parsed.videoScript,
+    videoStyle: parsed.videoStyle,
+  };
+}
