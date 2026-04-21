@@ -100,10 +100,50 @@ async function logNewsPost(postId, postUrl, postText, articleUrl) {
   });
 }
 
+// ─── DAILY CAP + COOLDOWN CHECK ──────────────────────────────────────────────
+
+const DAILY_CAP = 3;
+const COOLDOWN_HOURS = 4;
+
+async function canPost() {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from("posts")
+    .select("created_at")
+    .eq("format", "news_reaction")
+    .gte("created_at", todayStart.toISOString())
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.warn(`[NewsAgent] Cap check failed: ${error.message} — allowing post`);
+    return true;
+  }
+
+  if ((data?.length ?? 0) >= DAILY_CAP) {
+    console.log(`[NewsAgent] Daily cap reached (${data.length}/${DAILY_CAP}) — skipping`);
+    return false;
+  }
+
+  if (data?.length > 0) {
+    const lastPostAt = new Date(data[0].created_at);
+    const hoursSince = (Date.now() - lastPostAt.getTime()) / 3_600_000;
+    if (hoursSince < COOLDOWN_HOURS) {
+      console.log(`[NewsAgent] Cooldown active — ${hoursSince.toFixed(1)}h since last post (need ${COOLDOWN_HOURS}h) — skipping`);
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // ─── MAIN: CHECK AND POST ─────────────────────────────────────────────────────
 
 export async function checkAndPost() {
   console.log(`[NewsAgent] Checking for breaking news...`);
+
+  if (!(await canPost())) return;
 
   let articles;
   try {
