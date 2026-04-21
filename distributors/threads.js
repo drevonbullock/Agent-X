@@ -134,7 +134,10 @@ export async function postCarouselToThreads(imageUrls, caption) {
     console.log(`[Threads] Carousel child created: ${id}`);
   }
 
-  // Step 2: Create carousel container
+  // Step 2: Wait for child containers to be ready before referencing them
+  await new Promise((r) => setTimeout(r, 5000));
+
+  // Step 3: Create carousel container
   const containerId = await createContainer(userId, token, {
     media_type: "CAROUSEL",
     children: childIds.join(","),
