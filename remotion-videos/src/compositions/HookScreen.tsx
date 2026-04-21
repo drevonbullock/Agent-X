@@ -17,6 +17,7 @@ interface HookScreenProps {
   screenNumber: number; // used to load the right audio file
   hasAudio: boolean;
   durationFrames: number;
+  bgImage?: string;
 }
 
 // The hook screen shown first in every video.
@@ -26,6 +27,7 @@ export const HookScreen: React.FC<HookScreenProps> = ({
   screenNumber,
   hasAudio,
   durationFrames,
+  bgImage = "dre_square_v3.png",
 }) => {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
@@ -40,8 +42,8 @@ export const HookScreen: React.FC<HookScreenProps> = ({
     durationInFrames: 20,
   });
 
-  // Whole block fades in fast
-  const opacity = interpolate(frame, [0, 8], [0, 1], {
+  // Fade in: 0.3s (9 frames)
+  const opacity = interpolate(frame, [0, 9], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -52,13 +54,25 @@ export const HookScreen: React.FC<HookScreenProps> = ({
     extrapolateRight: "clamp",
   });
 
-  // Fade out in last 10 frames (avoid hard cut)
+  // Fade out: 0.4s (12 frames)
   const fadeOut = interpolate(
     frame,
-    [durationFrames - 10, durationFrames - 2],
+    [durationFrames - 12, durationFrames],
     [1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
   );
+
+  // Ken Burns: visible 20% zoom over hook screen duration
+  const bgScale = interpolate(frame, [0, durationFrames], [1.0, 1.20], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  // Screen flash: white bloom for first 4 frames
+  const flash = interpolate(frame, [0, 4], [0.55, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   return (
     <div
@@ -79,9 +93,9 @@ export const HookScreen: React.FC<HookScreenProps> = ({
         <Audio src={staticFile(`voice_${screenNumber}.mp3`)} />
       )}
 
-      {/* Signature background frame */}
+      {/* Background with Ken Burns zoom */}
       <Img
-        src={staticFile("dre_square_v3.png")}
+        src={staticFile(bgImage)}
         style={{
           position: "absolute",
           width: "100%",
@@ -89,19 +103,66 @@ export const HookScreen: React.FC<HookScreenProps> = ({
           objectFit: "cover",
           top: 0,
           left: 0,
+          transform: `scale(${bgScale})`,
+          transformOrigin: "center center",
         }}
       />
 
-      {/* Radial cyan glow behind text — 10% opacity, subtle */}
+      {/* Bottom vignette */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "45%",
+          background:
+            "linear-gradient(to top, rgba(28,36,51,0.92) 0%, rgba(28,36,51,0.35) 55%, transparent 100%)",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      />
+
+      {/* Top vignette */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "20%",
+          background:
+            "linear-gradient(to bottom, rgba(28,36,51,0.65) 0%, transparent 100%)",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      />
+
+      {/* Radial cyan glow behind text */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           backgroundImage:
-            "radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.10) 0%, transparent 65%)",
+            "radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.12) 0%, transparent 65%)",
           pointerEvents: "none",
+          zIndex: 1,
         }}
       />
+
+      {/* Screen flash */}
+      {flash > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundColor: "rgba(255,255,255,1)",
+            opacity: flash,
+            pointerEvents: "none",
+            zIndex: 15,
+          }}
+        />
+      )}
 
       {/* Heading with spring scale */}
       <div
@@ -112,6 +173,7 @@ export const HookScreen: React.FC<HookScreenProps> = ({
           alignItems: "center",
           gap: "28px",
           position: "relative",
+          zIndex: 2,
         }}
       >
         <div
@@ -129,13 +191,14 @@ export const HookScreen: React.FC<HookScreenProps> = ({
           {heading}
         </div>
 
-        {/* Cyan accent line */}
+        {/* Cyan accent line with glow */}
         <div
           style={{
             height: "5px",
             width: lineWidth,
             backgroundColor: "#00D2FF",
             borderRadius: "3px",
+            boxShadow: "0 0 16px rgba(0, 210, 255, 0.9)",
           }}
         />
       </div>

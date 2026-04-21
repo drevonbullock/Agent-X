@@ -53,12 +53,48 @@ scheduler.js           — Runs runAgent() at 9 AM, 1 PM, 6 PM EST via node-cron
 
 ## Environment Variables Required
 ```
+# Core AI
 ANTHROPIC_API_KEY=
 GEMINI_API_KEY=              ← Imagen 3 (VISUAL/DIAGRAM/COMIC mode) — from Google AI Studio
+OPENAI_API_KEY=              ← Whisper transcription for youtube-cutter
+
+# Supabase — BOTH keys required
+SUPABASE_URL=                ← https://xxxx.supabase.co
+SUPABASE_KEY=                ← anon/publishable key (sb_publishable_...)
+SUPABASE_SECRET_KEY=         ← service role key (sb_secret_...) — REQUIRED for all DB writes (bypasses RLS)
+
+# LinkedIn
 LINKEDIN_CLIENT_ID=          ← from LinkedIn Developer Portal
 LINKEDIN_CLIENT_SECRET=      ← from LinkedIn Developer Portal
 LINKEDIN_ACCESS_TOKEN=       ← set by auth/linkedin-auth.js
 LINKEDIN_PERSON_URN=         ← set by auth/linkedin-auth.js
+
+# ElevenLabs
+ELEVENLABS_API_KEY=
+ELEVENLABS_VOICE_ID=
+
+# NewsAPI
+NEWS_API_KEY=                ← newsapi.org — breaking news + trend monitoring
+
+# Shotstack
+SHOTSTACK_API_KEY=           ← sandbox key
+SHOTSTACK_API_KEY_PROD=      ← production key (swap when ready to ship)
+SHOTSTACK_ENV=sandbox        ← set to "production" on Railway deploy
+
+# Threads — live ✅
+THREADS_ACCESS_TOKEN=        ← from Meta developer portal
+THREADS_USER_ID=             ← fetched automatically, set to 26388859474068236
+
+# Instagram — live ✅ (uses graph.instagram.com, NOT graph.facebook.com)
+INSTAGRAM_ACCESS_TOKEN=     ← Basic Display API token (IGAA...)
+INSTAGRAM_BUSINESS_ID=      ← 24434756699555098
+
+# Platform expansion (add when credentials arrive)
+TIKTOK_ACCESS_TOKEN=
+YOUTUBE_CLIENT_ID=
+YOUTUBE_CLIENT_SECRET=
+YOUTUBE_REFRESH_TOKEN=
+YOUTUBE_CHANNEL_ID=          ← enables daily RSS check in scheduler (no API key needed)
 ```
 
 ## Image Modes

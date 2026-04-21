@@ -103,8 +103,9 @@ export async function analyzeAdPerformance(csvPath) {
   console.log(`[AdPerf] Parsed ${rows.length} ads`);
 
   // Calculate account average CPC from CSV data
+  const stripCurrency = (v) => parseFloat(String(v ?? "0").replace(/[$,%x]/g, ""));
   const cpcs = rows
-    .map((r) => parseFloat(r.cpc ?? r.CPC ?? r["Cost per Click"] ?? 0))
+    .map((r) => stripCurrency(r.cpc ?? r.CPC ?? r["Cost per Click"] ?? 0))
     .filter((n) => !isNaN(n) && n > 0);
   const avgCPC = cpcs.length ? cpcs.reduce((a, b) => a + b, 0) / cpcs.length : 0;
   console.log(`[AdPerf] Account avg CPC: $${avgCPC.toFixed(2)}`);

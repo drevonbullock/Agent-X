@@ -14,7 +14,8 @@ Voice rules (non-negotiable):
 - Max 2 hashtags total. Posts under 6 sentences get 0 hashtags
 - Every post must have one clear point. If you can't state it in one sentence, rewrite it
 - No quotes around the post
-- Never write for developers or tech people. Write for the business owner who is curious but not technical`;
+- Never write for developers or tech people. Write for the business owner who is curious but not technical
+- NEVER use em dashes (—), en dashes (–), or hyphens used as pauses ( - ) between thoughts. Rewrite every sentence that would use a dash as natural flowing prose instead`;
 
 const FORMATS = {
   contrarian: {
@@ -156,8 +157,9 @@ SCREENS 2-5 TEACH and EXPLAIN what the hook teased:
 Rules:
 - Caption and videoScript screen 1 must be DIFFERENT hooks — two separate angles.
 - Never use filler: "game changer", "let's dive in", "unpopular opinion", "hot take"
+- NEVER use em dashes (—), en dashes (–), or hyphens as pauses ( - ) between thoughts. Write flowing prose instead
 - Every screen has exactly ONE point.
-- videoStyle: always use "list_countdown" — teaching a concept step by step with a numbered countdown on each screen.
+- videoStyle: always use "list_countdown" for teaching a concept step by step with a numbered countdown on each screen.
 
 Return ONLY valid JSON. No explanation, no markdown fences.`;
 
@@ -181,7 +183,7 @@ Return valid JSON matching this EXACT schema (screen 1 is always the hook, scree
   "videoStyle": "list_countdown"
 }
 
-Always use "list_countdown" for videoStyle — no other value is valid.`;
+Always use "list_countdown" for videoStyle. No other value is valid.`;
 
   const message = await client.messages.create({
     model: "claude-sonnet-4-20250514",

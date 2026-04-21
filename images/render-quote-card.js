@@ -1,4 +1,10 @@
 import puppeteer from "puppeteer";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SQ_BG_PATH = path.resolve(__dirname, "../remotion-videos/public/dre_square_v3.png");
 
 const WIDTH = 1200;
 const HEIGHT = 675;
@@ -136,6 +142,132 @@ function buildHtml(quote, author, title, handle) {
   </script>
 </body>
 </html>`;
+}
+
+// ─── INSTAGRAM SQUARE CARD — 1080x1080 ───────────────────────────────────────
+// Uses dre_square_v3.png as the background layer.
+
+export async function renderSquareCard(postText, {
+  author = "Drevon Bullock",
+  title  = "AI Consultant • BCG",
+  handle = "@DrevonBullock",
+} = {}) {
+  const SQ = 1080;
+  const quote = extractHeroQuote(postText);
+
+  const bgBase64 = fs.readFileSync(SQ_BG_PATH).toString("base64");
+  const bgDataUrl = `data:image/png;base64,${bgBase64}`;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: ${SQ}px; height: ${SQ}px; overflow: hidden; }
+    .card {
+      position: relative; width: ${SQ}px; height: ${SQ}px;
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .bg {
+      position: absolute; inset: 0;
+      background: url("${bgDataUrl}") center/cover no-repeat;
+    }
+    .overlay {
+      position: absolute; inset: 0;
+      background: rgba(4, 8, 18, 0.55);
+    }
+    .accent-left {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+      background: linear-gradient(180deg, #00D2FF 0%, #0099CC 100%);
+    }
+    .bottom-border {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+      background: #00D2FF;
+    }
+    .ghost-quote {
+      position: absolute; top: -40px; left: 24px;
+      font-size: 340px; font-weight: 700;
+      font-family: Georgia, serif;
+      color: #00D2FF; opacity: 0.07; line-height: 1;
+    }
+    .quote-area {
+      position: relative; flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 60px 72px 16px;
+    }
+    .quote-text {
+      color: #FFFFFF; text-align: center; font-weight: 700; line-height: 1.3;
+      text-shadow: 0 0 48px rgba(0,210,255,0.2); max-width: 860px; word-break: break-word;
+    }
+    .bottom-strip {
+      position: relative; height: 110px;
+    }
+    .separator {
+      position: absolute; top: 0; left: 32px; right: 32px; height: 1px;
+      background: rgba(0,210,255,0.3);
+    }
+    .strip-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+    .strip-content {
+      position: relative; display: flex; align-items: center;
+      justify-content: space-between; height: 100%; padding: 0 32px;
+    }
+    .author-info { display: flex; flex-direction: column; gap: 4px; }
+    .author-name { color: #FFFFFF; font-weight: 700; font-size: 24px; }
+    .author-title { color: #B4C8DA; font-weight: 400; font-size: 18px; }
+    .handle { color: #00D2FF; font-weight: 600; font-size: 22px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="bg"></div>
+    <div class="overlay"></div>
+    <div class="accent-left"></div>
+    <div class="bottom-border"></div>
+    <div class="ghost-quote">&ldquo;</div>
+    <div class="quote-area">
+      <p class="quote-text" id="quote"></p>
+    </div>
+    <div class="bottom-strip">
+      <div class="separator"></div>
+      <div class="strip-overlay"></div>
+      <div class="strip-content">
+        <div class="author-info">
+          <span class="author-name" id="author"></span>
+          <span class="author-title" id="title"></span>
+        </div>
+        <span class="handle" id="handle"></span>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById("quote").textContent  = ${JSON.stringify(quote)};
+    document.getElementById("author").textContent = ${JSON.stringify(author)};
+    document.getElementById("title").textContent  = ${JSON.stringify(title)};
+    document.getElementById("handle").textContent = ${JSON.stringify(handle)};
+
+    const el = document.getElementById("quote");
+    for (let size = 80; size >= 32; size -= 2) {
+      el.style.fontSize = size + "px";
+      if (el.scrollWidth <= 860 && el.scrollHeight <= 580) break;
+    }
+  </script>
+</body>
+</html>`;
+
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: SQ, height: SQ, deviceScaleFactor: 2 });
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
+    return await page.screenshot({ type: "png" });
+  } finally {
+    await browser.close();
+  }
 }
 
 export async function renderQuoteCard(postText, {

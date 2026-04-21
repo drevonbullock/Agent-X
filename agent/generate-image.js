@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { renderQuoteCard } from "../images/render-quote-card.js";
+import { renderQuoteCard, renderSquareCard } from "../images/render-quote-card.js";
+
 import { generateGeminiImage } from "../images/gemini.js";
 
 const client = new Anthropic();
@@ -83,9 +84,50 @@ If VISUAL: {"mode":"visual","imagePrompt":"<your full visual prompt>"}`,
   });
 
   const raw = message.content[0].text.trim();
-  // Strip markdown code fences if the model wraps the JSON
-  const json = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
-  return JSON.parse(json);
+  // Walk the string counting braces — immune to } inside strings or trailing prose
+  const start = raw.indexOf("{");
+  if (start === -1) throw new Error("No JSON object found in response");
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < raw.length; i++) {
+    const ch = raw[i];
+    if (esc)        { esc = false; continue; }
+    if (ch === "\\") { esc = true;  continue; }
+    if (ch === '"')  { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (ch === "{") depth++;
+    if (ch === "}") { depth--; if (depth === 0) return JSON.parse(raw.slice(start, i + 1)); }
+  }
+  throw new Error("No complete JSON object found in response");
+}
+
+// ─── INSTAGRAM — 1080x1080 square ────────────────────────────────────────────
+// Reuses the same Claude mode decision but renders square assets.
+// QUOTE mode → dre_square_v3.png background card via Puppeteer.
+// Other modes → Gemini with square format appended to the prompt.
+
+export async function generateImageForInstagram(postText) {
+  let decision;
+  try {
+    decision = await selectImageMode(postText);
+  } catch (err) {
+    console.warn(`[Instagram] Image mode selection failed, defaulting to QUOTE: ${err.message}`);
+    decision = { mode: "quote" };
+  }
+
+  console.log(`[Instagram] Image mode: ${decision.mode.toUpperCase()} (square)`);
+
+  if (decision.mode === "quote") {
+    return renderSquareCard(postText);
+  }
+
+  const squarePrompt = `${decision.imagePrompt} Square 1:1 format, 1080x1080 pixels.`;
+
+  try {
+    return await generateGeminiImage(squarePrompt);
+  } catch (err) {
+    console.warn(`[Instagram] Gemini failed, falling back to square quote card: ${err.message}`);
+    return renderSquareCard(postText);
+  }
 }
 
 export async function generateImage(postText) {

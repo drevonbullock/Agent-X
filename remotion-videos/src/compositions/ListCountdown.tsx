@@ -13,10 +13,26 @@ import { HookScreen } from "./HookScreen";
 
 const { fontFamily } = loadFont("normal", { weights: ["400", "700"] });
 
+export interface Callout {
+  emoji: string;
+  at: number;
+  slot?: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+}
+
+export interface Visual {
+  at: number;
+  imageFile: string;
+  clipFile?: string;
+  side?: "left" | "right";
+}
+
 export interface VideoScreen {
   screen: number;
   heading: string;
   body: string;
+  points?: [string, string];
+  callouts?: Callout[];
+  visuals?: Visual[];
 }
 
 export interface VideoCompositionProps {
@@ -24,6 +40,7 @@ export interface VideoCompositionProps {
   screenDurations: number[];   // seconds per screen, parallel to videoScript
   screenHasAudio: boolean[];   // whether each screen has audio, parallel to videoScript
   totalDurationSeconds: number;
+  bgImage?: string;            // background image filename in /public (defaults to dre_square_v3.png)
 }
 
 // ─── COUNTDOWN ITEM ──────────────────────────────────────────────────────────
@@ -91,6 +108,8 @@ const CountdownItem: React.FC<CountdownItemProps> = ({
           objectFit: "cover",
           top: 0,
           left: 0,
+          transform: "scale(2)",
+          transformOrigin: "center center",
         }}
       />
 
@@ -135,7 +154,7 @@ const CountdownItem: React.FC<CountdownItemProps> = ({
             fontFamily,
             fontSize: "30px",
             fontWeight: 400,
-            color: "#B4C8DA",
+            color: "#FFFFFF",
             textAlign: "center",
             maxWidth: "780px",
             lineHeight: 1.5,

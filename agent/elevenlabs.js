@@ -6,8 +6,8 @@ import { execSync } from "child_process";
 const PUBLIC_DIR = path.resolve("remotion-videos/public");
 const FPS = 30;
 
-// Extra seconds held on screen AFTER the voiceover finishes before cutting to next slide.
-const HOLD_AFTER_AUDIO = 1.2;
+// Breathing room after voiceover finishes before cutting to next slide.
+const HOLD_AFTER_AUDIO = 0.8;
 
 // Get actual duration of an MP3 file using macOS afinfo.
 // Falls back to word-count estimate if afinfo fails.
@@ -29,27 +29,51 @@ function getAudioDuration(filePath, fallbackText) {
   return Math.round((words / 2.2 + 1.0) * 10) / 10;
 }
 
+// Returns { buffer, wordTimestamps: [{word, startTime}] }
 async function callElevenLabs(text, apiKey, voiceId) {
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-    method: "POST",
-    headers: {
-      "xi-api-key": apiKey,
-      "Content-Type": "application/json",
-      Accept: "audio/mpeg",
-    },
-    body: JSON.stringify({
-      text,
-      model_id: "eleven_turbo_v2",
-      voice_settings: { stability: 0.4, similarity_boost: 0.75 },
-    }),
-  });
+  const res = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/with-timestamps`,
+    {
+      method: "POST",
+      headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        model_id: "eleven_turbo_v2",
+        voice_settings: { stability: 0.4, similarity_boost: 0.75 },
+      }),
+    }
+  );
 
   if (!res.ok) {
     const errBody = await res.text();
     throw new Error(`ElevenLabs API error (${res.status}): ${errBody}`);
   }
 
-  return Buffer.from(await res.arrayBuffer());
+  const json = await res.json();
+  const buffer = Buffer.from(json.audio_base64, "base64");
+
+  // Parse character-level alignment into word timestamps
+  const wordTimestamps = [];
+  const chars  = json.alignment?.characters ?? [];
+  const starts = json.alignment?.character_start_times_seconds ?? [];
+  let wordChars = [];
+  let wordStart = null;
+
+  for (let i = 0; i < chars.length; i++) {
+    if (/\w/.test(chars[i])) {
+      if (wordStart === null) wordStart = starts[i];
+      wordChars.push(chars[i]);
+    } else if (wordChars.length > 0) {
+      wordTimestamps.push({ word: wordChars.join("").toLowerCase(), startTime: wordStart });
+      wordChars = [];
+      wordStart = null;
+    }
+  }
+  if (wordChars.length > 0) {
+    wordTimestamps.push({ word: wordChars.join("").toLowerCase(), startTime: wordStart });
+  }
+
+  return { buffer, wordTimestamps };
 }
 
 const NUMBER_WORDS = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
@@ -59,7 +83,9 @@ const NUMBER_WORDS = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Ei
 // countdownNumber: the number displayed on screen (e.g. 3, 2, 1) — only passed for list_countdown.
 function buildScreenText(screen, countdownNumber) {
   const h = screen.heading.replace(/[.!?]+$/, "").trim();
-  const b = screen.body ? screen.body.trim() : "";
+  const b = screen.points
+    ? screen.points.filter(Boolean).join(" ")
+    : (screen.body ? screen.body.trim() : "");
 
   if (screen.screen === 1) {
     // Hook screen: heading only, punchy, one sentence
@@ -96,17 +122,18 @@ export async function generateVoiceoverForScreen(screen, countdownNumber) {
   try {
     if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
 
-    const buffer = await callElevenLabs(text, apiKey, voiceId);
+    const { buffer, wordTimestamps } = await callElevenLabs(text, apiKey, voiceId);
     fs.writeFileSync(outputPath, buffer);
 
-    // Read actual audio duration, then add hold time so the slide doesn't cut mid-sentence.
     const audioDuration = getAudioDuration(outputPath, text);
-    // Hook screen: short punch — cap hold at 0.4s after audio. Teaching screens: full 1.2s hold.
-    const hold = screen.screen === 1 ? 0.4 : HOLD_AFTER_AUDIO;
-    const durationSeconds = Math.round((audioDuration + hold) * 10) / 10;
+    const bodyText = screen.points ? screen.points.join(' ') : (screen.body || '');
+    const displayWords = ((screen.heading || '') + ' ' + bodyText).trim().split(/\s+/).filter(Boolean).length;
+    const readFloor = displayWords / 3;
+    const minFloor = screen.screen === 1 ? 2.5 : 3.5;
+    const durationSeconds = Math.round(Math.max(audioDuration + HOLD_AFTER_AUDIO, readFloor, minFloor) * 10) / 10;
 
-    console.log(`[Agent X] Screen ${screen.screen} audio: ${outputFile} (${audioDuration.toFixed(1)}s audio + ${hold}s hold = ${durationSeconds.toFixed(1)}s)`);
-    return { path: `public/${outputFile}`, durationSeconds };
+    console.log(`[Agent X] Screen ${screen.screen} audio: ${outputFile} (${audioDuration.toFixed(1)}s audio → ${durationSeconds.toFixed(1)}s screen)`);
+    return { path: `public/${outputFile}`, durationSeconds, wordTimestamps };
   } catch (err) {
     console.error(`[ElevenLabs] Screen ${screen.screen} failed: ${err.message}`);
     return null;
@@ -139,6 +166,7 @@ export async function generateAllVoiceovers(videoScript, videoStyle) {
         screen: screen.screen,
         path: result.path,
         durationSeconds: result.durationSeconds,
+        wordTimestamps: result.wordTimestamps ?? [],
         hasAudio: true,
       });
     } else {

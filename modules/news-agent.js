@@ -26,6 +26,7 @@ Voice rules:
 - Include 1-2 specific details from the story.
 - Max 2 hashtags.
 - No filler phrases: "game changer", "let's dive in", "unpopular opinion"
+- NEVER use em dashes (—), en dashes (–), or hyphens as pauses ( - ). Write flowing prose instead
 - 150-350 words. One clear point.
 
 Format:
