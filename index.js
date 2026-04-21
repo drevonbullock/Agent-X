@@ -12,15 +12,72 @@ export const AGENT_CONFIG = {
   videoCadence: parseInt(process.env.VIDEO_CADENCE ?? "10", 10),
 };
 
+import fs from "fs";
+import Anthropic from "@anthropic-ai/sdk";
 import { generateLinkedInPost, generateVideoPost, generateThreadsPost } from "./agent/generate-post.js";
 import { generateImage } from "./agent/generate-image.js";
 import { generateVideo } from "./agent/generate-video.js";
 import { postToLinkedIn } from "./agent/post-to-linkedin.js";
+import { postReelToInstagram } from "./distributors/instagram.js";
 import { postVideoToTikTok } from "./distributors/tiktok.js";
 import { uploadYouTubeShort } from "./distributors/youtube-shorts.js";
 import { postTextToThreads } from "./distributors/threads.js";
 import { generateAndPostCarousel, generateAndPostCarouselToThreads } from "./modules/carousel-generator.js";
 import { startScheduler } from "./scheduler.js";
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const IG_BUCKET  = "agent-x-videos";
+
+const IG_REEL_TOPICS = [
+  "how to automate your client onboarding",
+  "AI tools that replace a $60k/yr hire",
+  "how to use AI if you work a 9-to-5",
+  "what happens when you automate lead follow-up",
+  "the difference between tools and systems",
+  "how to build a second brain using AI",
+  "AI automations every solo founder needs",
+  "stop doing manually what AI can do in seconds",
+];
+
+async function ensureIgBucket() {
+  const res = await fetch(`${process.env.SUPABASE_URL}/storage/v1/bucket`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.SUPABASE_SECRET_KEY}`,
+      apikey: process.env.SUPABASE_SECRET_KEY,
+    },
+    body: JSON.stringify({ id: IG_BUCKET, name: IG_BUCKET, public: true }),
+  });
+  const j = await res.json();
+  if (!res.ok && !JSON.stringify(j).includes("already exists") && j.message !== "Duplicate") {
+    console.warn(`[Instagram] Bucket note: ${JSON.stringify(j)}`);
+  }
+}
+
+async function generateReelScript(topic) {
+  const msg = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [{
+      role: "user",
+      content: `Write an Instagram Reel script for: "${topic}". Target audience: founders and 9-to-5 employees curious about AI. Drevon Bullock voice — direct, no hype.
+
+Return ONLY valid JSON:
+{
+  "caption": "Short punchy caption, under 400 chars, no hashtags.",
+  "videoScript": [
+    { "screen": 1, "heading": "Hook, 6 words max", "body": "" },
+    { "screen": 2, "heading": "Point one, 5 words", "body": "", "points": ["Insight one, max 12 words.", "How to apply it."] },
+    { "screen": 3, "heading": "Point two, 5 words", "body": "", "points": ["Insight two, specific.", "What changes."] },
+    { "screen": 4, "heading": "Point three, 5 words", "body": "", "points": ["Biggest unlock.", "Result within one week."] }
+  ]
+}`,
+    }],
+  });
+  const raw = msg.content[0].text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+  return JSON.parse(raw);
+}
 
 // ─── SUPABASE HELPERS ─────────────────────────────────────────────────────────
 
@@ -123,7 +180,42 @@ export async function runLinkedIn(withImage = true) {
 }
 
 // ─── INSTAGRAM ────────────────────────────────────────────────────────────────
-// Carousels only — every post uses carousel-generator.js.
+// 10am + 8pm → Reel (video)   |   3pm → Carousel (static)
+
+export async function runInstagramReel() {
+  if (!AGENT_CONFIG.platforms.includes("instagram")) return;
+  if (!process.env.INSTAGRAM_ACCESS_TOKEN) {
+    console.log("[Instagram] Skipped — INSTAGRAM_ACCESS_TOKEN not set");
+    return;
+  }
+
+  const topic = IG_REEL_TOPICS[Math.floor(Math.random() * IG_REEL_TOPICS.length)];
+  console.log(`\n[Instagram] Reel run | topic: ${topic}`);
+
+  try {
+    const { caption, videoScript } = await generateReelScript(topic);
+    console.log(`[Instagram] Hook: "${videoScript[0].heading}"`);
+
+    const videoPath = await generateVideo(videoScript, "carousel_slide_vertical");
+
+    await ensureIgBucket();
+    const key = `reels/ig-${Date.now()}.mp4`;
+    const buffer = fs.readFileSync(videoPath);
+    const { error } = await supabase.storage.from(IG_BUCKET).upload(key, buffer, {
+      contentType: "video/mp4",
+      upsert: true,
+    });
+    if (error) throw new Error(`Supabase upload failed: ${error.message}`);
+    const { data } = supabase.storage.from(IG_BUCKET).getPublicUrl(key);
+
+    const { mediaId, postUrl } = await postReelToInstagram(data.publicUrl, caption);
+    console.log(`[Instagram] Reel live: ${postUrl}\n`);
+    await logPost({ postId: mediaId, postUrl, postText: caption, format: "reel", postType: "video", platform: "instagram" });
+    return { postUrl };
+  } catch (err) {
+    console.error(`[Instagram] Reel failed: ${err.message}\n`);
+  }
+}
 
 export async function runInstagram() {
   if (!AGENT_CONFIG.platforms.includes("instagram")) return;
@@ -132,13 +224,14 @@ export async function runInstagram() {
     return;
   }
 
-  console.log(`\n[Instagram] Starting carousel run`);
+  console.log(`\n[Instagram] Carousel run`);
   try {
     const { postUrl, slideCount } = await generateAndPostCarousel(AGENT_CONFIG.niche);
-    console.log(`[Instagram] Done. ${slideCount} slides: ${postUrl}\n`);
+    console.log(`[Instagram] ${slideCount} slides live: ${postUrl}\n`);
+    await logPost({ postId: null, postUrl, postText: AGENT_CONFIG.niche, format: "carousel", postType: "image", platform: "instagram" });
     return { postUrl, slideCount };
   } catch (err) {
-    console.error(`[Instagram] Run failed: ${err.message}\n`);
+    console.error(`[Instagram] Carousel failed: ${err.message}\n`);
   }
 }
 

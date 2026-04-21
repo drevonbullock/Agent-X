@@ -4,6 +4,7 @@ import supabase from "../supabase/client.js";
 import { postToLinkedIn } from "../agent/post-to-linkedin.js";
 import { generateImage } from "../agent/generate-image.js";
 import { postTextToThreads } from "../distributors/threads.js";
+import { postImageToInstagram } from "../distributors/instagram.js";
 
 const client = new Anthropic();
 
@@ -75,6 +76,38 @@ async function markArticleSeen(article, posted = false) {
 }
 
 // ─── POST GENERATION ──────────────────────────────────────────────────────────
+
+async function uploadImageToSupabase(buffer) {
+  const key = `news-images/ig-${Date.now()}.jpg`;
+  const { error } = await supabase.storage.from("agent-x-videos").upload(key, buffer, {
+    contentType: "image/jpeg",
+    upsert: true,
+  });
+  if (error) throw new Error(`Image upload failed: ${error.message}`);
+  const { data } = supabase.storage.from("agent-x-videos").getPublicUrl(key);
+  return data.publicUrl;
+}
+
+const INSTAGRAM_REACTIVE_SYSTEM = `You are writing a reactive Instagram caption as Dre'von Bullock — AI automation builder in New York.
+
+A breaking news story just dropped. Write a sharp, punchy caption for an image post.
+
+Rules:
+- Max 300 characters
+- No hashtags
+- Lead with what this means for business owners
+- Direct tone. No filler phrases, no hype, no em dashes
+- One clear take`;
+
+async function generateInstagramReactiveCaption(article) {
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 128,
+    system: INSTAGRAM_REACTIVE_SYSTEM,
+    messages: [{ role: "user", content: `Headline: ${article.title}\nSummary: ${article.description}` }],
+  });
+  return msg.content[0].text.trim().slice(0, 300);
+}
 
 async function generateThreadsReactivePost(article) {
   const msg = await client.messages.create({
@@ -166,12 +199,13 @@ async function canPost(platform = "linkedin") {
 export async function checkAndPost() {
   console.log(`[NewsAgent] Checking for breaking news...`);
 
-  const [linkedinOk, threadsOk] = await Promise.all([
+  const [linkedinOk, threadsOk, instagramOk] = await Promise.all([
     canPost("linkedin"),
     canPost("threads"),
+    canPost("instagram"),
   ]);
 
-  if (!linkedinOk && !threadsOk) return;
+  if (!linkedinOk && !threadsOk && !instagramOk) return;
 
   let articles;
   try {
@@ -219,12 +253,29 @@ export async function checkAndPost() {
     try {
       const postText = await generateThreadsReactivePost(target);
       console.log(`[NewsAgent] Threads post generated (${postText.length} chars)`);
-
       const { postId, postUrl } = await postTextToThreads(postText);
       console.log(`[NewsAgent] Threads posted! ID: ${postId} | ${postUrl}`);
       await logNewsPost(postId, postUrl, postText, target.url, "threads");
     } catch (err) {
       console.error(`[NewsAgent] Threads post failed: ${err.message}`);
+    }
+  }
+
+  // ── Instagram — single image post ────────────────────────────────────────
+  if (instagramOk && process.env.INSTAGRAM_ACCESS_TOKEN) {
+    try {
+      const caption = await generateInstagramReactiveCaption(target);
+      console.log(`[NewsAgent] Instagram caption: "${caption.slice(0, 60)}..."`);
+
+      const imageBuffer = await generateImage(caption);
+      if (!imageBuffer) throw new Error("Image generation returned null");
+
+      const imageUrl = await uploadImageToSupabase(imageBuffer);
+      const { mediaId, postUrl } = await postImageToInstagram(imageUrl, caption);
+      console.log(`[NewsAgent] Instagram posted! ID: ${mediaId} | ${postUrl}`);
+      await logNewsPost(mediaId, postUrl, caption, target.url, "instagram");
+    } catch (err) {
+      console.error(`[NewsAgent] Instagram post failed: ${err.message}`);
     }
   }
 }

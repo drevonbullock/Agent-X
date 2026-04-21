@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { runLinkedIn, runInstagram, runThreads } from "./index.js";
+import { runLinkedIn, runInstagram, runInstagramReel, runThreads } from "./index.js";
 import { checkAndPost } from "./modules/news-agent.js";
 import { checkPerf } from "./modules/variation-engine.js";
 import { runWeeklyAnalysis } from "./modules/feedback-loop.js";
@@ -28,23 +28,23 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] LinkedIn 6pm failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  // ── INSTAGRAM — 10am, 3pm, 8pm (carousels only) ──────────────────────────
+  // ── INSTAGRAM — 10am Reel, 3pm Carousel, 8pm Reel ───────────────────────
   cron.schedule("0 10 * * *", async () => {
-    console.log(`[${new Date().toISOString()}] Instagram: 10:00 AM`);
-    try { await runInstagram(); }
-    catch (err) { console.error(`[Scheduler] Instagram 10am failed: ${err.message}`); }
+    console.log(`[${new Date().toISOString()}] Instagram: 10:00 AM (Reel)`);
+    try { await runInstagramReel(); }
+    catch (err) { console.error(`[Scheduler] Instagram 10am Reel failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   cron.schedule("0 15 * * *", async () => {
-    console.log(`[${new Date().toISOString()}] Instagram: 3:00 PM`);
+    console.log(`[${new Date().toISOString()}] Instagram: 3:00 PM (Carousel)`);
     try { await runInstagram(); }
-    catch (err) { console.error(`[Scheduler] Instagram 3pm failed: ${err.message}`); }
+    catch (err) { console.error(`[Scheduler] Instagram 3pm Carousel failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   cron.schedule("0 20 * * *", async () => {
-    console.log(`[${new Date().toISOString()}] Instagram: 8:00 PM`);
-    try { await runInstagram(); }
-    catch (err) { console.error(`[Scheduler] Instagram 8pm failed: ${err.message}`); }
+    console.log(`[${new Date().toISOString()}] Instagram: 8:00 PM (Reel)`);
+    try { await runInstagramReel(); }
+    catch (err) { console.error(`[Scheduler] Instagram 8pm Reel failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── THREADS — 8:30am, 12:30pm, 5:30pm (text or carousel every 3rd) ───────
@@ -124,7 +124,7 @@ export function startScheduler() {
 
   console.log("Scheduler active — all times EST:");
   console.log("  LinkedIn  : 9:00am (image), 1:00pm (text), 6:00pm (text)");
-  console.log("  Instagram : 10:00am, 3:00pm, 8:00pm (carousels only)");
+  console.log("  Instagram : 10:00am (Reel), 3:00pm (Carousel), 8:00pm (Reel)");
   console.log("  Threads   : 8:30am, 12:30pm, 5:30pm (text | carousel every 3rd)");
   console.log("  News agent: every 30 minutes");
   console.log("  Variation : every 6 hours");
