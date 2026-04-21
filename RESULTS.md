@@ -1,6 +1,67 @@
-# AGENT X v2 — BUILD RESULTS
-**Last updated:** 2026-04-19
-**Build sessions:** 5
+# AGENT X — BUILD RESULTS
+**Last updated:** 2026-04-20
+**Build sessions:** 6
+
+---
+
+## PHASE 8 — MULTI-PLATFORM EXPANSION + MOBILE VISUAL POLISH ✅ (Session 6)
+
+### What was built
+
+**Visual Fixes (Remotion)**
+- `remotion-videos/src/compositions/ListCountdown.tsx` — Background image scaled 2× (`transform: "scale(2)"`) to fill more canvas space. Body text changed from `#B4C8DA` (silver) to `#FFFFFF` (white) for readability.
+- `remotion-videos/src/compositions/CarouselSlide.tsx` — Major mobile OLED fix: added `filter: "brightness(1.28)"` to all three slide root divs. Background lifted from `#0a0f1e` to `#0d1830`. Safe zone adjusted for Instagram UI overlay: TopLabel at `top: 260`, CornerBrackets PT `240`, ListItemSlide padding-top `340px`. All uppercase for CTA heading + cover subtitle. Follow button changed to `"FOLLOW FOR DAILY AI"`. Card glow tightened.
+- `remotion-videos/src/Root.tsx` — Fixed CTA preview screen to use correct `Comment "AUTOMATE"` format so `extractKeyword()` resolves properly (was defaulting to "COMMENT").
+
+**Threads — Full Platform Build**
+- `agent/generate-post.js` — Added `generateThreadsPost()`: 5 format variants (list insight, hot take, breakdown, counter, scenario), 8 AI automation topics, hard cap at 400 chars, no hashtags, Threads-native voice.
+- `index.js` — `runThreads()` now calls `generateThreadsPost()` instead of slicing LinkedIn posts.
+- `scheduler.js` — Threads on independent schedule: 8:30am, 12:30pm, 5:30pm EST.
+- `distributors/threads.js` — Added 5-second wait between child container creation and carousel container creation (fixes "Invalid Carousel Children" API error).
+
+**Instagram — Full Platform Build**
+- `index.js` — Added `runInstagramReel()`: generates script via Claude → renders `carousel_slide_vertical` → uploads to Supabase → posts Reel → logs to Supabase. Added `ensureIgBucket()` and `generateReelScript(topic)` helpers.
+- `run-reel.js` — New standalone file: `node run-reel.js "topic"` generates and posts a Reel to Instagram on any custom topic.
+- `scheduler.js` — Instagram on independent schedule: 10am Reel, 3pm Carousel, 8pm Reel EST.
+
+**News Agent — Rate Limiting + Multi-Platform**
+- `modules/news-agent.js` — Added `canPost(platform)` with `DAILY_CAP=3`, `COOLDOWN_HOURS=4`. Checks Supabase `posts` table for `format: "news_reaction"` per platform per day + cooldown since last post. Added `generateThreadsReactivePost()` (Threads-native, under 400 chars), `generateInstagramReactiveCaption()` (under 300 chars), `uploadImageToSupabase(buffer)`. `checkAndPost()` now runs LinkedIn + Threads + Instagram independently with their own caps.
+
+**Infrastructure**
+- `supabase/client.js` — Explicit check for `SUPABASE_SECRET_KEY` (service role key) on startup with clear error message if missing.
+
+### Mistakes made + fixed (see `tasks/lessons.md` for full detail)
+| # | Mistake | Fix |
+|---|---------|-----|
+| 1 | CarouselSlide header cut off by Instagram UI overlay | Safe zone: top 260px, bottom 1540px |
+| 2 | Video looks dull on mobile OLED | `brightness(1.28)` + lifted background to `#0d1830` |
+| 3 | CTA showed "COMMENT" not actual keyword | Root.tsx preview screen now uses `Comment "AUTOMATE"` format |
+| 4 | Threads posts truncated mid-sentence | `generateThreadsPost()` writes natively, never truncates LinkedIn posts |
+| 5 | Threads carousel "Invalid Carousel Children" | 5-second wait after child container creation |
+| 6 | Railway crash: SUPABASE_SECRET_KEY missing | Added service role key (`sb_secret_...`) to Railway Variables |
+| 7 | News agent no rate limit — posting hourly | `canPost()` with daily cap (3) + 4-hour cooldown per platform |
+
+### Live platform schedule (as of 2026-04-20)
+```
+LinkedIn  : 9:00am (image), 1:00pm (text), 6:00pm (text) + news reactive (≤3/day, 4h cooldown)
+Instagram : 10:00am (Reel), 3:00pm (Carousel), 8:00pm (Reel) + news reactive image (≤3/day)
+Threads   : 8:30am, 12:30pm, 5:30pm (text | carousel every 3rd) + news reactive (≤3/day)
+News agent: every 30 min (all platforms independently gated)
+```
+
+### Test results (2026-04-20)
+| Test | Result |
+|---|---|
+| CarouselSlide brightness fix | ✅ Confirmed brighter on OLED |
+| "FOLLOW FOR DAILY AI" CTA button | ✅ Live |
+| CTA keyword extraction | ✅ "AUTOMATE" extracted correctly |
+| Instagram Reel — "how to use AI if you work a 9-to-5" | ✅ Posted live |
+| Threads text post | ✅ Posted live |
+| Threads carousel | ✅ Posted live |
+| Threads video | ✅ Posted live |
+| Instagram news reactive image | ✅ Wired |
+| News agent rate limit (3/day per platform) | ✅ Logic confirmed |
+| Railway deployment | ✅ Stable after SUPABASE_SECRET_KEY added |
 
 ---
 

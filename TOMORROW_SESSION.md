@@ -1,72 +1,111 @@
-## Agent X — Session Starter Prompt (copy/paste this tomorrow)
+## Agent X — Session Starter
+**Last updated:** 2026-04-20 (end of Session 6)
+**Project path:** `/Users/drevonbullock/C.C. Agent X/Agent X`
 
 ---
 
-We're continuing work on Agent X, an automated Instagram Reel pipeline.
-Project is at: `/Users/drevonbullock/C.C. Agent X/Agent X`
+## CURRENT STATE — Everything Live on Railway ✅
+
+### Platform Schedule (all times EST)
+| Platform | Schedule | Content Type |
+|---|---|---|
+| LinkedIn | 9am (image), 1pm (text), 6pm (text) | Text + single image |
+| Instagram | 10am (Reel), 3pm (Carousel), 8pm (Reel) | Video Reels + HTML carousel |
+| Threads | 8:30am, 12:30pm, 5:30pm | Text native + carousel every 3rd |
+| News Agent | Every 30 min | Reactive posts to all 3 platforms |
+
+### Rate limits (news agent)
+- Daily cap: 3 posts/platform/day
+- Cooldown: 4 hours between news posts per platform
+- Tracked in Supabase `posts` table (`format: "news_reaction"`)
+
+### Video pipeline (Remotion)
+- `list_countdown` — LinkedIn square (1080×1080), numbered countdown style
+- `hook_reveal_vertical` — Instagram/Threads story (1080×1920), word-by-word reveal with floating image cards
+- `carousel_slide_vertical` — Instagram/Threads Reel (1080×1920), BCG dark navy carousel cards
+
+### Key env vars (all set in Railway)
+```
+ANTHROPIC_API_KEY, GEMINI_API_KEY, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID
+LINKEDIN_ACCESS_TOKEN, LINKEDIN_PERSON_URN, LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET
+SUPABASE_URL, SUPABASE_KEY, SUPABASE_SECRET_KEY  ← all three required
+NEWS_API_KEY
+THREADS_ACCESS_TOKEN, THREADS_USER_ID
+INSTAGRAM_ACCESS_TOKEN, INSTAGRAM_BUSINESS_ID
+SHOTSTACK_API_KEY
+```
 
 ---
 
-## ✅ COMPLETED (as of 2026-04-20)
+## COMPLETED — All Sessions
 
-1. **Full pipeline end-to-end — LIVE** ✅
-   - ElevenLabs voiceover with word timestamps
-   - Claude Haiku picks a visual moment per screen
-   - Gemini generates a matching image
-   - Remotion renders as a floating card (centered bottom, 750×430px) that slides in while the voiceover talks
-   - 4K render (2160×3840) → ffmpeg compress to 1080p → Supabase upload → Instagram Reel post
+### Session 6 (2026-04-20)
+- Threads full build: native post generator, carousel, video, news reactive
+- Instagram full build: Reel scheduler (10am/8pm), carousel (3pm), news reactive image
+- CarouselSlide mobile fix: brightness 1.28, safe zone (top 260px / bottom 1540px)
+- ListCountdown: background image 2× scale, body text white
+- News agent rate limiting: 3/day per platform, 4-hour cooldown
+- Railway fix: SUPABASE_SECRET_KEY (service role) vs SUPABASE_KEY (anon) clarified
 
-2. **CTA fix — CONFIRMED WORKING** ✅
-   - Claude Haiku returns `{"keyword":"...","resource":"..."}` clean — JSON markdown fences stripped in `generateCTAScreen()`
-   - Tested: CTA keyword "DEMYSTIFIED" generated and voiced correctly as final screen
-   - Reel published live on Instagram
-
-3. **Runway image-to-video integration — BUILT** ✅
-   - `agent/runway.js` — Runway Gen-3 Turbo client (create task → poll → download)
-   - `generateVisualForScreen()` in `agent/generate-video.js` calls Runway after Gemini when `RUNWAY_API_KEY` is set
-   - Falls back to static Gemini image if key missing or Runway fails
-   - `Visual` interface in `ListCountdown.tsx` now has `clipFile?: string`
-   - `VisualCard` in `HookReveal.tsx` uses `<Video>` when `clipFile` present, `<Img>` otherwise
-   - **TO ACTIVATE:** Add `RUNWAY_API_KEY=your_key` to `.env`
-
-4. **CarouselSlide BCG template — BUILT + LIVE** ✅
-   - `remotion-videos/src/compositions/CarouselSlide.tsx` — full BCG carousel visual style
-   - Dark navy `#0a0f1e` bg, circuit grid overlay, cyan corner brackets
-   - 3 slide variants: Cover (screen 1), List item cards (numbered, spring animated), CTA (keyword badge + follow button)
-   - Spring entrance + breathing loop on cards, voiceover-synced
-   - Registered as `CarouselSlideVertical` (1080×1920) in Root.tsx
-   - Added to pipeline: `carousel_slide_vertical` style in `generate-video.js`
-   - `test-carousel.js` test runner — full render → upload → Instagram post
-   - Tested end-to-end: 48.4s reel rendered, posted live on Instagram
+### Sessions 1-5 (2026-04-19)
+- Full Remotion video pipeline (ElevenLabs + Gemini + Remotion)
+- HookRevealVertical with floating image cards (word-timed via ElevenLabs timestamps)
+- CarouselSlideVertical BCG template
+- Shotstack cinematic pipeline (Phase 6)
+- Instagram Reel + Threads video live
+- Supabase schema (posts, variations, performance_briefs, news_seen)
+- LinkedIn + Threads + Instagram all wired
+- Variation engine, hook tester, feedback loop, youtube cutter
 
 ---
 
-## NEXT SESSION — What to build
+## NEXT — What to build next session
 
-### 5. White-label mode
-Make the carousel template white-label ready so it can be deployed for clients:
-- Read `BRAND_AUTHOR`, `BRAND_HANDLE`, `BRAND_NICHE` from `.env` (already documented in `.env.example`)
-- Pass brand overrides as props to `CarouselSlide` (author name in bottom bar, label text, handle on CTA button)
+### 1. White-label mode
+Make the carousel template deployable for clients:
+- Read `BRAND_AUTHOR`, `BRAND_HANDLE`, `BRAND_NICHE` from `.env` (already in `.env.example`)
+- Pass brand overrides as props to `CarouselSlide` (author name, handle on CTA, label text)
 - Default to "DRE'VON BULLOCK / @DREVON" if env vars not set
 
-### 6. Auto-style selection
-Currently `videoStyle` is hardcoded per test runner. Add a Claude Haiku call in `generateVideo()` that picks the best style based on the script topic:
+### 2. Auto-style selection
+Add a Claude Haiku call in `generateVideo()` that picks the best Remotion style for a given script:
 - `list_countdown` → numbered tips, how-tos, step-by-step
 - `hook_reveal_vertical` → story-driven, emotional, narrative
-- `carousel_slide_vertical` → authority/framework posts, "N things you need" format
-- Expose as `videoStyle: "auto"` option
+- `carousel_slide_vertical` → authority/framework posts, "N things you need"
+- Expose as `videoStyle: "auto"` option in the pipeline
 
-### 7. Scheduler integration
-Wire the carousel style into the `scheduler.js` daily posting slots — the 9 AM post should alternate between `hook_reveal_vertical` and `carousel_slide_vertical`.
+### 3. Performance dashboard (optional)
+Build a simple Supabase query that surfaces weekly:
+- Top performing post by platform (by engagement score)
+- Which format (news_reaction, reel, carousel, text) drives most impressions
+- Which time slot outperforms — feed back into scheduler
+
+### 4. TikTok + YouTube Shorts (when tokens arrive)
+- `TIKTOK_ACCESS_TOKEN` → unlocks `distributeVideo()` TikTok path
+- `YOUTUBE_CLIENT_ID/SECRET/REFRESH_TOKEN` → unlocks YouTube Shorts
+- `YOUTUBE_CHANNEL_ID` → enables daily youtube-cutter RSS check at 11am
 
 ---
 
-## Key files
-- `agent/generate-video.js` — main pipeline (CTA + visual generation + Runway)
-- `agent/runway.js` — Runway Gen-3 image-to-video client
+## Reference files
+- `tasks/lessons.md` — All mistakes made + exact fixes. READ THIS before building.
+- `RESULTS.md` — Full build history, test results, architecture diagram
+- `CLAUDE.md` — Tech stack, env vars, LinkedIn API notes
+- `agent/generate-video.js` — Main video pipeline
 - `remotion-videos/src/compositions/CarouselSlide.tsx` — BCG carousel template
-- `remotion-videos/src/compositions/HookReveal.tsx` — VisualCard with Video/Img toggle
-- `remotion-videos/src/compositions/ListCountdown.tsx` — Visual interface (has clipFile)
-- `remotion-videos/src/Root.tsx` — Remotion composition registry
-- `test-reel.js` — HookRevealVertical pipeline test
-- `test-carousel.js` — CarouselSlideVertical pipeline test
+- `remotion-videos/src/compositions/HookReveal.tsx` — HookReveal with floating image cards
+- `remotion-videos/src/compositions/ListCountdown.tsx` — Countdown style
+- `modules/news-agent.js` — News reactive agent (all 3 platforms)
+- `scheduler.js` — Full cron schedule
+
+## Test commands
+```bash
+node index.js --test                    # LinkedIn test run
+node index.js --test-instagram          # Instagram carousel
+node index.js --test-threads            # Threads test
+node run-reel.js "your topic"           # Custom Instagram Reel
+node test-post3.js                      # Threads video post
+node test-threads-triple.js             # All 3 Threads types
+node modules/carousel-generator.js instagram "topic"
+node modules/carousel-generator.js threads "topic"
+```
