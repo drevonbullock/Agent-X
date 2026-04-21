@@ -124,6 +124,51 @@ Write only the post text. Follow the format exactly.`;
   return { postText, format };
 }
 
+// ─── THREADS POST ────────────────────────────────────────────────────────────
+// Short-form, punchy, under 400 chars. No hashtags. Threads native voice.
+
+const THREADS_FORMATS = [
+  "One sharp observation about AI or automation that business owners don't realize. No explanation. No hashtags. Under 280 characters.",
+  "A 3-line breakdown: line 1 is the hook, line 2 is the insight, line 3 is the punchline. Under 320 characters total. No hashtags.",
+  "An uncomfortable truth about hiring, AI, or running a business. Single paragraph. Under 350 characters. No hashtags.",
+  "Start with a number. '3 things I stopped doing once I automated X.' Three short bullets. Under 380 characters total. No hashtags.",
+  "A hot contrast: what everyone does vs what actually works. Two sentences max. Under 260 characters. No hashtags.",
+];
+
+const THREADS_TOPICS = [
+  "AI replacing repetitive work",
+  "why most automation fails",
+  "building systems instead of grinding",
+  "what founders waste time on",
+  "AI tools that actually save hours",
+  "the real cost of doing things manually",
+  "solo founders using AI to look like a team",
+  "why your chatbot isn't converting",
+];
+
+export async function generateThreadsPost() {
+  const format = THREADS_FORMATS[Math.floor(Math.random() * THREADS_FORMATS.length)];
+  const topic = THREADS_TOPICS[Math.floor(Math.random() * THREADS_TOPICS.length)];
+  console.log(`[Threads] Generating post | Topic: ${topic}`);
+
+  const message = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 256,
+    messages: [{
+      role: "user",
+      content: `${VOICE}
+
+Topic: ${topic}
+
+${format}
+
+Write only the post text. No quotes around it.`,
+    }],
+  });
+
+  return message.content[0].text.trim();
+}
+
 // ─── VIDEO MODE ──────────────────────────────────────────────────────────────
 // Returns { caption, videoScript, videoStyle } for Remotion rendering.
 // caption   → short hook posted as the LinkedIn caption above the video

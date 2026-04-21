@@ -12,7 +12,7 @@ export const AGENT_CONFIG = {
   videoCadence: parseInt(process.env.VIDEO_CADENCE ?? "10", 10),
 };
 
-import { generateLinkedInPost, generateVideoPost } from "./agent/generate-post.js";
+import { generateLinkedInPost, generateVideoPost, generateThreadsPost } from "./agent/generate-post.js";
 import { generateImage } from "./agent/generate-image.js";
 import { generateVideo } from "./agent/generate-video.js";
 import { postToLinkedIn } from "./agent/post-to-linkedin.js";
@@ -168,12 +168,11 @@ export async function runThreads() {
     }
   }
 
-  // Text post
+  // Text post — Threads-native short format
   try {
-    const { postText, format } = await generateLinkedInPost();
-    const trimmed = postText.slice(0, 500);
-    const { postId, postUrl } = await postTextToThreads(trimmed);
-    await logPost({ postId, postUrl, postText: trimmed, format, postType: "text", platform: "threads" });
+    const postText = await generateThreadsPost();
+    const { postId, postUrl } = await postTextToThreads(postText);
+    await logPost({ postId, postUrl, postText, format: "threads_native", postType: "text", platform: "threads" });
     console.log(`[Threads] Text posted: ${postUrl}\n`);
     return { postId, postUrl };
   } catch (err) {

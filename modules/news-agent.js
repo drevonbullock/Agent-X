@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import supabase from "../supabase/client.js";
 import { postToLinkedIn } from "../agent/post-to-linkedin.js";
 import { generateImage } from "../agent/generate-image.js";
+import { postTextToThreads } from "../distributors/threads.js";
 
 const client = new Anthropic();
 
@@ -16,6 +17,17 @@ const KEYWORDS = [
   "automation replace jobs",
   "AI customer service",
 ];
+
+const THREADS_REACTIVE_SYSTEM = `You are writing a reactive Threads post as Dre'von Bullock — AI automation builder in New York.
+
+A breaking news story just dropped. Write a short, punchy reaction. Threads native voice — like texting a smart friend.
+
+Rules:
+- Max 400 characters total
+- No hashtags
+- Lead with what this actually means for business owners
+- No filler phrases, no hype, no em dashes
+- One clear take. Could be a 2-liner or a short paragraph.`;
 
 const REACTIVE_SYSTEM = `You are writing a reactive LinkedIn post as Dre'von Bullock — AI automation builder in New York.
 A breaking news story was just published. Your job is to write a sharp, direct take on it.
@@ -64,6 +76,16 @@ async function markArticleSeen(article, posted = false) {
 
 // ─── POST GENERATION ──────────────────────────────────────────────────────────
 
+async function generateThreadsReactivePost(article) {
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 256,
+    system: THREADS_REACTIVE_SYSTEM,
+    messages: [{ role: "user", content: `Headline: ${article.title}\nSummary: ${article.description}` }],
+  });
+  return msg.content[0].text.trim().slice(0, 400);
+}
+
 async function generateReactivePost(article) {
   const prompt = `Breaking news article:
 
@@ -87,12 +109,12 @@ Write a reactive LinkedIn post about this story.`;
 
 // ─── SUPABASE LOG ─────────────────────────────────────────────────────────────
 
-async function logNewsPost(postId, postUrl, postText, articleUrl) {
+async function logNewsPost(postId, postUrl, postText, articleUrl, platform = "linkedin") {
   const hook = postText.split(/[.!?\n]/)[0].trim().slice(0, 200);
   await supabase.from("posts").insert({
     content: postText,
-    platform: "linkedin",
-    post_type: "image",
+    platform,
+    post_type: platform === "threads" ? "text" : "image",
     post_id: postId,
     post_url: postUrl,
     hook,
@@ -105,7 +127,7 @@ async function logNewsPost(postId, postUrl, postText, articleUrl) {
 const DAILY_CAP = 3;
 const COOLDOWN_HOURS = 4;
 
-async function canPost() {
+async function canPost(platform = "linkedin") {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
@@ -113,16 +135,17 @@ async function canPost() {
     .from("posts")
     .select("created_at")
     .eq("format", "news_reaction")
+    .eq("platform", platform)
     .gte("created_at", todayStart.toISOString())
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.warn(`[NewsAgent] Cap check failed: ${error.message} — allowing post`);
+    console.warn(`[NewsAgent] Cap check failed (${platform}): ${error.message} — allowing post`);
     return true;
   }
 
   if ((data?.length ?? 0) >= DAILY_CAP) {
-    console.log(`[NewsAgent] Daily cap reached (${data.length}/${DAILY_CAP}) — skipping`);
+    console.log(`[NewsAgent] ${platform} daily cap reached (${data.length}/${DAILY_CAP}) — skipping`);
     return false;
   }
 
@@ -130,7 +153,7 @@ async function canPost() {
     const lastPostAt = new Date(data[0].created_at);
     const hoursSince = (Date.now() - lastPostAt.getTime()) / 3_600_000;
     if (hoursSince < COOLDOWN_HOURS) {
-      console.log(`[NewsAgent] Cooldown active — ${hoursSince.toFixed(1)}h since last post (need ${COOLDOWN_HOURS}h) — skipping`);
+      console.log(`[NewsAgent] ${platform} cooldown active — ${hoursSince.toFixed(1)}h since last (need ${COOLDOWN_HOURS}h) — skipping`);
       return false;
     }
   }
@@ -143,7 +166,12 @@ async function canPost() {
 export async function checkAndPost() {
   console.log(`[NewsAgent] Checking for breaking news...`);
 
-  if (!(await canPost())) return;
+  const [linkedinOk, threadsOk] = await Promise.all([
+    canPost("linkedin"),
+    canPost("threads"),
+  ]);
+
+  if (!linkedinOk && !threadsOk) return;
 
   let articles;
   try {
@@ -168,31 +196,35 @@ export async function checkAndPost() {
   console.log(`[NewsAgent] New story: "${target.title}"`);
   await markArticleSeen(target, false);
 
-  // Generate reactive post
-  let postText;
-  try {
-    postText = await generateReactivePost(target);
-    console.log(`[NewsAgent] Post generated (${postText.length} chars)`);
-  } catch (err) {
-    console.error(`[NewsAgent] Post generation failed: ${err.message}`);
-    return;
+  // ── LinkedIn ────────────────────────────────────────────────────────────────
+  if (linkedinOk) {
+    try {
+      const postText = await generateReactivePost(target);
+      console.log(`[NewsAgent] LinkedIn post generated (${postText.length} chars)`);
+
+      let imageBuffer = null;
+      try { imageBuffer = await generateImage(postText); } catch { /* text-only ok */ }
+
+      const { postId, postUrl } = await postToLinkedIn(postText, imageBuffer, null);
+      console.log(`[NewsAgent] LinkedIn posted! ID: ${postId} | ${postUrl}`);
+      await markArticleSeen(target, true);
+      await logNewsPost(postId, postUrl, postText, target.url, "linkedin");
+    } catch (err) {
+      console.error(`[NewsAgent] LinkedIn post failed: ${err.message}`);
+    }
   }
 
-  // Generate image
-  let imageBuffer = null;
-  try {
-    imageBuffer = await generateImage(postText);
-  } catch {
-    // text-only is fine
-  }
+  // ── Threads ─────────────────────────────────────────────────────────────────
+  if (threadsOk && process.env.THREADS_ACCESS_TOKEN) {
+    try {
+      const postText = await generateThreadsReactivePost(target);
+      console.log(`[NewsAgent] Threads post generated (${postText.length} chars)`);
 
-  // Post to LinkedIn
-  try {
-    const { postId, postUrl } = await postToLinkedIn(postText, imageBuffer, null);
-    console.log(`[NewsAgent] Posted! ID: ${postId} | URL: ${postUrl}`);
-    await markArticleSeen(target, true);
-    await logNewsPost(postId, postUrl, postText, target.url);
-  } catch (err) {
-    console.error(`[NewsAgent] LinkedIn post failed: ${err.message}`);
+      const { postId, postUrl } = await postTextToThreads(postText);
+      console.log(`[NewsAgent] Threads posted! ID: ${postId} | ${postUrl}`);
+      await logNewsPost(postId, postUrl, postText, target.url, "threads");
+    } catch (err) {
+      console.error(`[NewsAgent] Threads post failed: ${err.message}`);
+    }
   }
 }
