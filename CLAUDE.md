@@ -1,7 +1,7 @@
 # Agent X — Project Context for Claude
 
 ## What This Is
-Agent X is an automated content generation and posting bot. It runs on a Node.js schedule (twice per hour, 24/7 EST: :00 and :30) and posts AI-generated content — text + image — to LinkedIn.
+Agent X is an automated content generation and posting bot. It runs on a Node.js schedule (3 posts per 2-hour block, every 40 min, 24/7 EST: :00 and :40 of even hours, :20 of odd hours) and posts AI-generated content — text + image — to LinkedIn. The news agent keeps running on its own 30-min cron and also posts when fresh news drops.
 
 ## Tech Stack
 - Runtime: Node.js (ES Modules, `"type": "module"` in package.json)
@@ -37,7 +37,7 @@ images/
   chart.js             — ChartJS chart (1200x675, picks from 4 preset datasets)
 
 index.js               — Orchestrates: generateLinkedInPost → generateImage → postToLinkedIn
-scheduler.js           — Runs runAgent() twice per hour (:00 with image, :30 text only) 24/7 EST via node-cron
+scheduler.js           — Runs runAgent() 3x per 2-hour block (slot 1 :00 even hrs with image, slot 2 :40 even hrs text, slot 3 :20 odd hrs text), 24/7 EST. Also runs news agent every 30 min (posts when news drops).
 ```
 
 ## LinkedIn API Notes
@@ -85,7 +85,7 @@ node auth/linkedin-auth.js
 # Test a single run:
 node index.js --test
 
-# Start scheduled bot (twice per hour, 24/7 EST):
+# Start scheduled bot (3 posts per 2 hours, 24/7 EST):
 node index.js
 ```
 
@@ -102,8 +102,9 @@ Each post uses one of 6 structured formats, selected randomly in `generate-post.
 | **One-Liner Drop** | Single sentence. No explanation. No hashtags. | 1 sentence |
 
 ## Image Frequency
-- **:00 of each hour** — image attached (if post is long enough)
-- **:30 of each hour** — text only, no image
+- **Slot 1 (:00 of even hours)** — image attached (if post is long enough)
+- **Slot 2 (:40 of even hours)** — text only, no image
+- **Slot 3 (:20 of odd hours)** — text only, no image
 
 Short posts (under 6 sentences) never get an image, regardless of slot. Logic lives in `index.js` (`isShortPost()`) and `scheduler.js` (`withImage` flag per slot).
 

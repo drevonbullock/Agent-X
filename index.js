@@ -16,10 +16,11 @@ export const AGENT_CONFIG = {
 
   // Posting schedule — passed as withImage flags to runAgent
   // Currently controlled by scheduler.js; listed here for reference.
-  // Twice per hour, 24/7: :00 runs with image, :30 is text only.
+  // 3 posts per 2-hour block (every 40 min), 24/7. Slot 1 runs with image; slots 2 and 3 text only.
   schedule: [
-    { label: ":00 (every hour)", withImage: true  },
-    { label: ":30 (every hour)", withImage: false },
+    { label: ":00 of even hour (slot 1)", withImage: true  },
+    { label: ":40 of even hour (slot 2)", withImage: false },
+    { label: ":20 of odd hour  (slot 3)", withImage: false },
   ],
 
   // Video cadence — every Nth post triggers video mode
