@@ -5,23 +5,19 @@ import { checkPerf } from "./modules/variation-engine.js";
 import { runWeeklyAnalysis } from "./modules/feedback-loop.js";
 
 export function startScheduler() {
-  // ── CORE CONTENT POSTS (v1 — unchanged) ─────────────────────────────────
-  cron.schedule("0 9 * * *",  async () => {
-    console.log(`[${new Date().toISOString()}] Scheduled run: 9:00 AM EST`);
+  // ── CORE CONTENT POSTS: twice per hour, 24/7 ─────────────────────────────
+  // :00 of every hour — post with image (image skipped automatically for short posts)
+  cron.schedule("0 * * * *", async () => {
+    console.log(`[${new Date().toISOString()}] Scheduled run: top of hour (image)`);
     try { await runAgent(true); }
-    catch (err) { console.error(`[Scheduler] 9am run failed: ${err.message}`); }
+    catch (err) { console.error(`[Scheduler] :00 run failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  cron.schedule("0 13 * * *", async () => {
-    console.log(`[${new Date().toISOString()}] Scheduled run: 1:00 PM EST`);
+  // :30 of every hour — text only
+  cron.schedule("30 * * * *", async () => {
+    console.log(`[${new Date().toISOString()}] Scheduled run: half hour (text only)`);
     try { await runAgent(false); }
-    catch (err) { console.error(`[Scheduler] 1pm run failed: ${err.message}`); }
-  }, { timezone: "America/New_York" });
-
-  cron.schedule("0 18 * * *", async () => {
-    console.log(`[${new Date().toISOString()}] Scheduled run: 6:00 PM EST`);
-    try { await runAgent(false); }
-    catch (err) { console.error(`[Scheduler] 6pm run failed: ${err.message}`); }
+    catch (err) { console.error(`[Scheduler] :30 run failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── NEWS AGENT — every 30 minutes (v2) ──────────────────────────────────
@@ -43,7 +39,7 @@ export function startScheduler() {
   }, { timezone: "America/New_York" });
 
   console.log("Scheduler active:");
-  console.log("  Content posts : 9am, 1pm, 6pm EST (daily)");
+  console.log("  Content posts : :00 and :30 every hour, 24/7 (EST)");
   console.log("  News agent    : every 30 minutes");
   console.log("  Variation eng : every 6 hours");
   console.log("  Feedback loop : Sundays at midnight");

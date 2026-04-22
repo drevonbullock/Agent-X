@@ -1,7 +1,7 @@
 # Agent X — Project Context for Claude
 
 ## What This Is
-Agent X is an automated content generation and posting bot. It runs on a Node.js schedule (9 AM, 1 PM, 6 PM EST) and posts AI-generated content — text + image — to LinkedIn.
+Agent X is an automated content generation and posting bot. It runs on a Node.js schedule (twice per hour, 24/7 EST: :00 and :30) and posts AI-generated content — text + image — to LinkedIn.
 
 ## Tech Stack
 - Runtime: Node.js (ES Modules, `"type": "module"` in package.json)
@@ -37,7 +37,7 @@ images/
   chart.js             — ChartJS chart (1200x675, picks from 4 preset datasets)
 
 index.js               — Orchestrates: generateLinkedInPost → generateImage → postToLinkedIn
-scheduler.js           — Runs runAgent() at 9 AM, 1 PM, 6 PM EST via node-cron
+scheduler.js           — Runs runAgent() twice per hour (:00 with image, :30 text only) 24/7 EST via node-cron
 ```
 
 ## LinkedIn API Notes
@@ -85,7 +85,7 @@ node auth/linkedin-auth.js
 # Test a single run:
 node index.js --test
 
-# Start scheduled bot (9 AM, 1 PM, 6 PM EST):
+# Start scheduled bot (twice per hour, 24/7 EST):
 node index.js
 ```
 
@@ -102,9 +102,8 @@ Each post uses one of 6 structured formats, selected randomly in `generate-post.
 | **One-Liner Drop** | Single sentence. No explanation. No hashtags. | 1 sentence |
 
 ## Image Frequency
-- **9:00 AM** — image attached (if post is long enough)
-- **1:00 PM** — text only, no image
-- **6:00 PM** — text only, no image
+- **:00 of each hour** — image attached (if post is long enough)
+- **:30 of each hour** — text only, no image
 
 Short posts (under 6 sentences) never get an image, regardless of slot. Logic lives in `index.js` (`isShortPost()`) and `scheduler.js` (`withImage` flag per slot).
 

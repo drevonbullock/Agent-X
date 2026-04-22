@@ -15,11 +15,11 @@ export const AGENT_CONFIG = {
   platforms:    (process.env.BRAND_PLATFORMS   ?? "linkedin").split(",").map((p) => p.trim()),
 
   // Posting schedule — passed as withImage flags to runAgent
-  // Currently controlled by scheduler.js; listed here for reference
+  // Currently controlled by scheduler.js; listed here for reference.
+  // Twice per hour, 24/7: :00 runs with image, :30 is text only.
   schedule: [
-    { label: "9:00 AM",  withImage: true  },
-    { label: "1:00 PM",  withImage: false },
-    { label: "6:00 PM",  withImage: false },
+    { label: ":00 (every hour)", withImage: true  },
+    { label: ":30 (every hour)", withImage: false },
   ],
 
   // Video cadence — every Nth post triggers video mode
