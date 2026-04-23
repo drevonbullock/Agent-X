@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { execSync } from "child_process";
 
 const TOPAZ_BASE = "https://api.topazlabs.com";
@@ -12,14 +13,78 @@ function ffprobePath() {
   return process.platform === "linux" ? "/usr/bin/ffprobe" : "/opt/homebrew/bin/ffprobe";
 }
 
-// Still image 2× upscale via ffmpeg Lanczos (Topaz Video API is video-only)
-export function upscaleImage(inputPath, outputPath) {
+// ─── IMAGE UPSCALE (Topaz Image API) ─────────────────────────────────────────
+// Auth uses X-API-Key header (different from video API Bearer token).
+// Uses async endpoint + poll + download flow.
+// Falls back to ffmpeg Lanczos if Topaz call fails.
+
+function getImageDimensions(filePath) {
+  const raw = execSync(
+    `${ffprobePath()} -v quiet -print_format json -show_streams "${filePath}"`,
+    { encoding: "utf8" }
+  );
+  const stream = JSON.parse(raw).streams[0];
+  return { width: stream.width, height: stream.height };
+}
+
+export async function upscaleImageWithTopaz(inputPath, outputPath) {
+  const apiKey = process.env.TOPAZ_API_KEY;
+  if (!apiKey) throw new Error("[Topaz Image] TOPAZ_API_KEY not set");
+
+  const { width, height } = getImageDimensions(inputPath);
+  console.log(`[Topaz Image] ${width}×${height} → ${width * 2}×${height * 2} (Standard V2)`);
+
+  const imgHeaders = { "X-API-Key": apiKey };
+
+  // Submit — multipart form with the image file
+  const form = new FormData();
+  form.append("model", "Standard V2");
+  form.append("output_format", "jpeg");
+  form.append("output_width",  String(width  * 2));
+  form.append("output_height", String(height * 2));
+  form.append(
+    "image",
+    new Blob([fs.readFileSync(inputPath)], { type: "image/jpeg" }),
+    path.basename(inputPath)
+  );
+
+  const submitRes = await fetch("https://api.topazlabs.com/image/v1/enhance/async", {
+    method: "POST",
+    headers: imgHeaders,
+    body: form,
+  });
+  if (!submitRes.ok) {
+    const err = await submitRes.text();
+    throw new Error(`[Topaz Image] Submit failed ${submitRes.status}: ${err}`);
+  }
+  const { process_id } = await submitRes.json();
+  console.log(`[Topaz Image] Process ID: ${process_id}`);
+
+  // Poll for completion (every 5s, up to 5 min)
+  for (let i = 0; i < 60; i++) {
+    await new Promise((r) => setTimeout(r, 5000));
+    const s = await (await fetch(`https://api.topazlabs.com/image/v1/status/${process_id}`, { headers: imgHeaders })).json();
+    console.log(`[Topaz Image] ${s.status ?? "pending"}`);
+    if (s.status === "Completed") break;
+    if (s.status === "Failed") throw new Error(`[Topaz Image] Job failed: ${JSON.stringify(s)}`);
+  }
+
+  // Download
+  const dlRes = await fetch(`https://api.topazlabs.com/image/v1/download/${process_id}`, { headers: imgHeaders });
+  if (!dlRes.ok) throw new Error(`[Topaz Image] Download failed: ${dlRes.status}`);
+  const buf = Buffer.from(await dlRes.arrayBuffer());
+  fs.writeFileSync(outputPath, buf);
+  console.log(`[Topaz Image] Saved: ${outputPath} (${(buf.length / 1024 / 1024).toFixed(1)} MB)`);
+  return outputPath;
+}
+
+// ffmpeg Lanczos fallback — used if Topaz image API is unavailable
+export function upscaleImageFfmpeg(inputPath, outputPath) {
   execSync(
     `${ffmpegPath()} -y -i "${inputPath}" -vf "scale=iw*2:ih*2:flags=lanczos" "${outputPath}"`,
     { stdio: "inherit", timeout: 30000 }
   );
-  const sizeMB = (fs.statSync(outputPath).size / 1024 / 1024).toFixed(1);
-  console.log(`[Upscale] Image 2×: ${outputPath} (${sizeMB} MB)`);
+  console.log(`[Upscale] Image 2× Lanczos: ${outputPath}`);
 }
 
 function getVideoMeta(filePath) {

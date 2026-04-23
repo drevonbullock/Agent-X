@@ -6,7 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { generateAllVoiceovers } from "./elevenlabs.js";
 import { generateGeminiImage } from "../images/gemini.js";
 import { generateRunwayClip } from "./runway.js";
-import { upscaleWithTopaz, upscaleImage } from "./topaz.js";
+import { upscaleWithTopaz, upscaleImageWithTopaz, upscaleImageFfmpeg } from "./topaz.js";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const PUBLIC_DIR = path.resolve("remotion-videos/public");
@@ -91,10 +91,14 @@ Return ONLY valid JSON, no explanation:
     const imageFile    = `visual_${screen.screen}_${screenIdx}.jpg`;
     fs.writeFileSync(path.join(PUBLIC_DIR, rawImageFile), imgBuffer);
     try {
-      upscaleImage(path.join(PUBLIC_DIR, rawImageFile), path.join(PUBLIC_DIR, imageFile));
-    } catch {
-      // upscale failed — fall back to raw image
-      fs.copyFileSync(path.join(PUBLIC_DIR, rawImageFile), path.join(PUBLIC_DIR, imageFile));
+      await upscaleImageWithTopaz(path.join(PUBLIC_DIR, rawImageFile), path.join(PUBLIC_DIR, imageFile));
+    } catch (topazImgErr) {
+      console.warn(`[Agent X] Topaz image upscale failed — using ffmpeg Lanczos: ${topazImgErr.message}`);
+      try {
+        upscaleImageFfmpeg(path.join(PUBLIC_DIR, rawImageFile), path.join(PUBLIC_DIR, imageFile));
+      } catch {
+        fs.copyFileSync(path.join(PUBLIC_DIR, rawImageFile), path.join(PUBLIC_DIR, imageFile));
+      }
     }
     console.log(`[Agent X] Visual image saved: ${imageFile}`);
 
