@@ -6,6 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { generateAllVoiceovers } from "./elevenlabs.js";
 import { generateGeminiImage } from "../images/gemini.js";
 import { generateRunwayClip } from "./runway.js";
+import { upscaleWithTopaz } from "./topaz.js";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const PUBLIC_DIR = path.resolve("remotion-videos/public");
@@ -255,21 +256,18 @@ export async function generateVideo(videoScript, videoStyle = "list_countdown") 
   if (isVertical) renderProps.bgImage = "dre_vertical_v3.png";
   fs.writeFileSync(propsFile, JSON.stringify(renderProps));
 
-  // Vertical: render 4K master (2160×3840, CRF=15), then compress to web copy for upload
-  // Square: standard 1080×1080 with higher-quality encoding
-  const qualityFlags = isVertical
-    ? ["--scale=2", "--crf=15"]
-    : ["--crf=18"];
-
-  const masterPath = isVertical
-    ? path.resolve("generated_imgs/output-vertical-4k.mp4")
+  // Vertical: render 1080×1920, Topaz 2× upscale → 2160×3840, then faststart remux
+  // Square/landscape: standard render, no upscale
+  const qualityFlags = ["--crf=18"];
+  const renderPath = isVertical
+    ? path.resolve("generated_imgs/output-vertical-1080.mp4")
     : outputPath;
 
   const masterCmd = [
     "npx remotion render",
     `"${remotionRoot}"`,
     compositionId,
-    `--output="${masterPath}"`,
+    `--output="${renderPath}"`,
     `--props="${propsFile}"`,
     "--log=verbose",
     "--overwrite",
@@ -288,22 +286,30 @@ export async function generateVideo(videoScript, videoStyle = "list_countdown") 
     try { fs.unlinkSync(propsFile); } catch { /* ignore */ }
   }
 
-  // For vertical: remux 4K master with faststart for streaming upload (stream copy, no re-encode)
   if (isVertical) {
-    console.log(`[Agent X] Remuxing 4K master for upload (faststart)...`);
-    const ffmpegCmd = [
-      `${process.platform === "linux" ? "/usr/bin/ffmpeg" : "/opt/homebrew/bin/ffmpeg"} -y`,
-      `-i "${masterPath}"`,
-      "-c copy",
-      "-movflags +faststart",
-      `"${outputPath}"`,
-    ].join(" ");
-    execSync(ffmpegCmd, { stdio: "inherit", timeout: 3 * 60 * 1000 });
+    // Topaz 2× upscale: 1080×1920 → 2160×3840
+    const topazPath = path.resolve("generated_imgs/output-vertical-topaz.mp4");
+    if (process.env.TOPAZ_API_KEY) {
+      try {
+        await upscaleWithTopaz(renderPath, topazPath);
+      } catch (err) {
+        console.warn(`[Agent X] Topaz upscale failed — falling back to 1080p: ${err.message}`);
+        fs.copyFileSync(renderPath, topazPath);
+      }
+    } else {
+      console.warn("[Agent X] TOPAZ_API_KEY not set — skipping upscale, using 1080p render");
+      fs.copyFileSync(renderPath, topazPath);
+    }
+
+    // Remux for streaming upload (faststart, stream copy — no re-encode)
+    const ffmpeg = process.platform === "linux" ? "/usr/bin/ffmpeg" : "/opt/homebrew/bin/ffmpeg";
+    execSync(
+      `${ffmpeg} -y -i "${topazPath}" -c copy -movflags +faststart "${outputPath}"`,
+      { stdio: "inherit", timeout: 3 * 60 * 1000 }
+    );
     const sizeMB = (fs.statSync(outputPath).size / 1024 / 1024).toFixed(1);
-    console.log(`[Agent X] Upload-ready 4K: ${outputPath} (${sizeMB} MB)`);
+    console.log(`[Agent X] Upload-ready: ${outputPath} (${sizeMB} MB)`);
   }
 
-  const masterSizeMB = (fs.statSync(masterPath).size / 1024 / 1024).toFixed(1);
-  console.log(`[Agent X] 4K master: ${masterPath} (${masterSizeMB} MB)`);
   return outputPath;
 }
