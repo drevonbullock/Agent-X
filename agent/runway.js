@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-const RUNWAY_API = "https://api.runwayml.com/v1";
+const RUNWAY_API = "https://api.dev.runwayml.com/v1";
 const POLL_INTERVAL_MS = 4000;
 const POLL_TIMEOUT_MS = 120_000;
 
