@@ -4,8 +4,22 @@ import { execSync } from "child_process";
 const TOPAZ_BASE = "https://api.topazlabs.com";
 const PART_SIZE = 10 * 1024 * 1024; // 10 MB chunks
 
+function ffmpegPath() {
+  return process.platform === "linux" ? "/usr/bin/ffmpeg" : "/opt/homebrew/bin/ffmpeg";
+}
+
 function ffprobePath() {
   return process.platform === "linux" ? "/usr/bin/ffprobe" : "/opt/homebrew/bin/ffprobe";
+}
+
+// Still image 2× upscale via ffmpeg Lanczos (Topaz Video API is video-only)
+export function upscaleImage(inputPath, outputPath) {
+  execSync(
+    `${ffmpegPath()} -y -i "${inputPath}" -vf "scale=iw*2:ih*2:flags=lanczos" "${outputPath}"`,
+    { stdio: "inherit", timeout: 30000 }
+  );
+  const sizeMB = (fs.statSync(outputPath).size / 1024 / 1024).toFixed(1);
+  console.log(`[Upscale] Image 2×: ${outputPath} (${sizeMB} MB)`);
 }
 
 function getVideoMeta(filePath) {

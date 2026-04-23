@@ -6,7 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { generateAllVoiceovers } from "./elevenlabs.js";
 import { generateGeminiImage } from "../images/gemini.js";
 import { generateRunwayClip } from "./runway.js";
-import { upscaleWithTopaz } from "./topaz.js";
+import { upscaleWithTopaz, upscaleImage } from "./topaz.js";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const PUBLIC_DIR = path.resolve("remotion-videos/public");
@@ -84,11 +84,18 @@ Return ONLY valid JSON, no explanation:
     // Find timestamp
     const at = Math.max(0.5, findPhraseTime(wordTimestamps, json.triggerPhrase) - 0.3);
 
-    // Generate still image
+    // Generate still image, then 2× upscale with ffmpeg Lanczos
     console.log(`[Agent X] Visual for screen ${screen.screen}: "${json.triggerPhrase}" at ${at.toFixed(1)}s`);
     const imgBuffer = await generateGeminiImage(json.imagePrompt);
-    const imageFile = `visual_${screen.screen}_${screenIdx}.jpg`;
-    fs.writeFileSync(path.join(PUBLIC_DIR, imageFile), imgBuffer);
+    const rawImageFile = `visual_${screen.screen}_${screenIdx}_raw.jpg`;
+    const imageFile    = `visual_${screen.screen}_${screenIdx}.jpg`;
+    fs.writeFileSync(path.join(PUBLIC_DIR, rawImageFile), imgBuffer);
+    try {
+      upscaleImage(path.join(PUBLIC_DIR, rawImageFile), path.join(PUBLIC_DIR, imageFile));
+    } catch {
+      // upscale failed — fall back to raw image
+      fs.copyFileSync(path.join(PUBLIC_DIR, rawImageFile), path.join(PUBLIC_DIR, imageFile));
+    }
     console.log(`[Agent X] Visual image saved: ${imageFile}`);
 
     // Attempt Runway animated clip — falls back to static image if key missing or fails
