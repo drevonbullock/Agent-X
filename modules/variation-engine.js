@@ -5,7 +5,6 @@ import { postToLinkedIn } from "../agent/post-to-linkedin.js";
 
 const client = new Anthropic();
 
-// Engagement threshold — a post must exceed this to trigger variations
 const WIN_THRESHOLD_LIKES = 15;
 const WIN_THRESHOLD_VIEWS = 500;
 
@@ -41,9 +40,11 @@ async function fetchWinners() {
   return data ?? [];
 }
 
-// ─── GENERATE VARIATIONS ─────────────────────────────────────────────────────
+// ─── GENERATE + QUEUE VARIATIONS ─────────────────────────────────────────────
+// Writes all 5 variations to variations_queue with scheduled_for timestamps.
+// No setTimeout — crash-safe across Railway restarts.
 
-async function generateVariations(post) {
+async function queueVariations(post) {
   const msg = await client.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 3072,
@@ -55,35 +56,80 @@ async function generateVariations(post) {
   });
 
   const raw = msg.content[0].text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
-  return JSON.parse(raw);
+  const variations = JSON.parse(raw);
+
+  const now = Date.now();
+  const rows = variations.map((v, i) => ({
+    parent_post_id: post.id,
+    variation_number: i + 1,
+    content: `${v.hook}\n\n${v.body}`.trim(),
+    platform: "linkedin",
+    hook: v.hook.slice(0, 200),
+    format: v.variation_type,
+    scheduled_for: new Date(now + i * 6 * 60 * 60 * 1000).toISOString(),
+  }));
+
+  const { error } = await supabase.from("variations_queue").insert(rows);
+  if (error) throw new Error(`Queue insert failed: ${error.message}`);
+
+  console.log(`[VariationEngine] Queued ${rows.length} variations for post ${post.id}`);
 }
 
-// ─── POST VARIATION ───────────────────────────────────────────────────────────
+// ─── PROCESS QUEUE ────────────────────────────────────────────────────────────
+// Exported so scheduler can run it every 30 min independently of checkPerf.
+// Posts any queued variations whose scheduled_for has passed.
 
-async function postVariation(parentPost, variation, variationNumber) {
-  const postText = `${variation.hook}\n\n${variation.body}`.trim();
+export async function processVariationQueue() {
+  const { data: pending, error } = await supabase
+    .from("variations_queue")
+    .select("*")
+    .eq("sent", false)
+    .lte("scheduled_for", new Date().toISOString())
+    .order("scheduled_for", { ascending: true })
+    .limit(5);
 
-  const { postId, postUrl } = await postToLinkedIn(postText, null, null);
-  const hook = variation.hook.slice(0, 200);
+  if (error) {
+    console.error(`[VariationEngine] Queue fetch failed: ${error.message}`);
+    return;
+  }
 
-  await supabase.from("variations").insert({
-    parent_post_id: parentPost.id,
-    variation_number: variationNumber,
-    content: postText,
-    platform: "linkedin",
-    hook,
-    format: variation.variation_type,
-    post_id: postId,
-    post_url: postUrl,
-  });
+  if (!pending?.length) return;
+  console.log(`[VariationEngine] Processing ${pending.length} queued variation(s)...`);
 
-  console.log(`[VariationEngine] Posted variation ${variationNumber}: ${postId}`);
-  return postId;
+  for (const item of pending) {
+    try {
+      const { postId, postUrl } = await postToLinkedIn(item.content, null, null);
+
+      await supabase
+        .from("variations_queue")
+        .update({ sent: true, post_id: postId, post_url: postUrl })
+        .eq("id", item.id);
+
+      // Mirror to variations table for hook-tester + feedback-loop
+      await supabase.from("variations").insert({
+        parent_post_id: item.parent_post_id,
+        variation_number: item.variation_number,
+        content: item.content,
+        platform: item.platform,
+        hook: item.hook,
+        format: item.format,
+        post_id: postId,
+        post_url: postUrl,
+      });
+
+      console.log(`[VariationEngine] Posted variation ${item.variation_number}: ${postId}`);
+    } catch (err) {
+      console.error(`[VariationEngine] Variation ${item.variation_number} (${item.id}) failed: ${err.message}`);
+    }
+  }
 }
 
 // ─── MAIN: CHECK AND GENERATE ─────────────────────────────────────────────────
 
 export async function checkPerf() {
+  // Process any due queue items first
+  await processVariationQueue();
+
   console.log(`[VariationEngine] Checking for high-performing posts...`);
 
   let winners;
@@ -100,31 +146,15 @@ export async function checkPerf() {
   }
 
   for (const post of winners) {
-    console.log(`[VariationEngine] Processing winner: ${post.id} (${post.likes} likes)`);
+    console.log(`[VariationEngine] New winner: ${post.id} (${post.likes} likes)`);
 
-    let variations;
     try {
-      variations = await generateVariations(post);
+      await queueVariations(post);
     } catch (err) {
-      console.error(`[VariationEngine] Variation generation failed: ${err.message}`);
+      console.error(`[VariationEngine] Queue generation failed: ${err.message}`);
       continue;
     }
 
-    // Mark original as winner
     await supabase.from("posts").update({ is_winner: true }).eq("id", post.id);
-
-    // Post variations with 6-hour stagger — schedule via setTimeout (non-blocking)
-    for (let i = 0; i < variations.length; i++) {
-      const delayMs = i * 6 * 60 * 60 * 1000; // 6 hours apart
-      const variation = variations[i];
-      setTimeout(async () => {
-        try {
-          await postVariation(post, variation, i + 1);
-        } catch (err) {
-          console.error(`[VariationEngine] Variation ${i + 1} post failed: ${err.message}`);
-        }
-      }, delayMs);
-      console.log(`[VariationEngine] Variation ${i + 1} scheduled in ${i * 6}h`);
-    }
   }
 }

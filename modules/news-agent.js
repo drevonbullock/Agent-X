@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import supabase from "../supabase/client.js";
 import { postToLinkedIn } from "../agent/post-to-linkedin.js";
 import { generateImage } from "../agent/generate-image.js";
+import { generateVideo } from "../agent/generate-video.js";
 import { postTextToThreads } from "../distributors/threads.js";
 import { postImageToInstagram } from "../distributors/instagram.js";
 
@@ -140,6 +141,32 @@ Write a reactive LinkedIn post about this story.`;
   return msg.content[0].text.trim();
 }
 
+async function generateNewsVideoScript(article) {
+  const msg = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 512,
+    messages: [{
+      role: "user",
+      content: `You are writing a 4-screen LinkedIn news video script for Drevon Bullock — AI automation builder. Direct, no hype, business owner audience.
+
+Headline: ${article.title}
+Summary: ${article.description}
+
+Return ONLY valid JSON:
+{
+  "videoScript": [
+    { "screen": 1, "heading": "Breaking news hook, max 8 words", "body": "" },
+    { "screen": 2, "heading": "What happened, 5 words", "body": "2 sentence factual summary." },
+    { "screen": 3, "heading": "What this means, 5 words", "body": "Impact on business owners specifically." },
+    { "screen": 4, "heading": "Bottom line, 5 words", "body": "One sharp takeaway for founders." }
+  ]
+}`,
+    }],
+  });
+  const raw = msg.content[0].text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+  return JSON.parse(raw).videoScript;
+}
+
 // ─── SUPABASE LOG ─────────────────────────────────────────────────────────────
 
 async function logNewsPost(postId, postUrl, postText, articleUrl, platform = "linkedin") {
@@ -230,16 +257,23 @@ export async function checkAndPost() {
   console.log(`[NewsAgent] New story: "${target.title}"`);
   await markArticleSeen(target, false);
 
-  // ── LinkedIn ────────────────────────────────────────────────────────────────
+  // ── LinkedIn — NewsReactive video ───────────────────────────────────────────
   if (linkedinOk) {
     try {
       const postText = await generateReactivePost(target);
-      console.log(`[NewsAgent] LinkedIn post generated (${postText.length} chars)`);
+      console.log(`[NewsAgent] LinkedIn caption: ${postText.length} chars`);
 
-      let imageBuffer = null;
-      try { imageBuffer = await generateImage(postText); } catch { /* text-only ok */ }
+      let videoAsset = null;
+      try {
+        const videoScript = await generateNewsVideoScript(target);
+        console.log(`[NewsAgent] News video hook: "${videoScript[0]?.heading}"`);
+        const videoPath = await generateVideo(videoScript, "news_reactive");
+        videoAsset = { type: "video", path: videoPath };
+      } catch (videoErr) {
+        console.warn(`[NewsAgent] News video failed, posting text-only: ${videoErr.message}`);
+      }
 
-      const { postId, postUrl } = await postToLinkedIn(postText, imageBuffer, null);
+      const { postId, postUrl } = await postToLinkedIn(postText, null, videoAsset);
       console.log(`[NewsAgent] LinkedIn posted! ID: ${postId} | ${postUrl}`);
       await markArticleSeen(target, true);
       await logNewsPost(postId, postUrl, postText, target.url, "linkedin");

@@ -18,6 +18,7 @@ interface HookScreenProps {
   hasAudio: boolean;
   durationFrames: number;
   bgImage?: string;
+  topAligned?: boolean; // vertical reels: anchor heading near top safe zone
 }
 
 // The hook screen shown first in every video.
@@ -28,6 +29,7 @@ export const HookScreen: React.FC<HookScreenProps> = ({
   hasAudio,
   durationFrames,
   bgImage = "dre_square_v3.png",
+  topAligned = false,
 }) => {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
@@ -82,8 +84,9 @@ export const HookScreen: React.FC<HookScreenProps> = ({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: topAligned ? "flex-start" : "center",
         padding: "80px",
+        paddingTop: topAligned ? "300px" : "80px",
         opacity: opacity * fadeOut,
         position: "relative",
         overflow: "hidden",
@@ -186,6 +189,7 @@ export const HookScreen: React.FC<HookScreenProps> = ({
             maxWidth: "880px",
             lineHeight: 1.2,
             letterSpacing: "-0.01em",
+            textTransform: topAligned ? "uppercase" : "none",
           }}
         >
           {heading}

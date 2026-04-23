@@ -1,10 +1,11 @@
 import cron from "node-cron";
 import { runLinkedIn, runInstagram, runInstagramReel, runThreads } from "./index.js";
 import { checkAndPost } from "./modules/news-agent.js";
-import { checkPerf } from "./modules/variation-engine.js";
+import { checkPerf, processVariationQueue } from "./modules/variation-engine.js";
 import { runWeeklyAnalysis } from "./modules/feedback-loop.js";
 import { processYouTubeVideo } from "./modules/youtube-cutter.js";
 import { analyzeHookPerformance } from "./modules/hook-tester.js";
+import { pollThreadsReplies } from "./modules/comment-reply.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
@@ -72,6 +73,18 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] NewsAgent failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
+  // ── VARIATION QUEUE — every 30 minutes (crash-safe, survives restarts) ───
+  cron.schedule("*/30 * * * *", async () => {
+    try { await processVariationQueue(); }
+    catch (err) { console.error(`[Scheduler] VariationQueue failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  // ── COMMENT REPLIES — Threads every 15 minutes ────────────────────────────
+  cron.schedule("*/15 * * * *", async () => {
+    try { await pollThreadsReplies(); }
+    catch (err) { console.error(`[Scheduler] ThreadsReplies failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
   // ── VARIATION ENGINE — every 6 hours ─────────────────────────────────────
   cron.schedule("0 */6 * * *", async () => {
     try { await checkPerf(); }
@@ -125,9 +138,11 @@ export function startScheduler() {
   console.log("Scheduler active — all times EST:");
   console.log("  LinkedIn  : 9:00am (image), 1:00pm (text), 6:00pm (text)");
   console.log("  Instagram : 10:00am (Reel), 3:00pm (Carousel), 8:00pm (Reel)");
-  console.log("  Threads   : 8:30am, 12:30pm, 5:30pm (text | carousel every 3rd)");
+  console.log("  Threads   : 8:30am, 12:30pm, 5:30pm (text | carousel every 3rd | video every 5th)");
   console.log("  News agent: every 30 minutes");
+  console.log("  Var queue : every 30 minutes (crash-safe job queue)");
   console.log("  Variation : every 6 hours");
+  console.log("  Replies   : every 15 minutes (Threads polling)");
   console.log("  Feedback  : Sundays midnight");
   console.log("  YouTube   : 11:00am daily (if YOUTUBE_CHANNEL_ID set)");
   console.log("  HookTester: every 6 hours (:30 offset)");

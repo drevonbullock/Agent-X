@@ -1,6 +1,99 @@
 # AGENT X — BUILD RESULTS
-**Last updated:** 2026-04-20
-**Build sessions:** 6
+**Last updated:** 2026-04-21
+**Build sessions:** 7
+
+---
+
+## PHASE 9 — PRODUCTION HARDENING + COMMENT REPLIES + AUTO STYLE + NEWS VIDEO ✅ (Session 7)
+
+### What was built
+
+**Bug Fix — ffmpeg path (`agent/generate-video.js`)**
+- `ffmpeg` path now OS-aware: `/usr/bin/ffmpeg` on Linux (Railway), `/opt/homebrew/bin/ffmpeg` on Mac
+- `nixpacks.toml` updated: added `ffmpeg` to `nixPkgs` so Railway installs it at build time
+- Previous hardcoded Mac path was a guaranteed crash on Railway deploy
+
+**Bug Fix — Variation Engine crash-safe queue (`modules/variation-engine.js`)**
+- Replaced all `setTimeout`-based variation posting with a Supabase `variations_queue` table
+- Each variation is a row: `parent_post_id`, `scheduled_for` (staggered 6h apart), `sent` boolean
+- `processVariationQueue()` exported — polls for `sent=false AND scheduled_for <= now()`, posts, marks sent
+- Survives Railway restarts with zero lost jobs
+- `scheduler.js` runs `processVariationQueue()` on its own 30-min cron
+
+**Bug Fix — Shotstack watermark (`modules/youtube-cutter.js`, `modules/format-agent.js`)**
+- Both files now use `shotstackKey()` and `shotstackStage()` helpers
+- `SHOTSTACK_ENV=production` → uses `SHOTSTACK_API_KEY_PROD` + `v1` endpoint (no watermark)
+- Default (sandbox) still uses `SHOTSTACK_API_KEY` + `stage` endpoint
+
+**New Module — Comment Replies (`modules/comment-reply.js`)**
+- Instagram: webhook handler at `GET/POST /webhook/instagram` — verifies hub token, handles comment events
+- Threads: polls `/me/replies?limit=25` every 15 min via scheduler
+- Claude Haiku generates 2-sentence replies — direct, no "great question", no em dashes
+- CTA keyword detection: `["AUTOMATE", "CLAUDE", "MAKE", "AGENTS", "TOOLS"]`
+- Never replies to same comment twice (dedup via `comment_replies` table)
+- Keyword leads logged to `keyword_leads` table for follow-up
+- `supabase/schema.sql` updated with `comment_replies` + `keyword_leads` + `variations_queue` tables
+
+**New Feature — Auto Video Style Selection (`agent/generate-video.js`)**
+- `selectVideoStyle(videoScript)` — Claude Haiku picks best style from 3 vertical options
+- Stat/number-heavy scripts → `stat_stack` (no API call, pure regex)
+- Story/narrative → `hook_reveal_vertical`
+- Framework/tips/list → `list_countdown`
+- System/authority posts → `carousel_slide_vertical`
+- All callers now pass `"auto"` instead of hardcoded style
+- `news_reactive` added to style map (for explicit use from news-agent)
+- Landscape output path `generated_imgs/output-landscape.mp4` added for `news_reactive`
+
+**New Feature — Threads Video Every 5th Post (`index.js`)**
+- `runThreads()` now checks `(count + 1) % 5 === 0` → video slot
+- Video slot: `generateVideoPost()` → `generateVideo(script, "auto")` → Supabase upload → `postVideoToThreads(publicUrl, caption)`
+- Carousel slot: every 3rd non-video post (unchanged)
+- Text: all other slots
+- Falls back to text if video pipeline fails
+
+**New Feature — Instagram Webhook HTTP Server (`index.js`)**
+- `http.createServer()` added in `main()` (scheduler mode only)
+- Listens on `process.env.PORT ?? 3000`
+- `GET /webhook/instagram` — verifies `hub.verify_token` against `INSTAGRAM_WEBHOOK_VERIFY_TOKEN` env var, returns `hub.challenge`
+- `POST /webhook/instagram` — parses JSON body, calls `handleInstagramWebhook(body)`
+- No new npm packages (native `http` module only)
+
+**New Feature — NewsReactive Video for LinkedIn (`modules/news-agent.js`)**
+- LinkedIn reactive news posts now render a `NewsReactive` (1920×1080) video instead of static image
+- `generateNewsVideoScript(article)` — Claude Haiku generates 4-screen script from article headline + summary
+- `generateVideo(script, "news_reactive")` → local mp4 → `postToLinkedIn(caption, null, { type: "video", path })`
+- Falls back to text-only post if video pipeline fails
+
+### New Railway env vars required
+```
+SHOTSTACK_ENV=production           → removes Shotstack sandbox watermark
+SHOTSTACK_API_KEY_PROD=<key>       → production Shotstack key
+INSTAGRAM_WEBHOOK_VERIFY_TOKEN=<token>  → any secret string; set same value in Meta webhook dashboard
+```
+
+### Updated platform schedule (as of 2026-04-21)
+```
+LinkedIn  : 9:00am (image), 1:00pm (text), 6:00pm (text), video every 10th
+            + news reactive (NewsReactive video, ≤3/day, 4h cooldown)
+Instagram : 10:00am (Reel), 3:00pm (Carousel), 8:00pm (Reel)
+            + comment replies via webhook (real-time)
+Threads   : 8:30am, 12:30pm, 5:30pm (text | carousel every 3rd | video every 5th)
+            + comment replies polled every 15 min
+            + news reactive text (≤3/day)
+News agent: every 30 min (all platforms independently gated)
+Var queue : every 30 min (crash-safe, survives Railway restarts)
+Variation : every 6 hours (check winners → queue new variations)
+HookTester: every 6 hours (:30 offset)
+Feedback  : Sundays midnight
+YouTube   : 11:00am daily (if YOUTUBE_CHANNEL_ID set)
+```
+
+### Mistakes made + fixed
+| # | Mistake | Fix |
+|---|---------|-----|
+| 1 | ffmpeg hardcoded to `/opt/homebrew/bin/ffmpeg` — crashes on Railway Linux | OS detection: Linux → `/usr/bin/ffmpeg`, Mac → `/opt/homebrew/bin/ffmpeg` |
+| 2 | Variation engine used `setTimeout` — silent loss on Railway restart | Supabase `variations_queue` table with `sent` boolean, polled every 30 min |
+| 3 | Shotstack sandbox key in all modules — watermark on all videos | `SHOTSTACK_ENV=production` + `SHOTSTACK_API_KEY_PROD` env-based switching |
 
 ---
 

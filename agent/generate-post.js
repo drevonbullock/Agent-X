@@ -204,8 +204,6 @@ Rules:
 - Never use filler: "game changer", "let's dive in", "unpopular opinion", "hot take"
 - NEVER use em dashes (—), en dashes (–), or hyphens as pauses ( - ) between thoughts. Write flowing prose instead
 - Every screen has exactly ONE point.
-- videoStyle: always use "list_countdown" for teaching a concept step by step with a numbered countdown on each screen.
-
 Return ONLY valid JSON. No explanation, no markdown fences.`;
 
 export async function generateVideoPost() {
@@ -225,10 +223,8 @@ Return valid JSON matching this EXACT schema (screen 1 is always the hook, scree
     { "screen": 3, "heading": "Second teaching point", "body": "1-2 sentence explanation." },
     { "screen": 4, "heading": "Third teaching point", "body": "1-2 sentence explanation." }
   ],
-  "videoStyle": "list_countdown"
-}
-
-Always use "list_countdown" for videoStyle. No other value is valid.`;
+  "videoStyle": "auto"
+}`;
 
   const message = await client.messages.create({
     model: "claude-sonnet-4-20250514",

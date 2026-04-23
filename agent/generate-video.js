@@ -15,13 +15,14 @@ const STYLE_TO_COMPOSITION = {
   hook_reveal_vertical: "HookRevealVertical",
   explainer_vertical: "ExplainerVertical",
   stat_stack: "StatStack",
+  news_reactive: "NewsReactive",
   problem_solution: "ProblemSolution",
   list_countdown: "ListCountdown",
   review_card: "ReviewCard",
   carousel_slide_vertical: "CarouselSlideVertical",
 };
 
-const APPROVED_STYLES = ["list_countdown", "hook_reveal_vertical", "explainer_vertical", "carousel_slide_vertical"];
+const APPROVED_STYLES = ["list_countdown", "hook_reveal_vertical", "explainer_vertical", "carousel_slide_vertical", "stat_stack", "news_reactive"];
 
 const MIN_SECONDS = 25;
 const FPS = 30;
@@ -37,6 +38,20 @@ function findPhraseTime(wordTimestamps, triggerPhrase) {
   // Fallback: 40% through the word list
   const midIdx = Math.floor(wordTimestamps.length * 0.4);
   return wordTimestamps[midIdx]?.startTime ?? 2.0;
+}
+
+// Emoji pairs to cycle through per content screen
+const CALLOUT_PAIRS = [
+  ["🤯", "💡"], ["🔥", "⚡"], ["💰", "🚀"], ["🧠", "🎯"], ["⚠️", "✅"],
+];
+
+function generateCalloutsForScreen(screenIdx, screenDurationSeconds) {
+  const [e1, e2] = CALLOUT_PAIRS[screenIdx % CALLOUT_PAIRS.length];
+  const mid = Math.max(3.5, screenDurationSeconds * 0.45);
+  return [
+    { emoji: e1, at: 1.2, slot: "topLeft" },
+    { emoji: e2, at: mid, slot: "topRight" },
+  ];
 }
 
 // Ask Claude to pick one visual moment per screen, generate the image with Gemini,
@@ -121,13 +136,51 @@ Return ONLY valid JSON:
   }
 }
 
+// ─── AUTO STYLE SELECTOR ──────────────────────────────────────────────────────
+// Claude Haiku reads the script and picks the best vertical style.
+// stat_stack fires on number-heavy scripts (no API call needed).
+// news_reactive fires from news-agent explicitly, not from auto.
+async function selectVideoStyle(videoScript) {
+  const topic = videoScript[0]?.heading ?? "";
+  const bodies = videoScript.slice(1).map((s) => s.body ?? "").join(" ");
+  const hasNumbers = /\d+/.test(bodies) || /\b(percent|revenue|hours|days|weeks|minutes|million|billion|thousand|dollars)\b/i.test(bodies);
+  if (hasNumbers) return "stat_stack";
+
+  try {
+    const msg = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 30,
+      messages: [{
+        role: "user",
+        content: `Pick the best vertical video style for this hook: "${topic}"
+
+Options:
+- list_countdown: numbered how-to steps, tips, frameworks
+- hook_reveal_vertical: story-driven, emotional, narrative, insight
+- carousel_slide_vertical: authority/framework, "N things", system posts
+
+Return ONLY the style key, nothing else.`,
+      }],
+    });
+    const style = msg.content[0].text.trim().toLowerCase().replace(/[^a-z_]/g, "");
+    const valid = ["list_countdown", "hook_reveal_vertical", "carousel_slide_vertical"];
+    return valid.includes(style) ? style : "hook_reveal_vertical";
+  } catch {
+    return "hook_reveal_vertical";
+  }
+}
+
 export async function generateVideo(videoScript, videoStyle = "list_countdown") {
-  const safeStyle = APPROVED_STYLES.includes(videoStyle) ? videoStyle : "list_countdown";
-  if (!APPROVED_STYLES.includes(videoStyle)) {
+  const resolved = videoStyle === "auto" ? await selectVideoStyle(videoScript) : videoStyle;
+  const safeStyle = APPROVED_STYLES.includes(resolved) ? resolved : "list_countdown";
+  if (resolved !== videoStyle) {
+    console.log(`[Agent X] Auto style selected: ${safeStyle}`);
+  } else if (!APPROVED_STYLES.includes(videoStyle)) {
     console.warn(`[Agent X] Video style "${videoStyle}" is not approved — using list_countdown`);
   }
   const compositionId = STYLE_TO_COMPOSITION[safeStyle];
   const isVertical = safeStyle === "hook_reveal_vertical" || safeStyle === "explainer_vertical" || safeStyle === "carousel_slide_vertical";
+  const isLandscape = safeStyle === "news_reactive";
 
   // 1. Append auto-generated CTA screen
   const ctaScreen = await generateCTAScreen(videoScript);
@@ -136,19 +189,32 @@ export async function generateVideo(videoScript, videoStyle = "list_countdown") 
   // 2. Generate one voiceover MP3 per screen (including CTA)
   const voiceResults = await generateAllVoiceovers(scriptWithCTA, safeStyle);
 
-  // 3. Generate contextual image visuals for content screens (not hook, not CTA)
+  // 3. Generate contextual image visuals + callout bubbles for content screens (not hook, not CTA)
   const ctaScreenNum = ctaScreen?.screen ?? -1;
+  const wantsCallouts = safeStyle === "hook_reveal_vertical";
   const augmentedScript = await Promise.all(
     scriptWithCTA.map(async (screen, idx) => {
-      if (screen.screen === 1) return screen;            // hook: no visual
-      if (screen.screen === ctaScreenNum) return screen; // CTA: no visual
+      if (screen.screen === 1) return screen;            // hook: no visual/callouts
+      if (screen.screen === ctaScreenNum) return screen; // CTA: no visual/callouts
       if (screen.visuals) return screen;                 // already has manual visuals
+
       const voiceResult = voiceResults.find((r) => r.screen === screen.screen);
       const wordTimestamps = voiceResult?.wordTimestamps ?? [];
-      if (wordTimestamps.length === 0) return screen;
-      const visual = await generateVisualForScreen(screen, wordTimestamps, idx);
-      if (!visual) return screen;
-      return { ...screen, visuals: [visual] };
+      const screenDuration = voiceResult?.durationSeconds ?? 6.0;
+
+      const visual = wordTimestamps.length > 0
+        ? await generateVisualForScreen(screen, wordTimestamps, idx)
+        : null;
+
+      const callouts = wantsCallouts
+        ? generateCalloutsForScreen(idx - 1, screenDuration)
+        : undefined;
+
+      return {
+        ...screen,
+        ...(visual ? { visuals: [visual] } : {}),
+        ...(callouts ? { callouts } : {}),
+      };
     })
   );
 
@@ -178,7 +244,11 @@ export async function generateVideo(videoScript, videoStyle = "list_countdown") 
 
   // 5. Render with Remotion — pass augmented script (with visuals) in props
   const remotionRoot = path.resolve("remotion-videos/src/index.ts");
-  const outputPath = path.resolve(isVertical ? "generated_imgs/output-vertical.mp4" : "generated_imgs/output.mp4");
+  const outputPath = path.resolve(
+    isVertical   ? "generated_imgs/output-vertical.mp4"  :
+    isLandscape  ? "generated_imgs/output-landscape.mp4" :
+                   "generated_imgs/output.mp4"
+  );
 
   const propsFile = path.join(os.tmpdir(), `agentx-props-${Date.now()}.json`);
   const renderProps = { videoScript: augmentedScript, screenDurations, screenHasAudio, totalDurationSeconds };
@@ -222,7 +292,7 @@ export async function generateVideo(videoScript, videoStyle = "list_countdown") 
   if (isVertical) {
     console.log(`[Agent X] Remuxing 4K master for upload (faststart)...`);
     const ffmpegCmd = [
-      "/opt/homebrew/bin/ffmpeg -y",
+      `${process.platform === "linux" ? "/usr/bin/ffmpeg" : "/opt/homebrew/bin/ffmpeg"} -y`,
       `-i "${masterPath}"`,
       "-c copy",
       "-movflags +faststart",

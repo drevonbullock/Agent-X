@@ -13,16 +13,19 @@ export const AGENT_CONFIG = {
 };
 
 import fs from "fs";
+import http from "http";
 import Anthropic from "@anthropic-ai/sdk";
 import { generateLinkedInPost, generateVideoPost, generateThreadsPost } from "./agent/generate-post.js";
 import { generateImage } from "./agent/generate-image.js";
 import { generateVideo } from "./agent/generate-video.js";
 import { postToLinkedIn } from "./agent/post-to-linkedin.js";
 import { postReelToInstagram } from "./distributors/instagram.js";
+import { postVideoToThreads } from "./distributors/threads.js";
 import { postVideoToTikTok } from "./distributors/tiktok.js";
 import { uploadYouTubeShort } from "./distributors/youtube-shorts.js";
 import { postTextToThreads } from "./distributors/threads.js";
 import { generateAndPostCarousel, generateAndPostCarouselToThreads } from "./modules/carousel-generator.js";
+import { handleInstagramWebhook } from "./modules/comment-reply.js";
 import { startScheduler } from "./scheduler.js";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -196,7 +199,7 @@ export async function runInstagramReel() {
     const { caption, videoScript } = await generateReelScript(topic);
     console.log(`[Instagram] Hook: "${videoScript[0].heading}"`);
 
-    const videoPath = await generateVideo(videoScript, "carousel_slide_vertical");
+    const videoPath = await generateVideo(videoScript, "auto");
 
     await ensureIgBucket();
     const key = `reels/ig-${Date.now()}.mp4`;
@@ -236,7 +239,7 @@ export async function runInstagram() {
 }
 
 // ─── THREADS ──────────────────────────────────────────────────────────────────
-// Text posts + carousels every 3rd post. No single images.
+// Video every 5th post. Carousel every 3rd (non-video). Text fills the rest.
 
 export async function runThreads() {
   if (!AGENT_CONFIG.platforms.includes("threads")) return;
@@ -245,11 +248,41 @@ export async function runThreads() {
     return;
   }
 
-  const threadsCount = await loadPostCount("threads");
-  const isCarouselSlot = (threadsCount + 1) % 3 === 0;
+  const threadsCount  = await loadPostCount("threads");
+  const isVideoSlot   = (threadsCount + 1) % 5 === 0;
+  const isCarouselSlot = !isVideoSlot && (threadsCount + 1) % 3 === 0;
 
-  console.log(`\n[Threads] Starting run | post #${threadsCount + 1} | ${isCarouselSlot ? "carousel" : "text"}`);
+  console.log(`\n[Threads] Starting run | post #${threadsCount + 1} | ${isVideoSlot ? "video" : isCarouselSlot ? "carousel" : "text"}`);
 
+  // ── VIDEO MODE ──────────────────────────────────────────────────────────────
+  if (isVideoSlot) {
+    try {
+      const { caption, videoScript } = await generateVideoPost();
+      console.log(`[Threads] Video hook: "${videoScript[0].heading}"`);
+
+      const videoPath = await generateVideo(videoScript, "auto");
+
+      await ensureIgBucket();
+      const key = `reels/threads-${Date.now()}.mp4`;
+      const buffer = fs.readFileSync(videoPath);
+      const { error } = await supabase.storage.from(IG_BUCKET).upload(key, buffer, {
+        contentType: "video/mp4",
+        upsert: true,
+      });
+      if (error) throw new Error(`Supabase upload failed: ${error.message}`);
+      const { data } = supabase.storage.from(IG_BUCKET).getPublicUrl(key);
+
+      const { postId, postUrl } = await postVideoToThreads(data.publicUrl, caption);
+      await logPost({ postId, postUrl, postText: caption, format: "video", postType: "video", platform: "threads" });
+      console.log(`[Threads] Video posted: ${postUrl}\n`);
+      return { postId, postUrl };
+    } catch (err) {
+      console.error(`[Threads] Video failed, falling back to text: ${err.message}`);
+      // fall through to text post
+    }
+  }
+
+  // ── CAROUSEL MODE ───────────────────────────────────────────────────────────
   if (isCarouselSlot) {
     try {
       const { postUrl, slideCount } = await generateAndPostCarouselToThreads(AGENT_CONFIG.niche);
@@ -261,7 +294,7 @@ export async function runThreads() {
     }
   }
 
-  // Text post — Threads-native short format
+  // ── TEXT MODE ────────────────────────────────────────────────────────────────
   try {
     const postText = await generateThreadsPost();
     const { postId, postUrl } = await postTextToThreads(postText);
@@ -311,6 +344,50 @@ async function main() {
     await runThreads();
   } else {
     startScheduler();
+
+    // Instagram webhook — GET = hub verification, POST = comment events
+    const PORT = parseInt(process.env.PORT ?? "3000", 10);
+    const server = http.createServer(async (req, res) => {
+      const url = new URL(req.url, `http://localhost`);
+
+      if (req.method === "GET" && url.pathname === "/webhook/instagram") {
+        const mode      = url.searchParams.get("hub.mode");
+        const token     = url.searchParams.get("hub.verify_token");
+        const challenge = url.searchParams.get("hub.challenge");
+        if (mode === "subscribe" && token === process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN) {
+          res.writeHead(200, { "Content-Type": "text/plain" });
+          res.end(challenge);
+        } else {
+          res.writeHead(403);
+          res.end("Forbidden");
+        }
+        return;
+      }
+
+      if (req.method === "POST" && url.pathname === "/webhook/instagram") {
+        let body = "";
+        req.on("data", (chunk) => { body += chunk; });
+        req.on("end", async () => {
+          try {
+            const parsed = JSON.parse(body);
+            await handleInstagramWebhook(parsed);
+          } catch (err) {
+            console.error(`[Webhook] IG parse/handle failed: ${err.message}`);
+          }
+          res.writeHead(200);
+          res.end("OK");
+        });
+        return;
+      }
+
+      res.writeHead(200);
+      res.end("Agent X");
+    });
+
+    server.listen(PORT, () => {
+      console.log(`[Agent X] Webhook server on port ${PORT}`);
+    });
+
     console.log("[Agent X] Scheduler started. Waiting for next run...");
   }
 }

@@ -1,0 +1,150 @@
+{
+  "analyzed_at": "2026-04-19T15:28:21.108Z",
+  "csv_file": "test-ads.csv",
+  "total_ads": 5,
+  "flagged_count": 3,
+  "account_avg_cpc": 4.08,
+  "results": [
+    {
+      "ad_id": "AD-001",
+      "severity": "high",
+      "issue": "Low click-through rate, poor return on ad spend, and above-average cost per click indicate weak audience targeting and messaging.",
+      "recommendation": "Pause this ad and create new variations with more specific value propositions and targeted keywords.",
+      "original": {
+        "headline": "Save Time With AI",
+        "description": "Automate your business today and focus on what matters.",
+        "ctr": "0.4%",
+        "roas": "1.2x",
+        "cpc": "$4.80"
+      },
+      "new_headlines": [
+        {
+          "headline": "The AI Secret CEOs Use",
+          "technique": "curiosity gap",
+          "why_it_will_work": "Creates intrigue by suggesting exclusive knowledge and targets high-value audience segment with aspirational positioning"
+        },
+        {
+          "headline": "Cut Work Time by 73%",
+          "technique": "stat-led",
+          "why_it_will_work": "Specific percentage creates credibility and quantifies the benefit, making the value proposition concrete and measurable"
+        },
+        {
+          "headline": "Get 8 Hours Back Weekly",
+          "technique": "benefit-first",
+          "why_it_will_work": "Focuses on tangible time savings that busy professionals can immediately understand and value, creating clear ROI"
+        }
+      ],
+      "new_descriptions": [
+        {
+          "description": "Stop losing $1000s to manual tasks that could run themselves. Our automation platform eliminates 80% of your busywork so you can focus on growing revenue instead of drowning in operations. Get your free automation audit now.",
+          "hook_type": "pain_point",
+          "cta": "Get your free automation audit now"
+        },
+        {
+          "description": "What if you could get 3 extra hours back every day? Smart business owners are already using our automation tools to handle repetitive tasks while they focus on high-value activities that actually move the needle. Start your 14-day free trial today.",
+          "hook_type": "question",
+          "cta": "Start your 14-day free trial today"
+        },
+        {
+          "description": "While your competitors waste time on manual processes, you could be scaling faster with zero extra effort. Our proven automation system handles the boring stuff automatically, giving you the competitive edge you need to dominate your market. Book a demo and see results in 24 hours.",
+          "hook_type": "competitive_advantage",
+          "cta": "Book a demo and see results in 24 hours"
+        }
+      ]
+    },
+    {
+      "ad_id": "AD-003",
+      "severity": "high",
+      "issue": "Below-threshold click-through rate, insufficient return on ad spend, and high cost per click suggest poor ad relevance.",
+      "recommendation": "Revise the headline to be more compelling and adjust targeting to reach users with higher purchase intent.",
+      "original": {
+        "headline": "Cut Costs By 40%",
+        "description": "Our clients save 40% on admin costs in the first month.",
+        "ctr": "0.7%",
+        "roas": "1.8x",
+        "cpc": "$5.20"
+      },
+      "new_headlines": [
+        {
+          "headline": "What if costs dropped 40%?",
+          "technique": "curiosity gap",
+          "why_it_will_work": "Creates intrigue by posing a hypothetical question that makes users wonder about the method, driving clicks to discover the answer"
+        },
+        {
+          "headline": "40% cost cuts proven",
+          "technique": "stat-led",
+          "why_it_will_work": "Leads with the compelling statistic while adding credibility through 'proven', making the claim more trustworthy and clickable"
+        },
+        {
+          "headline": "Slash expenses today",
+          "technique": "benefit-first",
+          "why_it_will_work": "Focuses on immediate benefit with action-oriented language, appealing to urgency and the desire for quick cost reduction"
+        }
+      ],
+      "new_descriptions": [
+        {
+          "description": "Tired of drowning in paperwork? Cut your admin costs by 40% in 30 days with our automated solutions. Thousands of businesses already saved millions on tedious tasks. Start your free trial today and reclaim your time.",
+          "hook_type": "pain_point",
+          "cta": "Start your free trial today"
+        },
+        {
+          "description": "What if you could slash admin expenses by nearly half this month? Our proven system delivers 40% cost savings in just 30 days, freeing up budget for growth investments. Join 5,000+ companies optimizing operations. Get your savings report now.",
+          "hook_type": "what_if",
+          "cta": "Get your savings report now"
+        },
+        {
+          "description": "Stop wasting money on manual admin work. Our clients consistently achieve 40% cost reductions within their first month, redirecting thousands back into revenue-generating activities. See exactly how much you could save with a personalized demo.",
+          "hook_type": "command",
+          "cta": "Book your personalized demo"
+        }
+      ]
+    },
+    {
+      "ad_id": "AD-005",
+      "severity": "high",
+      "issue": "Extremely low engagement with negative return on investment and the highest cost per click indicates fundamental ad performance failure.",
+      "recommendation": "Immediately pause this ad and conduct audience research to understand why the message isn't resonating.",
+      "original": {
+        "headline": "Stop Losing Leads",
+        "description": "67% of leads never get a follow-up. Fix that today.",
+        "ctr": "0.3%",
+        "roas": "0.9x",
+        "cpc": "$6.40"
+      },
+      "new_headlines": [
+        {
+          "headline": "1 Secret Saves Every Lead",
+          "technique": "curiosity gap",
+          "why_it_will_work": "Creates intrigue around an unknown secret while promising to solve their lead loss problem, driving clicks to discover what it is"
+        },
+        {
+          "headline": "73% More Leads in 30 Days",
+          "technique": "stat-led",
+          "why_it_will_work": "Specific percentage and timeframe creates credibility and sets clear expectations for measurable results"
+        },
+        {
+          "headline": "Turn Clicks Into Customers",
+          "technique": "benefit-first",
+          "why_it_will_work": "Focuses on positive outcome of conversion rather than negative framing, appealing to desire for business growth"
+        }
+      ],
+      "new_descriptions": [
+        {
+          "description": "Stop losing $10K monthly from unfollowed leads. Our AI system converts 3x more prospects into paying customers within 48 hours. Start your free trial now.",
+          "hook_type": "problem_amplification",
+          "cta": "Start your free trial now"
+        },
+        {
+          "description": "What if every lead became a customer? Our automated follow-up system closes deals while you sleep - guaranteed 300% ROI or money back. Get instant access.",
+          "hook_type": "curiosity_question",
+          "cta": "Get instant access"
+        },
+        {
+          "description": "Finally - follow-up automation that actually works. Turn ignored leads into $50K monthly revenue with zero extra effort from your team. Book demo today.",
+          "hook_type": "relief_statement",
+          "cta": "Book demo today"
+        }
+      ]
+    }
+  ]
+}

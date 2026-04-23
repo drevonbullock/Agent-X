@@ -51,3 +51,44 @@ CREATE TABLE IF NOT EXISTS news_seen (
   posted           BOOLEAN DEFAULT false,
   created_at       TIMESTAMPTZ DEFAULT now()
 );
+
+-- Crash-safe job queue for variation posting (replaces setTimeout)
+CREATE TABLE IF NOT EXISTS variations_queue (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_post_id   UUID REFERENCES posts(id) ON DELETE CASCADE,
+  variation_number INTEGER,
+  content          TEXT,
+  platform         TEXT,
+  hook             TEXT,
+  format           TEXT,
+  scheduled_for    TIMESTAMPTZ NOT NULL,
+  sent             BOOLEAN DEFAULT false,
+  post_id          TEXT,
+  post_url         TEXT,
+  created_at       TIMESTAMPTZ DEFAULT now()
+);
+
+-- Comment reply tracking — never reply to the same comment twice
+CREATE TABLE IF NOT EXISTS comment_replies (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  platform         TEXT NOT NULL,
+  comment_id       TEXT NOT NULL UNIQUE,
+  post_id          TEXT,
+  commenter_name   TEXT,
+  comment_text     TEXT,
+  reply_text       TEXT,
+  replied_at       TIMESTAMPTZ DEFAULT now()
+);
+
+-- Keyword lead tracking — comments containing CTA keywords
+CREATE TABLE IF NOT EXISTS keyword_leads (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  platform         TEXT NOT NULL,
+  comment_id       TEXT NOT NULL UNIQUE,
+  post_id          TEXT,
+  commenter_name   TEXT,
+  commenter_id     TEXT,
+  keyword          TEXT,
+  comment_text     TEXT,
+  created_at       TIMESTAMPTZ DEFAULT now()
+);

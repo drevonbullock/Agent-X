@@ -102,13 +102,13 @@ const VisualCard: React.FC<{ v: Visual; fps: number }> = ({ v, fps }) => {
     extrapolateLeft: "clamp", extrapolateRight: "clamp",
   });
 
-  // Always centered at bottom — slide direction only affects entrance animation
-  const pos: React.CSSProperties = { left: 165, bottom: 230 };
+  // Centered at bottom — slide direction only affects entrance animation
+  const pos: React.CSSProperties = { left: 60, bottom: 160 };
 
   return (
     <div style={{
       position: "absolute", ...pos,
-      width: 750, height: 430,
+      width: 960, height: 560,
       borderRadius: 22, overflow: "hidden",
       opacity,
       transform: `translateX(${tx}px) scale(${scale})`,
@@ -397,6 +397,7 @@ export const HookReveal: React.FC<VideoCompositionProps> = ({
             hasAudio={screenHasAudio[0] ?? false}
             durationFrames={Math.round((screenDurations[0] ?? 2.5) * FPS)}
             bgImage={bgImage}
+            topAligned={true}
           />
         </Sequence>
       )}

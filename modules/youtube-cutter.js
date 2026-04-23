@@ -5,6 +5,18 @@ import path from "path";
 
 const client = new Anthropic();
 
+// ─── SHOTSTACK ENV HELPERS ────────────────────────────────────────────────────
+
+function shotstackKey() {
+  return process.env.SHOTSTACK_ENV === "production"
+    ? process.env.SHOTSTACK_API_KEY_PROD
+    : process.env.SHOTSTACK_API_KEY;
+}
+
+function shotstackStage() {
+  return process.env.SHOTSTACK_ENV === "production" ? "v1" : "stage";
+}
+
 const CLIP_SELECTOR_SYSTEM = `You are a short-form video editor.
 Given a YouTube video transcript, identify the 8 most clip-worthy moments.
 Each clip should be: surprising, educational, emotionally resonant, or controversial.
@@ -84,8 +96,8 @@ async function selectClips(transcript) {
 // ─── SHOTSTACK VIDEO CUTTING ─────────────────────────────────────────────────
 
 async function cutClipWithShotstack(youtubeUrl, startTime, endTime, outputLabel) {
-  const key = process.env.SHOTSTACK_API_KEY;
-  if (!key) throw new Error("SHOTSTACK_API_KEY not set in .env");
+  const key = shotstackKey();
+  if (!key) throw new Error("Shotstack API key not set in .env");
 
   // Convert MM:SS to seconds
   const toSeconds = (t) => {
@@ -107,7 +119,7 @@ async function cutClipWithShotstack(youtubeUrl, startTime, endTime, outputLabel)
     }],
   };
 
-  const editRes = await fetch("https://api.shotstack.io/edit/v1/render", {
+  const editRes = await fetch(`https://api.shotstack.io/edit/${shotstackStage()}/render`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

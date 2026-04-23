@@ -1,6 +1,18 @@
 import "dotenv/config";
 import fs from "fs";
 
+// ─── SHOTSTACK ENV HELPERS ────────────────────────────────────────────────────
+
+function shotstackKey() {
+  return process.env.SHOTSTACK_ENV === "production"
+    ? process.env.SHOTSTACK_API_KEY_PROD
+    : process.env.SHOTSTACK_API_KEY;
+}
+
+function shotstackStage() {
+  return process.env.SHOTSTACK_ENV === "production" ? "v1" : "stage";
+}
+
 // Platform specs per PRD
 const PLATFORM_SPECS = {
   tiktok:           { ratio: "9:16",  maxChars: 2200, hashtags: 5,  resolution: "sd",  aspectRatio: "9:16"  },
@@ -40,8 +52,8 @@ function trimHashtags(text, maxHashtags) {
 // ─── SHOTSTACK RESIZE ─────────────────────────────────────────────────────────
 
 async function resizeWithShotstack(videoPath, targetPlatform) {
-  const key = process.env.SHOTSTACK_API_KEY;
-  if (!key) throw new Error("SHOTSTACK_API_KEY not set in .env");
+  const key = shotstackKey();
+  if (!key) throw new Error("Shotstack API key not set in .env");
 
   const spec = PLATFORM_SPECS[targetPlatform];
   if (!spec) throw new Error(`Unknown platform: ${targetPlatform}`);
@@ -61,7 +73,7 @@ async function resizeWithShotstack(videoPath, targetPlatform) {
     }],
   };
 
-  const res = await fetch("https://api.shotstack.io/edit/v1/render", {
+  const res = await fetch(`https://api.shotstack.io/edit/${shotstackStage()}/render`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-api-key": key },
     body: JSON.stringify({
@@ -86,13 +98,13 @@ async function resizeWithShotstack(videoPath, targetPlatform) {
 // ─── POLL RENDER STATUS ──────────────────────────────────────────────────────
 
 export async function pollRenderStatus(renderId, maxAttempts = 30) {
-  const key = process.env.SHOTSTACK_API_KEY;
-  if (!key) throw new Error("SHOTSTACK_API_KEY not set in .env");
+  const key = shotstackKey();
+  if (!key) throw new Error("Shotstack API key not set in .env");
 
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise((r) => setTimeout(r, 10000)); // 10s between polls
 
-    const res = await fetch(`https://api.shotstack.io/edit/v1/render/${renderId}`, {
+    const res = await fetch(`https://api.shotstack.io/edit/${shotstackStage()}/render/${renderId}`, {
       headers: { "x-api-key": key },
     });
 
