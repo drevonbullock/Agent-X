@@ -97,6 +97,21 @@ Return ONLY valid JSON, no explanation:
       try {
         const clipName = `clip_${screen.screen}_${screenIdx}.mp4`;
         clipFile = await generateRunwayClip(imgBuffer, json.imagePrompt, clipName, PUBLIC_DIR);
+
+        // Topaz upscale the clip before it gets composited into the Reel
+        if (process.env.TOPAZ_API_KEY && clipFile) {
+          const hdName = `clip_${screen.screen}_${screenIdx}_hd.mp4`;
+          try {
+            await upscaleWithTopaz(
+              path.join(PUBLIC_DIR, clipFile),
+              path.join(PUBLIC_DIR, hdName)
+            );
+            clipFile = hdName;
+            console.log(`[Agent X] Runway clip upscaled: ${hdName}`);
+          } catch (topazErr) {
+            console.warn(`[Agent X] Topaz clip upscale failed — using original: ${topazErr.message}`);
+          }
+        }
       } catch (runwayErr) {
         console.warn(`[Agent X] Runway skipped for screen ${screen.screen}: ${runwayErr.message}`);
       }
