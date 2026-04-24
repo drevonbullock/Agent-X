@@ -69,10 +69,19 @@ export async function upscaleImageWithTopaz(inputPath, outputPath) {
     if (s.status === "Failed") throw new Error(`[Topaz Image] Job failed: ${JSON.stringify(s)}`);
   }
 
-  // Download
+  // Download — API now returns JSON with signed URL instead of direct binary
   const dlRes = await fetch(`https://api.topazlabs.com/image/v1/download/${process_id}`, { headers: imgHeaders });
   if (!dlRes.ok) throw new Error(`[Topaz Image] Download failed: ${dlRes.status}`);
-  const buf = Buffer.from(await dlRes.arrayBuffer());
+  const contentType = dlRes.headers.get("content-type") || "";
+  let buf;
+  if (contentType.includes("application/json")) {
+    const { download_url } = await dlRes.json();
+    const imgRes = await fetch(download_url);
+    if (!imgRes.ok) throw new Error(`[Topaz Image] Signed URL fetch failed: ${imgRes.status}`);
+    buf = Buffer.from(await imgRes.arrayBuffer());
+  } else {
+    buf = Buffer.from(await dlRes.arrayBuffer());
+  }
   fs.writeFileSync(outputPath, buf);
   console.log(`[Topaz Image] Saved: ${outputPath} (${(buf.length / 1024 / 1024).toFixed(1)} MB)`);
   return outputPath;

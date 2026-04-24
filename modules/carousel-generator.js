@@ -322,15 +322,17 @@ export async function renderCarousel(topic) {
 
   const imageUrls = [];
 
+  const up = (s) => String(s ?? "").toUpperCase();
+
   // Hook
   console.log(`[Carousel] Rendering slide 1/${totalSlides} — hook`);
   const hookBuf = await renderSlide(
     buildPage(css, fillSlide(HOOK_SLIDE, {
       BG_IMAGE_PATH:  bg,
       TOPIC_TAG:      content.topic_tag,
-      HEADLINE_LINE1: content.hook.headline_line1,
-      HEADLINE_LINE2: content.hook.headline_line2,
-      HEADLINE_LINE3: content.hook.headline_line3,
+      HEADLINE_LINE1: up(content.hook.headline_line1),
+      HEADLINE_LINE2: up(content.hook.headline_line2),
+      HEADLINE_LINE3: up(content.hook.headline_line3),
       SUBTEXT:        content.hook.subtext,
       SLIDE_COUNT:    String(totalSlides),
     })),
@@ -348,8 +350,8 @@ export async function renderCarousel(topic) {
         BG_IMAGE_PATH:   bg,
         ICONS_SVG:       ICONS_SVG,
         SLIDE_TAG:       s.slide_tag,
-        HEADLINE:        s.headline,
-        HEADLINE_ACCENT: s.headline_accent,
+        HEADLINE:        up(s.headline),
+        HEADLINE_ACCENT: up(s.headline_accent),
         POINT_1_TITLE:   s.point_1_title,
         POINT_1_BODY:    s.point_1_body,
         POINT_2_TITLE:   s.point_2_title,
@@ -370,9 +372,9 @@ export async function renderCarousel(topic) {
     buildPage(css, fillSlide(CTA_SLIDE, {
       BG_IMAGE_PATH: bg,
       TOPIC_TAG:     content.topic_tag,
-      CTA_LINE1:     content.cta.cta_line1,
-      CTA_LINE2:     content.cta.cta_line2,
-      CTA_LINE3:     content.cta.cta_line3,
+      CTA_LINE1:     up(content.cta.cta_line1),
+      CTA_LINE2:     up(content.cta.cta_line2),
+      CTA_LINE3:     up(content.cta.cta_line3),
       CTA_BODY:      content.cta.cta_body,
       KEYWORD:       content.cta.keyword,
       RESOURCE:      content.cta.resource,
@@ -411,7 +413,9 @@ export async function generateAndPostCarousel(topic) {
 // ─── POST TO THREADS ──────────────────────────────────────────────────────────
 
 export async function generateAndPostCarouselToThreads(topic) {
-  const { imageUrls, caption, content } = await renderCarousel(topic);
+  const { imageUrls, content } = await renderCarousel(topic);
+  const caption = await buildThreadsCaption(content);
+  console.log(`[Carousel] Threads caption: "${caption}"`);
   console.log(`[Carousel] Posting to Threads...`);
   const { postId, postUrl } = await postCarouselToThreads(imageUrls, caption);
 
@@ -428,6 +432,24 @@ export async function generateAndPostCarouselToThreads(topic) {
 
   console.log(`[Carousel] Threads done. ${postUrl}`);
   return { postId, postUrl, slideCount: imageUrls.length };
+}
+
+async function buildThreadsCaption(content) {
+  const context = [
+    `Hook: ${content.hook.headline_line1} ${content.hook.headline_line2} ${content.hook.headline_line3}`,
+    `Subtext: ${content.hook.subtext}`,
+    `Slides: ${content.slides.map((s) => s.headline + " " + s.headline_accent).join(" / ")}`,
+  ].join("\n");
+
+  const msg = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 128,
+    messages: [{
+      role: "user",
+      content: `Write ONE punchy sentence caption for a Threads carousel post. The carousel covers:\n${context}\n\nRules: no explanation, no hashtags, no quotes, under 120 chars, reads like a real person texting a sharp take. Just the sentence.`,
+    }],
+  });
+  return msg.content[0].text.trim().replace(/^["']|["']$/g, "");
 }
 
 function buildCaption(content) {

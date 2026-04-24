@@ -13,6 +13,9 @@ export const AGENT_CONFIG = {
 };
 
 import fs from "fs";
+import os from "os";
+import path from "path";
+import { execSync } from "child_process";
 import http from "http";
 import Anthropic from "@anthropic-ai/sdk";
 import { generateLinkedInPost, generateVideoPost, generateThreadsPost } from "./agent/generate-post.js";
@@ -182,6 +185,26 @@ export async function runLinkedIn(withImage = true) {
   return { postId, postUrl, postText };
 }
 
+// Re-encode the 4K master to a web-optimized 1080p MP4 for Supabase upload.
+// The 4K render (CRF=15) produces 300MB+ files that exceed Supabase's 50MB limit.
+function compressForUpload(inputPath) {
+  const outPath = path.join(os.tmpdir(), `ig-upload-${Date.now()}.mp4`);
+  const ffmpeg = process.platform === "linux" ? "/usr/bin/ffmpeg" : "/opt/homebrew/bin/ffmpeg";
+  const cmd = [
+    `${ffmpeg} -y`,
+    `-i "${inputPath}"`,
+    `-vf "scale=1080:1920"`,
+    `-c:v libx264 -crf 23 -preset fast`,
+    `-c:a aac -b:a 128k`,
+    `-movflags +faststart`,
+    `"${outPath}"`,
+  ].join(" ");
+  execSync(cmd, { stdio: "inherit", timeout: 5 * 60 * 1000 });
+  const sizeMB = (fs.statSync(outPath).size / 1024 / 1024).toFixed(1);
+  console.log(`[Instagram] Compressed for upload: ${sizeMB} MB → ${outPath}`);
+  return outPath;
+}
+
 // ─── INSTAGRAM ────────────────────────────────────────────────────────────────
 // 10am + 8pm → Reel (video)   |   3pm → Carousel (static)
 
@@ -199,16 +222,21 @@ export async function runInstagramReel() {
     const { caption, videoScript } = await generateReelScript(topic);
     console.log(`[Instagram] Hook: "${videoScript[0].heading}"`);
 
-    const videoPath = await generateVideo(videoScript, "auto");
+    const rawPath = await generateVideo(videoScript, "auto");
+    const videoPath = compressForUpload(rawPath);
 
     await ensureIgBucket();
     const key = `reels/ig-${Date.now()}.mp4`;
     const buffer = fs.readFileSync(videoPath);
-    const { error } = await supabase.storage.from(IG_BUCKET).upload(key, buffer, {
-      contentType: "video/mp4",
-      upsert: true,
-    });
-    if (error) throw new Error(`Supabase upload failed: ${error.message}`);
+    try {
+      const { error } = await supabase.storage.from(IG_BUCKET).upload(key, buffer, {
+        contentType: "video/mp4",
+        upsert: true,
+      });
+      if (error) throw new Error(`Supabase upload failed: ${error.message}`);
+    } finally {
+      try { fs.unlinkSync(videoPath); } catch { /* tmp cleanup */ }
+    }
     const { data } = supabase.storage.from(IG_BUCKET).getPublicUrl(key);
 
     const { mediaId, postUrl } = await postReelToInstagram(data.publicUrl, caption);
@@ -260,16 +288,21 @@ export async function runThreads() {
       const { caption, videoScript } = await generateVideoPost();
       console.log(`[Threads] Video hook: "${videoScript[0].heading}"`);
 
-      const videoPath = await generateVideo(videoScript, "auto");
+      const rawPath = await generateVideo(videoScript, "auto");
+      const videoPath = compressForUpload(rawPath);
 
       await ensureIgBucket();
       const key = `reels/threads-${Date.now()}.mp4`;
       const buffer = fs.readFileSync(videoPath);
-      const { error } = await supabase.storage.from(IG_BUCKET).upload(key, buffer, {
-        contentType: "video/mp4",
-        upsert: true,
-      });
-      if (error) throw new Error(`Supabase upload failed: ${error.message}`);
+      try {
+        const { error } = await supabase.storage.from(IG_BUCKET).upload(key, buffer, {
+          contentType: "video/mp4",
+          upsert: true,
+        });
+        if (error) throw new Error(`Supabase upload failed: ${error.message}`);
+      } finally {
+        try { fs.unlinkSync(videoPath); } catch { /* tmp cleanup */ }
+      }
       const { data } = supabase.storage.from(IG_BUCKET).getPublicUrl(key);
 
       const { postId, postUrl } = await postVideoToThreads(data.publicUrl, caption);
