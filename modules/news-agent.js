@@ -2,7 +2,7 @@ import "dotenv/config";
 import Anthropic from "@anthropic-ai/sdk";
 import supabase from "../supabase/client.js";
 import { postToLinkedIn } from "../agent/post-to-linkedin.js";
-import { generateImage } from "../agent/generate-image.js";
+import { generateImage, generateImageForInstagram } from "../agent/generate-image.js";
 import { generateVideo } from "../agent/generate-video.js";
 import { postTextToThreads } from "../distributors/threads.js";
 import { postImageToInstagram } from "../distributors/instagram.js";
@@ -301,7 +301,7 @@ export async function checkAndPost() {
       const caption = await generateInstagramReactiveCaption(target);
       console.log(`[NewsAgent] Instagram caption: "${caption.slice(0, 60)}..."`);
 
-      const imageBuffer = await generateImage(caption);
+      const imageBuffer = await generateImageForInstagram(caption);
       if (!imageBuffer) throw new Error("Image generation returned null");
 
       const imageUrl = await uploadImageToSupabase(imageBuffer);

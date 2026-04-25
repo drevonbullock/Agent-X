@@ -4,6 +4,85 @@
 
 ---
 
+## PHASE 10 — SMART IMAGE MODES: BOARDROOM + CHEATSHEET + NEWS SCREENSHOT ✅ (Session 8)
+
+### What was built
+
+**Kill Gemini COMIC/DIAGRAM randomness — replaced with 4 deterministic renderers**
+
+The core problem: Gemini was generating unrelated, random-looking images for Instagram posts because `generateImage` (LinkedIn/16:9) was being called instead of `generateImageForInstagram` (square). Also, COMIC and DIAGRAM modes produced inconsistent Gemini output with no brand control.
+
+**`images/render-boardroom.js` — NEW**
+- Puppeteer-rendered comic strip: "The Boardroom" — consistent, branded, same every post
+- Two fixed CSS/SVG characters: SIGNAL (hoodie, half-closed eyes, smug smile) and NOISE (suit, red tie, wide eyes, open mouth)
+- 5-panel layout: 2 panels on top row, 3 on bottom row. 1200×800px
+- Panels accept `dialogue` (speech bubble with triangle pointer) or `action` (italic caption below character)
+- Header: title, episode name, `@DrevonBullock • Bullock Consulting Group`
+- Footer: thin orange line, BCG credit
+- Export: `renderBoardroom(script) → Buffer`
+
+**`images/render-cheatsheet.js` — NEW**
+- Puppeteer-rendered educational card. 1200×675px dark navy (#1c2433)
+- Section cards in a row: colored left border (orange/cyan/green), white heading, arrow bullet points
+- Auto-scales to 2–3 sections side by side
+- Export: `renderCheatsheet(content) → Buffer`
+
+**`images/render-news-screenshot.js` — NEW**
+- Playwright (Chromium) navigates to a real news article URL
+- Injects fixed BCG banner at bottom: orange #FF6B00, `@DrevonBullock • Bullock Consulting Group LLC` + `Via [domain]`
+- Screenshots 1200×800px viewport — captures headline and hero image
+- Export: `renderNewsScreenshot(url) → Buffer`
+
+**`agent/fetch-news-url.js` — NEW**
+- Firecrawl (`@mendable/firecrawl-js` v4 — uses `result.web[]` shape) searches for a real news article URL matching the post topic
+- Skips social platforms and PDFs
+- Falls back gracefully if no key or no results
+- Export: `fetchNewsUrl(postText) → url | null`
+
+**`agent/generate-image.js` — FULL REWRITE**
+- Mode selection updated: DIAGRAM removed, COMIC removed, replaced with BOARDROOM + CHEATSHEET + NEWS
+- Modes: `quote | boardroom | cheatsheet | news | visual`
+- Added `generateBoardroomScript(postText)` — Claude writes 5-panel script from post text
+- Added `generateCheatsheetContent(postText)` — Claude extracts structured sections + bullets from post
+- All fallback logic centralized in `dispatchMode()` — LinkedIn returns null on visual failure (text-only post), Instagram always returns a buffer
+- Fixed Instagram news posts: `generateImageForInstagram` now used in `news-agent.js` instead of `generateImage`
+
+**`modules/news-agent.js` — FIX**
+- Was calling `generateImage` (LinkedIn 16:9) for Instagram posts → random Gemini visuals
+- Now calls `generateImageForInstagram` → branded 1080×1080 square card, never null
+
+### New env var required
+```
+FIRECRAWL_API_KEY=    # app.firecrawl.dev — enables NEWS mode URL lookup
+```
+
+### Mode selection logic
+| Mode | Triggers when... |
+|---|---|
+| BOARDROOM | Post contrasts manual vs automated, before/after, someone doing things the hard way |
+| CHEATSHEET | "X vs Y", framework breakdown, 2–3 distinct categories to teach |
+| NEWS | Named company/product announcement, cites a real findable event |
+| VISUAL | Abstract, philosophical, metaphorical — catch-all |
+| QUOTE | Punchy one-liner, personal reflection, build-in-public update |
+
+### Test results (2026-04-25)
+| Test | Mode selected | Result |
+|---|---|---|
+| Lead follow-up manual vs automated post | BOARDROOM | ✅ Strip rendered — ep: "The Follow-Up" |
+| MCP vs RAG comparison post | CHEATSHEET | ✅ 3-section card rendered |
+| OpenAI operator news post | NEWS | ✅ `openai.com/index/introducing-chatgpt-agent/` screenshotted |
+| Quote card (existing) | QUOTE | ✅ Unchanged |
+| Direct renderer — all 4 | N/A | ✅ All passed `test-all-modes.js` |
+
+### Mistakes made + fixed
+| # | Mistake | Fix |
+|---|---------|-----|
+| 1 | `\2192` CSS unicode in template literal → octal escape error | Escaped to `\\2192` |
+| 2 | Firecrawl v4 returns `result.web[]` not `result.data[]` | Added `result?.web ?? result?.data ?? result?.results` fallback chain |
+| 3 | Mode selection too loose — VISUAL was catch-all, BOARDROOM never triggered | Rewrote BOARDROOM description to explicitly include "manual vs automated" signal |
+
+---
+
 ## PHASE 9 — PRODUCTION HARDENING + COMMENT REPLIES + AUTO STYLE + NEWS VIDEO ✅ (Session 7)
 
 ### What was built

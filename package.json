@@ -13,11 +13,13 @@
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
+    "@mendable/firecrawl-js": "^4.20.0",
     "@supabase/supabase-js": "^2.103.3",
     "canvas": "^3.2.1",
     "chartjs-node-canvas": "^5.0.0",
     "dotenv": "^17.3.1",
     "node-cron": "^4.2.1",
+    "playwright": "^1.59.1",
     "puppeteer": "^24.38.0",
     "twitter-api-v2": "^1.29.0"
   }
