@@ -1,21 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { renderQuoteCard, renderVerticalCard } from "../images/render-quote-card.js";
-import { generateGeminiImage } from "../images/gemini.js";
 import { renderBoardroom, renderVerticalBoardroom } from "../images/render-boardroom.js";
 import { renderCheatsheet, renderVerticalCheatsheet } from "../images/render-cheatsheet.js";
 import { renderNewsScreenshot } from "../images/render-news-screenshot.js";
 import { fetchNewsUrl } from "./fetch-news-url.js";
+import { generateGeminiImage } from "../images/gemini.js";
 
 const client = new Anthropic();
 
 // ─── MODE SELECTION ───────────────────────────────────────────────────────────
-// Claude picks the best visual treatment. Returns { mode, imagePrompt? }.
-// Modes: quote | boardroom | news | cheatsheet | visual
+// Claude picks between BOARDROOM, NEWS, or CHEATSHEET only.
+// Quote cards and Gemini visual images are permanently removed.
 
 async function selectImageMode(postText) {
   const message = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 1024,
+    max_tokens: 256,
     messages: [
       {
         role: "user",
@@ -28,53 +27,23 @@ ${postText}
 
 ---
 
-MODE SELECTION — pick exactly one:
+MODE SELECTION — pick exactly one of these three:
 
-QUOTE MODE — Puppeteer renders a branded dark quote card. No image prompt needed.
-Best for: punchy one-liners, strong opinions, personal reflections, build-in-public updates.
-Return: {"mode":"quote"}
-
-BOARDROOM MODE — Puppeteer renders "The Boardroom" comic strip: Signal (hoodie, automated everything, smug) vs Noise (suit, manual everything, always wrong).
-Best for: ANY post involving businesses, companies, or business owners — especially when it contrasts old-school vs AI-powered approaches, manual vs automated work, companies that are falling behind vs companies winning, traditional strategies vs modern ones, someone wasting time on repetitive tasks, or an industry being disrupted. If the post mentions companies, business owners, competitors, market dynamics, or organizational behavior — BOARDROOM is almost always correct. This is the DEFAULT for business content.
+BOARDROOM — "The Boardroom" comic strip: Signal (hoodie, AI guy, always right) vs Noise (suit, manual guy, always wrong).
+This is the DEFAULT. Use it for anything about business, AI, automation, hiring, productivity, companies, founders, or any contrast between old-school and modern approaches.
 Return: {"mode":"boardroom"}
 
-NEWS MODE — Playwright screenshots a real news article related to the post topic.
-Best for: posts that name a specific company, product, or announcement (e.g. "OpenAI just...", "Google released...", "New study shows..."). Must reference a real, findable news event with a specific headline.
+NEWS — Playwright screenshots a real news article related to the post.
+Use ONLY when the post references a specific real company, product launch, or named announcement that would have a findable news article (e.g. "OpenAI just released...", "Google announced...", "New study from MIT shows...").
 Return: {"mode":"news"}
 
-CHEATSHEET MODE — Puppeteer renders a structured educational card with titled sections and bullet points.
-Best for: "X vs Y" comparisons, framework breakdowns, "the difference between...", tool reviews with structured pros/cons, numbered lists of distinct concepts, anything where the educational value is in 2–3 clearly labeled categories with bullet points under each.
+CHEATSHEET — Structured educational card with labeled sections and bullet points.
+Use ONLY for "X vs Y" comparisons, step-by-step frameworks, tool comparisons with clear categories, or educational breakdowns with 2–3 distinct labeled sections.
 Return: {"mode":"cheatsheet"}
 
-VISUAL MODE — Gemini Imagen 3 generates a cinematic editorial photograph or illustration.
-Best for: deeply philosophical or emotional content about human experience, identity, or abstract life concepts — with absolutely NO business characters, companies, or organizational contrast. Must be a genuinely abstract topic where none of the above modes could dramatize it.
-NEVER use VISUAL for: posts about companies, business owners, industry trends, market competition, AI adoption, productivity, automation, or any organizational scenario — use BOARDROOM instead.
-Use VISUAL only as a last resort when the post is purely philosophical with zero business context.
+When in doubt: return boardroom.
 
----
-
-PROMPT RULES — VISUAL mode only:
-
-Write a prompt that:
-- Makes the PRIMARY SUBJECT clearly related to the post's core topic (AI, automation, business, data). Metaphors influence MOOD and ATMOSPHERE only — never the main subject.
-- Describes a specific scene tied to the concept — NOT generic tech imagery
-- Uses real-world grounding: physical objects, environments, lighting conditions
-- Style: editorial photography meets cinematic storytelling
-- Color temperature matches the post's emotion: cool blues for analytical, warm gold for human/optimistic, monochrome for stark, jewel tones for ambitious
-- Lighting: practical and motivated (lamp, screen glow, morning sun). No decorative overlays
-- Strong negative space, rich textures, decisive framing
-- No: glowing circuits, robot suits, floating UI, neon grids, stock setups
-- No text or typography in the image
-- Ends with: "Professional quality, sharp, no visual artifacts, relevant to topic: [3–5 word topic]"
-
----
-
-Respond with valid JSON only. No explanation, no markdown fences.
-If QUOTE:      {"mode":"quote"}
-If BOARDROOM:  {"mode":"boardroom"}
-If NEWS:       {"mode":"news"}
-If CHEATSHEET: {"mode":"cheatsheet"}
-If VISUAL:     {"mode":"visual","imagePrompt":"<full prompt>"}`,
+Respond with valid JSON only. No explanation, no markdown fences.`,
       },
     ],
   });
@@ -183,15 +152,25 @@ Return only valid JSON. No explanation, no markdown fences.`,
   return JSON.parse(raw);
 }
 
-// ─── SHARED MODE DISPATCHER ───────────────────────────────────────────────────
-// Returns a Buffer. Falls back to the provided fallbackFn if a mode errors.
+// ─── BOARDROOM FALLBACK ───────────────────────────────────────────────────────
+// All mode failures fall back to boardroom. No quote cards. No Gemini images.
 
-async function dispatchMode(decision, postText, { fallbackFn, isVertical = false }) {
-  const mode = decision.mode;
-
-  if (mode === "quote") {
-    return isVertical ? renderVerticalCard(postText) : renderQuoteCard(postText);
+async function renderBoardroomFallback(postText, isVertical) {
+  try {
+    const script = await generateBoardroomScript(postText);
+    return isVertical ? await renderVerticalBoardroom(script) : await renderBoardroom(script);
+  } catch (err) {
+    console.warn(`[Agent X] Boardroom fallback also failed: ${err.message}`);
+    return null;
   }
+}
+
+// ─── SHARED MODE DISPATCHER ───────────────────────────────────────────────────
+// Allowed modes: boardroom | news | cheatsheet
+// Any unknown mode falls back to boardroom.
+
+async function dispatchMode(decision, postText, { isVertical = false } = {}) {
+  const mode = decision.mode;
 
   if (mode === "boardroom") {
     try {
@@ -199,8 +178,8 @@ async function dispatchMode(decision, postText, { fallbackFn, isVertical = false
       console.log(`[Agent X] Boardroom episode: "${script.episode}"`);
       return isVertical ? await renderVerticalBoardroom(script) : await renderBoardroom(script);
     } catch (err) {
-      console.warn(`[Agent X] Boardroom failed, falling back: ${err.message}`);
-      return fallbackFn(postText);
+      console.warn(`[Agent X] Boardroom failed: ${err.message}`);
+      return null;
     }
   }
 
@@ -208,37 +187,42 @@ async function dispatchMode(decision, postText, { fallbackFn, isVertical = false
     try {
       const url = await fetchNewsUrl(postText);
       if (url) return await renderNewsScreenshot(url);
-      console.warn("[Agent X] No news URL found — falling back");
+      console.warn("[Agent X] No news URL found — falling back to boardroom");
     } catch (err) {
-      console.warn(`[Agent X] News screenshot failed, falling back: ${err.message}`);
+      console.warn(`[Agent X] News screenshot failed — falling back to boardroom: ${err.message}`);
     }
-    return fallbackFn(postText);
+    return renderBoardroomFallback(postText, isVertical);
   }
 
   if (mode === "cheatsheet") {
     try {
       const content = await generateCheatsheetContent(postText);
-      return isVertical ? await renderVerticalCheatsheet(content) : await renderCheatsheet(content);
+
+      // Generate Gemini (Nano Banana Pro) background art for the cheatsheet
+      let bgBase64 = null;
+      try {
+        const bgPrompt = isVertical
+          ? `Dark abstract digital art background for a business AI cheatsheet. Deep navy and black tones (#080E1C). Subtle glowing orange circuit-trace geometry, faint grid lines, soft light beams. No text, no characters, no faces. Premium editorial feel. Vertical portrait format.`
+          : `Dark abstract tech background for a business AI infographic card. Deep navy-black (#080E1C). Faint glowing orange geometric patterns, subtle circuit lines, soft light rays. No text, no people. Clean premium look. Wide landscape format.`;
+        const bgBuf = await generateGeminiImage(bgPrompt);
+        bgBase64 = bgBuf.toString("base64");
+        console.log(`[Agent X] Nano Banana background generated for cheatsheet`);
+      } catch (bgErr) {
+        console.warn(`[Agent X] Gemini bg failed — using solid bg: ${bgErr.message}`);
+      }
+
+      return isVertical
+        ? await renderVerticalCheatsheet(content, bgBase64)
+        : await renderCheatsheet(content, bgBase64);
     } catch (err) {
-      console.warn(`[Agent X] Cheatsheet failed, falling back: ${err.message}`);
-      return fallbackFn(postText);
+      console.warn(`[Agent X] Cheatsheet failed — falling back to boardroom: ${err.message}`);
+      return renderBoardroomFallback(postText, isVertical);
     }
   }
 
-  // VISUAL — Gemini Imagen 3
-  const prompt = isVertical
-    ? `${decision.imagePrompt} Vertical 9:16 portrait format, 1080x1920 pixels.`
-    : decision.imagePrompt;
-
-  try {
-    console.log(`[Agent X] Generating Gemini image...`);
-    const buf = await generateGeminiImage(prompt);
-    if (buf) return buf;
-    throw new Error("Gemini returned null");
-  } catch (err) {
-    console.warn(`[Agent X] Gemini failed: ${err.message}`);
-    return isVertical ? fallbackFn(postText) : null;
-  }
+  // Unknown mode — default to boardroom
+  console.warn(`[Agent X] Unknown mode "${mode}" — defaulting to boardroom`);
+  return renderBoardroomFallback(postText, isVertical);
 }
 
 // ─── INSTAGRAM — 1080x1920 vertical (9:16) ───────────────────────────────────
@@ -248,16 +232,12 @@ export async function generateImageForInstagram(postText) {
   try {
     decision = await selectImageMode(postText);
   } catch (err) {
-    console.warn(`[Instagram] Mode selection failed, defaulting to QUOTE: ${err.message}`);
-    decision = { mode: "quote" };
+    console.warn(`[Instagram] Mode selection failed, defaulting to boardroom: ${err.message}`);
+    decision = { mode: "boardroom" };
   }
 
   console.log(`[Instagram] Image mode: ${decision.mode.toUpperCase()} (9:16 vertical)`);
-
-  return dispatchMode(decision, postText, {
-    fallbackFn: renderVerticalCard,
-    isVertical: true,
-  });
+  return dispatchMode(decision, postText, { isVertical: true });
 }
 
 // ─── LINKEDIN — 1200x675 landscape ───────────────────────────────────────────
@@ -267,14 +247,10 @@ export async function generateImage(postText) {
   try {
     decision = await selectImageMode(postText);
   } catch (err) {
-    console.warn(`[Agent X] Mode selection failed, defaulting to QUOTE: ${err.message}`);
-    decision = { mode: "quote" };
+    console.warn(`[Agent X] Mode selection failed, defaulting to boardroom: ${err.message}`);
+    decision = { mode: "boardroom" };
   }
 
   console.log(`[Agent X] Image mode: ${decision.mode.toUpperCase()}`);
-
-  return dispatchMode(decision, postText, {
-    fallbackFn: renderQuoteCard,
-    isSquare: false,
-  });
+  return dispatchMode(decision, postText, { isVertical: false });
 }
