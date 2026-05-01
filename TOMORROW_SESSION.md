@@ -1,5 +1,5 @@
 ## Agent X — Session Starter
-**Last updated:** 2026-04-20 (end of Session 6)
+**Last updated:** 2026-04-25 (end of Session 8)
 **Project path:** `/Users/drevonbullock/C.C. Agent X/Agent X`
 
 ---
@@ -67,6 +67,50 @@ SHOTSTACK_API_KEY
 - Supabase schema (posts, variations, performance_briefs, news_seen)
 - LinkedIn + Threads + Instagram all wired
 - Variation engine, hook tester, feedback loop, youtube cutter
+
+---
+
+## FIRST — Verify Session 8 in Production
+
+Session 8 shipped 4 new image modes. Railway deployed automatically. Need to confirm they're working live before building anything new.
+
+### What was built (Session 8)
+- `images/render-boardroom.js` — "The Boardroom" CSS/SVG comic strip (SIGNAL vs NOISE, 5 panels)
+- `images/render-cheatsheet.js` — Dark navy educational card with section columns
+- `images/render-news-screenshot.js` — Playwright screenshots real article + BCG banner overlay
+- `agent/fetch-news-url.js` — Firecrawl search for news URL (uses `result.web[]` in v4 API)
+- `agent/generate-image.js` — Full rewrite: 5 modes (`quote | boardroom | cheatsheet | news | visual`), shared `dispatchMode()`, `generateBoardroomScript()`, `generateCheatsheetContent()`
+- `modules/news-agent.js` — Fixed Instagram posts using `generateImageForInstagram` instead of `generateImage`
+- `FIRECRAWL_API_KEY` — Added to Railway ✅ and local `.env` ✅
+
+### Production verification checklist
+Run these and confirm logs + output images look correct:
+
+```bash
+# 1. All 4 renderers — direct test, no Claude involved
+node test-all-modes.js
+
+# 2. Boardroom mode — Claude picks mode + renders strip
+node test-boardroom.js
+
+# 3. Cheatsheet mode — Claude picks mode + renders card
+node test-cheatsheet.js
+
+# 4. News mode — Firecrawl finds URL + Playwright screenshots it
+node test-news.js
+```
+
+Expected logs:
+- `[Agent X] Image mode: BOARDROOM` → `[Agent X] Boardroom episode: "..."`
+- `[Agent X] Image mode: CHEATSHEET`
+- `[Agent X] Image mode: NEWS` → `[Firecrawl] Found article URL: https://...`
+
+If any mode falls through to VISUAL or QUOTE unexpectedly — the mode selection prompt may need tuning for that post type.
+
+### Known edge cases to watch
+- NEWS mode falls back to QUOTE if Firecrawl returns no results (not an error — just logs a warning)
+- BOARDROOM mode won't trigger on very short/abstract posts — Claude will pick QUOTE or VISUAL instead
+- VISUAL mode with Gemini can still return null on LinkedIn (text-only post) — this is intentional
 
 ---
 

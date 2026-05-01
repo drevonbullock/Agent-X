@@ -31,6 +31,18 @@ import { generateAndPostCarousel, generateAndPostCarouselToThreads } from "./mod
 import { handleInstagramWebhook } from "./modules/comment-reply.js";
 import { startScheduler } from "./scheduler.js";
 
+// ─── STARTUP — RAW FOOTAGE CHECK ─────────────────────────────────────────────
+fs.mkdirSync("raw_footage",    { recursive: true });
+fs.mkdirSync("video-projects", { recursive: true });
+{
+  const _rawFiles = fs.readdirSync("raw_footage").filter((f) => /\.(mp4|mov|avi|mkv)$/i.test(f));
+  if (_rawFiles.length > 0) {
+    console.log(`[Agent X] Raw footage detected — next video post will use PATH A: ${_rawFiles[0]}`);
+  } else {
+    console.log(`[Agent X] No raw footage — next video post will use PATH B (AI generated)`);
+  }
+}
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const IG_BUCKET  = "agent-x-videos";
 
@@ -137,7 +149,7 @@ export async function runLinkedIn(withImage = true) {
       const { caption: c, videoScript, videoStyle } = await generateVideoPost();
       caption = c;
       console.log(`[LinkedIn] Video script: ${videoScript.length} screens | style: ${videoStyle}`);
-      videoPath = await generateVideo(videoScript, videoStyle);
+      videoPath = await generateVideo(caption, videoScript, videoStyle);
       videoAsset = { type: "video", path: videoPath };
     } catch (err) {
       console.error(`[LinkedIn] Video pipeline failed, falling back to text: ${err.message}`);
@@ -222,7 +234,7 @@ export async function runInstagramReel() {
     const { caption, videoScript } = await generateReelScript(topic);
     console.log(`[Instagram] Hook: "${videoScript[0].heading}"`);
 
-    const rawPath = await generateVideo(videoScript, "auto");
+    const rawPath = await generateVideo(caption, videoScript, "auto");
     const videoPath = compressForUpload(rawPath);
 
     await ensureIgBucket();
@@ -288,7 +300,7 @@ export async function runThreads() {
       const { caption, videoScript } = await generateVideoPost();
       console.log(`[Threads] Video hook: "${videoScript[0].heading}"`);
 
-      const rawPath = await generateVideo(videoScript, "auto");
+      const rawPath = await generateVideo(caption, videoScript, "auto");
       const videoPath = compressForUpload(rawPath);
 
       await ensureIgBucket();

@@ -1,8 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { renderQuoteCard, renderSquareCard } from "../images/render-quote-card.js";
+import { renderQuoteCard, renderVerticalCard } from "../images/render-quote-card.js";
 import { generateGeminiImage } from "../images/gemini.js";
-import { renderBoardroom } from "../images/render-boardroom.js";
-import { renderCheatsheet } from "../images/render-cheatsheet.js";
+import { renderBoardroom, renderVerticalBoardroom } from "../images/render-boardroom.js";
+import { renderCheatsheet, renderVerticalCheatsheet } from "../images/render-cheatsheet.js";
 import { renderNewsScreenshot } from "../images/render-news-screenshot.js";
 import { fetchNewsUrl } from "./fetch-news-url.js";
 
@@ -35,20 +35,21 @@ Best for: punchy one-liners, strong opinions, personal reflections, build-in-pub
 Return: {"mode":"quote"}
 
 BOARDROOM MODE — Puppeteer renders "The Boardroom" comic strip: Signal (hoodie, automated everything, smug) vs Noise (suit, manual everything, always wrong).
-Best for: ANY post that contrasts manual vs automated work, shows a before/after between old-school and AI approaches, describes a business owner wasting time on repetitive tasks, or has a punchline where automation wins. If someone is still doing something manually that could be automated — that's BOARDROOM.
+Best for: ANY post involving businesses, companies, or business owners — especially when it contrasts old-school vs AI-powered approaches, manual vs automated work, companies that are falling behind vs companies winning, traditional strategies vs modern ones, someone wasting time on repetitive tasks, or an industry being disrupted. If the post mentions companies, business owners, competitors, market dynamics, or organizational behavior — BOARDROOM is almost always correct. This is the DEFAULT for business content.
 Return: {"mode":"boardroom"}
 
 NEWS MODE — Playwright screenshots a real news article related to the post topic.
-Best for: posts that name a specific company, product, or announcement (e.g. "OpenAI just...", "Google released...", "New study shows..."). Must reference a real, findable news event.
+Best for: posts that name a specific company, product, or announcement (e.g. "OpenAI just...", "Google released...", "New study shows..."). Must reference a real, findable news event with a specific headline.
 Return: {"mode":"news"}
 
 CHEATSHEET MODE — Puppeteer renders a structured educational card with titled sections and bullet points.
-Best for: "X vs Y" comparisons, framework breakdowns, "the difference between...", numbered lists of distinct concepts, anything where the educational value is in categorized structure with 2–3 clear sections.
+Best for: "X vs Y" comparisons, framework breakdowns, "the difference between...", tool reviews with structured pros/cons, numbered lists of distinct concepts, anything where the educational value is in 2–3 clearly labeled categories with bullet points under each.
 Return: {"mode":"cheatsheet"}
 
 VISUAL MODE — Gemini Imagen 3 generates a cinematic editorial photograph or illustration.
-Best for: philosophical takes, mindset posts, abstract ideas about the future, atmosphere-driven concepts, metaphorical storytelling with no clear manual-vs-automated contrast and no structured categories to teach.
-Use VISUAL only when none of the above modes fit.
+Best for: deeply philosophical or emotional content about human experience, identity, or abstract life concepts — with absolutely NO business characters, companies, or organizational contrast. Must be a genuinely abstract topic where none of the above modes could dramatize it.
+NEVER use VISUAL for: posts about companies, business owners, industry trends, market competition, AI adoption, productivity, automation, or any organizational scenario — use BOARDROOM instead.
+Use VISUAL only as a last resort when the post is purely philosophical with zero business context.
 
 ---
 
@@ -185,18 +186,18 @@ Return only valid JSON. No explanation, no markdown fences.`,
 // ─── SHARED MODE DISPATCHER ───────────────────────────────────────────────────
 // Returns a Buffer. Falls back to the provided fallbackFn if a mode errors.
 
-async function dispatchMode(decision, postText, { fallbackFn, isSquare = false }) {
+async function dispatchMode(decision, postText, { fallbackFn, isVertical = false }) {
   const mode = decision.mode;
 
   if (mode === "quote") {
-    return isSquare ? renderSquareCard(postText) : renderQuoteCard(postText);
+    return isVertical ? renderVerticalCard(postText) : renderQuoteCard(postText);
   }
 
   if (mode === "boardroom") {
     try {
       const script = await generateBoardroomScript(postText);
       console.log(`[Agent X] Boardroom episode: "${script.episode}"`);
-      return await renderBoardroom(script);
+      return isVertical ? await renderVerticalBoardroom(script) : await renderBoardroom(script);
     } catch (err) {
       console.warn(`[Agent X] Boardroom failed, falling back: ${err.message}`);
       return fallbackFn(postText);
@@ -217,7 +218,7 @@ async function dispatchMode(decision, postText, { fallbackFn, isSquare = false }
   if (mode === "cheatsheet") {
     try {
       const content = await generateCheatsheetContent(postText);
-      return await renderCheatsheet(content);
+      return isVertical ? await renderVerticalCheatsheet(content) : await renderCheatsheet(content);
     } catch (err) {
       console.warn(`[Agent X] Cheatsheet failed, falling back: ${err.message}`);
       return fallbackFn(postText);
@@ -225,8 +226,8 @@ async function dispatchMode(decision, postText, { fallbackFn, isSquare = false }
   }
 
   // VISUAL — Gemini Imagen 3
-  const prompt = isSquare
-    ? `${decision.imagePrompt} Square 1:1 format, 1080x1080 pixels.`
+  const prompt = isVertical
+    ? `${decision.imagePrompt} Vertical 9:16 portrait format, 1080x1920 pixels.`
     : decision.imagePrompt;
 
   try {
@@ -236,12 +237,11 @@ async function dispatchMode(decision, postText, { fallbackFn, isSquare = false }
     throw new Error("Gemini returned null");
   } catch (err) {
     console.warn(`[Agent X] Gemini failed: ${err.message}`);
-    // LinkedIn: null means text-only post. Instagram: always return something.
-    return isSquare ? fallbackFn(postText) : null;
+    return isVertical ? fallbackFn(postText) : null;
   }
 }
 
-// ─── INSTAGRAM — 1080x1080 square ────────────────────────────────────────────
+// ─── INSTAGRAM — 1080x1920 vertical (9:16) ───────────────────────────────────
 
 export async function generateImageForInstagram(postText) {
   let decision;
@@ -252,11 +252,11 @@ export async function generateImageForInstagram(postText) {
     decision = { mode: "quote" };
   }
 
-  console.log(`[Instagram] Image mode: ${decision.mode.toUpperCase()} (square)`);
+  console.log(`[Instagram] Image mode: ${decision.mode.toUpperCase()} (9:16 vertical)`);
 
   return dispatchMode(decision, postText, {
-    fallbackFn: renderSquareCard,
-    isSquare: true,
+    fallbackFn: renderVerticalCard,
+    isVertical: true,
   });
 }
 

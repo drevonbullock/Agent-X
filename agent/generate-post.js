@@ -170,10 +170,10 @@ Write only the post text. No quotes around it.`,
 }
 
 // ─── VIDEO MODE ──────────────────────────────────────────────────────────────
-// Returns { caption, videoScript, videoStyle } for Remotion rendering.
+// Returns { caption, videoScript, videoStyle } for Hyperframes rendering.
 // caption   → short hook posted as the LinkedIn caption above the video
 // videoScript → array of { screen, heading, body } rendered inside the video
-// videoStyle  → which Remotion composition to use
+// videoStyle  → which Hyperframes composition style to use
 
 const VIDEO_SYSTEM_PROMPT = `You are writing a LinkedIn video post for a business owner audience — founders, agency owners, and small business operators who are curious about AI but not technical.
 

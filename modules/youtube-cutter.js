@@ -2,20 +2,10 @@ import "dotenv/config";
 import Anthropic from "@anthropic-ai/sdk";
 import fs from "fs";
 import path from "path";
+import { execSync } from "child_process";
 
 const client = new Anthropic();
 
-// ─── SHOTSTACK ENV HELPERS ────────────────────────────────────────────────────
-
-function shotstackKey() {
-  return process.env.SHOTSTACK_ENV === "production"
-    ? process.env.SHOTSTACK_API_KEY_PROD
-    : process.env.SHOTSTACK_API_KEY;
-}
-
-function shotstackStage() {
-  return process.env.SHOTSTACK_ENV === "production" ? "v1" : "stage";
-}
 
 const CLIP_SELECTOR_SYSTEM = `You are a short-form video editor.
 Given a YouTube video transcript, identify the 8 most clip-worthy moments.
@@ -93,48 +83,27 @@ async function selectClips(transcript) {
   return JSON.parse(raw);
 }
 
-// ─── SHOTSTACK VIDEO CUTTING ─────────────────────────────────────────────────
+// ─── FFMPEG VIDEO CUTTING ────────────────────────────────────────────────────
 
-async function cutClipWithShotstack(youtubeUrl, startTime, endTime, outputLabel) {
-  const key = shotstackKey();
-  if (!key) throw new Error("Shotstack API key not set in .env");
-
-  // Convert MM:SS to seconds
+function cutClipWithFfmpeg(sourceVideoPath, startTime, endTime, outputLabel) {
+  const ffmpeg = process.platform === "linux" ? "/usr/bin/ffmpeg" : "/opt/homebrew/bin/ffmpeg";
   const toSeconds = (t) => {
     const [m, s] = t.split(":").map(Number);
     return m * 60 + s;
   };
   const start = toSeconds(startTime);
-  const length = toSeconds(endTime) - start;
+  const end   = toSeconds(endTime);
 
-  const timeline = {
-    tracks: [{
-      clips: [{
-        asset: { type: "video", src: youtubeUrl, trim: start },
-        start: 0,
-        length,
-        fit: "crop",
-        scale: 1,
-      }],
-    }],
-  };
+  fs.mkdirSync("generated_imgs", { recursive: true });
+  const outPath = path.resolve(`generated_imgs/yt-clip-${outputLabel}-${Date.now()}.mp4`);
 
-  const editRes = await fetch(`https://api.shotstack.io/edit/${shotstackStage()}/render`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": key,
-    },
-    body: JSON.stringify({ timeline, output: { format: "mp4", resolution: "sd", aspectRatio: "9:16" } }),
-  });
+  execSync(
+    `${ffmpeg} -y -ss ${start} -to ${end} -i "${sourceVideoPath}" -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920" -c:v libx264 -crf 22 -preset fast -c:a aac "${outPath}"`,
+    { stdio: "pipe", timeout: 120000 }
+  );
 
-  if (!editRes.ok) {
-    const err = await editRes.text();
-    throw new Error(`Shotstack render failed (${editRes.status}): ${err}`);
-  }
-
-  const { response } = await editRes.json();
-  return response.id; // render ID — poll for completion separately
+  console.log(`[YouTubeCutter] Clip saved: ${outPath}`);
+  return outPath;
 }
 
 // ─── CAPTION GENERATION ──────────────────────────────────────────────────────
@@ -152,9 +121,10 @@ async function generateCaption(clip) {
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
 export async function processYouTubeVideo(youtubeUrl) {
+  const { execSync: exec } = await import("child_process");
   console.log(`[YouTubeCutter] Processing: ${youtubeUrl}`);
 
-  // 1. Download audio
+  // 1. Download audio for transcription
   const tmpAudio = `/tmp/agentx-yt-${Date.now()}.mp3`;
   console.log(`[YouTubeCutter] Downloading audio...`);
   await downloadAudio(youtubeUrl, tmpAudio);
@@ -163,7 +133,6 @@ export async function processYouTubeVideo(youtubeUrl) {
   console.log(`[YouTubeCutter] Transcribing with Whisper...`);
   const transcript = await transcribeWithWhisper(tmpAudio);
   console.log(`[YouTubeCutter] Transcript: ${transcript.length} characters`);
-
   try { fs.unlinkSync(tmpAudio); } catch { /* ignore */ }
 
   // 3. Select 8 clips via Claude
@@ -171,17 +140,31 @@ export async function processYouTubeVideo(youtubeUrl) {
   const clips = await selectClips(transcript);
   console.log(`[YouTubeCutter] Selected ${clips.length} clips`);
 
-  // 4. Generate captions + queue Shotstack renders
+  // 4. Download full video for local ffmpeg cutting
+  const tmpVideo = `/tmp/agentx-yt-vid-${Date.now()}.mp4`;
+  console.log(`[YouTubeCutter] Downloading video for local cutting...`);
+  try {
+    exec(`yt-dlp -f "best[ext=mp4]" -o "${tmpVideo}" "${youtubeUrl}"`, {
+      stdio: "pipe",
+      timeout: 300000,
+    });
+  } catch (err) {
+    console.warn(`[YouTubeCutter] Video download failed: ${err.message}. Clips will be skipped.`);
+  }
+
+  // 5. Generate captions + cut clips with ffmpeg
   const results = [];
   for (const clip of clips) {
     const caption = await generateCaption(clip).catch(() => clip.hook);
-    let renderId = null;
+    let clipPath = null;
 
-    try {
-      renderId = await cutClipWithShotstack(youtubeUrl, clip.start_time, clip.end_time, `clip-${results.length + 1}`);
-      console.log(`[YouTubeCutter] Clip ${results.length + 1} queued: ${clip.start_time}–${clip.end_time} | Render: ${renderId}`);
-    } catch (err) {
-      console.error(`[YouTubeCutter] Shotstack failed for clip ${results.length + 1}: ${err.message}`);
+    if (fs.existsSync(tmpVideo)) {
+      try {
+        clipPath = cutClipWithFfmpeg(tmpVideo, clip.start_time, clip.end_time, `clip-${results.length + 1}`);
+        console.log(`[YouTubeCutter] Clip ${results.length + 1} cut: ${clip.start_time}–${clip.end_time}`);
+      } catch (err) {
+        console.error(`[YouTubeCutter] ffmpeg cut failed for clip ${results.length + 1}: ${err.message}`);
+      }
     }
 
     results.push({
@@ -191,9 +174,11 @@ export async function processYouTubeVideo(youtubeUrl) {
       hook: clip.hook,
       caption,
       why_it_works: clip.why_it_works,
-      shotstack_render_id: renderId,
+      clip_path: clipPath,
     });
   }
+
+  try { fs.unlinkSync(tmpVideo); } catch { /* ignore */ }
 
   const output = {
     processed_at: new Date().toISOString(),
@@ -204,7 +189,7 @@ export async function processYouTubeVideo(youtubeUrl) {
 
   const outPath = `generated_imgs/youtube-clips-${Date.now()}.json`;
   fs.writeFileSync(outPath, JSON.stringify(output, null, 2));
-  console.log(`[YouTubeCutter] Done. ${results.length} clips queued → ${outPath}`);
+  console.log(`[YouTubeCutter] Done. ${results.length} clips cut → ${outPath}`);
   return output;
 }
 

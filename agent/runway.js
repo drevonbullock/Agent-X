@@ -7,7 +7,7 @@ const POLL_TIMEOUT_MS = 120_000;
 
 /**
  * Generate a short animated clip from a still image using Runway Gen-3.
- * Returns the local filename (e.g. "clip_2_1.mp4") saved to remotion-videos/public/.
+ * Returns the local filename (e.g. "clip_2_1.mp4") saved to the provided publicDir.
  * Throws if RUNWAY_API_KEY is not set or if generation fails.
  */
 export async function generateRunwayClip(imageBuffer, prompt, outputFilename, publicDir) {

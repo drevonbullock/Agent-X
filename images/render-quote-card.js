@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SQ_BG_PATH = path.resolve(__dirname, "../remotion-videos/public/dre_square_v3.png");
+const SQ_BG_PATH = path.resolve(__dirname, "../assets/dre_square_v3.png");
 
 const WIDTH = 1200;
 const HEIGHT = 675;
@@ -289,7 +289,120 @@ export async function renderQuoteCard(postText, {
     await page.setContent(html, { waitUntil: "domcontentloaded" });
 
     const buffer = await page.screenshot({ type: "png" });
-    return buffer; // Buffer (PNG)
+    return buffer;
+  } finally {
+    await browser.close();
+  }
+}
+
+// ─── INSTAGRAM VERTICAL CARD — 1080x1350 (4:5) ───────────────────────────────
+
+export async function renderVerticalCard(postText, {
+  author = "Drevon Bullock",
+  title  = "AI Consultant • BCG",
+  handle = "@drevonbullock.ai",
+} = {}) {
+  const W = 1080;
+  const H = 1350;
+  const quote = extractHeroQuote(postText);
+  const bgBase64 = fs.readFileSync(SQ_BG_PATH).toString("base64");
+  const bgDataUrl = `data:image/png;base64,${bgBase64}`;
+  const q = JSON.stringify(quote);
+  const a = JSON.stringify(author);
+  const t = JSON.stringify(title);
+  const h = JSON.stringify(handle);
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: ${W}px; height: ${H}px; overflow: hidden; }
+    .card {
+      position: relative; width: ${W}px; height: ${H}px;
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .bg { position: absolute; inset: 0; background: url("${bgDataUrl}") center/cover no-repeat; }
+    .overlay { position: absolute; inset: 0; background: rgba(4,8,18,0.62); }
+    .accent-left {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 8px;
+      background: linear-gradient(180deg, #00D2FF 0%, #0099CC 100%);
+    }
+    .bottom-border { position: absolute; bottom: 0; left: 0; right: 0; height: 6px; background: #00D2FF; }
+    .ghost-quote {
+      position: absolute; top: -60px; left: 32px;
+      font-size: 500px; font-weight: 700; font-family: Georgia, serif;
+      color: #00D2FF; opacity: 0.06; line-height: 1;
+    }
+    .quote-area {
+      position: relative; flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 80px 80px 30px;
+    }
+    .quote-text {
+      color: #FFF; text-align: center; font-weight: 700; line-height: 1.3;
+      text-shadow: 0 0 60px rgba(0,210,255,0.2); word-break: break-word;
+    }
+    .bottom-strip { position: relative; height: 160px; }
+    .separator { position: absolute; top: 0; left: 40px; right: 40px; height: 1px; background: rgba(0,210,255,0.3); }
+    .strip-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+    .strip-content {
+      position: relative; display: flex; align-items: center;
+      justify-content: space-between; height: 100%; padding: 0 44px;
+    }
+    .author-info { display: flex; flex-direction: column; gap: 6px; }
+    .author-name { color: #FFF; font-weight: 700; font-size: 32px; }
+    .author-title { color: #B4C8DA; font-size: 24px; }
+    .handle { color: #00D2FF; font-weight: 600; font-size: 28px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="bg"></div>
+    <div class="overlay"></div>
+    <div class="accent-left"></div>
+    <div class="bottom-border"></div>
+    <div class="ghost-quote">&ldquo;</div>
+    <div class="quote-area">
+      <p class="quote-text" id="quote"></p>
+    </div>
+    <div class="bottom-strip">
+      <div class="separator"></div>
+      <div class="strip-overlay"></div>
+      <div class="strip-content">
+        <div class="author-info">
+          <span class="author-name" id="author"></span>
+          <span class="author-title" id="title"></span>
+        </div>
+        <span class="handle" id="handle"></span>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById("quote").textContent  = ${q};
+    document.getElementById("author").textContent = ${a};
+    document.getElementById("title").textContent  = ${t};
+    document.getElementById("handle").textContent = ${h};
+    const el = document.getElementById("quote");
+    for (let size = 110; size >= 42; size -= 4) {
+      el.style.fontSize = size + "px";
+      if (el.scrollWidth <= 920 && el.scrollHeight <= 1400) break;
+    }
+  </script>
+</body>
+</html>`;
+
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: W, height: H, deviceScaleFactor: 2 });
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
+    return await page.screenshot({ type: "png" });
   } finally {
     await browser.close();
   }

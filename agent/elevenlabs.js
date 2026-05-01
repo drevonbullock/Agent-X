@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 
-const PUBLIC_DIR = path.resolve("remotion-videos/public");
+const DEFAULT_AUDIO_DIR = path.resolve("generated_imgs/audio");
 const FPS = 30;
 
 // Breathing room after voiceover finishes before cutting to next slide.
@@ -105,8 +105,9 @@ function buildScreenText(screen, countdownNumber) {
 // ─── SINGLE SCREEN ───────────────────────────────────────────────────────────
 // Generates a single MP3 for one screen.
 // countdownNumber: pass the displayed countdown integer for list_countdown screens (e.g. 3, 2, 1).
-// Returns { path: 'public/voice_1.mp3', durationSeconds: 6.2 } or null on failure.
-export async function generateVoiceoverForScreen(screen, countdownNumber) {
+// outputDir: directory to write the MP3 (defaults to generated_imgs/audio/).
+// Returns { path: '/abs/path/to/voice_1.mp3', durationSeconds: 6.2 } or null on failure.
+export async function generateVoiceoverForScreen(screen, countdownNumber, outputDir) {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   const voiceId = process.env.ELEVENLABS_VOICE_ID;
 
@@ -115,12 +116,13 @@ export async function generateVoiceoverForScreen(screen, countdownNumber) {
     return null;
   }
 
+  const dir = outputDir ?? DEFAULT_AUDIO_DIR;
   const text = buildScreenText(screen, countdownNumber);
   const outputFile = `voice_${screen.screen}.mp3`;
-  const outputPath = path.join(PUBLIC_DIR, outputFile);
+  const outputPath = path.join(dir, outputFile);
 
   try {
-    if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
     const { buffer, wordTimestamps } = await callElevenLabs(text, apiKey, voiceId);
     fs.writeFileSync(outputPath, buffer);
@@ -133,7 +135,7 @@ export async function generateVoiceoverForScreen(screen, countdownNumber) {
     const durationSeconds = Math.round(Math.max(audioDuration + HOLD_AFTER_AUDIO, readFloor, minFloor) * 10) / 10;
 
     console.log(`[Agent X] Screen ${screen.screen} audio: ${outputFile} (${audioDuration.toFixed(1)}s audio → ${durationSeconds.toFixed(1)}s screen)`);
-    return { path: `public/${outputFile}`, durationSeconds, wordTimestamps };
+    return { path: outputPath, durationSeconds, wordTimestamps };
   } catch (err) {
     console.error(`[ElevenLabs] Screen ${screen.screen} failed: ${err.message}`);
     return null;
@@ -143,8 +145,9 @@ export async function generateVoiceoverForScreen(screen, countdownNumber) {
 // ─── FULL SCRIPT ─────────────────────────────────────────────────────────────
 // Generates one MP3 per screen in the video script.
 // videoStyle: pass "list_countdown" to prefix each teaching screen with its spoken number.
-// Returns array: [{ screen: 1, path: 'public/voice_1.mp3', durationSeconds: 2.5, hasAudio: true }, ...]
-export async function generateAllVoiceovers(videoScript, videoStyle) {
+// outputDir: directory to write MP3s (defaults to generated_imgs/audio/).
+// Returns array: [{ screen: 1, path: '/abs/path/voice_1.mp3', durationSeconds: 2.5, hasAudio: true }, ...]
+export async function generateAllVoiceovers(videoScript, videoStyle, outputDir) {
   const results = [];
   const isCountdown = videoStyle === "list_countdown";
   // Teaching screens = all screens after the hook (screen index > 0)
@@ -159,7 +162,7 @@ export async function generateAllVoiceovers(videoScript, videoStyle) {
       countdownNumber = teachingCount - teachingIndex; // 3 → 2 → 1
     }
 
-    const result = await generateVoiceoverForScreen(screen, countdownNumber);
+    const result = await generateVoiceoverForScreen(screen, countdownNumber, outputDir);
 
     if (result) {
       results.push({
@@ -188,4 +191,40 @@ export async function generateAllVoiceovers(videoScript, videoStyle) {
 export async function generateVoiceover() {
   console.warn("[ElevenLabs] generateVoiceover() is deprecated — use generateAllVoiceovers()");
   return null;
+}
+
+// ─── SPEECH-TO-TEXT ──────────────────────────────────────────────────────────
+// Used by processRawFootage for word-level transcript with timestamps.
+// Returns { text, words: [{ text, start, end }] }
+export async function transcribeAudio(audioBuffer) {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) throw new Error("ELEVENLABS_API_KEY not set");
+
+  const form = new FormData();
+  form.append(
+    "audio_file",
+    new Blob([audioBuffer], { type: "audio/mpeg" }),
+    "audio.mp3"
+  );
+  form.append("model_id", "scribe_v1");
+
+  const res = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
+    method: "POST",
+    headers: { "xi-api-key": apiKey },
+    body: form,
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`ElevenLabs STT failed (${res.status}): ${err}`);
+  }
+
+  const data = await res.json();
+  const words = (data.words ?? []).map((w) => ({
+    text:  w.text ?? w.value ?? "",
+    start: w.start ?? w.start_time ?? 0,
+    end:   w.end   ?? w.end_time   ?? 0,
+  }));
+
+  return { text: data.text ?? "", words };
 }
