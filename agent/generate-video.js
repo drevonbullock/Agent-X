@@ -1,12 +1,8 @@
 import { generateHyperframesVideo } from "./generate-hyperframes-video.js";
 import { processRawFootage } from "./process-raw-footage.js";
 import { generateHeyGenVideo } from "./generate-heygen-avatar.js";
-import { generateAllVoiceovers } from "./elevenlabs.js";
 import fs from "fs";
 import path from "path";
-
-// Styles that do not need voiceover audio
-const SILENT_STYLES = new Set(["hook_reveal", "review_card"]);
 
 // ─── AUTO STYLE SELECTOR ──────────────────────────────────────────────────────
 // Haiku picks the best style from the script content.
@@ -77,28 +73,11 @@ export async function generateVideo(postText, videoScript, videoStyle) {
   // ── PATH B fallback — Hyperframes only ──────────────────────────────────
   console.log(`[Agent X] PATH B — Hyperframes motion graphics`);
 
-  // Resolve "auto" style
   const resolvedStyle = videoStyle === "auto" || !videoStyle
     ? await selectVideoStyle(videoScript)
     : videoStyle;
 
   console.log(`[Agent X] Format: ${resolvedStyle}`);
-
-  // Generate voiceovers for styles that use audio
-  let voiceoverPath    = null;
-  let screenDurations  = null;
-
-  if (!SILENT_STYLES.has(resolvedStyle)) {
-    console.log(`[Agent X] Generating voiceovers for ${videoScript.length} screens...`);
-    try {
-      const voiceovers   = await generateAllVoiceovers(videoScript, resolvedStyle);
-      screenDurations    = voiceovers.map((v) => v.durationSeconds);
-      voiceoverPath      = voiceovers[0]?.path ?? null;
-    } catch (err) {
-      console.warn(`[Agent X] Voiceover generation failed — rendering silent: ${err.message}`);
-    }
-  }
-
   console.log(`[Agent X] Rendering with Hyperframes...`);
-  return await generateHyperframesVideo(videoScript, resolvedStyle, voiceoverPath, screenDurations);
+  return await generateHyperframesVideo(videoScript, resolvedStyle);
 }

@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
+import { generateAllVoiceovers } from "./elevenlabs.js";
 
 const ffmpeg = process.platform === "linux" ? "/usr/bin/ffmpeg" : "/opt/homebrew/bin/ffmpeg";
 
@@ -133,7 +134,7 @@ html, body { width: 1080px; height: 1080px; overflow: hidden; background: ${BG};
     <div class="stat-body">${escHtml(s.body || s.points?.join(' ') || '')}</div>
   </div>`).join('')}
 </div>
-${screens.length > 0 ? `<audio id="vo" src="voice_2.mp3" data-start="0" data-volume="1.0"></audio>` : ''}
+${screens.length > 0 ? `<audio id="vo-stat" src="voice_2.mp3" data-start="0" data-volume="1.0"></audio>` : ''}
 <script>
 (() => {
   const SLOT = ${dur};
@@ -155,7 +156,7 @@ function buildProblemSolution(videoScript, projectDir, voiceoverPath) {
   const solution = videoScript[1] ?? {};
   const dur = 12;
   const audioTag = voiceoverPath
-    ? `<audio id="vo" src="${path.basename(voiceoverPath)}" data-start="0" data-volume="1.0"></audio>`
+    ? `<audio id="vo-ps" src="${path.basename(voiceoverPath)}" data-start="0" data-volume="1.0"></audio>`
     : '';
   return `<!DOCTYPE html>
 <html>
@@ -250,7 +251,7 @@ function buildListCountdown(videoScript, screenDurations, projectDir) {
   <div class="screen hook-screen clip" id="sc1"
        data-start="0" data-duration="${hookDur}" data-track-index="1">
     <div class="hook-heading">${escHtml(hookScreen?.heading ?? '')}</div>
-    <audio src="voice_1.mp3" data-start="0" data-volume="1.0"></audio>
+    <audio id="vo-sc1" src="voice_1.mp3" data-start="0" data-volume="1.0"></audio>
   </div>`;
 
   cumulativeTime += hookDur;
@@ -270,7 +271,7 @@ function buildListCountdown(videoScript, screenDurations, projectDir) {
     <div class="countdown-number">${num}</div>
     <div class="teach-heading">${escHtml(s.heading)}</div>
     <ul class="teach-points">${pointsHtml}</ul>
-    <audio src="voice_${i + 2}.mp3" data-start="${st}" data-volume="1.0"></audio>
+    <audio id="vo-sc${i + 2}" src="voice_${i + 2}.mp3" data-start="${st}" data-volume="1.0"></audio>
   </div>`;
   }).join('');
 
@@ -431,19 +432,50 @@ function escHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
+// Styles that are always silent (no voiceover needed)
+const SILENT_STYLES = new Set(['hook_reveal', 'review_card']);
+
 // ─── MAIN EXPORT ─────────────────────────────────────────────────────────────
 
-export async function generateHyperframesVideo(videoScript, style, voiceoverPath, screenDurations) {
+export async function generateHyperframesVideo(videoScript, style) {
   const timestamp   = Date.now();
   const projectSlug = `${style}-${timestamp}`;
   const projectDir  = path.resolve(`video-projects/${projectSlug}`);
   const htmlPath    = path.join(projectDir, 'index.html');
   const outputPath  = path.resolve(`generated_imgs/video-${timestamp}.mp4`);
 
-  fs.mkdirSync(projectDir, { recursive: true });
+  fs.mkdirSync(path.join(projectDir, 'renders'), { recursive: true });
   fs.mkdirSync('generated_imgs', { recursive: true });
 
+  // Write minimal Hyperframes project config files
+  fs.writeFileSync(path.join(projectDir, 'hyperframes.json'), JSON.stringify({
+    "$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
+    "registry": "https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry",
+    "paths": { "blocks": "compositions", "components": "compositions/components", "assets": "assets" }
+  }, null, 2));
+  fs.writeFileSync(path.join(projectDir, 'meta.json'), JSON.stringify({
+    "id": projectSlug, "name": projectSlug, "createdAt": new Date().toISOString()
+  }, null, 2));
+
   console.log(`[Agent X] Building Hyperframes composition: ${style}`);
+
+  // ── Generate voiceovers INTO the project folder ──────────────────────────
+  // Voice files land at projectDir/voice_1.mp3, voice_2.mp3, etc.
+  // The HTML references them as relative filenames — Chrome finds them correctly.
+  let screenDurations = null;
+  let voiceoverPath   = null;
+
+  if (!SILENT_STYLES.has(style)) {
+    console.log(`[Agent X] Generating voiceovers into project folder...`);
+    try {
+      const voiceovers = await generateAllVoiceovers(videoScript, style, projectDir);
+      screenDurations  = voiceovers.map((v) => v.durationSeconds);
+      voiceoverPath    = voiceovers[0]?.path ?? null;
+      console.log(`[Agent X] Voiceovers done. Screen durations: ${screenDurations?.join(', ')}`);
+    } catch (err) {
+      console.warn(`[Agent X] Voiceover generation failed — rendering silent: ${err.message}`);
+    }
+  }
 
   let html;
   switch (style) {
@@ -469,25 +501,25 @@ export async function generateHyperframesVideo(videoScript, style, voiceoverPath
   fs.writeFileSync(htmlPath, html, 'utf8');
   console.log(`[Agent X] HTML written: ${htmlPath}`);
 
-  // Lint before render
+  // Lint — run from project dir, no file arg (reads index.html from CWD)
   try {
     console.log(`[Agent X] Linting composition...`);
-    execSync(`npx hyperframes lint "${htmlPath}"`, {
+    execSync(`npx hyperframes lint`, {
       cwd: projectDir,
       stdio: 'pipe',
       timeout: 30000,
     });
     console.log(`[Agent X] Lint passed`);
   } catch (err) {
-    const lintOut = err.stdout?.toString() ?? err.message;
-    console.warn(`[Agent X] Lint warnings — proceeding: ${lintOut.slice(0, 200)}`);
+    const lintOut = (err.stdout?.toString() ?? err.stderr?.toString() ?? err.message).slice(0, 300);
+    console.warn(`[Agent X] Lint warnings — proceeding: ${lintOut}`);
   }
 
-  // Render to MP4
+  // Render — pass project dir as the DIR argument, absolute output path
   console.log(`[Agent X] Rendering with Hyperframes...`);
   try {
     execSync(
-      `npx hyperframes render "${htmlPath}" --output "${outputPath}" --quality standard`,
+      `npx hyperframes render "${projectDir}" --output "${outputPath}" --quality standard`,
       {
         cwd: projectDir,
         stdio: 'inherit',
