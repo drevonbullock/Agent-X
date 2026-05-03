@@ -118,11 +118,17 @@ Return only valid JSON. No explanation, no markdown fences.`,
 async function generateCheatsheetContent(postText) {
   const message = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 600,
-    system: `You are a content designer. Given a LinkedIn post about AI automation for business owners, extract the key educational content and structure it as a visual cheatsheet.
+    max_tokens: 900,
+    system: `You are a premium content designer building high-information visual reference cards for business owners learning AI automation.
 
-Keep it scannable — max 3 sections, max 4 bullet points each. Sections should each teach a distinct idea.
-For section border colors, use only: #FF6B00 (orange), #00D2FF (cyan), or #22c55e (green).
+Given a LinkedIn post, extract the core educational content into exactly 3 sections. Each section must teach a distinct, concrete idea.
+
+Rules:
+- 4 bullet points per section — specific, concrete, actionable (not generic)
+- badge: 2-3 word ALL-CAPS use-case label (e.g. "FOR ACTIONS", "AVOID WHEN", "BEST FOR", "USE CASE", "KEY RISK", "HOW IT WORKS")
+- what: one sharp sentence under 15 words — the exact definition or use case
+- tags: 2-3 short keyword pills (1-2 words each) that describe this section's category
+- Section colors — use only: #FF6B00 (orange), #00D2FF (cyan), #22c55e (green) — one per section, no repeats
 Return only valid JSON. No explanation, no markdown fences.`,
     messages: [
       {
@@ -133,9 +139,12 @@ Return only valid JSON. No explanation, no markdown fences.`,
   "subtitle": "One-line description, max 8 words",
   "sections": [
     {
-      "heading": "Section heading",
+      "heading": "Section heading (2-4 words)",
       "color": "#FF6B00",
-      "points": ["Point 1", "Point 2", "Point 3"]
+      "badge": "USE CASE LABEL",
+      "what": "One sharp sentence — what this concept actually is.",
+      "points": ["Specific actionable point 1", "Point 2", "Point 3", "Point 4"],
+      "tags": ["Tag1", "Tag2", "Tag3"]
     }
   ],
   "footer": "@DrevonBullock • Bullock Consulting Group"
