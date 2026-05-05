@@ -65,9 +65,13 @@ export async function generateVideo(postText, videoScript, videoStyle) {
     const spokenScript = videoScript
       .map((s) => `${s.heading}. ${s.body || (s.points ?? []).join(" ")}`)
       .join(" ");
-    const result = await generateHeyGenVideo(spokenScript);
-    if (result) return result;
-    console.warn("[Agent X] HeyGen returned null — falling back to Hyperframes");
+    try {
+      const result = await generateHeyGenVideo(spokenScript);
+      if (result) return result;
+      console.warn("[Agent X] HeyGen returned null — falling back to Hyperframes");
+    } catch (err) {
+      console.warn(`[Agent X] HeyGen failed (${err.message}) — falling back to Hyperframes`);
+    }
   }
 
   // ── PATH B fallback — Hyperframes only ──────────────────────────────────
@@ -79,5 +83,5 @@ export async function generateVideo(postText, videoScript, videoStyle) {
 
   console.log(`[Agent X] Format: ${resolvedStyle}`);
   console.log(`[Agent X] Rendering with Hyperframes...`);
-  return await generateHyperframesVideo(videoScript, resolvedStyle);
+  return await generateHyperframesVideo(videoScript, resolvedStyle, null, postText);
 }
