@@ -23,7 +23,8 @@ function escHtml(s) {
 }
 
 function sfx(src, start, duration, idx) {
-  return `<audio class="clip" data-start="${start.toFixed(2)}" data-duration="${duration}" data-track-index="${idx}" src="${src}"></audio>`;
+  const t = parseFloat(start);
+  return `<audio id="sfx-${idx}" class="clip" data-start="${t.toFixed(2)}" data-duration="${duration}" data-track-index="${idx}" src="${src}"></audio>`;
 }
 
 // ─── SHARED CHROME (logo + watermark + jingle + riser) ───────────────────────
@@ -36,8 +37,8 @@ function buildChrome(paths, totalDur) {
     : "";
 
   return `
-  ${sfx(paths.jingle, 0, 3, 50)}
-  ${sfx(paths.sfx.riser, 0, 1.5, 51)}
+  <audio id="bcg-jingle" class="clip" data-start="0" data-duration="3" data-track-index="50" src="${paths.jingle}"></audio>
+  <audio id="sfx-riser-open" class="clip" data-start="0" data-duration="1.5" data-track-index="51" src="${paths.sfx.riser}"></audio>
   ${logoHtml}
   <div id="bcg-watermark">@DrevonBullock&nbsp;•&nbsp;BCG</div>`;
 }
@@ -159,7 +160,7 @@ function buildStatStack(fullScript, screenDurations, paths) {
   }, []);
 
   const hookDur = screenDurations[0];
-  const stats = fullScript.slice(1);
+  const stats = fullScript.slice(1).filter((s) => !s.isCTA);
   let sfxIdx = 53;
 
   const hookHtml = `
@@ -256,7 +257,7 @@ function buildProblemSolution(fullScript, screenDurations, paths) {
   }, []);
 
   const hookDur = screenDurations[0];
-  const teaches = fullScript.slice(1);
+  const teaches = fullScript.slice(1).filter((s) => !s.isCTA);
   const midIdx  = Math.floor(teaches.length / 2);
   const probScreens = teaches.slice(0, Math.max(1, midIdx));
   const solScreens  = teaches.slice(Math.max(1, midIdx));
@@ -385,7 +386,7 @@ function buildListCountdown(fullScript, screenDurations, paths) {
   }, []);
 
   const hookDur  = screenDurations[0];
-  const teaches  = fullScript.slice(1);
+  const teaches  = fullScript.slice(1).filter((s) => !s.isCTA);
   const total    = teaches.length;
 
   const hookWords = (fullScript[0]?.heading ?? "").split(/\s+/).filter(Boolean);
