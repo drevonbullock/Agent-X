@@ -19,9 +19,9 @@ export async function ensureBCGJingle() {
     method: "POST",
     headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
     body: JSON.stringify({
-      text: "Deep cinematic bass hit, then a sharp rising whoosh tone, ending with a clean crisp snap. Professional broadcast intro sting. 3 seconds total.",
-      duration_seconds: 3,
-      prompt_influence: 0.8,
+      text: "Sharp news broadcast intro sting. Quick electronic swoosh rise, single crisp snare accent, bright synth ping. Punchy, high-energy, attention-grabbing. 1.5 seconds total.",
+      duration_seconds: 1.5,
+      prompt_influence: 0.9,
     }),
   });
 

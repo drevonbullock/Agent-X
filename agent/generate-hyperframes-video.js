@@ -37,10 +37,14 @@ function buildChrome(paths, totalDur) {
     : "";
 
   return `
-  <audio id="bcg-jingle" class="clip" data-start="0" data-duration="3" data-track-index="50" src="${paths.jingle}"></audio>
+  <audio id="bcg-jingle" class="clip" data-start="0" data-duration="1.5" data-track-index="50" src="${paths.jingle}"></audio>
   <audio id="sfx-riser-open" class="clip" data-start="0" data-duration="1.5" data-track-index="51" src="${paths.sfx.riser}"></audio>
   ${logoHtml}
-  <div id="bcg-watermark">@DrevonBullock&nbsp;•&nbsp;BCG</div>`;
+  <div id="bcg-watermark">@DrevonBullock&nbsp;•&nbsp;BCG</div>
+  <div id="jingle-intro">
+    <div id="jingle-bar"></div>
+    <div id="jingle-label">BREAKING</div>
+  </div>`;
 }
 
 function chromeGsap(paths) {
@@ -49,7 +53,11 @@ function chromeGsap(paths) {
     : "";
   return `
   ${logoTween}
-  tl.fromTo('#bcg-watermark',{opacity:0},{opacity:1,duration:0.6,ease:'power2.out'},0.3);`;
+  tl.fromTo('#bcg-watermark',{opacity:0},{opacity:1,duration:0.6,ease:'power2.out'},0.3);
+  tl.fromTo('#jingle-intro',{opacity:0},{opacity:1,duration:0.15,ease:'power2.out'},0);
+  tl.to('#jingle-bar',{width:72,duration:0.35,ease:'power3.out'},0.05);
+  tl.fromTo('#jingle-label',{x:-24,opacity:0},{x:0,opacity:1,duration:0.3,ease:'back.out(2)'},0.3);
+  tl.to('#jingle-intro',{opacity:0,duration:0.25,ease:'power2.in'},1.5);`;
 }
 
 const SHARED_CSS = `
@@ -66,7 +74,14 @@ audio{display:none;}
 #logo-wrap img{width:76px;height:76px;object-fit:contain;}
 #bcg-watermark{position:absolute;bottom:48px;left:48px;z-index:10;opacity:0;
   font-size:28px;font-weight:700;color:${ORANGE};letter-spacing:2px;
-  text-shadow:0 2px 8px rgba(0,0,0,0.8);}`;
+  text-shadow:0 2px 8px rgba(0,0,0,0.8);}
+#jingle-intro{position:absolute;bottom:120px;left:48px;z-index:20;
+  display:flex;align-items:center;gap:16px;opacity:0;pointer-events:none;}
+#jingle-bar{height:5px;width:0;background:${ORANGE};border-radius:3px;
+  box-shadow:0 0 16px rgba(255,107,0,0.9);}
+#jingle-label{font-size:26px;font-weight:900;letter-spacing:6px;color:#fff;
+  background:${ORANGE};padding:6px 20px;border-radius:6px;opacity:0;
+  text-shadow:none;}`;
 
 // ─── STYLE A: HOOK REVEAL (8s, no voiceover) ─────────────────────────────────
 function buildHookReveal(videoScript, paths) {
@@ -134,7 +149,7 @@ ${SHARED_CSS}
       ${screenshotHtml}
     </div>
     ${sfx(paths.sfx.swoosh, 0.4, 0.5, 53)}
-    ${sfx(paths.sfx.impact, parseFloat(impactStart), 0.4, 54)}
+    ${sfx(paths.sfx.swoosh, parseFloat(impactStart), 0.5, 54)}
     ${sfx(paths.sfx.pop, 4.5, 0.3, 55)}
   </div>
 </div>
@@ -315,7 +330,7 @@ function buildProblemSolution(fullScript, screenDurations, paths) {
     <div class="ps-body" id="ssb${scIdx}">${escHtml(body)}</div>
   </div>
   <audio id="vo-sc${scIdx}" src="voice_${scIdx}.mp3" data-start="${st.toFixed(2)}" data-volume="1.0"></audio>
-  ${sfx(paths.sfx.impact, st, 0.4, impactI)}
+  ${sfx(paths.sfx.swoosh, st, 0.5, impactI)}
   ${sfx(paths.sfx.swoosh, st + 0.5, 0.5, swooshI)}
 </div>`;
   }).join("");
@@ -403,7 +418,7 @@ function buildListCountdown(fullScript, screenDurations, paths) {
   </div>
   <audio id="vo-sc1" src="voice_1.mp3" data-start="0" data-volume="1.0"></audio>
   ${sfx(paths.sfx.swoosh, 0.4, 0.5, 53)}
-  ${sfx(paths.sfx.impact, (0.5 + hookWords.length * 0.1).toFixed(2), 0.4, 54)}
+  ${sfx(paths.sfx.swoosh, 0.5 + hookWords.length * 0.1, 0.5, 54)}
 </div>`;
 
   let sfxIdx = 55;
