@@ -122,8 +122,8 @@ function topazUpscale(inputPath) {
   console.log("[Topaz] Upscaling with Proteus (enhance + sharpen)...");
   try {
     execSync(
-      `"${TOPAZ_FFMPEG}" -y -i "${inputPath}" -vf "tvai_up=model=ahq-12:scale=1:noise=0.2:details=0.3:blur=0.1:compression=0.3" -c:v h264_videotoolbox -b:v 16M -c:a copy "${outPath}"`,
-      { stdio: "inherit", timeout: 10 * 60 * 1000 }
+      `"${TOPAZ_FFMPEG}" -y -i "${inputPath}" -vf "tvai_up=model=ahq-12:scale=2:noise=0.2:details=0.3:blur=0.1:compression=0.3" -c:v h264_videotoolbox -b:v 16M -c:a copy "${outPath}"`,
+      { stdio: "inherit", timeout: 10 * 60 * 1000, cwd: "/Applications/Topaz Video AI.app/Contents/Resources" }
     );
     console.log(`[Topaz] Done → ${path.basename(outPath)}`);
     return outPath;
