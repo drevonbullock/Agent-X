@@ -19,7 +19,7 @@ export async function ensureBCGJingle() {
     method: "POST",
     headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
     body: JSON.stringify({
-      text: "Sharp news broadcast intro sting. Quick electronic swoosh rise, single crisp snare accent, bright synth ping. Punchy, high-energy, attention-grabbing. 1.5 seconds total.",
+      text: "Futuristic TV news channel ident. Three rising digital tones in quick succession, ending with a clean bright resonant chime. Smooth, modern, distinctive. 1.5 seconds total.",
       duration_seconds: 1.5,
       prompt_influence: 0.9,
     }),

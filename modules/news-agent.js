@@ -187,6 +187,27 @@ async function logNewsPost(postId, postUrl, postText, articleUrl, platform = "li
 const DAILY_CAP = 3;
 const COOLDOWN_HOURS = 4;
 
+// Cap-only check for scheduled slots (no cooldown — scheduler controls timing)
+async function canPostScheduled(platform, dailyCap) {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const { data, error } = await supabase
+    .from("posts")
+    .select("id")
+    .eq("platform", platform)
+    .gte("created_at", todayStart.toISOString());
+  if (error) {
+    console.warn(`[NewsAgent] Cap check failed (${platform}): ${error.message} — allowing post`);
+    return true;
+  }
+  const count = data?.length ?? 0;
+  if (count >= dailyCap) {
+    console.log(`[NewsAgent] ${platform} daily cap reached (${count}/${dailyCap}) — skipping`);
+    return false;
+  }
+  return true;
+}
+
 async function canPost(platform = "linkedin") {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -219,6 +240,75 @@ async function canPost(platform = "linkedin") {
   }
 
   return true;
+}
+
+// ─── SCHEDULED: LINKEDIN NEWS IMAGE (4x/day) ─────────────────────────────────
+
+export async function postLinkedInNewsImage() {
+  console.log(`[NewsAgent] LinkedIn news image slot...`);
+  if (!(await canPostScheduled("linkedin", 4))) return;
+
+  let articles;
+  try { articles = await fetchLatestNews(); }
+  catch (err) { console.error(`[NewsAgent] News fetch failed: ${err.message}`); return; }
+
+  let target = null;
+  for (const article of articles) {
+    if (!(await isArticleSeen(article.url))) { target = article; break; }
+  }
+  if (!target) { console.log(`[NewsAgent] No new articles — LinkedIn slot skipped`); return; }
+
+  await markArticleSeen(target, false);
+
+  try {
+    const postText = await generateReactivePost(target);
+    let imageBuffer = null;
+    try {
+      imageBuffer = await generateImageForInstagram(postText);
+    } catch (imgErr) {
+      console.warn(`[NewsAgent] LinkedIn image failed, posting text-only: ${imgErr.message}`);
+    }
+    const { postId, postUrl } = await postToLinkedIn(postText, imageBuffer, null);
+    console.log(`[NewsAgent] LinkedIn news image posted! ${postUrl}`);
+    await markArticleSeen(target, true);
+    await logNewsPost(postId, postUrl, postText, target.url, "linkedin");
+  } catch (err) {
+    console.error(`[NewsAgent] LinkedIn post failed: ${err.message}`);
+  }
+}
+
+// ─── SCHEDULED: INSTAGRAM NEWS IMAGE (1 of 2 daily slots) ───────────────────
+
+export async function postInstagramNewsImage() {
+  console.log(`[NewsAgent] Instagram news image slot...`);
+  if (!process.env.INSTAGRAM_ACCESS_TOKEN) return;
+  if (!(await canPostScheduled("instagram", 2))) return;
+
+  let articles;
+  try { articles = await fetchLatestNews(); }
+  catch (err) { console.error(`[NewsAgent] News fetch failed: ${err.message}`); return; }
+
+  let target = null;
+  for (const article of articles) {
+    if (!(await isArticleSeen(article.url))) { target = article; break; }
+  }
+  if (!target) { console.log(`[NewsAgent] No new articles — Instagram slot skipped`); return; }
+
+  await markArticleSeen(target, false);
+
+  try {
+    const caption = await generateInstagramReactiveCaption(target);
+    const imageBuffer = await generateImageForInstagram(caption);
+    if (!imageBuffer) throw new Error("Image generation returned null");
+
+    const imageUrl = await uploadImageToSupabase(imageBuffer);
+    const { mediaId, postUrl } = await postImageToInstagram(imageUrl, caption);
+    console.log(`[NewsAgent] Instagram news image posted! ${postUrl}`);
+    await markArticleSeen(target, true);
+    await logNewsPost(mediaId, postUrl, caption, target.url, "instagram");
+  } catch (err) {
+    console.error(`[NewsAgent] Instagram post failed: ${err.message}`);
+  }
 }
 
 // ─── MAIN: CHECK AND POST ─────────────────────────────────────────────────────

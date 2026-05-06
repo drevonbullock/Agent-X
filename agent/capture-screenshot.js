@@ -23,15 +23,15 @@ async function renderHeadlineCard(browser, headline, domain, outputPath) {
 
   await page.setContent(`<!DOCTYPE html><html><head><style>
     *{margin:0;padding:0;box-sizing:border-box;}
-    html,body{width:1100px;height:360px;overflow:hidden;background:#080E1C;
+    html,body{width:1100px;height:360px;overflow:hidden;background:#ffffff;
       font-family:'Helvetica Neue',Arial,sans-serif;}
     .card{display:flex;flex-direction:column;justify-content:center;
       padding:44px 56px;height:100%;}
     .source{font-size:19px;font-weight:800;letter-spacing:4px;
-      color:#FF6B00;text-transform:uppercase;margin-bottom:18px;}
+      color:#000000;text-transform:uppercase;margin-bottom:18px;}
     .bar{width:64px;height:4px;background:#FF6B00;border-radius:3px;
-      margin-bottom:24px;box-shadow:0 0 14px rgba(255,107,0,0.8);}
-    .headline{font-size:${fontSize}px;font-weight:900;color:#ffffff;
+      margin-bottom:24px;}
+    .headline{font-size:${fontSize}px;font-weight:900;color:#111111;
       line-height:1.25;letter-spacing:-0.3px;}
   </style></head><body>
     <div class="card">

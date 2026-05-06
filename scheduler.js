@@ -1,6 +1,6 @@
 import cron from "node-cron";
-import { runLinkedIn, runInstagram, runInstagramReel, runThreads } from "./index.js";
-import { checkAndPost } from "./modules/news-agent.js";
+import { runInstagramReel, runThreads } from "./index.js";
+import { postLinkedInNewsImage, postInstagramNewsImage } from "./modules/news-agent.js";
 import { checkPerf, processVariationQueue } from "./modules/variation-engine.js";
 import { runWeeklyAnalysis } from "./modules/feedback-loop.js";
 import { processYouTubeVideo } from "./modules/youtube-cutter.js";
@@ -10,42 +10,42 @@ import supabase from "./supabase/client.js";
 
 export function startScheduler() {
 
-  // ── LINKEDIN — 9am (image), 1pm (text), 6pm (text) ───────────────────────
-  cron.schedule("0 9 * * *", async () => {
-    console.log(`[${new Date().toISOString()}] LinkedIn: 9:00 AM`);
-    try { await runLinkedIn(true); }
-    catch (err) { console.error(`[Scheduler] LinkedIn 9am failed: ${err.message}`); }
+  // ── LINKEDIN — 4x/day, all news image posts ──────────────────────────────
+  cron.schedule("0 8 * * *", async () => {
+    console.log(`[${new Date().toISOString()}] LinkedIn: 8:00 AM (news image)`);
+    try { await postLinkedInNewsImage(); }
+    catch (err) { console.error(`[Scheduler] LinkedIn 8am failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  cron.schedule("0 13 * * *", async () => {
-    console.log(`[${new Date().toISOString()}] LinkedIn: 1:00 PM`);
-    try { await runLinkedIn(false); }
-    catch (err) { console.error(`[Scheduler] LinkedIn 1pm failed: ${err.message}`); }
+  cron.schedule("0 12 * * *", async () => {
+    console.log(`[${new Date().toISOString()}] LinkedIn: 12:00 PM (news image)`);
+    try { await postLinkedInNewsImage(); }
+    catch (err) { console.error(`[Scheduler] LinkedIn 12pm failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  cron.schedule("0 18 * * *", async () => {
-    console.log(`[${new Date().toISOString()}] LinkedIn: 6:00 PM`);
-    try { await runLinkedIn(false); }
-    catch (err) { console.error(`[Scheduler] LinkedIn 6pm failed: ${err.message}`); }
-  }, { timezone: "America/New_York" });
-
-  // ── INSTAGRAM — 10am Reel, 3pm Carousel, 8pm Reel ───────────────────────
-  cron.schedule("0 10 * * *", async () => {
-    console.log(`[${new Date().toISOString()}] Instagram: 10:00 AM (Reel)`);
-    try { await runInstagramReel(); }
-    catch (err) { console.error(`[Scheduler] Instagram 10am Reel failed: ${err.message}`); }
-  }, { timezone: "America/New_York" });
-
-  cron.schedule("0 15 * * *", async () => {
-    console.log(`[${new Date().toISOString()}] Instagram: 3:00 PM (Carousel)`);
-    try { await runInstagram(); }
-    catch (err) { console.error(`[Scheduler] Instagram 3pm Carousel failed: ${err.message}`); }
+  cron.schedule("0 16 * * *", async () => {
+    console.log(`[${new Date().toISOString()}] LinkedIn: 4:00 PM (news image)`);
+    try { await postLinkedInNewsImage(); }
+    catch (err) { console.error(`[Scheduler] LinkedIn 4pm failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   cron.schedule("0 20 * * *", async () => {
-    console.log(`[${new Date().toISOString()}] Instagram: 8:00 PM (Reel)`);
+    console.log(`[${new Date().toISOString()}] LinkedIn: 8:00 PM (news image)`);
+    try { await postLinkedInNewsImage(); }
+    catch (err) { console.error(`[Scheduler] LinkedIn 8pm failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  // ── INSTAGRAM — 2x/day: 10am news image, 7pm Reel ────────────────────────
+  cron.schedule("0 10 * * *", async () => {
+    console.log(`[${new Date().toISOString()}] Instagram: 10:00 AM (news image)`);
+    try { await postInstagramNewsImage(); }
+    catch (err) { console.error(`[Scheduler] Instagram 10am failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  cron.schedule("0 19 * * *", async () => {
+    console.log(`[${new Date().toISOString()}] Instagram: 7:00 PM (Reel)`);
     try { await runInstagramReel(); }
-    catch (err) { console.error(`[Scheduler] Instagram 8pm Reel failed: ${err.message}`); }
+    catch (err) { console.error(`[Scheduler] Instagram 7pm Reel failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── THREADS — 8:30am, 12:30pm, 5:30pm (text or carousel every 3rd) ───────
@@ -65,12 +65,6 @@ export function startScheduler() {
     console.log(`[${new Date().toISOString()}] Threads: 5:30 PM`);
     try { await runThreads(); }
     catch (err) { console.error(`[Scheduler] Threads 5:30pm failed: ${err.message}`); }
-  }, { timezone: "America/New_York" });
-
-  // ── NEWS AGENT — every 30 minutes ────────────────────────────────────────
-  cron.schedule("*/30 * * * *", async () => {
-    try { await checkAndPost(); }
-    catch (err) { console.error(`[Scheduler] NewsAgent failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── VARIATION QUEUE — every 30 minutes (crash-safe, survives restarts) ───
@@ -136,10 +130,9 @@ export function startScheduler() {
   }, { timezone: "America/New_York" });
 
   console.log("Scheduler active — all times EST:");
-  console.log("  LinkedIn  : 9:00am (image), 1:00pm (text), 6:00pm (text)");
-  console.log("  Instagram : 10:00am (Reel), 3:00pm (Carousel), 8:00pm (Reel)");
+  console.log("  LinkedIn  : 8:00am, 12:00pm, 4:00pm, 8:00pm (news image x4)");
+  console.log("  Instagram : 10:00am (news image), 7:00pm (Reel) — 2 posts/day");
   console.log("  Threads   : 8:30am, 12:30pm, 5:30pm (text | carousel every 3rd | video every 5th)");
-  console.log("  News agent: every 30 minutes");
   console.log("  Var queue : every 30 minutes (crash-safe job queue)");
   console.log("  Variation : every 6 hours");
   console.log("  Replies   : every 15 minutes (Threads polling)");

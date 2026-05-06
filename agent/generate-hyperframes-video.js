@@ -38,13 +38,13 @@ function buildChrome(paths, totalDur) {
 
   return `
   <audio id="bcg-jingle" class="clip" data-start="0" data-duration="1.5" data-track-index="50" src="${paths.jingle}"></audio>
-  <audio id="sfx-riser-open" class="clip" data-start="0" data-duration="1.5" data-track-index="51" src="${paths.sfx.riser}"></audio>
   ${logoHtml}
   <div id="bcg-watermark">@DrevonBullock&nbsp;•&nbsp;BCG</div>
   <div id="jingle-intro">
     <div id="jingle-bar"></div>
     <div id="jingle-label">BREAKING</div>
-  </div>`;
+  </div>
+  <div id="border-frame"></div>`;
 }
 
 function chromeGsap(paths) {
@@ -81,7 +81,10 @@ audio{display:none;}
   box-shadow:0 0 16px rgba(255,107,0,0.9);}
 #jingle-label{font-size:26px;font-weight:900;letter-spacing:6px;color:#fff;
   background:${ORANGE};padding:6px 20px;border-radius:6px;opacity:0;
-  text-shadow:none;}`;
+  text-shadow:none;}
+#border-frame{position:absolute;inset:0;pointer-events:none;z-index:16;
+  border:8px solid ${ORANGE};
+  box-shadow:0 0 32px rgba(255,107,0,0.65),inset 0 0 20px rgba(255,107,0,0.12);}`;
 
 // ─── STYLE A: HOOK REVEAL (8s, no voiceover) ─────────────────────────────────
 function buildHookReveal(videoScript, paths) {
@@ -148,9 +151,8 @@ ${SHARED_CSS}
       <div class="hook-underline" id="ul"></div>
       ${screenshotHtml}
     </div>
-    ${sfx(paths.sfx.swoosh, 0.4, 0.5, 53)}
-    ${sfx(paths.sfx.swoosh, parseFloat(impactStart), 0.5, 54)}
-    ${sfx(paths.sfx.pop, 4.5, 0.3, 55)}
+    ${sfx(paths.sfx.swoosh, 1.6, 0.5, 53)}
+    ${sfx(paths.sfx.swoosh, parseFloat(impactStart) < 1.6 ? 2.0 : parseFloat(impactStart), 0.5, 54)}
   </div>
 </div>
 <script>(() => {
@@ -210,7 +212,6 @@ function buildStatStack(fullScript, screenDurations, paths) {
   </div>
   <audio id="vo-sc${scIdx}" src="voice_${scIdx}.mp3" data-start="${st.toFixed(2)}" data-volume="1.0"></audio>
   ${sfx(paths.sfx.swoosh, st, 0.5, swooshI)}
-  ${sfx(paths.sfx.pop, st + 0.3, 0.3, popI)}
 </div>`;
   }).join("");
 
@@ -417,8 +418,7 @@ function buildListCountdown(fullScript, screenDurations, paths) {
     <div class="hook-words">${hwHtml}</div>
   </div>
   <audio id="vo-sc1" src="voice_1.mp3" data-start="0" data-volume="1.0"></audio>
-  ${sfx(paths.sfx.swoosh, 0.4, 0.5, 53)}
-  ${sfx(paths.sfx.swoosh, 0.5 + hookWords.length * 0.1, 0.5, 54)}
+  ${sfx(paths.sfx.swoosh, 1.6, 0.5, 53)}
 </div>`;
 
   let sfxIdx = 55;
@@ -443,7 +443,6 @@ function buildListCountdown(fullScript, screenDurations, paths) {
     return `
 <div class="screen clip" id="sc${scIdx}" data-start="${st.toFixed(2)}" data-duration="${dur.toFixed(2)}" data-track-index="${scIdx}">
   <div class="screen-bg"></div>
-  <div class="orange-border"></div>
   <div class="teach-content" id="tc${scIdx}">
     <div class="screen-counter" id="cnt${scIdx}">${numDisp}&nbsp;/&nbsp;${totDisp}</div>
     <div class="teach-heading" id="th${scIdx}">${escHtml(s.heading)}</div>
@@ -452,7 +451,6 @@ function buildListCountdown(fullScript, screenDurations, paths) {
   </div>
   <audio id="vo-sc${scIdx}" src="voice_${scIdx}.mp3" data-start="${st.toFixed(2)}" data-volume="1.0"></audio>
   ${sfx(paths.sfx.swoosh, st, 0.5, swooshI)}
-  ${sfx(paths.sfx.pop, st + 0.15, 0.3, popI)}
 </div>`;
   }).join("");
 
@@ -486,8 +484,6 @@ ${SHARED_CSS}
   text-shadow:0 0 60px rgba(255,107,0,0.2);opacity:0;}
 .hw-key{color:${ORANGE};text-shadow:0 0 100px rgba(255,107,0,0.9);}
 /* Teach */
-.orange-border{position:absolute;left:0;top:0;bottom:0;width:8px;background:${ORANGE};
-  z-index:4;box-shadow:0 0 20px rgba(255,107,0,0.5);}
 .teach-content{position:relative;z-index:3;flex:1;display:flex;flex-direction:column;
   justify-content:center;padding:120px 80px 80px 100px;}
 .screen-counter{font-size:30px;font-weight:800;color:${ORANGE};letter-spacing:4px;
@@ -566,8 +562,8 @@ ${SHARED_CSS}
       <div class="review-author" id="rauth">${escHtml(author.split(",")[0] ?? "")}</div>
       <div class="review-title" id="rtitle">${escHtml(author.split(",").slice(1).join(",").trim())}</div>
     </div>
-    ${sfx(paths.sfx.pop, 0.8, 0.3, 53)}
-    ${sfx(paths.sfx.swoosh, parseFloat(dividerStart), 0.5, 54)}
+    ${sfx(paths.sfx.swoosh, 1.6, 0.5, 53)}
+    ${sfx(paths.sfx.swoosh, parseFloat(dividerStart) < 1.6 ? 2.2 : parseFloat(dividerStart), 0.5, 54)}
   </div>
 </div>
 <script>(() => {

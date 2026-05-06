@@ -53,6 +53,7 @@ function mixMusicIntoVideo(videoPath, musicPath) {
   console.log(`[Music] Mixed → ${path.basename(outPath)}`);
   return outPath;
 }
+const TOPAZ_FFMPEG = "/Applications/Topaz Video AI.app/Contents/MacOS/ffmpeg";
 const BUCKET = "agent-x-videos";
 
 async function ensureBucket() {
@@ -112,6 +113,26 @@ Rules: no jargon, no code, no filler phrases, business language only.`,
   return JSON.parse(raw);
 }
 
+function topazUpscale(inputPath) {
+  if (!fs.existsSync(TOPAZ_FFMPEG)) {
+    console.warn("[Topaz] Topaz Video AI not found — skipping upscale");
+    return inputPath;
+  }
+  const outPath = inputPath.replace(".mp4", "-topaz.mp4");
+  console.log("[Topaz] Upscaling with Proteus (enhance + sharpen)...");
+  try {
+    execSync(
+      `"${TOPAZ_FFMPEG}" -y -i "${inputPath}" -vf "tvai_up=model=ahq-12:scale=1:noise=0.2:details=0.3:blur=0.1:compression=0.3" -c:v h264_videotoolbox -b:v 16M -c:a copy "${outPath}"`,
+      { stdio: "inherit", timeout: 10 * 60 * 1000 }
+    );
+    console.log(`[Topaz] Done → ${path.basename(outPath)}`);
+    return outPath;
+  } catch (err) {
+    console.warn(`[Topaz] Upscale failed: ${err.message.slice(0, 120)} — using original`);
+    return inputPath;
+  }
+}
+
 async function main() {
   const topic = process.argv[2] ?? "how to use AI if you work a 9-to-5 job";
   console.log(`\n[Reel] Topic: "${topic}"`);
@@ -120,10 +141,12 @@ async function main() {
   console.log(`[Reel] Hook: "${videoScript[0].heading}"`);
   console.log(`[Reel] Caption: "${caption}"`);
 
-  const videoPath = await generateVideo(videoScript, "carousel_slide_vertical");
+  const videoPath = await generateVideo(null, videoScript, "carousel_slide_vertical");
 
   const musicPath = selectMusicTrack(topic, caption);
-  const finalVideoPath = mixMusicIntoVideo(videoPath, musicPath);
+  const withMusicPath = mixMusicIntoVideo(videoPath, musicPath);
+
+  const finalVideoPath = topazUpscale(withMusicPath);
 
   const storageKey = `reels/reel-${Date.now()}.mp4`;
   console.log(`[Reel] Uploading to Supabase...`);
