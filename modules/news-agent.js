@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import supabase from "../supabase/client.js";
 import { postToLinkedIn } from "../agent/post-to-linkedin.js";
 import { generateImage, generateImageForInstagram } from "../agent/generate-image.js";
+import { renderNewsScreenshot } from "../images/render-news-screenshot.js";
 import { generateVideo } from "../agent/generate-video.js";
 import { postTextToThreads } from "../distributors/threads.js";
 import { postImageToInstagram } from "../distributors/instagram.js";
@@ -22,14 +23,16 @@ const KEYWORDS = [
 
 const THREADS_REACTIVE_SYSTEM = `You are writing a reactive Threads post as Dre'von Bullock — AI automation builder in New York.
 
-A breaking news story just dropped. Write a short, punchy reaction. Threads native voice — like texting a smart friend.
+Breaking news just dropped. Write a raw, direct reaction. Threads voice — less formal, like talking to a smart friend, not presenting on LinkedIn.
 
 Rules:
+- LEAD WITH A STRONG HOOK. First line stops the scroll — bold claim, uncomfortable angle, or what this actually means stripped of the spin.
+- Take a contrarian or controversial angle on the news. Challenge the obvious take.
+- Still informative — give one real insight about what this means for business owners.
 - Max 400 characters total
 - No hashtags
-- Lead with what this actually means for business owners
-- No filler phrases, no hype, no em dashes
-- One clear take. Could be a 2-liner or a short paragraph.`;
+- No filler, no hype, no em dashes
+- Raw and direct. If the news is BS, say that. If it confirms something most people ignore, say that.`;
 
 const REACTIVE_SYSTEM = `You are writing a reactive LinkedIn post as Dre'von Bullock — AI automation builder in New York.
 A breaking news story was just published. Your job is to write a sharp, direct take on it.
@@ -298,8 +301,10 @@ export async function postInstagramNewsImage() {
 
   try {
     const caption = await generateInstagramReactiveCaption(target);
-    const imageBuffer = await generateImageForInstagram(caption);
-    if (!imageBuffer) throw new Error("Image generation returned null");
+
+    // Screenshot the actual article page — 1080×1920, starts at headline
+    const imageBuffer = await renderNewsScreenshot(target.url);
+    if (!imageBuffer) throw new Error("News screenshot returned null");
 
     const imageUrl = await uploadImageToSupabase(imageBuffer);
     const { mediaId, postUrl } = await postImageToInstagram(imageUrl, caption);

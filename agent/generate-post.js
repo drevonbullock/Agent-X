@@ -127,23 +127,39 @@ Write only the post text. Follow the format exactly.`;
 // ─── THREADS POST ────────────────────────────────────────────────────────────
 // Short-form, punchy, under 400 chars. No hashtags. Threads native voice.
 
+const THREADS_VOICE = `You are Dre'von Bullock — AI automation builder in New York. You post on Threads like you're talking to a smart friend, not presenting at a conference.
+
+Rules (non-negotiable):
+- ALWAYS open with a hook that stops the scroll. Pattern interrupt, uncomfortable truth, bold claim, or a number that sounds wrong. First line is everything.
+- Less formal than LinkedIn. Raw. Direct. Like you typed this between meetings.
+- Every post must have a controversial or contrarian angle — challenge something most people accept without thinking.
+- Still informative — one real insight per post. No fluff.
+- Max 400 characters total
+- No hashtags
+- No filler: "game changer", "let's be real", "unpopular opinion", "hot take"
+- No em dashes. No hyphens as pauses. Write naturally.
+- No quotes around the post`;
+
 const THREADS_FORMATS = [
-  "One sharp observation about AI or automation that business owners don't realize. No explanation. No hashtags. Under 280 characters.",
-  "A 3-line breakdown: line 1 is the hook, line 2 is the insight, line 3 is the punchline. Under 320 characters total. No hashtags.",
-  "An uncomfortable truth about hiring, AI, or running a business. Single paragraph. Under 350 characters. No hashtags.",
-  "Start with a number. '3 things I stopped doing once I automated X.' Three short bullets. Under 380 characters total. No hashtags.",
-  "A hot contrast: what everyone does vs what actually works. Two sentences max. Under 260 characters. No hashtags.",
+  "Open with a bold claim or number that sounds wrong. Then in 2 lines explain why it's actually right. Under 300 chars.",
+  "Lead with the uncomfortable truth most founders are avoiding. One paragraph. Under 350 chars. Make it land.",
+  "Hook on line 1. Flip the conventional wisdom on line 2. One-sentence gut punch on line 3. Under 320 chars.",
+  "Start with 'Everyone's doing [X].' Then explain why that's the wrong move and what the smart play is. Under 380 chars.",
+  "Open with a stark contrast: what most businesses do vs what the 1% who are winning actually do. Two lines. Under 260 chars.",
+  "Start with a specific number or stat that reframes the problem. Then give the insight nobody talks about. Under 350 chars.",
 ];
 
 const THREADS_TOPICS = [
-  "AI replacing repetitive work",
-  "why most automation fails",
-  "building systems instead of grinding",
-  "what founders waste time on",
-  "AI tools that actually save hours",
-  "the real cost of doing things manually",
-  "solo founders using AI to look like a team",
-  "why your chatbot isn't converting",
+  "why most businesses are automating the wrong things first",
+  "the real reason small businesses lose — it's not budget, it's bottlenecks",
+  "AI tools vs AI systems and why only one of them scales",
+  "what founders discover after their first 30 days with automation",
+  "why your follow-up sequence is costing you more than you think",
+  "the difference between saving time and creating leverage",
+  "why hiring more people before automating is backwards",
+  "what a business that runs while you sleep actually looks like",
+  "why your competitors are already ahead and it has nothing to do with budget",
+  "the silent revenue killer most service businesses ignore",
 ];
 
 export async function generateThreadsPost() {
@@ -156,7 +172,7 @@ export async function generateThreadsPost() {
     max_tokens: 256,
     messages: [{
       role: "user",
-      content: `${VOICE}
+      content: `${THREADS_VOICE}
 
 Topic: ${topic}
 
