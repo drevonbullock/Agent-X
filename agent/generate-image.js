@@ -11,7 +11,7 @@ const client = new Anthropic();
 
 async function selectImageMode(postText) {
   const message = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 256,
     messages: [
       {
@@ -63,7 +63,7 @@ Respond with valid JSON only. No explanation, no markdown fences.`,
 
 async function generateCheatsheetContent(postText) {
   const message = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 900,
     system: `You are a premium content designer building high-information visual reference cards for business owners learning AI automation.
 

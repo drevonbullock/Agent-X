@@ -46,7 +46,7 @@ async function fetchWinners() {
 
 async function queueVariations(post) {
   const msg = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 3072,
     system: VARIATION_SYSTEM,
     messages: [{
@@ -79,14 +79,32 @@ async function queueVariations(post) {
 // Exported so scheduler can run it every 30 min independently of checkPerf.
 // Posts any queued variations whose scheduled_for has passed.
 
+async function fetchWithRetry(fn, label, retries = 3, delayMs = 5000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i < retries - 1 && err.message?.includes("fetch failed")) {
+        console.warn(`[${label}] Network error, retrying in ${delayMs / 1000}s... (${i + 1}/${retries - 1})`);
+        await new Promise((r) => setTimeout(r, delayMs));
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 export async function processVariationQueue() {
-  const { data: pending, error } = await supabase
-    .from("variations_queue")
-    .select("*")
-    .eq("sent", false)
-    .lte("scheduled_for", new Date().toISOString())
-    .order("scheduled_for", { ascending: true })
-    .limit(5);
+  let pending, error;
+  try {
+    ({ data: pending, error } = await fetchWithRetry(
+      () => supabase.from("variations_queue").select("*").eq("sent", false).lte("scheduled_for", new Date().toISOString()).order("scheduled_for", { ascending: true }).limit(5),
+      "VariationEngine"
+    ));
+  } catch (err) {
+    console.error(`[VariationEngine] Queue fetch failed: ${err.message}`);
+    return;
+  }
 
   if (error) {
     console.error(`[VariationEngine] Queue fetch failed: ${error.message}`);

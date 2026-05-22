@@ -115,7 +115,7 @@ ${FORMATS[format].instruction}
 Write only the post text. Follow the format exactly.`;
 
   const message = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   });
@@ -168,7 +168,7 @@ export async function generateThreadsPost() {
   console.log(`[Threads] Generating post | Topic: ${topic}`);
 
   const message = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 256,
     messages: [{
       role: "user",
@@ -243,7 +243,7 @@ Return valid JSON matching this EXACT schema (screen 1 is always the hook, scree
 }`;
 
   const message = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   });

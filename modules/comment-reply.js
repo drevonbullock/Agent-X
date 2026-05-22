@@ -61,17 +61,21 @@ async function logReply({ platform, commentId, postId, commenterName, commentTex
 // ─── KEYWORD LEAD LOG ─────────────────────────────────────────────────────────
 
 async function logKeywordLead({ platform, commentId, postId, commenterName, commenterId, keyword, commentText }) {
-  const { error } = await supabase.from("keyword_leads").insert({
-    platform,
-    comment_id: commentId,
-    post_id: postId,
-    commenter_name: commenterName,
-    commenter_id: commenterId,
-    keyword,
-    comment_text: commentText,
-  });
-  if (error && !error.message.includes("duplicate")) {
-    console.warn(`[CommentReply] keyword_leads insert failed: ${error.message}`);
+  try {
+    const { error } = await supabase.from("keyword_leads").insert({
+      platform,
+      comment_id: commentId,
+      post_id: postId,
+      commenter_name: commenterName,
+      commenter_id: commenterId,
+      keyword,
+      comment_text: commentText,
+    });
+    if (error && !error.message.includes("duplicate")) {
+      console.warn(`[CommentReply] keyword_leads insert failed: ${error.message}`);
+    }
+  } catch (err) {
+    console.warn(`[CommentReply] keyword_leads insert failed: ${err.message}`);
   }
 }
 
@@ -142,66 +146,91 @@ async function postInstagramReply(commentId, replyText) {
 }
 
 // ─── THREADS REPLY POLLER ─────────────────────────────────────────────────────
-// Polls /me/replies every 15 min via scheduler. Replies to new comments.
+// Polls recent posts every 15 min, then fetches incoming replies per post.
+// Uses /{postId}/replies (incoming) NOT /{userId}/replies (outgoing — that
+// endpoint returns the account's own posts and caused a self-reply loop).
 
 export async function pollThreadsReplies() {
   const token = process.env.THREADS_ACCESS_TOKEN;
   const userId = process.env.THREADS_USER_ID;
+  const ownUsername = process.env.THREADS_USERNAME ?? "drevonbullock.ai";
   if (!token || !userId) return;
 
-  console.log(`[CommentReply] Polling Threads replies...`);
+  console.log(`[CommentReply] Polling Threads incoming replies...`);
 
-  let replies;
+  // Step 1: fetch recent posts
+  let posts;
   try {
     const res = await fetch(
-      `${THREADS_API}/${userId}/replies?fields=id,text,username,replied_to,timestamp&limit=25&access_token=${token}`
+      `${THREADS_API}/${userId}/threads?fields=id,text,timestamp&limit=10&access_token=${token}`
     );
-    if (!res.ok) throw new Error(`Threads replies API failed (${res.status})`);
+    if (!res.ok) throw new Error(`Threads threads API failed (${res.status})`);
     const data = await res.json();
-    replies = data.data ?? [];
+    posts = data.data ?? [];
   } catch (err) {
     console.error(`[CommentReply] Threads poll failed: ${err.message}`);
     return;
   }
 
+  const cutoff = Date.now() - 48 * 60 * 60 * 1000;
   let processed = 0;
-  for (const reply of replies) {
-    const { id: commentId, text, username, replied_to } = reply;
-    if (!commentId || !text) continue;
 
-    if (await hasReplied(commentId)) continue;
-
-    const postId = replied_to?.id;
-    const keyword = detectKeyword(text);
-
-    if (keyword) {
-      console.log(`[CommentReply] Threads keyword "${keyword}" from @${username ?? "?"}`);
-      await logKeywordLead({
-        platform: "threads",
-        commentId,
-        postId,
-        commenterName: username,
-        commenterId: null,
-        keyword,
-        commentText: text,
-      });
+  // Step 2: for each post, fetch replies on that post (incoming comments)
+  for (const post of posts) {
+    let replies;
+    try {
+      const res = await fetch(
+        `${THREADS_API}/${post.id}/replies?fields=id,text,username,timestamp&limit=25&access_token=${token}`
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      replies = data.data ?? [];
+    } catch {
+      continue;
     }
 
-    try {
-      const replyText = await generateReply(text);
-      await postThreadsReply(userId, token, commentId, replyText);
-      await logReply({
-        platform: "threads",
-        commentId,
-        postId,
-        commenterName: username,
-        commentText: text,
-        replyText,
-      });
-      console.log(`[CommentReply] Threads replied to ${commentId}: "${replyText.slice(0, 60)}..."`);
-      processed++;
-    } catch (err) {
-      console.error(`[CommentReply] Threads reply failed (${commentId}): ${err.message}`);
+    for (const reply of replies) {
+      const { id: commentId, text, username } = reply;
+      if (!commentId || !text) continue;
+
+      // skip our own replies to avoid self-reply loop
+      if (username === ownUsername) continue;
+
+      // skip old replies
+      if (reply.timestamp && new Date(reply.timestamp).getTime() < cutoff) continue;
+
+      if (await hasReplied(commentId)) continue;
+
+      const keyword = detectKeyword(text);
+      if (keyword) {
+        console.log(`[CommentReply] Threads keyword "${keyword}" from @${username ?? "?"}`);
+        await logKeywordLead({
+          platform: "threads",
+          commentId,
+          postId: post.id,
+          commenterName: username,
+          commenterId: null,
+          keyword,
+          commentText: text,
+        });
+      }
+
+      try {
+        const replyText = await generateReply(text, post.text ?? "");
+        await postThreadsReply(userId, token, commentId, replyText);
+        await logReply({
+          platform: "threads",
+          commentId,
+          postId: post.id,
+          commenterName: username,
+          commentText: text,
+          replyText,
+        });
+        console.log(`[CommentReply] Threads replied to ${commentId}: "${replyText.slice(0, 60)}..."`);
+        processed++;
+      } catch (err) {
+        console.error(`[CommentReply] Threads reply failed (${commentId}): ${err.message}`);
+      }
     }
   }
 

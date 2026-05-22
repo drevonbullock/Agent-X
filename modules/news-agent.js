@@ -105,7 +105,7 @@ Rules:
 
 async function generateInstagramReactiveCaption(article) {
   const msg = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 128,
     system: INSTAGRAM_REACTIVE_SYSTEM,
     messages: [{ role: "user", content: `Headline: ${article.title}\nSummary: ${article.description}` }],
@@ -115,7 +115,7 @@ async function generateInstagramReactiveCaption(article) {
 
 async function generateThreadsReactivePost(article) {
   const msg = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 256,
     system: THREADS_REACTIVE_SYSTEM,
     messages: [{ role: "user", content: `Headline: ${article.title}\nSummary: ${article.description}` }],
@@ -135,7 +135,7 @@ ${article.content ? `\nContent excerpt: ${article.content.slice(0, 600)}` : ""}
 Write a reactive LinkedIn post about this story.`;
 
   const msg = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 1024,
     system: REACTIVE_SYSTEM,
     messages: [{ role: "user", content: prompt }],
@@ -267,7 +267,7 @@ export async function postLinkedInNewsImage() {
     const postText = await generateReactivePost(target);
     let imageBuffer = null;
     try {
-      imageBuffer = await generateImageForInstagram(postText);
+      imageBuffer = await generateImage(postText);
     } catch (imgErr) {
       console.warn(`[NewsAgent] LinkedIn image failed, posting text-only: ${imgErr.message}`);
     }
@@ -362,7 +362,7 @@ export async function checkAndPost() {
       try {
         const videoScript = await generateNewsVideoScript(target);
         console.log(`[NewsAgent] News video hook: "${videoScript[0]?.heading}"`);
-        const videoPath = await generateVideo(videoScript, "news_reactive");
+        const videoPath = await generateVideo(postText, videoScript, "news_reactive");
         videoAsset = { type: "video", path: videoPath };
       } catch (videoErr) {
         console.warn(`[NewsAgent] News video failed, posting text-only: ${videoErr.message}`);
