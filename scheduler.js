@@ -18,31 +18,38 @@ export function startScheduler() {
   // Load competitor-derived design themes into the variant pool at startup.
   loadDynamicThemes().catch((err) => console.warn(`[Scheduler] loadDynamicThemes failed: ${err.message}`));
 
-  // ── LINKEDIN — 4x/day: 2 image, 1 text, 1 news ──────────────────────────
+  // ── LINKEDIN — 5x/day: 2 news, 2 cheatsheet, 1 text ────────────────────
   cron.schedule("0 8 * * *", async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn 8am skipped`); return; }
-    console.log(`[${new Date().toISOString()}] LinkedIn: 8:00 AM (image post)`);
-    try { await runLinkedIn(true); }
+    console.log(`[${new Date().toISOString()}] LinkedIn: 8:00 AM (news image)`);
+    try { await postLinkedInNewsImage(); }
     catch (err) { console.error(`[Scheduler] LinkedIn 8am failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  cron.schedule("0 12 * * *", async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn 12pm skipped`); return; }
-    console.log(`[${new Date().toISOString()}] LinkedIn: 12:00 PM (news image)`);
-    try { await postLinkedInNewsImage(); }
-    catch (err) { console.error(`[Scheduler] LinkedIn 12pm failed: ${err.message}`); }
+  cron.schedule("0 11 * * *", async () => {
+    if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn 11am skipped`); return; }
+    console.log(`[${new Date().toISOString()}] LinkedIn: 11:00 AM (cheatsheet post)`);
+    try { await runLinkedIn(true); }
+    catch (err) { console.error(`[Scheduler] LinkedIn 11am failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  cron.schedule("0 16 * * *", async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn 4pm skipped`); return; }
-    console.log(`[${new Date().toISOString()}] LinkedIn: 4:00 PM (text post)`);
+  cron.schedule("0 14 * * *", async () => {
+    if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn 2pm skipped`); return; }
+    console.log(`[${new Date().toISOString()}] LinkedIn: 2:00 PM (text post)`);
     try { await runLinkedIn(false); }
-    catch (err) { console.error(`[Scheduler] LinkedIn 4pm failed: ${err.message}`); }
+    catch (err) { console.error(`[Scheduler] LinkedIn 2pm failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  cron.schedule("0 17 * * *", async () => {
+    if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn 5pm skipped`); return; }
+    console.log(`[${new Date().toISOString()}] LinkedIn: 5:00 PM (news image)`);
+    try { await postLinkedInNewsImage(); }
+    catch (err) { console.error(`[Scheduler] LinkedIn 5pm failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   cron.schedule("0 20 * * *", async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn 8pm skipped`); return; }
-    console.log(`[${new Date().toISOString()}] LinkedIn: 8:00 PM (image post)`);
+    console.log(`[${new Date().toISOString()}] LinkedIn: 8:00 PM (cheatsheet post)`);
     try { await runLinkedIn(true); }
     catch (err) { console.error(`[Scheduler] LinkedIn 8pm failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
@@ -182,7 +189,7 @@ export function startScheduler() {
   }, { timezone: "America/New_York" });
 
   console.log("Scheduler active — all times EST:");
-  console.log("  LinkedIn  : 8:00am (image), 12:00pm (news), 4:00pm (text), 8:00pm (image)");
+  console.log("  LinkedIn  : 8:00am (news), 11:00am (cheatsheet), 2:00pm (text), 5:00pm (news), 8:00pm (cheatsheet)");
   console.log("  Instagram : 10:00am (news image)");
   console.log("  Threads   : 8:30am, 12:30pm, 4:30pm, 8:30pm (text | carousel every 3rd)");
   console.log("  Video     : 7:00pm daily — one render, all platforms, held for review");

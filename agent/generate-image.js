@@ -164,7 +164,9 @@ export async function generateImageForInstagram(postText, variantId = null) {
   return dispatchMode(decision, postText, { isVertical: true, theme: getTheme(variantId) });
 }
 
-// ─── LINKEDIN — 1200x675 landscape ───────────────────────────────────────────
+// ─── LINKEDIN — 1080x1350 vertical (4:5) ─────────────────────────────────────
+// Vertical shows much larger text on mobile. LinkedIn supports 4:5 natively
+// and displays it full-height in the feed — far more readable than landscape.
 
 export async function generateImage(postText, variantId = null) {
   let decision;
@@ -175,6 +177,6 @@ export async function generateImage(postText, variantId = null) {
     decision = { mode: "cheatsheet" };
   }
 
-  console.log(`[Agent X] Image mode: ${decision.mode.toUpperCase()}`);
-  return dispatchMode(decision, postText, { isVertical: false, theme: getTheme(variantId) });
+  console.log(`[Agent X] Image mode: ${decision.mode.toUpperCase()} (4:5 vertical)`);
+  return dispatchMode(decision, postText, { isVertical: true, theme: getTheme(variantId) });
 }

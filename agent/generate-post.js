@@ -49,60 +49,82 @@ WRITE LIKE A REAL HUMAN (CRITICAL):
   "a myriad of" → use "a lot of" or "tons of"`;
 
 const FORMATS = {
+  numbers: {
+    weight: 5,
+    instruction: `FORMAT. Numbers Drop:
+Open with a specific number or dollar amount that makes someone stop scrolling. It must feel real and slightly surprising.
+Examples of opening energy (do not copy):
+"A 5-minute task done 15 times a day is 1.25 hours of paid labor. Gone."
+"Most service businesses lose $3,000-8,000 a year in missed follow-ups. Not because they forgot. Because no system caught it."
+"I built an intake system last month. It handles 40+ hours of manual work weekly. The owner hasn't touched it."
+Then explain the real insight in 3-4 short sentences. Business owner language only.
+End with one sentence that makes them feel the cost of not acting.
+No hashtags.`,
+  },
+
   contrarian: {
     weight: 4,
     instruction: `FORMAT. Contrarian Take:
-Open with "Everyone says [X]." or "The common belief is [X]." or "Most people think [X]."
-Then write "Here's what's actually true:" and deliver the real insight in 3-4 sentences.
-The topic must challenge a common belief that business owners hold about AI, automation, hiring, or growth.
-No client stories. No partner mentions. Speak directly to the business owner reading this.
-End with a single punchy sentence that lands like a conclusion.`,
+Do NOT open with "Most people think" or "Everyone says" or "The common belief is." That opener is dead on LinkedIn.
+Instead open with a SHORT declarative statement that contradicts what your audience believes. One sentence. Make it land like a fact, not a debate topic.
+Examples of opening energy (do not copy):
+"Hiring more people before you fix your systems just means more chaos."
+"The businesses beating you right now aren't working harder. They removed the bottleneck you're still living with."
+Then deliver the real insight in 3-4 sentences. No hedging. No "in my experience."
+End with a single sentence that forces the reader to apply it to their own business.`,
+  },
+
+  story: {
+    weight: 3,
+    instruction: `FORMAT. Real Story:
+Tell a short, specific story about something you built, fixed, or noticed while working with a business. 4-6 sentences.
+Make it concrete: what the problem was, what the system did, what changed. Specific beats vague every time.
+No hypotheticals. No "imagine if." This happened.
+End with the lesson in one sentence.
+Write in first person. Keep it grounded.`,
   },
 
   one_liner: {
-    weight: 3,
+    weight: 2,
     instruction: `FORMAT. One-Liner Drop:
-Single sentence. No explanation. No hashtags. Just a sharp observation about AI automation, building systems, or what it means to run a business in this era.
-Make it land. Make it feel like something you actually think, not something a LinkedIn account would say.
+Single sentence. No explanation. No hashtags. A sharp, specific observation about AI automation, running a business, or what it costs to do things manually.
+Make it feel like something you actually think, not something a LinkedIn account would say.
+It should land like a gut punch, not a fortune cookie.
 Examples of the energy (do not copy these):
 "Vibe coding is just manifestation with a compiler."
-"The automation isn't the product. The time it gives back is."`,
+"The automation isn't the product. The time it gives back is."
+"Every hour your intake form sits in an inbox is money you already spent."`,
   },
 
   build_update: {
     weight: 2,
     instruction: `FORMAT. System Breakdown:
-Describe a specific AI automation system a business could run — what it does, what problem it solves, what it replaces.
-Frame it as a real operational upgrade, not a product pitch.
-4-6 sentences. Business owner language only — no code, no tech jargon.
-End with the single business outcome it creates.`,
-  },
-
-  insight: {
-    weight: 1,
-    instruction: `FORMAT. Sharp Insight:
-One observation about how AI automation is changing what it means to run a small business or agency.
-3-5 sentences. No fluff.
-End with a provocative question or statement that makes a founder stop and think about their own business.`,
+Describe one specific AI automation system a real business could run today. What it does, what problem it kills, what it replaces.
+Frame it as an operational upgrade that already exists, not a future concept.
+4-6 sentences. No code. No jargon. Write for a business owner who has never heard of an API.
+End with the single outcome it creates in plain numbers or time saved.`,
   },
 };
 
 const TOPICS = [
-  "The specific tasks inside a business that AI automation eliminates first — and why those tasks are costing more than owners realize",
-  "Why most small businesses are still doing manually what could run on autopilot right now",
-  "The operational difference between a business that uses AI tools and one that has AI systems",
-  "What happens to your capacity when you remove the 2-hour daily tasks that don't require a human",
-  "The three places in any service business where leads fall through the cracks — and how automation seals them",
-  "Why response time is the silent killer of small business revenue and what fixes it",
-  "What a fully automated lead-to-booking pipeline looks like and what it actually costs to build",
-  "The difference between saving time and creating leverage — why most automation advice gets this wrong",
-  "What business owners discover after their first 30 days running an AI system they didn't have to babysit",
-  "Why the businesses winning right now aren't bigger — they just have fewer bottlenecks",
-  "The follow-up sequence most service businesses never send — and how much revenue that silence costs",
-  "What it actually means to run a business that operates while you sleep",
-  "The real reason small businesses lose to larger competitors — and why AI closes that gap faster than hiring",
-  "How automating one intake process changes the entire client experience from the first touchpoint",
-  "What founders stop doing manually once they see what an AI system can handle — and what that unlocks",
+  "The specific repetitive tasks inside a service business that eat 1-2 hours daily and could be fully automated this week",
+  "Why a slow follow-up response kills more deals than bad pricing does",
+  "What an AI intake and booking system actually looks like end to end for a small service business",
+  "The difference between a business that uses AI tools and one that has AI systems working while the owner sleeps",
+  "Why the first thing to automate is never the most exciting thing — and what it actually is",
+  "What happens to a business's capacity when it removes the 3 tasks that eat the most manual hours",
+  "The real cost of a missed lead follow-up when you add it up across a full year",
+  "Why responding to a lead within 5 minutes vs 5 hours is the difference between closing and losing",
+  "What a fully automated lead-to-booked-call pipeline costs to build vs what it earns back in year one",
+  "Why the businesses winning right now aren't bigger — they just have fewer places where work falls through the cracks",
+  "What it actually takes to run a business where the owner stops being the bottleneck",
+  "The one workflow that every service business still does manually that is costing them the most time",
+  "Why AI agents are more useful for small businesses than AI tools — and what the difference actually means",
+  "What founders say they wish they had automated first after running their first real AI system for 30 days",
+  "How one automated intake system changed the entire client experience before the first call even happened",
+  "Why most business owners automate the wrong thing first and what they should start with instead",
+  "The hidden operational cost that small businesses stop noticing because they've been living with it for years",
+  "What it means when a business can take on 3x the clients without hiring a single new person",
 ];
 
 function pickWeighted() {
