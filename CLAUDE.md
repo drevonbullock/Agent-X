@@ -27,12 +27,13 @@ platforms) is driven by `BRAND_*` env vars and resolved into `AGENT_CONFIG` in
 scheduler.js (cron)
   └─> index.js run functions ──> generate ──> render ──> post ──> log to Supabase
         runLinkedIn(withImage)        post-to-linkedin.js
-        runInstagram / runInstagramReel
+        runInstagram                  (carousel; news image via modules/news-agent)
         runThreads
+        runVideo                      one clip ──> review_queue ──> (on approval) all platforms
   └─> modules/* background jobs (news, variations, replies, feedback, hooks, youtube)
 
 Every post is logged to Supabase `posts`. Counts in `posts` drive cadence
-decisions (e.g. video every Nth post). High performers get cloned by the
+decisions (e.g. Threads carousel every 3rd post). High performers get cloned by the
 variation engine; weekly analysis writes a performance brief back into the
 generators.
 ```
@@ -41,9 +42,11 @@ generators.
 ```
 index.js              — Orchestrator. Defines AGENT_CONFIG (white-label), the
                         per-platform run functions (runLinkedIn, runInstagram,
-                        runInstagramReel, runThreads), Supabase logging helpers,
-                        video distribution fan-out, and an HTTP server for the
-                        Instagram webhook. CLI: --test, --test-instagram, --test-threads.
+                        runThreads), runVideo (single all-platform video job),
+                        videoTargets(), and an HTTP server for the Instagram
+                        webhook + the /review video-approval dashboard.
+                        CLI: --test, --test-instagram, --test-threads,
+                        --review, --approve <id>, --reject <id>, --process-reviews.
 scheduler.js          — All node-cron jobs (posting slots + background loops).
 
 agent/                — Generation + direct-post primitives
@@ -134,10 +137,10 @@ test-*.js  run-reel.js   Ad-hoc manual test entry points (not part of the schedu
 ```
 
 ## Platforms & Schedule (all EST)
-- **LinkedIn** — 4x/day: 8am image, 12pm news image, 4pm text, 8pm image. Video every Nth post (`VIDEO_CADENCE`, default 10). Single images only, no carousels.
-- **Instagram** — 2x/day: 10am news image, 7pm Reel. 3pm carousel path exists in code (`runInstagram`) but isn't currently scheduled.
-- **Threads** — 4x/day at :30 offsets. Text by default; carousel every 3rd post, video every 5th.
-- **Video is gated + fanned out.** Images and written posts auto-publish. Video never does: any video slot renders, then `enqueueVideo()` parks it in `review_queue` (pending). On approval it cross-posts to **all enabled platforms** (LinkedIn, Instagram, Threads) plus TikTok/YouTube Shorts where tokens are set — `videoTargets()` in `index.js`. If a LinkedIn video render fails, that slot degrades to a normal auto text/image post.
+- **LinkedIn** — 4x/day: 8am image, 12pm news image, 4pm text, 8pm image. Single images only, no carousels, no video.
+- **Instagram** — 10am news image. 3pm carousel path exists in code (`runInstagram`) but isn't currently scheduled.
+- **Threads** — 4x/day at :30 offsets. Text by default; carousel every 3rd post.
+- **Video — one daily cadence for the whole system.** `runVideo()` (7pm cron) is the ONLY place video renders. It builds one clip, then `enqueueVideo()` parks it in `review_queue` (pending). On approval it cross-posts to **all enabled platforms** (LinkedIn, Instagram, Threads) plus TikTok/YouTube Shorts where tokens are set — `videoTargets()` in `index.js`. Images and written posts auto-publish; video never does.
 - **Background loops**: variation queue (30m), Threads reply polling (15m), review-queue publish (10m), variation engine (6h), hook tester (6h :30), analytics sync+learn+A/B+adapt (6h :45), weekly feedback (Sun midnight), YouTube cutter (11am, if `YOUTUBE_CHANNEL_ID`).
 - **Kill switch**: set `POSTING_PAUSED=true` to skip all posting slots (background analysis skips too).
 
@@ -219,7 +222,7 @@ SHOTSTACK_API_KEY=  SHOTSTACK_API_KEY_PROD=  SHOTSTACK_ENV=
 
 # White-label overrides (resolve into AGENT_CONFIG)
 BRAND_AUTHOR=  BRAND_TITLE=  BRAND_HANDLE=  BRAND_NICHE=  BRAND_AUDIENCE=
-BRAND_PLATFORMS=  (csv, e.g. linkedin,instagram,threads)   VIDEO_CADENCE=  (default 10)
+BRAND_PLATFORMS=  (csv, e.g. linkedin,instagram,threads)
 
 # Ops
 PORT=  (webhook server, default 3000)   POSTING_PAUSED=true  (global kill switch)

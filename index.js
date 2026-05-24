@@ -9,12 +9,10 @@ export const AGENT_CONFIG = {
   niche:        process.env.BRAND_NICHE     ?? "AI automation for small businesses",
   audience:     process.env.BRAND_AUDIENCE  ?? "founders, agency owners, small business operators",
   platforms:    (process.env.BRAND_PLATFORMS ?? "linkedin").split(",").map((p) => p.trim()),
-  videoCadence: parseInt(process.env.VIDEO_CADENCE ?? "10", 10),
 };
 
 import fs from "fs";
 import http from "http";
-import Anthropic from "@anthropic-ai/sdk";
 import { generateLinkedInPost, generateVideoPost, generateThreadsPost } from "./agent/generate-post.js";
 import { generateImage } from "./agent/generate-image.js";
 import { generateVideo } from "./agent/generate-video.js";
@@ -37,43 +35,6 @@ fs.mkdirSync("video-projects", { recursive: true });
   } else {
     console.log(`[Agent X] No raw footage — next video post will use PATH B (AI generated)`);
   }
-}
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-const IG_REEL_TOPICS = [
-  "how to automate your client onboarding",
-  "AI tools that replace a $60k/yr hire",
-  "how to use AI if you work a 9-to-5",
-  "what happens when you automate lead follow-up",
-  "the difference between tools and systems",
-  "how to build a second brain using AI",
-  "AI automations every solo founder needs",
-  "stop doing manually what AI can do in seconds",
-];
-
-async function generateReelScript(topic) {
-  const msg = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    messages: [{
-      role: "user",
-      content: `Write an Instagram Reel script for: "${topic}". Target audience: founders and 9-to-5 employees curious about AI. Drevon Bullock voice — direct, no hype.
-
-Return ONLY valid JSON:
-{
-  "caption": "Short punchy caption, under 400 chars, no hashtags.",
-  "videoScript": [
-    { "screen": 1, "heading": "Hook, 6 words max", "body": "" },
-    { "screen": 2, "heading": "Point one, 5 words", "body": "", "points": ["Insight one, max 12 words.", "How to apply it."] },
-    { "screen": 3, "heading": "Point two, 5 words", "body": "", "points": ["Insight two, specific.", "What changes."] },
-    { "screen": 4, "heading": "Point three, 5 words", "body": "", "points": ["Biggest unlock.", "Result within one week."] }
-  ]
-}`,
-    }],
-  });
-  const raw = msg.content[0].text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
-  return JSON.parse(raw);
 }
 
 // ─── SUPABASE HELPERS ─────────────────────────────────────────────────────────
@@ -107,34 +68,13 @@ function videoTargets() {
 }
 
 // ─── LINKEDIN ─────────────────────────────────────────────────────────────────
-// Text + single images only. Video every 10th LinkedIn post. No carousels.
+// Text + single images only. No carousels, no video (video is its own daily job).
 
 export async function runLinkedIn(withImage = true) {
   if (!AGENT_CONFIG.platforms.includes("linkedin")) return;
 
   const liCount = await loadPostCount("linkedin");
-  const isVideoPost = withImage && (liCount + 1) % AGENT_CONFIG.videoCadence === 0;
-
-  console.log(`\n[LinkedIn] Starting run | post #${liCount + 1} | ${isVideoPost ? "VIDEO" : withImage ? "image" : "text"}`);
-
-  // ── VIDEO MODE — render, then hold for human approval ────────────────────────
-  // Video is the one thing that never auto-publishes. We render it, queue it for
-  // review (on approval it cross-posts to every enabled platform), and stop. If
-  // the render fails we degrade to a normal auto text/image post for this slot.
-  if (isVideoPost) {
-    try {
-      const { caption, videoScript, videoStyle } = await generateVideoPost();
-      console.log(`[LinkedIn] Video script: ${videoScript.length} screens | style: ${videoStyle}`);
-      const videoPath = await generateVideo(caption, videoScript, videoStyle);
-
-      const row = await enqueueVideo({ targets: videoTargets(), caption, format: "video", rawPath: videoPath, meta: { slot: "linkedin", videoStyle } });
-      console.log(`[LinkedIn] Video queued for review${row ? ` (id ${row.id})` : ""}.\n`);
-      return { queued: true, reviewId: row?.id ?? null };
-    } catch (err) {
-      console.error(`[LinkedIn] Video pipeline failed — degrading to a normal post: ${err.message}`);
-      // fall through to TEXT / IMAGE MODE below
-    }
-  }
+  console.log(`\n[LinkedIn] Starting run | post #${liCount + 1} | ${withImage ? "image" : "text"}`);
 
   // ── TEXT / IMAGE MODE ───────────────────────────────────────────────────────
   // Ask the optimizer which creative variant to run for this slot. Cold start
@@ -175,31 +115,34 @@ export async function runLinkedIn(withImage = true) {
   return { postId, postUrl, postText };
 }
 
-// ─── INSTAGRAM ────────────────────────────────────────────────────────────────
-// 10am + 8pm → Reel (video)   |   3pm → Carousel (static)
+// ─── VIDEO (unified, all platforms) ──────────────────────────────────────────
+// One video cadence for the whole system. Renders a single clip, queues it for
+// review, and on approval cross-posts to every enabled platform (LinkedIn,
+// Instagram, Threads) plus TikTok/YouTube. This is the ONLY place video renders.
 
-export async function runInstagramReel() {
-  if (!AGENT_CONFIG.platforms.includes("instagram")) return;
-  if (!process.env.INSTAGRAM_ACCESS_TOKEN) {
-    console.log("[Instagram] Skipped — INSTAGRAM_ACCESS_TOKEN not set");
+export async function runVideo() {
+  const targets = videoTargets();
+  if (!targets.length) {
+    console.log("[Video] Skipped — no enabled video platforms");
     return;
   }
 
-  const topic = IG_REEL_TOPICS[Math.floor(Math.random() * IG_REEL_TOPICS.length)];
-  console.log(`\n[Instagram] Reel run | topic: ${topic}`);
-
+  console.log(`\n[Video] Daily video run | targets: ${targets.join(", ")}`);
   try {
-    const { caption, videoScript } = await generateReelScript(topic);
-    console.log(`[Instagram] Hook: "${videoScript[0].heading}"`);
+    const { caption, videoScript, videoStyle } = await generateVideoPost();
+    console.log(`[Video] Script: ${videoScript.length} screens | style: ${videoStyle}`);
 
-    const rawPath = await generateVideo(caption, videoScript, "auto");
-    const row = await enqueueVideo({ targets: videoTargets(), caption, format: "reel", rawPath, meta: { slot: "instagram_reel", topic } });
-    console.log(`[Instagram] Reel queued for review${row ? ` (id ${row.id})` : ""}.\n`);
+    const rawPath = await generateVideo(caption, videoScript, videoStyle);
+    const row = await enqueueVideo({ targets, caption, format: "video", rawPath, meta: { slot: "daily_video", videoStyle } });
+    console.log(`[Video] Queued for review${row ? ` (id ${row.id})` : ""}.\n`);
     return { queued: true, reviewId: row?.id ?? null };
   } catch (err) {
-    console.error(`[Instagram] Reel failed: ${err.message}\n`);
+    console.error(`[Video] Pipeline failed: ${err.message}\n`);
   }
 }
+
+// ─── INSTAGRAM ────────────────────────────────────────────────────────────────
+// 10am → news image   |   3pm → Carousel (static). Video handled by runVideo().
 
 export async function runInstagram() {
   if (!AGENT_CONFIG.platforms.includes("instagram")) return;
@@ -220,7 +163,7 @@ export async function runInstagram() {
 }
 
 // ─── THREADS ──────────────────────────────────────────────────────────────────
-// Video every 5th post. Carousel every 3rd (non-video). Text fills the rest.
+// Carousel every 3rd post. Text fills the rest. Video handled by runVideo().
 
 export async function runThreads() {
   if (!AGENT_CONFIG.platforms.includes("threads")) return;
@@ -229,27 +172,10 @@ export async function runThreads() {
     return;
   }
 
-  const threadsCount  = await loadPostCount("threads");
-  const isVideoSlot   = (threadsCount + 1) % 5 === 0;
-  const isCarouselSlot = !isVideoSlot && (threadsCount + 1) % 3 === 0;
+  const threadsCount   = await loadPostCount("threads");
+  const isCarouselSlot = (threadsCount + 1) % 3 === 0;
 
-  console.log(`\n[Threads] Starting run | post #${threadsCount + 1} | ${isVideoSlot ? "video" : isCarouselSlot ? "carousel" : "text"}`);
-
-  // ── VIDEO MODE — render + queue for review (fans out to all platforms) ───────
-  if (isVideoSlot) {
-    try {
-      const { caption, videoScript } = await generateVideoPost();
-      console.log(`[Threads] Video hook: "${videoScript[0].heading}"`);
-
-      const rawPath = await generateVideo(caption, videoScript, "auto");
-      const row = await enqueueVideo({ targets: videoTargets(), caption, format: "video", rawPath, meta: { slot: "threads" } });
-      console.log(`[Threads] Video queued for review${row ? ` (id ${row.id})` : ""}.\n`);
-      return { queued: true, reviewId: row?.id ?? null };
-    } catch (err) {
-      console.error(`[Threads] Video failed, falling back to text: ${err.message}`);
-      // fall through to text post
-    }
-  }
+  console.log(`\n[Threads] Starting run | post #${threadsCount + 1} | ${isCarouselSlot ? "carousel" : "text"}`);
 
   // ── CAROUSEL MODE ───────────────────────────────────────────────────────────
   if (isCarouselSlot) {

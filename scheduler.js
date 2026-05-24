@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { runThreads, runLinkedIn, runInstagramReel } from "./index.js";
+import { runThreads, runLinkedIn, runVideo } from "./index.js";
 import { postLinkedInNewsImage, postInstagramNewsImage } from "./modules/news-agent.js";
 import { checkPerf, processVariationQueue } from "./modules/variation-engine.js";
 import { runWeeklyAnalysis } from "./modules/feedback-loop.js";
@@ -43,7 +43,7 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] LinkedIn 8pm failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  // ── INSTAGRAM — 2x/day: 10am news image + 7pm reel ───────────────────────
+  // ── INSTAGRAM — 10am news image ───────────────────────────────────────────
   cron.schedule("0 10 * * *", async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 10am skipped`); return; }
     console.log(`[${new Date().toISOString()}] Instagram: 10:00 AM (news image)`);
@@ -51,11 +51,12 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] Instagram 10am failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
+  // ── VIDEO — 1x/day at 7pm: one render, fanned out to all platforms (held for review) ──
   cron.schedule("0 19 * * *", async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 7pm skipped`); return; }
-    console.log(`[${new Date().toISOString()}] Instagram: 7:00 PM (reel)`);
-    try { await runInstagramReel(); }
-    catch (err) { console.error(`[Scheduler] Instagram 7pm failed: ${err.message}`); }
+    if (paused()) { console.log(`[Scheduler] PAUSED — daily video skipped`); return; }
+    console.log(`[${new Date().toISOString()}] Video: 7:00 PM (all platforms, held for review)`);
+    try { await runVideo(); }
+    catch (err) { console.error(`[Scheduler] Daily video failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── THREADS — 4x/day: matches LinkedIn frequency (30min offset) ──────────
@@ -171,8 +172,9 @@ export function startScheduler() {
 
   console.log("Scheduler active — all times EST:");
   console.log("  LinkedIn  : 8:00am (image), 12:00pm (news), 4:00pm (text), 8:00pm (image)");
-  console.log("  Instagram : 10:00am (news image), 7:00pm (reel)");
-  console.log("  Threads   : 8:30am, 12:30pm, 4:30pm, 8:30pm (text | carousel every 3rd | video every 5th)");
+  console.log("  Instagram : 10:00am (news image)");
+  console.log("  Threads   : 8:30am, 12:30pm, 4:30pm, 8:30pm (text | carousel every 3rd)");
+  console.log("  Video     : 7:00pm daily — one render, all platforms, held for review");
   console.log("  Var queue : every 30 minutes (crash-safe job queue)");
   console.log("  Variation : every 6 hours");
   console.log("  Replies   : every 15 minutes (Threads polling)");
