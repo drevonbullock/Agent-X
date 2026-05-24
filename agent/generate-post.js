@@ -17,12 +17,41 @@ Voice rules (non-negotiable):
 - Every post must have one clear point. If you can't state it in one sentence, rewrite it
 - No quotes around the post
 - Never write for developers or tech people. Write for the business owner who is curious but not technical
-- NEVER use em dashes (—), en dashes (–), or hyphens used as pauses ( - ) between thoughts. Rewrite every sentence that would use a dash as natural flowing prose instead`;
+- NEVER use em dashes (—), en dashes (–), or hyphens used as pauses ( - ) between thoughts. Rewrite every sentence that would use a dash as natural flowing prose instead
+
+WRITE LIKE A REAL HUMAN (CRITICAL):
+- Use everyday words only. If a normal person wouldn't say it out loud to a friend, do not write it
+- Contractions are good: "don't", "you're", "it's", "that's"
+- Short sentences win. Mix in fragments when they land harder
+- Banned words and phrases (use the simple version instead):
+  "leverage" → use "use"
+  "utilize" → use "use"
+  "optimize" → use "make better" or "fix"
+  "streamline" → use "simplify" or "clean up"
+  "robust" → use "solid" or "strong"
+  "seamless" → use "smooth" or just cut it
+  "holistic" → cut it
+  "facilitate" → use "help" or "do"
+  "elevate" → use "raise" or "lift"
+  "empower" → use "help" or "let"
+  "cutting-edge" / "state-of-the-art" → cut it
+  "paradigm" → cut it
+  "ecosystem" (for business) → use "space" or "world"
+  "endeavor" → use "try"
+  "revolutionize" → use "change"
+  "transform" (business context) → use "change"
+  "synergy" → cut it
+  "landscape" (as metaphor) → cut it
+  "delve" → use "look at" or "get into"
+  "furthermore" / "moreover" → use "and" or start a new sentence
+  "in order to" → use "to"
+  "due to the fact that" → use "because"
+  "a myriad of" → use "a lot of" or "tons of"`;
 
 const FORMATS = {
   contrarian: {
     weight: 4,
-    instruction: `FORMAT — Contrarian Take:
+    instruction: `FORMAT. Contrarian Take:
 Open with "Everyone says [X]." or "The common belief is [X]." or "Most people think [X]."
 Then write "Here's what's actually true:" and deliver the real insight in 3-4 sentences.
 The topic must challenge a common belief that business owners hold about AI, automation, hiring, or growth.
@@ -32,9 +61,9 @@ End with a single punchy sentence that lands like a conclusion.`,
 
   one_liner: {
     weight: 3,
-    instruction: `FORMAT — One-Liner Drop:
+    instruction: `FORMAT. One-Liner Drop:
 Single sentence. No explanation. No hashtags. Just a sharp observation about AI automation, building systems, or what it means to run a business in this era.
-Make it land. Make it feel like something you actually think — not something a LinkedIn account would say.
+Make it land. Make it feel like something you actually think, not something a LinkedIn account would say.
 Examples of the energy (do not copy these):
 "Vibe coding is just manifestation with a compiler."
 "The automation isn't the product. The time it gives back is."`,
@@ -42,7 +71,7 @@ Examples of the energy (do not copy these):
 
   build_update: {
     weight: 2,
-    instruction: `FORMAT — System Breakdown:
+    instruction: `FORMAT. System Breakdown:
 Describe a specific AI automation system a business could run — what it does, what problem it solves, what it replaces.
 Frame it as a real operational upgrade, not a product pitch.
 4-6 sentences. Business owner language only — no code, no tech jargon.
@@ -51,7 +80,7 @@ End with the single business outcome it creates.`,
 
   insight: {
     weight: 1,
-    instruction: `FORMAT — Sharp Insight:
+    instruction: `FORMAT. Sharp Insight:
 One observation about how AI automation is changing what it means to run a small business or agency.
 3-5 sentences. No fluff.
 End with a provocative question or statement that makes a founder stop and think about their own business.`,
