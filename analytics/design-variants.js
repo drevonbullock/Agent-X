@@ -59,8 +59,34 @@ export const IMAGE_THEMES = [
 
 export const DEFAULT_THEME_ID = IMAGE_THEMES[0].id;
 
+// Competitor-derived themes (Phase 3). Loaded from the `design_themes` table at
+// runtime via setDynamicThemes(); empty until the competitor miner has run, so
+// the pool is just the static brand themes by default.
+let DYNAMIC_THEMES = [];
+
+const HEX6 = /^#[0-9A-Fa-f]{6}$/;
+
+// A dynamic theme must be fully valid or the renderer could break — invalid
+// entries are dropped here so getTheme/variantPool only ever expose safe themes.
+export function isValidTheme(t) {
+  return !!t
+    && typeof t.id === "string" && t.id.length > 0
+    && HEX6.test(t.accent ?? "") && HEX6.test(t.accentLight ?? "") && HEX6.test(t.bg ?? "")
+    && typeof t.fontHeading === "string"
+    && typeof t.fontMono === "string"
+    && typeof t.fontLink === "string" && t.fontLink.startsWith("https://fonts.googleapis.com/");
+}
+
+export function setDynamicThemes(themes) {
+  DYNAMIC_THEMES = (themes ?? []).filter(isValidTheme);
+}
+
+export function allImageThemes() {
+  return [...IMAGE_THEMES, ...DYNAMIC_THEMES];
+}
+
 export function getTheme(id) {
-  return IMAGE_THEMES.find((t) => t.id === id) ?? IMAGE_THEMES[0];
+  return allImageThemes().find((t) => t.id === id) ?? IMAGE_THEMES[0];
 }
 
 // Written-post copy styles. id "default" injects no directive — identical to
@@ -83,7 +109,7 @@ export function getCopyStyle(id) {
 export function variantPool(postType) {
   return postType === "text"
     ? COPY_STYLES.map((c) => c.id)
-    : IMAGE_THEMES.map((t) => t.id);
+    : allImageThemes().map((t) => t.id);
 }
 
 export function defaultVariant(postType) {

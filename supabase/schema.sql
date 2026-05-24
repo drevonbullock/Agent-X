@@ -172,3 +172,28 @@ CREATE TABLE IF NOT EXISTS review_queue (
   posted_at   TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS idx_review_queue_status ON review_queue(status);
+
+-- ─── COMPETITOR MINING ────────────────────────────────────────────────────────
+-- Claude-vision analysis of competitors' top-performing Instagram graphics
+-- (pulled via Business Discovery). One row per analyzed post; `analysis` holds
+-- the extracted design system (accent, background, font, layout, hook style).
+CREATE TABLE IF NOT EXISTS competitor_insights (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username    TEXT NOT NULL,
+  permalink   TEXT UNIQUE,           -- dedup: never re-analyze the same post
+  likes       INTEGER DEFAULT 0,
+  comments    INTEGER DEFAULT 0,
+  analysis    JSONB DEFAULT '{}'::jsonb,
+  created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+-- Design themes synthesized from competitor analysis. Loaded into the variant
+-- pool at runtime (setDynamicThemes) so the optimizer can A/B them as challengers
+-- and promote any that beat the brand champion. `theme` matches the IMAGE_THEMES shape.
+CREATE TABLE IF NOT EXISTS design_themes (
+  id          TEXT PRIMARY KEY,      -- e.g. comp_<username>
+  theme       JSONB NOT NULL,
+  source      TEXT DEFAULT 'competitor',
+  active      BOOLEAN DEFAULT true,
+  updated_at  TIMESTAMPTZ DEFAULT now()
+);

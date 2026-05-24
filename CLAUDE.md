@@ -104,6 +104,9 @@ modules/              — Autonomous engines (run from scheduler)
   format-agent.js       Shotstack multi-platform resize (legacy/secondary).
   ad-performance.js     analyzeAdPerformance(csv) — flags + rewrites underperforming ads.
   shotstack-enhance.js  generateCinematicVideo(script) — Shotstack pipeline (legacy/secondary).
+  competitor-research.js mineCompetitors() — IG Business Discovery pulls rivals' top posts,
+                        Claude vision extracts their design system, synthesizes new themes into
+                        `design_themes`; loadDynamicThemes() feeds them to the optimizer pool.
 
 analytics/            — Closes the learning loop: pulls REAL metrics back per platform
   index.js              syncAllMetrics() writes live views/likes/comments/shares +
@@ -141,7 +144,7 @@ test-*.js  run-reel.js   Ad-hoc manual test entry points (not part of the schedu
 - **Instagram** — 10am news image. 3pm carousel path exists in code (`runInstagram`) but isn't currently scheduled.
 - **Threads** — 4x/day at :30 offsets. Text by default; carousel every 3rd post.
 - **Video — one daily cadence for the whole system.** `runVideo()` (7pm cron) is the ONLY place video renders. It builds one clip, then `enqueueVideo()` parks it in `review_queue` (pending). On approval it cross-posts to **all enabled platforms** (LinkedIn, Instagram, Threads) plus TikTok/YouTube Shorts where tokens are set — `videoTargets()` in `index.js`. Images and written posts auto-publish; video never does.
-- **Background loops**: variation queue (30m), Threads reply polling (15m), review-queue publish (10m), variation engine (6h), hook tester (6h :30), analytics sync+learn+A/B+adapt (6h :45), weekly feedback (Sun midnight), YouTube cutter (11am, if `YOUTUBE_CHANNEL_ID`).
+- **Background loops**: variation queue (30m), Threads reply polling (15m), review-queue publish (10m), variation engine (6h), hook tester (6h :30), analytics sync+learn+A/B+adapt (6h :45), weekly feedback (Sun midnight), competitor mining (Sun 1am), YouTube cutter (11am, if `YOUTUBE_CHANNEL_ID`).
 - **Kill switch**: set `POSTING_PAUSED=true` to skip all posting slots (background analysis skips too).
 
 ## Supabase Data Layer
@@ -156,6 +159,8 @@ Tables (`supabase/schema.sql`):
 - `experiments` — A/B variant pairs + decided winner. Posts carry `experiment_id`/`variant`.
 - `optimization_state` — per `(platform, post_type)`: current `champion_variant`, `mode` (exploit|explore), `underperform_streak`, rolling `baseline_score`. Drives the adaptive creative loop.
 - `review_queue` — rendered videos awaiting human approval. `targets` (jsonb platform list), `video_url` (public Supabase URL), `status` (pending|approved|rejected|posted). Approved rows publish to all targets, then flip to `posted`.
+- `competitor_insights` — Claude-vision analysis of competitors' top IG posts (one row per analyzed post, deduped by `permalink`). `analysis` holds the extracted accent/background/font/layout/hook.
+- `design_themes` — themes synthesized from competitor analysis (`id` like `comp_<username>`, `theme` jsonb matching IMAGE_THEMES). `active` rows are loaded into the variant pool at runtime so the optimizer can A/B them as challengers.
 - `posts.metrics_synced_at` / `posts.design_variant` — last metric pull + which creative variant (theme/copy style) the post used.
 - **Storage buckets**: `agent-x-videos`, `agent-x-images` (public) — host media for platforms that require a public URL (Instagram/Threads).
 
@@ -172,7 +177,10 @@ On top of learning, the optimizer actively varies the creative and keeps what wi
 - **Variants**: `IMAGE_THEMES` (accent/background/font presets the parameterized `render-cheatsheet.js` accepts) and `COPY_STYLES` (directives injected into `generateLinkedInPost`). The first of each is the brand default; cold start uses it, so output is unchanged until data exists. Each post is tagged with its `design_variant`.
 - **Pick** (`pickVariant`): in `exploit` mode it serves the champion (with a ~15% challenger probe); in `explore` mode it rotates challengers.
 - **Adapt** (`adaptAll`, in `runAnalyticsCycle`): recomputes a rolling baseline (median score of the last 20 posts per platform/post_type). It only flips to `explore` after **5 consecutive posts below baseline** (so one slow day never triggers a change), and promotes a challenger to champion once it beats the champion's average with ≥3 samples.
-- Scope: video is intentionally excluded (kept for manual review). IG/Threads wiring, a video approval gate, and Instagram competitor mining (Business Discovery + Claude vision) are planned follow-ups.
+- Scope: video is intentionally excluded (it's gated for manual review — see the video approval gate). The optimizer is currently wired into LinkedIn image + text slots; IG/Threads wiring is the remaining follow-up.
+
+### Competitor mining (`modules/competitor-research.js`)
+Feeds the variant pool with rival-inspired designs. Weekly (`mineCompetitors`, Sun 1am): for each handle in `COMPETITOR_IG_HANDLES`, Instagram Business Discovery pulls recent media, picks the top image by engagement, and Claude vision (`claude-sonnet-4-6`) reverse-engineers its design system (accent, dark background, heading font from an allowed Google-Fonts list, layout, hook style). That's stored in `competitor_insights` (deduped by permalink) and synthesized into a `design_themes` row (`comp_<username>`). `loadDynamicThemes()` (called at scheduler startup and after each mining run) loads the active themes via `setDynamicThemes()` so the optimizer A/Bs them as challengers — and promotes any that beat the brand champion. Synthesized themes are validated (`isValidTheme`) so a bad hex/font can never break a render; the active set is capped (default 4). CLI: `node modules/competitor-research.js`.
 
 ## Content Generation (agent/generate-post.js)
 - A single non-negotiable **VOICE** system prompt defines the persona and hard rules (see Global Post Rules).
@@ -217,6 +225,7 @@ YOUTUBE_CLIENT_ID=  YOUTUBE_CLIENT_SECRET=  YOUTUBE_REFRESH_TOKEN=  YOUTUBE_CHAN
 
 # Media / news services
 ELEVENLABS_API_KEY=  ELEVENLABS_VOICE_ID=  NEWS_API_KEY=  FIRECRAWL_API_KEY=
+COMPETITOR_IG_HANDLES=  (csv of rival IG usernames for the competitor miner; needs INSTAGRAM_BUSINESS_ID)
 RUNWAY_API_KEY=  TOPAZ_API_KEY=  HEYGEN_API_KEY=  HEYGEN_AVATAR_ID=
 SHOTSTACK_API_KEY=  SHOTSTACK_API_KEY_PROD=  SHOTSTACK_ENV=
 

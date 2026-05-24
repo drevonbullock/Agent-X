@@ -8,11 +8,15 @@ import { analyzeHookPerformance } from "./modules/hook-tester.js";
 import { pollThreadsReplies } from "./modules/comment-reply.js";
 import { runAnalyticsCycle } from "./analytics/index.js";
 import { processReviewQueue } from "./modules/review-queue.js";
+import { mineCompetitors, loadDynamicThemes } from "./modules/competitor-research.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
 
   const paused = () => process.env.POSTING_PAUSED === "true";
+
+  // Load competitor-derived design themes into the variant pool at startup.
+  loadDynamicThemes().catch((err) => console.warn(`[Scheduler] loadDynamicThemes failed: ${err.message}`));
 
   // ── LINKEDIN — 4x/day: 2 image, 1 text, 1 news ──────────────────────────
   cron.schedule("0 8 * * *", async () => {
@@ -123,6 +127,13 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] FeedbackLoop failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
+  // ── COMPETITOR MINING — every Sunday 1am: analyze rivals, refresh dynamic themes ──
+  cron.schedule("0 1 * * 0", async () => {
+    if (paused()) { return; }
+    try { await mineCompetitors(); }
+    catch (err) { console.error(`[Scheduler] CompetitorMining failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
   // ── YOUTUBE CUTTER — daily at 11am (offset from LinkedIn 9am + IG 10am) ──
   cron.schedule("0 11 * * *", async () => {
     if (paused()) { return; }
@@ -180,6 +191,7 @@ export function startScheduler() {
   console.log("  Replies   : every 15 minutes (Threads polling)");
   console.log("  Review    : every 10 minutes (publish approved videos)");
   console.log("  Feedback  : Sundays midnight");
+  console.log("  Competitor: Sundays 1:00am (IG Business Discovery + Claude vision → dynamic themes)");
   console.log("  YouTube   : 11:00am daily (if YOUTUBE_CHANNEL_ID set)");
   console.log("  HookTester: every 6 hours (:30 offset)");
   console.log("  Analytics : every 6 hours (:45 offset) — metric sync + learn + A/B decide");
