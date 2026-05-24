@@ -7,6 +7,7 @@ import { processYouTubeVideo } from "./modules/youtube-cutter.js";
 import { analyzeHookPerformance } from "./modules/hook-tester.js";
 import { pollThreadsReplies } from "./modules/comment-reply.js";
 import { runAnalyticsCycle } from "./analytics/index.js";
+import { processReviewQueue } from "./modules/review-queue.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
@@ -100,6 +101,13 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] ThreadsReplies failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
+  // ── VIDEO REVIEW QUEUE — publish approved videos every 10 minutes ─────────
+  cron.schedule("*/10 * * * *", async () => {
+    if (paused()) { return; }
+    try { await processReviewQueue(); }
+    catch (err) { console.error(`[Scheduler] ReviewQueue failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
   // ── VARIATION ENGINE — every 6 hours ─────────────────────────────────────
   cron.schedule("0 */6 * * *", async () => {
     if (paused()) { return; }
@@ -168,6 +176,7 @@ export function startScheduler() {
   console.log("  Var queue : every 30 minutes (crash-safe job queue)");
   console.log("  Variation : every 6 hours");
   console.log("  Replies   : every 15 minutes (Threads polling)");
+  console.log("  Review    : every 10 minutes (publish approved videos)");
   console.log("  Feedback  : Sundays midnight");
   console.log("  YouTube   : 11:00am daily (if YOUTUBE_CHANNEL_ID set)");
   console.log("  HookTester: every 6 hours (:30 offset)");

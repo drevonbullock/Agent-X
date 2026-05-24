@@ -153,3 +153,22 @@ CREATE TABLE IF NOT EXISTS optimization_state (
   updated_at         TIMESTAMPTZ DEFAULT now(),
   PRIMARY KEY (platform, post_type)
 );
+
+-- ─── VIDEO APPROVAL GATE ──────────────────────────────────────────────────────
+-- Every rendered video lands here as 'pending' instead of auto-publishing. The
+-- compressed MP4 is uploaded to Supabase storage first, so the item survives a
+-- container restart. processReviewQueue() publishes 'approved' rows to each of
+-- their `targets` (linkedin/instagram/threads/tiktok/youtube), then marks 'posted'.
+CREATE TABLE IF NOT EXISTS review_queue (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  targets     JSONB NOT NULL DEFAULT '[]'::jsonb,  -- platforms to publish to on approval
+  caption     TEXT,
+  format      TEXT DEFAULT 'video',
+  video_url   TEXT NOT NULL,                        -- public Supabase storage URL
+  meta        JSONB DEFAULT '{}'::jsonb,
+  status      TEXT DEFAULT 'pending',               -- pending | approved | rejected | posted
+  created_at  TIMESTAMPTZ DEFAULT now(),
+  decided_at  TIMESTAMPTZ,
+  posted_at   TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_review_queue_status ON review_queue(status);

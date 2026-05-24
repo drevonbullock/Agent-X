@@ -13,23 +13,18 @@ export const AGENT_CONFIG = {
 };
 
 import fs from "fs";
-import os from "os";
-import path from "path";
-import { execSync } from "child_process";
 import http from "http";
 import Anthropic from "@anthropic-ai/sdk";
 import { generateLinkedInPost, generateVideoPost, generateThreadsPost } from "./agent/generate-post.js";
 import { generateImage } from "./agent/generate-image.js";
 import { generateVideo } from "./agent/generate-video.js";
 import { postToLinkedIn } from "./agent/post-to-linkedin.js";
-import { postReelToInstagram } from "./distributors/instagram.js";
-import { postVideoToThreads } from "./distributors/threads.js";
-import { postVideoToTikTok } from "./distributors/tiktok.js";
-import { uploadYouTubeShort } from "./distributors/youtube-shorts.js";
 import { postTextToThreads } from "./distributors/threads.js";
 import { generateAndPostCarousel, generateAndPostCarouselToThreads } from "./modules/carousel-generator.js";
 import { handleInstagramWebhook } from "./modules/comment-reply.js";
 import { pickVariant } from "./analytics/index.js";
+import { logPost } from "./supabase/log-post.js";
+import { enqueueVideo, processReviewQueue, listPendingReviews, decideReview, renderReviewPageHtml } from "./modules/review-queue.js";
 import { startScheduler } from "./scheduler.js";
 
 // ─── STARTUP — RAW FOOTAGE CHECK ─────────────────────────────────────────────
@@ -45,7 +40,6 @@ fs.mkdirSync("video-projects", { recursive: true });
 }
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const IG_BUCKET  = "agent-x-videos";
 
 const IG_REEL_TOPICS = [
   "how to automate your client onboarding",
@@ -57,22 +51,6 @@ const IG_REEL_TOPICS = [
   "AI automations every solo founder needs",
   "stop doing manually what AI can do in seconds",
 ];
-
-async function ensureIgBucket() {
-  const res = await fetch(`${process.env.SUPABASE_URL}/storage/v1/bucket`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.SUPABASE_SECRET_KEY}`,
-      apikey: process.env.SUPABASE_SECRET_KEY,
-    },
-    body: JSON.stringify({ id: IG_BUCKET, name: IG_BUCKET, public: true }),
-  });
-  const j = await res.json();
-  if (!res.ok && !JSON.stringify(j).includes("already exists") && j.message !== "Duplicate") {
-    console.warn(`[Instagram] Bucket note: ${JSON.stringify(j)}`);
-  }
-}
 
 async function generateReelScript(topic) {
   const msg = await anthropic.messages.create({
@@ -111,23 +89,21 @@ async function loadPostCount(platform = null) {
   return count ?? 0;
 }
 
-async function logPost({ postId, postUrl, postText, format, postType, platform = "linkedin", designVariant = null }) {
-  const hook = postText.split(/[.!?\n]/)[0].trim().slice(0, 200);
-  const { error } = await supabase.from("posts").insert({
-    content: postText,
-    platform,
-    post_type: postType,
-    hook,
-    format,
-    post_id: postId,
-    post_url: postUrl,
-    design_variant: designVariant,
-  });
-  if (error) console.warn(`[Agent X] Supabase log failed (${platform}): ${error.message}`);
-}
-
 function isShortPost(text) {
   return text.split(/[.!?]+/).filter((s) => s.trim().length > 0).length < 6;
+}
+
+// Every rendered video is cross-posted to all enabled platforms (LinkedIn,
+// Instagram, Threads) plus TikTok/YouTube when configured. Used by all video
+// slots so one approved render publishes everywhere.
+function videoTargets() {
+  const t = [];
+  if (AGENT_CONFIG.platforms.includes("linkedin")) t.push("linkedin");
+  if (AGENT_CONFIG.platforms.includes("instagram") && process.env.INSTAGRAM_ACCESS_TOKEN) t.push("instagram");
+  if (AGENT_CONFIG.platforms.includes("threads")   && process.env.THREADS_ACCESS_TOKEN)   t.push("threads");
+  if (AGENT_CONFIG.platforms.includes("tiktok")    && process.env.TIKTOK_ACCESS_TOKEN)     t.push("tiktok");
+  if (AGENT_CONFIG.platforms.includes("youtube")   && process.env.YOUTUBE_REFRESH_TOKEN)   t.push("youtube");
+  return t;
 }
 
 // ─── LINKEDIN ─────────────────────────────────────────────────────────────────
@@ -141,32 +117,23 @@ export async function runLinkedIn(withImage = true) {
 
   console.log(`\n[LinkedIn] Starting run | post #${liCount + 1} | ${isVideoPost ? "VIDEO" : withImage ? "image" : "text"}`);
 
-  // ── VIDEO MODE ──────────────────────────────────────────────────────────────
+  // ── VIDEO MODE — render, then hold for human approval ────────────────────────
+  // Video is the one thing that never auto-publishes. We render it, queue it for
+  // review (on approval it cross-posts to every enabled platform), and stop. If
+  // the render fails we degrade to a normal auto text/image post for this slot.
   if (isVideoPost) {
-    let videoAsset = null;
-    let caption = null;
-    let videoPath = null;
-
     try {
-      const { caption: c, videoScript, videoStyle } = await generateVideoPost();
-      caption = c;
+      const { caption, videoScript, videoStyle } = await generateVideoPost();
       console.log(`[LinkedIn] Video script: ${videoScript.length} screens | style: ${videoStyle}`);
-      videoPath = await generateVideo(caption, videoScript, videoStyle);
-      videoAsset = { type: "video", path: videoPath };
+      const videoPath = await generateVideo(caption, videoScript, videoStyle);
+
+      const row = await enqueueVideo({ targets: videoTargets(), caption, format: "video", rawPath: videoPath, meta: { slot: "linkedin", videoStyle } });
+      console.log(`[LinkedIn] Video queued for review${row ? ` (id ${row.id})` : ""}.\n`);
+      return { queued: true, reviewId: row?.id ?? null };
     } catch (err) {
-      console.error(`[LinkedIn] Video pipeline failed, falling back to text: ${err.message}`);
+      console.error(`[LinkedIn] Video pipeline failed — degrading to a normal post: ${err.message}`);
+      // fall through to TEXT / IMAGE MODE below
     }
-
-    const postText = caption ?? "[Agent X] Video render failed.";
-    const { postId, postUrl } = await postToLinkedIn(postText, null, videoAsset);
-    console.log(`[LinkedIn] Posted! ID: ${postId} | ${postUrl}`);
-    await logPost({ postId, postUrl, postText, format: "video", postType: videoAsset ? "video" : "text", platform: "linkedin" });
-
-    // TikTok / YouTube if tokens present
-    if (videoPath) await distributeVideo(postText, videoPath);
-
-    console.log(`[LinkedIn] Done.\n`);
-    return { postId, postUrl, postText };
   }
 
   // ── TEXT / IMAGE MODE ───────────────────────────────────────────────────────
@@ -208,26 +175,6 @@ export async function runLinkedIn(withImage = true) {
   return { postId, postUrl, postText };
 }
 
-// Re-encode the 4K master to a web-optimized 1080p MP4 for Supabase upload.
-// The 4K render (CRF=15) produces 300MB+ files that exceed Supabase's 50MB limit.
-function compressForUpload(inputPath) {
-  const outPath = path.join(os.tmpdir(), `ig-upload-${Date.now()}.mp4`);
-  const ffmpeg = process.platform === "linux" ? "/usr/bin/ffmpeg" : "/opt/homebrew/bin/ffmpeg";
-  const cmd = [
-    `${ffmpeg} -y`,
-    `-i "${inputPath}"`,
-    `-vf "scale=1080:1920"`,
-    `-c:v libx264 -crf 23 -preset fast`,
-    `-c:a aac -b:a 128k`,
-    `-movflags +faststart`,
-    `"${outPath}"`,
-  ].join(" ");
-  execSync(cmd, { stdio: "inherit", timeout: 5 * 60 * 1000 });
-  const sizeMB = (fs.statSync(outPath).size / 1024 / 1024).toFixed(1);
-  console.log(`[Instagram] Compressed for upload: ${sizeMB} MB → ${outPath}`);
-  return outPath;
-}
-
 // ─── INSTAGRAM ────────────────────────────────────────────────────────────────
 // 10am + 8pm → Reel (video)   |   3pm → Carousel (static)
 
@@ -246,26 +193,9 @@ export async function runInstagramReel() {
     console.log(`[Instagram] Hook: "${videoScript[0].heading}"`);
 
     const rawPath = await generateVideo(caption, videoScript, "auto");
-    const videoPath = compressForUpload(rawPath);
-
-    await ensureIgBucket();
-    const key = `reels/ig-${Date.now()}.mp4`;
-    const buffer = fs.readFileSync(videoPath);
-    try {
-      const { error } = await supabase.storage.from(IG_BUCKET).upload(key, buffer, {
-        contentType: "video/mp4",
-        upsert: true,
-      });
-      if (error) throw new Error(`Supabase upload failed: ${error.message}`);
-    } finally {
-      try { fs.unlinkSync(videoPath); } catch { /* tmp cleanup */ }
-    }
-    const { data } = supabase.storage.from(IG_BUCKET).getPublicUrl(key);
-
-    const { mediaId, postUrl } = await postReelToInstagram(data.publicUrl, caption);
-    console.log(`[Instagram] Reel live: ${postUrl}\n`);
-    await logPost({ postId: mediaId, postUrl, postText: caption, format: "reel", postType: "video", platform: "instagram" });
-    return { postUrl };
+    const row = await enqueueVideo({ targets: videoTargets(), caption, format: "reel", rawPath, meta: { slot: "instagram_reel", topic } });
+    console.log(`[Instagram] Reel queued for review${row ? ` (id ${row.id})` : ""}.\n`);
+    return { queued: true, reviewId: row?.id ?? null };
   } catch (err) {
     console.error(`[Instagram] Reel failed: ${err.message}\n`);
   }
@@ -305,33 +235,16 @@ export async function runThreads() {
 
   console.log(`\n[Threads] Starting run | post #${threadsCount + 1} | ${isVideoSlot ? "video" : isCarouselSlot ? "carousel" : "text"}`);
 
-  // ── VIDEO MODE ──────────────────────────────────────────────────────────────
+  // ── VIDEO MODE — render + queue for review (fans out to all platforms) ───────
   if (isVideoSlot) {
     try {
       const { caption, videoScript } = await generateVideoPost();
       console.log(`[Threads] Video hook: "${videoScript[0].heading}"`);
 
       const rawPath = await generateVideo(caption, videoScript, "auto");
-      const videoPath = compressForUpload(rawPath);
-
-      await ensureIgBucket();
-      const key = `reels/threads-${Date.now()}.mp4`;
-      const buffer = fs.readFileSync(videoPath);
-      try {
-        const { error } = await supabase.storage.from(IG_BUCKET).upload(key, buffer, {
-          contentType: "video/mp4",
-          upsert: true,
-        });
-        if (error) throw new Error(`Supabase upload failed: ${error.message}`);
-      } finally {
-        try { fs.unlinkSync(videoPath); } catch { /* tmp cleanup */ }
-      }
-      const { data } = supabase.storage.from(IG_BUCKET).getPublicUrl(key);
-
-      const { postId, postUrl } = await postVideoToThreads(data.publicUrl, caption);
-      await logPost({ postId, postUrl, postText: caption, format: "video", postType: "video", platform: "threads" });
-      console.log(`[Threads] Video posted: ${postUrl}\n`);
-      return { postId, postUrl };
+      const row = await enqueueVideo({ targets: videoTargets(), caption, format: "video", rawPath, meta: { slot: "threads" } });
+      console.log(`[Threads] Video queued for review${row ? ` (id ${row.id})` : ""}.\n`);
+      return { queued: true, reviewId: row?.id ?? null };
     } catch (err) {
       console.error(`[Threads] Video failed, falling back to text: ${err.message}`);
       // fall through to text post
@@ -364,33 +277,36 @@ export async function runThreads() {
 
 // ─── VIDEO DISTRIBUTION (TikTok / YouTube) ───────────────────────────────────
 
-async function distributeVideo(postText, videoPath) {
-  if (AGENT_CONFIG.platforms.includes("tiktok") && process.env.TIKTOK_ACCESS_TOKEN) {
-    try {
-      const { publish_id } = await postVideoToTikTok(videoPath, postText);
-      await logPost({ postId: publish_id, postUrl: null, postText, format: "video", postType: "video", platform: "tiktok" });
-      console.log(`[LinkedIn] TikTok queued: ${publish_id}`);
-    } catch (err) {
-      console.warn(`[LinkedIn] TikTok skipped: ${err.message}`);
-    }
-  }
-
-  if (AGENT_CONFIG.platforms.includes("youtube") && process.env.YOUTUBE_REFRESH_TOKEN) {
-    try {
-      const title = postText.split(/[.!?\n]/)[0].trim().slice(0, 100);
-      const { videoId, videoUrl } = await uploadYouTubeShort(videoPath, title, postText);
-      await logPost({ postId: videoId, postUrl: videoUrl, postText, format: "video", postType: "video", platform: "youtube" });
-      console.log(`[LinkedIn] YouTube Short: ${videoUrl}`);
-    } catch (err) {
-      console.warn(`[LinkedIn] YouTube Shorts skipped: ${err.message}`);
-    }
-  }
-}
-
 // ─── ENTRY ────────────────────────────────────────────────────────────────────
+
+const REVIEW_TOKEN = () => process.env.REVIEW_TOKEN || process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN || null;
 
 async function main() {
   const args = process.argv;
+
+  // ── Video review CLI ────────────────────────────────────────────────────────
+  if (args.includes("--review")) {
+    const pending = await listPendingReviews();
+    if (!pending.length) console.log("[ReviewQueue] No pending videos.");
+    for (const r of pending) console.log(`${r.id} | ${(r.targets ?? []).join(",")} | ${(r.caption ?? "").slice(0, 60)} | ${r.video_url}`);
+    process.exit(0);
+  }
+  const approveIdx = args.indexOf("--approve");
+  if (approveIdx !== -1) {
+    await decideReview(args[approveIdx + 1], "approve");
+    await processReviewQueue();
+    process.exit(0);
+  }
+  const rejectIdx = args.indexOf("--reject");
+  if (rejectIdx !== -1) {
+    await decideReview(args[rejectIdx + 1], "reject");
+    process.exit(0);
+  }
+  if (args.includes("--process-reviews")) {
+    await processReviewQueue();
+    process.exit(0);
+  }
+
   if (args.includes("--test")) {
     // Test LinkedIn (9am slot = withImage true)
     await runLinkedIn(true);
@@ -433,6 +349,29 @@ async function main() {
           res.writeHead(200);
           res.end("OK");
         });
+        return;
+      }
+
+      // ── Video review: approval dashboard + decision links ──────────────────────
+      if (req.method === "GET" && (url.pathname === "/review" || url.pathname === "/review/decide")) {
+        const expected = REVIEW_TOKEN();
+        if (!expected) { res.writeHead(503); res.end("Set REVIEW_TOKEN to enable video review."); return; }
+        if (url.searchParams.get("token") !== expected) { res.writeHead(403); res.end("Forbidden"); return; }
+
+        if (url.pathname === "/review") {
+          const pending = await listPendingReviews();
+          res.writeHead(200, { "Content-Type": "text/html" });
+          res.end(renderReviewPageHtml(pending, expected));
+          return;
+        }
+
+        const id = url.searchParams.get("id");
+        const action = url.searchParams.get("action");
+        if (!id || !["approve", "reject"].includes(action)) { res.writeHead(400); res.end("Bad request"); return; }
+        await decideReview(id, action);
+        if (action === "approve") processReviewQueue().catch((e) => console.warn(`[ReviewQueue] post-approve publish failed: ${e.message}`));
+        res.writeHead(200, { "Content-Type": "text/html" });
+        res.end(`<p style="font-family:system-ui">${action === "approve" ? "Approved — publishing now." : "Rejected."} <a href="/review?token=${encodeURIComponent(expected)}">Back to queue</a></p>`);
         return;
       }
 

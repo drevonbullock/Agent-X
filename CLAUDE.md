@@ -93,6 +93,10 @@ modules/              — Autonomous engines (run from scheduler)
   comment-reply.js      handleInstagramWebhook(body) / pollThreadsReplies();
                         Claude-Haiku auto-replies + keyword-lead capture.
   carousel-generator.js generateAndPostCarousel / ...ToThreads — HTML→PNG slides.
+  review-queue.js       Video approval gate. enqueueVideo() compresses+uploads a render to
+                        Supabase and parks it 'pending'; processReviewQueue() publishes
+                        'approved' rows to every target; listPendingReviews/decideReview +
+                        renderReviewPageHtml (the /review dashboard).
   youtube-cutter.js     processYouTubeVideo(url) — yt-dlp + Whisper + Claude clip selection.
   format-agent.js       Shotstack multi-platform resize (legacy/secondary).
   ad-performance.js     analyzeAdPerformance(csv) — flags + rewrites underperforming ads.
@@ -117,6 +121,8 @@ analytics/            — Closes the learning loop: pulls REAL metrics back per 
 
 supabase/
   client.js             Default export: Supabase client built with SUPABASE_SECRET_KEY.
+  log-post.js           Shared logPost() — writes every successful publish to `posts`
+                        (used by index.js direct posts and the video review queue).
   schema.sql            Run once. Tables below.
 
 auth/
@@ -131,8 +137,8 @@ test-*.js  run-reel.js   Ad-hoc manual test entry points (not part of the schedu
 - **LinkedIn** — 4x/day: 8am image, 12pm news image, 4pm text, 8pm image. Video every Nth post (`VIDEO_CADENCE`, default 10). Single images only, no carousels.
 - **Instagram** — 2x/day: 10am news image, 7pm Reel. 3pm carousel path exists in code (`runInstagram`) but isn't currently scheduled.
 - **Threads** — 4x/day at :30 offsets. Text by default; carousel every 3rd post, video every 5th.
-- **TikTok / YouTube Shorts** — fan-out targets: when a LinkedIn video renders, `distributeVideo()` also pushes it here if the platform is in `BRAND_PLATFORMS` and tokens are set.
-- **Background loops**: variation queue (30m), Threads reply polling (15m), variation engine (6h), hook tester (6h :30), analytics sync+learn+A/B (6h :45), weekly feedback (Sun midnight), YouTube cutter (11am, if `YOUTUBE_CHANNEL_ID`).
+- **Video is gated + fanned out.** Images and written posts auto-publish. Video never does: any video slot renders, then `enqueueVideo()` parks it in `review_queue` (pending). On approval it cross-posts to **all enabled platforms** (LinkedIn, Instagram, Threads) plus TikTok/YouTube Shorts where tokens are set — `videoTargets()` in `index.js`. If a LinkedIn video render fails, that slot degrades to a normal auto text/image post.
+- **Background loops**: variation queue (30m), Threads reply polling (15m), review-queue publish (10m), variation engine (6h), hook tester (6h :30), analytics sync+learn+A/B+adapt (6h :45), weekly feedback (Sun midnight), YouTube cutter (11am, if `YOUTUBE_CHANNEL_ID`).
 - **Kill switch**: set `POSTING_PAUSED=true` to skip all posting slots (background analysis skips too).
 
 ## Supabase Data Layer
@@ -146,6 +152,7 @@ Tables (`supabase/schema.sql`):
 - `platform_performance` — per-platform learning aggregates (best `format`/`post_type` by avg engagement score), recomputed by `analytics/learn.js`.
 - `experiments` — A/B variant pairs + decided winner. Posts carry `experiment_id`/`variant`.
 - `optimization_state` — per `(platform, post_type)`: current `champion_variant`, `mode` (exploit|explore), `underperform_streak`, rolling `baseline_score`. Drives the adaptive creative loop.
+- `review_queue` — rendered videos awaiting human approval. `targets` (jsonb platform list), `video_url` (public Supabase URL), `status` (pending|approved|rejected|posted). Approved rows publish to all targets, then flip to `posted`.
 - `posts.metrics_synced_at` / `posts.design_variant` — last metric pull + which creative variant (theme/copy style) the post used.
 - **Storage buckets**: `agent-x-videos`, `agent-x-images` (public) — host media for platforms that require a public URL (Instagram/Threads).
 
@@ -216,7 +223,15 @@ BRAND_PLATFORMS=  (csv, e.g. linkedin,instagram,threads)   VIDEO_CADENCE=  (defa
 
 # Ops
 PORT=  (webhook server, default 3000)   POSTING_PAUSED=true  (global kill switch)
+REVIEW_TOKEN=  (shared secret guarding the /review video-approval endpoints; falls
+               back to INSTAGRAM_WEBHOOK_VERIFY_TOKEN if unset)
 ```
+
+The webhook server also serves the video review dashboard: `GET /review?token=...`
+lists pending videos (with previews + Approve/Reject links), and
+`GET /review/decide?id=...&action=approve|reject&token=...` records the decision
+(approve publishes immediately). The scheduler also publishes approved videos every
+10 minutes, so approving via the Supabase dashboard (set `status='approved'`) works too.
 
 ## LinkedIn API Notes
 - Base: `https://api.linkedin.com/rest/`. Posts: `POST /rest/posts`.
@@ -232,6 +247,11 @@ node auth/linkedin-auth.js     # one-time LinkedIn OAuth (writes token + URN to 
 node index.js --test           # single LinkedIn run (8am slot, withImage=true)
 node index.js --test-instagram # single Instagram carousel run
 node index.js --test-threads   # single Threads run
+
+node index.js --review         # list videos pending review
+node index.js --approve <id>   # approve + publish a queued video to all targets
+node index.js --reject <id>    # reject a queued video
+node index.js --process-reviews# publish any already-approved videos now
 
 node index.js                  # start scheduler + webhook server (production entry)
 npm start                      # == node index.js
