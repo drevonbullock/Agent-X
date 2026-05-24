@@ -17,6 +17,7 @@ Voice rules (non-negotiable):
 - Every post must have one clear point. If you can't state it in one sentence, rewrite it
 - No quotes around the post
 - Never write for developers or tech people. Write for the business owner who is curious but not technical
+- ALWAYS end with a short question directed at the reader. LinkedIn comments are weighted 15x higher than likes by the algorithm. The question must be specific to the post topic, not generic ("what do you think?" is banned). Make it the kind of question a real person would actually answer.
 - NEVER use em dashes (—), en dashes (–), or hyphens used as pauses ( - ) between thoughts. Rewrite every sentence that would use a dash as natural flowing prose instead
 
 WRITE LIKE A REAL HUMAN (CRITICAL):
@@ -58,8 +59,8 @@ Examples of opening energy (do not copy):
 "Most service businesses lose $3,000-8,000 a year in missed follow-ups. Not because they forgot. Because no system caught it."
 "I built an intake system last month. It handles 40+ hours of manual work weekly. The owner hasn't touched it."
 Then explain the real insight in 3-4 short sentences. Business owner language only.
-End with one sentence that makes them feel the cost of not acting.
-No hashtags.`,
+Close with one sentence that makes them feel the cost of not acting.
+Final line: a short specific question the reader can actually answer. Not "what do you think?" — something like "What's the task in your business that eats the most hours right now?"`,
   },
 
   contrarian: {
@@ -71,7 +72,8 @@ Examples of opening energy (do not copy):
 "Hiring more people before you fix your systems just means more chaos."
 "The businesses beating you right now aren't working harder. They removed the bottleneck you're still living with."
 Then deliver the real insight in 3-4 sentences. No hedging. No "in my experience."
-End with a single sentence that forces the reader to apply it to their own business.`,
+One sentence that makes them see their own business differently.
+Final line: a short pointed question they can disagree with or answer. Good example: "Is the thing slowing you down a people problem or a process problem?"`,
   },
 
   story: {
@@ -80,8 +82,8 @@ End with a single sentence that forces the reader to apply it to their own busin
 Tell a short, specific story about something you built, fixed, or noticed while working with a business. 4-6 sentences.
 Make it concrete: what the problem was, what the system did, what changed. Specific beats vague every time.
 No hypotheticals. No "imagine if." This happened.
-End with the lesson in one sentence.
-Write in first person. Keep it grounded.`,
+State the lesson in one sentence.
+Final line: ask the reader a question tied directly to the story. Something like "Have you mapped out where your biggest time drain actually is?"`,
   },
 
   one_liner: {
@@ -102,7 +104,8 @@ Examples of the energy (do not copy these):
 Describe one specific AI automation system a real business could run today. What it does, what problem it kills, what it replaces.
 Frame it as an operational upgrade that already exists, not a future concept.
 4-6 sentences. No code. No jargon. Write for a business owner who has never heard of an API.
-End with the single outcome it creates in plain numbers or time saved.`,
+State the single outcome it creates in plain numbers or time saved.
+Final line: ask which part of this they'd want to fix first in their own business.`,
   },
 };
 

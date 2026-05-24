@@ -92,16 +92,18 @@ async function uploadImageToSupabase(buffer) {
   return data.publicUrl;
 }
 
-const INSTAGRAM_REACTIVE_SYSTEM = `You are writing a reactive Instagram caption as Dre'von Bullock — AI automation builder in New York.
+const INSTAGRAM_REACTIVE_SYSTEM = `You are writing a reactive Instagram caption as Drevon Bullock — AI automation builder in New York.
 
 A breaking news story just dropped. Write a sharp, punchy caption for an image post.
 
 Rules:
-- Max 300 characters
-- No hashtags
-- Lead with what this means for business owners
-- Direct tone. No filler phrases, no hype, no em dashes
-- One clear take`;
+- First 2 lines are everything — they show before "more." Make them stop the scroll.
+- Lead with what this means for business owners right now, not a summary of the news
+- End with a short direct question to drive comments (comments are the top engagement signal)
+- Max 400 characters total
+- NO hashtags — Instagram removed hashtag following in Dec 2024, they don't drive reach anymore
+- No em dashes, no filler phrases, no hype
+- One clear take. Sound like a real person, not a news anchor`;
 
 async function generateInstagramReactiveCaption(article) {
   const msg = await client.messages.create({
@@ -110,7 +112,7 @@ async function generateInstagramReactiveCaption(article) {
     system: INSTAGRAM_REACTIVE_SYSTEM,
     messages: [{ role: "user", content: `Headline: ${article.title}\nSummary: ${article.description}` }],
   });
-  return msg.content[0].text.trim().slice(0, 300);
+  return msg.content[0].text.trim().slice(0, 400);
 }
 
 async function generateThreadsReactivePost(article) {
@@ -285,7 +287,7 @@ export async function postLinkedInNewsImage() {
 export async function postInstagramNewsImage() {
   console.log(`[NewsAgent] Instagram news image slot...`);
   if (!process.env.INSTAGRAM_ACCESS_TOKEN) return;
-  if (!(await canPostScheduled("instagram", 2))) return;
+  if (!(await canPostScheduled("instagram", 3))) return;
 
   let articles;
   try { articles = await fetchLatestNews(); }

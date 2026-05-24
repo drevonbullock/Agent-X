@@ -486,13 +486,15 @@ function buildCaption(content) {
   content.slides.forEach((s, i) => {
     lines.push(`${i + 1}. ${s.point_1_title} — ${s.point_1_body}`);
   });
+  // Instagram removed hashtag following in Dec 2024 — hashtags no longer drive reach.
+  // Caption keywords and saves/DM shares are the top signals now.
   lines.push(
     "",
-    `Save this for later so you can come back to it.`,
+    `Save this. You'll want to come back to it.`,
     "",
     `Comment "${cta.keyword}" and I'll send you ${cta.resource} straight to your DMs.`,
     "",
-    "#AIAutomation #BCG"
+    `AI automation. Small business systems. Time back in your week.`
   );
   return lines.join("\n").slice(0, 2200);
 }

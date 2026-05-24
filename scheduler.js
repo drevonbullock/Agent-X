@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { runThreads, runLinkedIn, runVideo } from "./index.js";
+import { runThreads, runLinkedIn, runVideo, runInstagram } from "./index.js";
 import { postLinkedInNewsImage, postInstagramNewsImage } from "./modules/news-agent.js";
 import { checkPerf, processVariationQueue } from "./modules/variation-engine.js";
 import { runWeeklyAnalysis } from "./modules/feedback-loop.js";
@@ -54,7 +54,7 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] LinkedIn 8pm failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  // ── INSTAGRAM — 10am news image ───────────────────────────────────────────
+  // ── INSTAGRAM — 3x/day: 10am news, 2pm carousel, 7pm carousel ───────────
   cron.schedule("0 10 * * *", async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 10am skipped`); return; }
     console.log(`[${new Date().toISOString()}] Instagram: 10:00 AM (news image)`);
@@ -62,10 +62,24 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] Instagram 10am failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  // ── VIDEO — 1x/day at 7pm: one render, fanned out to all platforms (held for review) ──
-  cron.schedule("0 19 * * *", async () => {
+  cron.schedule("0 14 * * *", async () => {
+    if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 2pm skipped`); return; }
+    console.log(`[${new Date().toISOString()}] Instagram: 2:00 PM (carousel)`);
+    try { await runInstagram(); }
+    catch (err) { console.error(`[Scheduler] Instagram 2pm failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  cron.schedule("0 18 * * *", async () => {
+    if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 6pm skipped`); return; }
+    console.log(`[${new Date().toISOString()}] Instagram: 6:00 PM (carousel)`);
+    try { await runInstagram(); }
+    catch (err) { console.error(`[Scheduler] Instagram 6pm failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  // ── VIDEO — 1x/day at 9pm: one render, fanned out to all platforms (held for review) ──
+  cron.schedule("0 21 * * *", async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — daily video skipped`); return; }
-    console.log(`[${new Date().toISOString()}] Video: 7:00 PM (all platforms, held for review)`);
+    console.log(`[${new Date().toISOString()}] Video: 9:00 PM (all platforms, held for review)`);
     try { await runVideo(); }
     catch (err) { console.error(`[Scheduler] Daily video failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
@@ -190,9 +204,9 @@ export function startScheduler() {
 
   console.log("Scheduler active — all times EST:");
   console.log("  LinkedIn  : 8:00am (news), 11:00am (cheatsheet), 2:00pm (text), 5:00pm (news), 8:00pm (cheatsheet)");
-  console.log("  Instagram : 10:00am (news image)");
+  console.log("  Instagram : 10:00am (news), 2:00pm (carousel), 6:00pm (carousel)");
   console.log("  Threads   : 8:30am, 12:30pm, 4:30pm, 8:30pm (text | carousel every 3rd)");
-  console.log("  Video     : 7:00pm daily — one render, all platforms, held for review");
+  console.log("  Video     : 9:00pm daily — one render, all platforms, held for review");
   console.log("  Var queue : every 30 minutes (crash-safe job queue)");
   console.log("  Variation : every 6 hours");
   console.log("  Replies   : every 15 minutes (Threads polling)");
