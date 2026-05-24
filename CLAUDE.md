@@ -1,160 +1,219 @@
 # Agent X — Project Context for Claude
 
 ## What This Is
-Agent X is an automated content generation and posting bot. It runs on a Node.js schedule (9 AM, 1 PM, 6 PM EST) and posts AI-generated content — text + image — to LinkedIn.
+Agent X is an autonomous, multi-platform content engine. It runs on a Node.js
+cron schedule and generates + posts AI content (text, images, carousels, and
+video) across **LinkedIn, Instagram, Threads, TikTok, and YouTube Shorts** with
+zero manual input. It also runs background loops that reply to comments, spin
+winning posts into variations, and analyze its own performance weekly.
+
+The system is **white-label**: brand identity (author, niche, audience, active
+platforms) is driven by `BRAND_*` env vars and resolved into `AGENT_CONFIG` in
+`index.js`. Default brand is Drevon Bullock / Bullock Consulting Group.
 
 ## Tech Stack
-- Runtime: Node.js (ES Modules, `"type": "module"` in package.json)
-- AI: Anthropic Claude via `@anthropic-ai/sdk` (text generation + image mode selection)
-- Images: Gemini Imagen 3 (VISUAL/DIAGRAM/COMIC mode, via REST API); Puppeteer + inline HTML (QUOTE mode)
-- Scheduler: `node-cron`
-- HTTP: Native `fetch` (Node 18+) — no Axios, no LinkedIn SDK
-- Auth: Custom OAuth 2.0 one-time flow in `auth/linkedin-auth.js`
+- **Runtime**: Node.js (ES Modules, `"type": "module"`). Native `fetch` (Node 18+) — no Axios, no platform SDKs except where noted.
+- **Text AI**: Anthropic Claude via `@anthropic-ai/sdk`. `claude-sonnet-4-6` for content/scripts, `claude-haiku-4-5-20251001` for fast routing (style detection, comment replies). Some older modules still reference the `claude-sonnet-4-20250514` alias.
+- **Image AI**: Google **Gemini 2.5 Flash Image** (`images/gemini.js`) for backgrounds + comic art. NOT Imagen 3 — that reference is stale.
+- **Image rendering**: Puppeteer + inline HTML/CSS (cheatsheets, quote cards, carousels, comics). Playwright/Chromium for live news screenshots.
+- **Video**: **Hyperframes** (GSAP motion-graphics renderer, the primary pipeline) + HeyGen avatars + raw-footage processing. Runway Gen-3 (image-to-video), Topaz (upscale), ElevenLabs (voiceover/SFX/jingle), `ffmpeg`/`yt-dlp` shell out. Shotstack code exists (`format-agent.js`, `shotstack-enhance.js`) but the main pipeline has moved off it.
+- **Data**: Supabase (Postgres + Storage) is the system of record — post log, analytics, crash-safe job queue, dedup tables. Replaces the old `post_count.json`.
+- **Scheduler**: `node-cron` (all times `America/New_York`).
+- **HTTP server**: Native `http` — serves the Instagram comment webhook.
+- **Deploy**: Railway via `nixpacks.toml` (installs `yt-dlp` + `ffmpeg`) and `Procfile` (`worker: node index.js`).
+
+## Architecture & Data Flow
+```
+scheduler.js (cron)
+  └─> index.js run functions ──> generate ──> render ──> post ──> log to Supabase
+        runLinkedIn(withImage)        post-to-linkedin.js
+        runInstagram / runInstagramReel
+        runThreads
+  └─> modules/* background jobs (news, variations, replies, feedback, hooks, youtube)
+
+Every post is logged to Supabase `posts`. Counts in `posts` drive cadence
+decisions (e.g. video every Nth post). High performers get cloned by the
+variation engine; weekly analysis writes a performance brief back into the
+generators.
+```
 
 ## Project Structure
 ```
-agent/
-  generate-post.js     — Generates text via Claude. Two exports:
-                         generatePost(contentType)          → Twitter (280 chars, legacy)
-                         generateLinkedInPost(contentType)  → LinkedIn (150–500 words)
-  generate-image.js    — Multi-mode image router. Exports generateImage(postText) → Buffer | null
-                         1. Calls Claude to select QUOTE, DIAGRAM, COMIC, or VISUAL mode
-                         2. QUOTE MODE → renderQuoteCard (Puppeteer, branded dark card)
-                         3. DIAGRAM/COMIC/VISUAL MODE → generateGeminiImage (Imagen 3)
-                            If Gemini fails for any reason → logs and returns null (text-only post)
-  post-to-linkedin.js  — Uploads image + creates post via LinkedIn REST API
-                         Returns { postId, postUrl }
+index.js              — Orchestrator. Defines AGENT_CONFIG (white-label), the
+                        per-platform run functions (runLinkedIn, runInstagram,
+                        runInstagramReel, runThreads), Supabase logging helpers,
+                        video distribution fan-out, and an HTTP server for the
+                        Instagram webhook. CLI: --test, --test-instagram, --test-threads.
+scheduler.js          — All node-cron jobs (posting slots + background loops).
+
+agent/                — Generation + direct-post primitives
+  generate-post.js      generateLinkedInPost() {postText,format}; generateThreadsPost() string;
+                        generateVideoPost() {caption,videoScript,videoStyle}. Holds the
+                        VOICE system prompt, weighted FORMATS, and TOPICS pools.
+  generate-image.js     generateImage(postText) [LinkedIn 1200x675];
+                        generateImageForInstagram(postText) [9:16 vertical].
+                        Claude picks mode: CHEATSHEET (default) or NEWS. Returns Buffer|null.
+  generate-video.js     generateVideo(postText, videoScript, videoStyle) → routes to
+                        raw footage (PATH A), HeyGen avatar, or Hyperframes (PATH B).
+  generate-hyperframes-video.js  Builds GSAP HTML, lints + renders MP4 via Hyperframes.
+  post-to-linkedin.js   postToLinkedIn(text, imageBuffer, videoAsset) → {postId, postUrl}.
+  post-to-twitter.js    postTweet(...) — legacy, not in the main flow.
+  elevenlabs.js         Voiceover per screen + audio transcription (word timestamps).
+  generate-jingle.js / generate-sfx.js  One-time ElevenLabs audio-asset bootstrap.
+  fetch-news-url.js     Firecrawl search → trusted-domain news URL for NEWS image mode.
+  fetch-company-logo.js Clearbit logo fetch (hardcoded domain map, cached).
+  capture-screenshot.js Playwright headline capture / proof-card render.
+  process-raw-footage.js ffmpeg pipeline: transcribe, cut silence, grade, burn subs, overlay.
+  generate-heygen-avatar.js  HeyGen talking-head video, composited behind motion graphics.
+  runway.js             Runway Gen-3 image-to-video clips.
+  topaz.js              Topaz upscale (image + video), ffmpeg Lanczos fallback.
+
+images/               — Renderers (most output PNG Buffers)
+  gemini.js             generateGeminiImage(prompt) — Gemini 2.5 Flash Image, retry on 503/429.
+  render-cheatsheet.js  renderCheatsheet / renderVerticalCheatsheet — 3-section infographic.
+  render-news-screenshot.js  renderNewsScreenshot(url) — cropped live article + BCG banner.
+  render-quote-card.js  renderQuoteCard / renderSquareCard / renderVerticalCard.
+  render-boardroom.js   3-panel anime comic (Gemini art + dialogue overlay).
+  chart.js / quote-card.js  Legacy canvas renderers, not in main flow.
+
+distributors/         — Platform publish layer (Meta/TikTok/YouTube APIs)
+  instagram.js          postImageToInstagram / postReelToInstagram / postCarouselToInstagram.
+  threads.js            postTextToThreads / postImageToThreads / postVideoToThreads / postCarouselToThreads.
+  tiktok.js             postVideoToTikTok (resumable file upload) / checkPostStatus.
+  youtube-shorts.js     uploadYouTubeShort (OAuth2 refresh) / getChannelInfo.
+
+modules/              — Autonomous engines (run from scheduler)
+  news-agent.js         postLinkedInNewsImage / postInstagramNewsImage / checkAndPost.
+                        Reactive posts off NewsAPI with per-platform daily caps.
+  variation-engine.js   checkPerf() finds winners + queues 5 variations;
+                        processVariationQueue() posts due items (crash-safe via DB).
+  feedback-loop.js      runWeeklyAnalysis() → data/performance-brief.json + Supabase;
+                        readBrief() feeds insights back to generators.
+  hook-tester.js        generateHookVariations(topic) / analyzeHookPerformance().
+  comment-reply.js      handleInstagramWebhook(body) / pollThreadsReplies();
+                        Claude-Haiku auto-replies + keyword-lead capture.
+  carousel-generator.js generateAndPostCarousel / ...ToThreads — HTML→PNG slides.
+  youtube-cutter.js     processYouTubeVideo(url) — yt-dlp + Whisper + Claude clip selection.
+  format-agent.js       Shotstack multi-platform resize (legacy/secondary).
+  ad-performance.js     analyzeAdPerformance(csv) — flags + rewrites underperforming ads.
+  shotstack-enhance.js  generateCinematicVideo(script) — Shotstack pipeline (legacy/secondary).
+
+supabase/
+  client.js             Default export: Supabase client built with SUPABASE_SECRET_KEY.
+  schema.sql            Run once. Tables below.
 
 auth/
-  linkedin-auth.js     — One-time OAuth 2.0 browser flow. Run manually once.
-                         Writes LINKEDIN_ACCESS_TOKEN and LINKEDIN_PERSON_URN to .env
+  linkedin-auth.js      One-time OAuth 2.0 browser flow. Writes token + URN to .env.
 
-images/
-  gemini.js            — Gemini Imagen 3 image generation (16:9, cinematic dark/orange aesthetic)
-                         Uses GEMINI_API_KEY. Same model as nano-banana MCP tool.
-  render-quote-card.js — Puppeteer screenshot of inline HTML quote card (1200x675 @2x)
-  quote-card.js        — Canvas quote card (legacy, unused in main flow)
-  chart.js             — ChartJS chart (1200x675, picks from 4 preset datasets)
+assets/  music/         Brand logos (horizontal/square/vertical) + background music tracks.
+data/    generated_imgs/  raw_footage/  video-projects/   Working dirs (mostly gitignored).
+test-*.js  run-reel.js   Ad-hoc manual test entry points (not part of the scheduled flow).
+```
 
-index.js               — Orchestrates: generateLinkedInPost → generateImage → postToLinkedIn
-scheduler.js           — Runs runAgent() at 9 AM, 1 PM, 6 PM EST via node-cron
+## Platforms & Schedule (all EST)
+- **LinkedIn** — 4x/day: 8am image, 12pm news image, 4pm text, 8pm image. Video every Nth post (`VIDEO_CADENCE`, default 10). Single images only, no carousels.
+- **Instagram** — 2x/day: 10am news image, 7pm Reel. 3pm carousel path exists in code (`runInstagram`) but isn't currently scheduled.
+- **Threads** — 4x/day at :30 offsets. Text by default; carousel every 3rd post, video every 5th.
+- **TikTok / YouTube Shorts** — fan-out targets: when a LinkedIn video renders, `distributeVideo()` also pushes it here if the platform is in `BRAND_PLATFORMS` and tokens are set.
+- **Background loops**: variation queue (30m), Threads reply polling (15m), variation engine (6h), hook tester (6h :30), weekly feedback (Sun midnight), YouTube cutter (11am, if `YOUTUBE_CHANNEL_ID`).
+- **Kill switch**: set `POSTING_PAUSED=true` to skip all posting slots (background analysis skips too).
+
+## Supabase Data Layer
+Service-role key (`SUPABASE_SECRET_KEY`) is required — all writes bypass RLS.
+Tables (`supabase/schema.sql`):
+- `posts` — every post. `platform`, `post_type` (text|image|video), `format`, `hook`, native `post_id`, `post_url`, engagement metrics, `is_winner`. Row counts drive cadence.
+- `variations` / `variations_queue` — generated clones of winners; queue is the crash-safe scheduler (survives restarts; replaces `setTimeout`).
+- `performance_briefs` — weekly top hooks/formats/topics + avoid-patterns.
+- `news_seen` — URL dedup for news-agent and youtube-cutter (`article_url` UNIQUE).
+- `comment_replies` / `keyword_leads` — reply dedup + CTA-keyword lead capture.
+- **Storage buckets**: `agent-x-videos`, `agent-x-images` (public) — host media for platforms that require a public URL (Instagram/Threads).
+
+## Content Generation (agent/generate-post.js)
+- A single non-negotiable **VOICE** system prompt defines the persona and hard rules (see Global Post Rules).
+- **LinkedIn FORMATS** are weighted and never repeat twice in a row (`lastFormat`/`lastTopic` module vars): `contrarian` (4), `one_liner` (3), `build_update` (2), `insight` (1). These replaced the old `ai_tips/build_in_public/philosophy` content types.
+- **TOPICS** are a fixed pool of AI-automation-for-small-business angles.
+- **Threads** has its own punchier voice, format list, and topic list, capped at ~400 chars.
+- **Video** (`generateVideoPost`) returns `{caption, videoScript[], videoStyle}` as strict JSON; screen 1 is always an 8-word hook, screens 2–5 teach.
+
+## Image Modes (agent/generate-image.js)
+Claude (`selectImageMode`) picks exactly one. Older modes (QUOTE/DIAGRAM/COMIC/VISUAL) are retired from the router even though some renderers still exist:
+- **CHEATSHEET** (default) — Puppeteer renders a 3-section educational card. A Gemini-generated dark abstract background is layered behind it (falls back to a solid bg if Gemini fails). Landscape for LinkedIn, vertical for Instagram.
+- **NEWS** — only when the post names a real, findable company/launch. Firecrawl finds the article URL, Playwright screenshots it (`renderNewsScreenshot`). Falls back to cheatsheet if no URL.
+- Any failure path returns `null` → text-only post.
+
+## Video Pipeline (agent/generate-video.js)
+`generateVideo()` dispatches to:
+- **PATH A — Raw footage**: if `raw_footage/` has a clip, `process-raw-footage.js` transcribes, trims silence/fillers, color-grades, burns subtitles, and composites a Hyperframes overlay.
+- **HeyGen avatar**: talking-head video (`generate-heygen-avatar.js`) composited behind motion graphics.
+- **PATH B — Hyperframes** (default fallback): pure GSAP motion-graphics MP4 from the `videoScript`, with ElevenLabs voiceover, jingle/SFX, and fetched company logos.
+- 4K masters are re-encoded to 1080p ≤50MB (`compressForUpload` in index.js) before Supabase upload, because Supabase caps at 50MB.
+- `ffmpeg` path is platform-specific: `/usr/bin/ffmpeg` on Linux, `/opt/homebrew/bin/ffmpeg` on macOS.
+
+## Environment Variables
+See `.env.example` for the full annotated list. Grouped essentials:
+```
+# Core AI
+ANTHROPIC_API_KEY=     GEMINI_API_KEY=     OPENAI_API_KEY=   (Whisper, youtube-cutter)
+
+# Supabase (service key REQUIRED for writes)
+SUPABASE_URL=          SUPABASE_SECRET_KEY=   SUPABASE_KEY= (anon, optional)
+
+# LinkedIn (URN + token set by auth/linkedin-auth.js)
+LINKEDIN_CLIENT_ID=  LINKEDIN_CLIENT_SECRET=  LINKEDIN_ACCESS_TOKEN=  LINKEDIN_PERSON_URN=
+
+# Meta — Instagram + Threads
+INSTAGRAM_ACCESS_TOKEN=  INSTAGRAM_BUSINESS_ID=  INSTAGRAM_WEBHOOK_VERIFY_TOKEN=
+THREADS_ACCESS_TOKEN=    THREADS_USER_ID=        THREADS_USERNAME=
+
+# Other platforms
+TIKTOK_ACCESS_TOKEN=
+YOUTUBE_CLIENT_ID=  YOUTUBE_CLIENT_SECRET=  YOUTUBE_REFRESH_TOKEN=  YOUTUBE_CHANNEL_ID=
+
+# Media / news services
+ELEVENLABS_API_KEY=  ELEVENLABS_VOICE_ID=  NEWS_API_KEY=  FIRECRAWL_API_KEY=
+RUNWAY_API_KEY=  TOPAZ_API_KEY=  HEYGEN_API_KEY=  HEYGEN_AVATAR_ID=
+SHOTSTACK_API_KEY=  SHOTSTACK_API_KEY_PROD=  SHOTSTACK_ENV=
+
+# White-label overrides (resolve into AGENT_CONFIG)
+BRAND_AUTHOR=  BRAND_TITLE=  BRAND_HANDLE=  BRAND_NICHE=  BRAND_AUDIENCE=
+BRAND_PLATFORMS=  (csv, e.g. linkedin,instagram,threads)   VIDEO_CADENCE=  (default 10)
+
+# Ops
+PORT=  (webhook server, default 3000)   POSTING_PAUSED=true  (global kill switch)
 ```
 
 ## LinkedIn API Notes
-- API Base: `https://api.linkedin.com/rest/`
-- Posts endpoint: `POST /rest/posts`
-- Image upload: two-step — initialize upload (`POST /rest/images?action=initializeUpload`), then `PUT` binary to the returned signed URL
-- **Important**: Do NOT send `Authorization` header when uploading to the signed URL — it is pre-signed
-- Post ID is in the HTTP response header `x-restli-id`, not the response body (body is empty on 201)
-- Person URN format: `urn:li:person:XXXXXXXXX` (stored in .env as `LINKEDIN_PERSON_URN`)
-- Access tokens expire after ~60 days. Re-run `node auth/linkedin-auth.js` to refresh.
-- Required scopes: `openid profile w_member_social`
-- All `/rest/` calls require: `LinkedIn-Version: 202501` and `X-Restli-Protocol-Version: 2.0.0`
-
-## Environment Variables Required
-```
-# Core AI
-ANTHROPIC_API_KEY=
-GEMINI_API_KEY=              ← Imagen 3 (VISUAL/DIAGRAM/COMIC mode) — from Google AI Studio
-OPENAI_API_KEY=              ← Whisper transcription for youtube-cutter
-
-# Supabase — BOTH keys required
-SUPABASE_URL=                ← https://xxxx.supabase.co
-SUPABASE_KEY=                ← anon/publishable key (sb_publishable_...)
-SUPABASE_SECRET_KEY=         ← service role key (sb_secret_...) — REQUIRED for all DB writes (bypasses RLS)
-
-# LinkedIn
-LINKEDIN_CLIENT_ID=          ← from LinkedIn Developer Portal
-LINKEDIN_CLIENT_SECRET=      ← from LinkedIn Developer Portal
-LINKEDIN_ACCESS_TOKEN=       ← set by auth/linkedin-auth.js
-LINKEDIN_PERSON_URN=         ← set by auth/linkedin-auth.js
-
-# ElevenLabs
-ELEVENLABS_API_KEY=
-ELEVENLABS_VOICE_ID=
-
-# NewsAPI
-NEWS_API_KEY=                ← newsapi.org — breaking news + trend monitoring
-
-# Shotstack
-SHOTSTACK_API_KEY=           ← sandbox key
-SHOTSTACK_API_KEY_PROD=      ← production key (swap when ready to ship)
-SHOTSTACK_ENV=sandbox        ← set to "production" on Railway deploy
-
-# Threads — live ✅
-THREADS_ACCESS_TOKEN=        ← from Meta developer portal
-THREADS_USER_ID=             ← fetched automatically, set to 26388859474068236
-
-# Instagram — live ✅ (uses graph.instagram.com, NOT graph.facebook.com)
-INSTAGRAM_ACCESS_TOKEN=     ← Basic Display API token (IGAA...)
-INSTAGRAM_BUSINESS_ID=      ← 24434756699555098
-
-# Platform expansion (add when credentials arrive)
-TIKTOK_ACCESS_TOKEN=
-YOUTUBE_CLIENT_ID=
-YOUTUBE_CLIENT_SECRET=
-YOUTUBE_REFRESH_TOKEN=
-YOUTUBE_CHANNEL_ID=          ← enables daily RSS check in scheduler (no API key needed)
-```
-
-## Image Modes
-Claude reads each generated post and picks one of two visual modes:
-
-- **QUOTE MODE** — Puppeteer renders a branded dark HTML card (1200x675 @2x).
-  Orange accent bar, ghost quote mark, key phrase in large white text, author byline.
-  Best for: philosophy, opinions, build-in-public updates, punchy statements.
-
-- **VISUAL MODE** — Gemini Imagen 3 generates a cinematic thematic illustration (16:9).
-  Dark futuristic aesthetic, orange neon accents. Returns null (text-only post) if Gemini fails.
-  Best for: ai_tips, technical explainers, concept-heavy posts.
-
-## Content Types
-- `ai_tips` — Specific, actionable AI/automation insights (image: usually VISUAL)
-- `build_in_public` — Raw updates on active projects: MLB betting AI, AI receptionist, content bots (image: usually QUOTE)
-- `philosophy` — Sharp takes on AI, building, and the future of work (image: usually QUOTE)
+- Base: `https://api.linkedin.com/rest/`. Posts: `POST /rest/posts`.
+- All `/rest/` calls require `LinkedIn-Version: 202503` and `X-Restli-Protocol-Version: 2.0.0` (see `linkedInHeaders()` in `post-to-linkedin.js` — the version is bumped over time).
+- Image upload is two-step: `POST /rest/images?action=initializeUpload`, then `PUT` the binary to the returned signed URL. **Do NOT** send `Authorization` on the signed `PUT` — it is pre-signed. Video uses `/rest/videos?action=initializeUpload`.
+- New post ID comes from the `x-restli-id` response header (201 body is empty).
+- Person URN: `urn:li:person:XXXX` in `LINKEDIN_PERSON_URN`. Tokens expire ~60 days → re-run `node auth/linkedin-auth.js`. Required scopes: `openid profile w_member_social`.
 
 ## Running
 ```bash
-# First-time LinkedIn authorization (run once, opens browser):
-node auth/linkedin-auth.js
+node auth/linkedin-auth.js     # one-time LinkedIn OAuth (writes token + URN to .env)
 
-# Test a single run:
-node index.js --test
+node index.js --test           # single LinkedIn run (8am slot, withImage=true)
+node index.js --test-instagram # single Instagram carousel run
+node index.js --test-threads   # single Threads run
 
-# Start scheduled bot (9 AM, 1 PM, 6 PM EST):
-node index.js
+node index.js                  # start scheduler + webhook server (production entry)
+npm start                      # == node index.js
 ```
+On Railway the `worker` process runs `node index.js`; `nixpacks.toml` provisions `yt-dlp` and `ffmpeg`.
 
-## Post Format System
-Each post uses one of 6 structured formats, selected randomly in `generate-post.js`. The same format is never used twice in a row (`lastFormat` module variable tracks this).
-
-| Format | Structure | Length |
-|--------|-----------|--------|
-| **Insight** | One sharp observation. Ends with a provocative question or statement. | 3-5 sentences |
-| **Steps / How-To** | "Here's how I [did X]:" → 3-5 numbered steps → key takeaway | Medium |
-| **News + Take** | Trend/development (2 sentences context) → "My take:" (2-3 sentences opinion) | Medium |
-| **Myth vs Reality** | "Everyone says [X]." → "Here's what's actually true:" → real insight | Medium |
-| **Build Update** | What I built + problem it solves + what I learned. Specific, concrete. | 4-6 sentences |
-| **One-Liner Drop** | Single sentence. No explanation. No hashtags. | 1 sentence |
-
-## Image Frequency
-- **9:00 AM** — image attached (if post is long enough)
-- **1:00 PM** — text only, no image
-- **6:00 PM** — text only, no image
-
-Short posts (under 6 sentences) never get an image, regardless of slot. Logic lives in `index.js` (`isShortPost()`) and `scheduler.js` (`withImage` flag per slot).
-
-## Global Post Rules
-- No filler phrases: "In today's world", "Let's dive in", "Game changer", "Unpopular opinion", "Hot take", "Let's be honest", "This changes everything" — never
-- Max 2 hashtags per post
-- Posts under 6 sentences: 0 hashtags, no image
-- Every post must have one clear point — if you can't state it in one sentence, rewrite it
-- Never use the same format twice in a row
+## Global Post Rules (hard constraints in the VOICE prompt)
+- **Never** use em dashes (—), en dashes (–), or hyphens as pause separators. Rewrite as flowing prose. (This is the single most-enforced rule.)
+- No filler openers: "In today's world", "Let's dive in", "Game changer", "Unpopular opinion", "Hot take", "Let's be honest", "This changes everything".
+- Max 2 hashtags. Posts under 6 sentences: 0 hashtags, no image.
+- Every post makes exactly one clear point. No quotes wrapping the post text.
+- Write for non-technical business owners — no code, no jargon. Never the same format twice in a row.
 
 ## Key Conventions
-- All files use ES Module syntax (`import`/`export`, no `require`)
-- No new npm packages unless strictly necessary — use native Node.js APIs
-- LinkedIn post text targets 150–400 words for medium posts (max ~3000 chars)
-- `postToLinkedIn` returns `{ postId, postUrl }` — mirrors shape of old `postTweet` return
-- Errors logged with `[LinkedIn]` prefix, consistent with project-wide `[Agent X]` / `[Twitter]` pattern
-- `generatePost()` (Twitter/280 char) is kept in generate-post.js but not called by index.js
+- ES Modules everywhere (`import`/`export`). Prefer native Node APIs; avoid adding npm packages unless strictly necessary.
+- Log prefixes are bracketed per subsystem: `[Agent X]`, `[LinkedIn]`, `[Instagram]`, `[Threads]`, `[Scheduler]`, etc.
+- Posting functions return `{postId, postUrl}` (or `{mediaId, postUrl}` for Meta) and every successful post calls `logPost(...)`.
+- Failures degrade gracefully rather than crash: video → text fallback, image mode → cheatsheet → null (text-only), HeyGen → Hyperframes, Gemini bg → solid, Topaz → ffmpeg.
+- Brand accent color `#FF6B00` (orange); watermark `@DrevonBullock • Bullock Consulting Group`.
+- Cadence and caps are derived from Supabase counts at runtime — there is no local counter file.
+- `README.md` is end-user marketing copy and is partially stale (mentions DALL-E/Imagen 3, LinkedIn-only). Treat this file (CLAUDE.md) as the source of truth for architecture.
