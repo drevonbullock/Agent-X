@@ -14,6 +14,24 @@ const TEMPLATE_PATH = path.resolve(__dirname, "../templates/carousel-template.ht
 const BG_PATH = path.resolve(__dirname, "../remotion-videos/public/dre_square_v3.png");
 const client = new Anthropic();
 
+// Specific topics that generate concrete, save-worthy carousels.
+// Exported so index.js can pick one at call time.
+// Used instead of the generic AGENT_CONFIG.niche.
+export const CAROUSEL_TOPICS = [
+  "The 3 workflows every service business should automate before anything else",
+  "How to build an AI intake system that books calls while you sleep",
+  "Why most businesses lose leads — and the automation that fixes it in one week",
+  "What a full AI follow-up sequence looks like for a service business",
+  "The real cost of manual tasks: how to calculate what your time is actually worth",
+  "AI agents vs AI tools — which one actually grows your business",
+  "How to automate your client onboarding from first contact to first call",
+  "The 5-minute response rule: why speed matters more than your pitch",
+  "How small businesses are competing with larger companies using AI systems",
+  "What changes in your business when you remove the 3 biggest manual bottlenecks",
+  "The lead follow-up sequence that books 40% more calls without hiring anyone",
+  "How to build a business that runs on autopilot while you focus on growth",
+];
+
 // ─── TEMPLATE CSS ─────────────────────────────────────────────────────────────
 // Always read from the locked template file — never hardcode styles
 
@@ -211,7 +229,7 @@ async function generateCarouselContent(topic) {
   const keyword = pickKeyword(topic);
 
   const message = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 2048,
     messages: [{
       role: "user",
@@ -455,17 +473,27 @@ async function buildThreadsCaption(content) {
 function buildCaption(content) {
   const h = content.hook;
   const cta = content.cta;
+  // First 2 lines are what show before "more" on Instagram — make them count.
+  // Subtext is the real hook sentence. Headline words alone don't stop the scroll.
+  const firstLine = h.subtext || `${h.headline_line1} ${h.headline_line2}`.trim();
+  const secondLine = `Swipe to see all ${1 + content.slides.length + 1} slides.`;
+
   const lines = [
-    `${h.headline_line1} ${h.headline_line2} ${h.headline_line3}`.trim(),
-    "",
-    h.subtext,
+    firstLine,
+    secondLine,
     "",
   ];
   content.slides.forEach((s, i) => {
     lines.push(`${i + 1}. ${s.point_1_title} — ${s.point_1_body}`);
   });
-  lines.push("", `Comment "${cta.keyword}" and I'll send you ${cta.resource} straight to your DMs.`);
-  lines.push("", "#AIAutomation #BCG");
+  lines.push(
+    "",
+    `Save this for later so you can come back to it.`,
+    "",
+    `Comment "${cta.keyword}" and I'll send you ${cta.resource} straight to your DMs.`,
+    "",
+    "#AIAutomation #BCG"
+  );
   return lines.join("\n").slice(0, 2200);
 }
 

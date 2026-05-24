@@ -18,7 +18,7 @@ import { generateImage } from "./agent/generate-image.js";
 import { generateVideo } from "./agent/generate-video.js";
 import { postToLinkedIn } from "./agent/post-to-linkedin.js";
 import { postTextToThreads } from "./distributors/threads.js";
-import { generateAndPostCarousel, generateAndPostCarouselToThreads } from "./modules/carousel-generator.js";
+import { generateAndPostCarousel, generateAndPostCarouselToThreads, CAROUSEL_TOPICS } from "./modules/carousel-generator.js";
 import { handleInstagramWebhook } from "./modules/comment-reply.js";
 import { pickVariant } from "./analytics/index.js";
 import { logPost } from "./supabase/log-post.js";
@@ -151,11 +151,12 @@ export async function runInstagram() {
     return;
   }
 
-  console.log(`\n[Instagram] Carousel run`);
+  const carouselTopic = CAROUSEL_TOPICS[Math.floor(Math.random() * CAROUSEL_TOPICS.length)];
+  console.log(`\n[Instagram] Carousel run | topic: "${carouselTopic}"`);
   try {
-    const { postUrl, slideCount } = await generateAndPostCarousel(AGENT_CONFIG.niche);
+    const { postUrl, slideCount } = await generateAndPostCarousel(carouselTopic);
     console.log(`[Instagram] ${slideCount} slides live: ${postUrl}\n`);
-    await logPost({ postId: null, postUrl, postText: AGENT_CONFIG.niche, format: "carousel", postType: "image", platform: "instagram" });
+    await logPost({ postId: null, postUrl, postText: carouselTopic, format: "carousel", postType: "image", platform: "instagram" });
     return { postUrl, slideCount };
   } catch (err) {
     console.error(`[Instagram] Carousel failed: ${err.message}\n`);
@@ -180,7 +181,8 @@ export async function runThreads() {
   // ── CAROUSEL MODE ───────────────────────────────────────────────────────────
   if (isCarouselSlot) {
     try {
-      const { postUrl, slideCount } = await generateAndPostCarouselToThreads(AGENT_CONFIG.niche);
+      const carouselTopic = CAROUSEL_TOPICS[Math.floor(Math.random() * CAROUSEL_TOPICS.length)];
+      const { postUrl, slideCount } = await generateAndPostCarouselToThreads(carouselTopic);
       console.log(`[Threads] Carousel done. ${slideCount} slides: ${postUrl}\n`);
       return { postUrl, slideCount };
     } catch (err) {
