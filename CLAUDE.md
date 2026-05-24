@@ -98,6 +98,18 @@ modules/              — Autonomous engines (run from scheduler)
   ad-performance.js     analyzeAdPerformance(csv) — flags + rewrites underperforming ads.
   shotstack-enhance.js  generateCinematicVideo(script) — Shotstack pipeline (legacy/secondary).
 
+analytics/            — Closes the learning loop: pulls REAL metrics back per platform
+  index.js              syncAllMetrics() writes live views/likes/comments/shares +
+                        engagement_rate into posts; runAnalyticsCycle() = sync → learn →
+                        decide A/B. Re-exports learn + ab helpers.
+  fetch-instagram.js    fetchInstagramMetrics(mediaId) — Graph API insights (needs insights scope).
+  fetch-threads.js      fetchThreadsMetrics(mediaId) — Threads insights (replies→comments etc.).
+  fetch-linkedin.js     fetchLinkedInMetrics(urn) — best-effort likes/comments via socialActions; views N/A.
+  learn.js              learnPerPlatform() aggregates real metrics into platform_performance;
+                        getBestFor(platform, dimension) reader available to generators.
+  ab-testing.js         createExperiment() pairs two posts; evaluateExperiments() scores +
+                        picks a winner after the window; scorePost() shared scoring.
+
 supabase/
   client.js             Default export: Supabase client built with SUPABASE_SECRET_KEY.
   schema.sql            Run once. Tables below.
@@ -115,7 +127,7 @@ test-*.js  run-reel.js   Ad-hoc manual test entry points (not part of the schedu
 - **Instagram** — 2x/day: 10am news image, 7pm Reel. 3pm carousel path exists in code (`runInstagram`) but isn't currently scheduled.
 - **Threads** — 4x/day at :30 offsets. Text by default; carousel every 3rd post, video every 5th.
 - **TikTok / YouTube Shorts** — fan-out targets: when a LinkedIn video renders, `distributeVideo()` also pushes it here if the platform is in `BRAND_PLATFORMS` and tokens are set.
-- **Background loops**: variation queue (30m), Threads reply polling (15m), variation engine (6h), hook tester (6h :30), weekly feedback (Sun midnight), YouTube cutter (11am, if `YOUTUBE_CHANNEL_ID`).
+- **Background loops**: variation queue (30m), Threads reply polling (15m), variation engine (6h), hook tester (6h :30), analytics sync+learn+A/B (6h :45), weekly feedback (Sun midnight), YouTube cutter (11am, if `YOUTUBE_CHANNEL_ID`).
 - **Kill switch**: set `POSTING_PAUSED=true` to skip all posting slots (background analysis skips too).
 
 ## Supabase Data Layer
@@ -126,7 +138,18 @@ Tables (`supabase/schema.sql`):
 - `performance_briefs` — weekly top hooks/formats/topics + avoid-patterns.
 - `news_seen` — URL dedup for news-agent and youtube-cutter (`article_url` UNIQUE).
 - `comment_replies` / `keyword_leads` — reply dedup + CTA-keyword lead capture.
+- `platform_performance` — per-platform learning aggregates (best `format`/`post_type` by avg engagement score), recomputed by `analytics/learn.js`.
+- `experiments` — A/B variant pairs + decided winner. Posts carry `experiment_id`/`variant`.
+- `posts.metrics_synced_at` — last time `analytics/` pulled live metrics for the row.
 - **Storage buckets**: `agent-x-videos`, `agent-x-images` (public) — host media for platforms that require a public URL (Instagram/Threads).
+
+## Analytics & Self-Learning (analytics/)
+The columns `posts.views/likes/comments/shares/engagement_rate` are **only real because of this layer** — without it they stay at their `0` defaults and every learning module (feedback-loop, hook-tester, variation-engine) trains on empty data. Flow:
+1. **Sync** (`syncAllMetrics`, every 6h at :45) — for each recent post (≤14 days) on Instagram/Threads/LinkedIn, call that platform's insight API and write metrics + `engagement_rate` back into `posts`. Failures degrade to zeros, never throw.
+2. **Learn** (`learnPerPlatform`) — aggregate the last 30 days per platform into `platform_performance`, scored by `scorePost = likes + shares*2 + comments*3 + views*0.01`. `getBestFor(platform, dimension)` exposes the winning value once `sample_size ≥ 3` (returns `null` otherwise). It's an available reader for generators to consult; current generation logic is left untouched.
+3. **A/B** (`createExperiment` / `evaluateExperiments`) — pair two posted variants as an experiment; after a 24h window, compare synced scores, set the winner, and mark it `decided`. The winning posts feed `learnPerPlatform` naturally.
+- Platform coverage: Instagram + Threads via the existing tokens (need `*_manage_insights` scope); LinkedIn is best-effort (likes/comments via `socialActions`, impressions gated → stay 0).
+- CLI: `node analytics/index.js` (full cycle), `node analytics/learn.js`, `node analytics/ab-testing.js`.
 
 ## Content Generation (agent/generate-post.js)
 - A single non-negotiable **VOICE** system prompt defines the persona and hard rules (see Global Post Rules).

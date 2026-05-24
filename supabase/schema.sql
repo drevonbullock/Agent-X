@@ -92,3 +92,43 @@ CREATE TABLE IF NOT EXISTS keyword_leads (
   comment_text     TEXT,
   created_at       TIMESTAMPTZ DEFAULT now()
 );
+
+-- ─── ANALYTICS ────────────────────────────────────────────────────────────────
+-- The analytics/ module fetches real engagement back from each platform into
+-- posts (views/likes/comments/shares/engagement_rate), learns per-platform, and
+-- runs variant-pair A/B experiments.
+
+-- Track when metrics were last pulled, and link posts to A/B experiments.
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS metrics_synced_at TIMESTAMPTZ;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS experiment_id     UUID;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS variant           TEXT;   -- 'a' | 'b'
+
+-- Per-platform performance aggregates (recomputed from real metrics).
+-- One row per (platform, dimension, value). dimension: 'format' | 'post_type'.
+CREATE TABLE IF NOT EXISTS platform_performance (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  platform         TEXT NOT NULL,
+  dimension        TEXT NOT NULL,
+  value            TEXT NOT NULL,
+  avg_score        FLOAT DEFAULT 0,
+  sample_size      INTEGER DEFAULT 0,
+  computed_at      TIMESTAMPTZ DEFAULT now()
+);
+
+-- A/B experiments: two variants posted to the same platform/slot, winner
+-- decided by engagement score after a fixed window.
+CREATE TABLE IF NOT EXISTS experiments (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  platform           TEXT NOT NULL,
+  slot               TEXT,
+  hypothesis         TEXT,
+  variant_a_post_id  UUID REFERENCES posts(id) ON DELETE SET NULL,
+  variant_b_post_id  UUID REFERENCES posts(id) ON DELETE SET NULL,
+  variant_a_label    TEXT,
+  variant_b_label    TEXT,
+  status             TEXT DEFAULT 'running',   -- running | decided
+  winner             TEXT,                     -- 'a' | 'b' | 'tie'
+  winning_score      FLOAT,
+  decided_at         TIMESTAMPTZ,
+  created_at         TIMESTAMPTZ DEFAULT now()
+);

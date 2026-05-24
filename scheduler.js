@@ -6,6 +6,7 @@ import { runWeeklyAnalysis } from "./modules/feedback-loop.js";
 import { processYouTubeVideo } from "./modules/youtube-cutter.js";
 import { analyzeHookPerformance } from "./modules/hook-tester.js";
 import { pollThreadsReplies } from "./modules/comment-reply.js";
+import { runAnalyticsCycle } from "./analytics/index.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
@@ -140,6 +141,13 @@ export function startScheduler() {
     }
   }, { timezone: "America/New_York" });
 
+  // ── ANALYTICS — every 6 hours (offset :45): pull real metrics, learn, decide A/B ──
+  cron.schedule("45 */6 * * *", async () => {
+    if (paused()) { return; }
+    try { await runAnalyticsCycle(); }
+    catch (err) { console.error(`[Scheduler] Analytics failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
   // ── HOOK TESTER — every 6 hours (offset :30) ─────────────────────────────
   cron.schedule("30 */6 * * *", async () => {
     if (paused()) { return; }
@@ -163,4 +171,5 @@ export function startScheduler() {
   console.log("  Feedback  : Sundays midnight");
   console.log("  YouTube   : 11:00am daily (if YOUTUBE_CHANNEL_ID set)");
   console.log("  HookTester: every 6 hours (:30 offset)");
+  console.log("  Analytics : every 6 hours (:45 offset) — metric sync + learn + A/B decide");
 }
