@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { getBestFor } from "../analytics/learn.js";
 
 const client = new Anthropic();
 
@@ -103,7 +104,19 @@ function pick() {
 }
 
 export async function generateLinkedInPost() {
-  const { format, topic } = pick();
+  let { format, topic } = pick();
+
+  // Soft bias toward the format that's actually winning on LinkedIn. Falls back
+  // to the weighted pick until analytics has enough real data (see analytics/learn.js).
+  try {
+    const best = await getBestFor("linkedin", "format");
+    if (best && FORMATS[best] && best !== lastFormat && Math.random() < 0.5) {
+      format = best;
+      lastFormat = best;
+      console.log(`[Agent X] Format biased to top performer: ${best}`);
+    }
+  } catch { /* no learning data yet — keep weighted pick */ }
+
   console.log(`[Agent X] Format: ${format} | Topic: ${topic}`);
 
   const prompt = `${VOICE}

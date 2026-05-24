@@ -106,7 +106,7 @@ analytics/            — Closes the learning loop: pulls REAL metrics back per 
   fetch-threads.js      fetchThreadsMetrics(mediaId) — Threads insights (replies→comments etc.).
   fetch-linkedin.js     fetchLinkedInMetrics(urn) — best-effort likes/comments via socialActions; views N/A.
   learn.js              learnPerPlatform() aggregates real metrics into platform_performance;
-                        getBestFor(platform, dimension) reader available to generators.
+                        getBestFor(platform, dimension) reader that biases generateLinkedInPost.
   ab-testing.js         createExperiment() pairs two posts; evaluateExperiments() scores +
                         picks a winner after the window; scorePost() shared scoring.
 
@@ -146,7 +146,7 @@ Tables (`supabase/schema.sql`):
 ## Analytics & Self-Learning (analytics/)
 The columns `posts.views/likes/comments/shares/engagement_rate` are **only real because of this layer** — without it they stay at their `0` defaults and every learning module (feedback-loop, hook-tester, variation-engine) trains on empty data. Flow:
 1. **Sync** (`syncAllMetrics`, every 6h at :45) — for each recent post (≤14 days) on Instagram/Threads/LinkedIn, call that platform's insight API and write metrics + `engagement_rate` back into `posts`. Failures degrade to zeros, never throw.
-2. **Learn** (`learnPerPlatform`) — aggregate the last 30 days per platform into `platform_performance`, scored by `scorePost = likes + shares*2 + comments*3 + views*0.01`. `getBestFor(platform, dimension)` exposes the winning value once `sample_size ≥ 3` (returns `null` otherwise). It's an available reader for generators to consult; current generation logic is left untouched.
+2. **Learn** (`learnPerPlatform`) — aggregate the last 30 days per platform into `platform_performance`, scored by `scorePost = likes + shares*2 + comments*3 + views*0.01`. `getBestFor("linkedin","format")` reads this and softly biases `generateLinkedInPost` toward the winning format (only once `sample_size ≥ 3`, ~50% of the time; otherwise falls back to the weighted pick — so behavior is unchanged until real data exists).
 3. **A/B** (`createExperiment` / `evaluateExperiments`) — pair two posted variants as an experiment; after a 24h window, compare synced scores, set the winner, and mark it `decided`. The winning posts feed `learnPerPlatform` naturally.
 - Platform coverage: Instagram + Threads via the existing tokens (need `*_manage_insights` scope); LinkedIn is best-effort (likes/comments via `socialActions`, impressions gated → stay 0).
 - CLI: `node analytics/index.js` (full cycle), `node analytics/learn.js`, `node analytics/ab-testing.js`.
