@@ -17,6 +17,16 @@ function hexToRgb(hex) {
   };
 }
 
+// Brand default — reproduces the original look exactly when no theme is passed.
+const DEFAULT_THEME = {
+  accent: "#FF6B00",
+  accentLight: "#FF9A50",
+  bg: "#060c18",
+  fontHeading: "Space Grotesk",
+  fontMono: "JetBrains Mono",
+  fontLink: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap",
+};
+
 // ─── LANDSCAPE — LinkedIn 1200×675 ───────────────────────────────────────────
 
 const L_W = 1200;
@@ -50,8 +60,12 @@ function buildLandscapeColumn(section, idx) {
 </div>`;
 }
 
-function buildLandscapeHtml(content, bgBase64) {
+function buildLandscapeHtml(content, bgBase64, theme = DEFAULT_THEME) {
   const cols   = (content.sections || []).slice(0, 3).map(buildLandscapeColumn).join("\n");
+  const a = theme.accent, aL = theme.accentLight;
+  const { r: ar, g: ag, b: ab } = hexToRgb(a);
+  const { r: br, g: bgc, b: bb } = hexToRgb(theme.bg);
+  const bgRgb = `${br},${bgc},${bb}`;
   const bgLayer = bgBase64
     ? `<div class="lbg" style="background-image:url('data:image/png;base64,${bgBase64}')"></div>`
     : "";
@@ -59,24 +73,24 @@ function buildLandscapeHtml(content, bgBase64) {
   return `<!DOCTYPE html><html>
 <head>
 <meta charset="UTF-8"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="${theme.fontLink}" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:${L_W}px;height:${L_H}px;overflow:hidden;background:#060c18;font-family:'Space Grotesk',sans-serif;}
+html,body{width:${L_W}px;height:${L_H}px;overflow:hidden;background:${theme.bg};font-family:'${theme.fontHeading}',sans-serif;}
 .lwrap{width:${L_W}px;height:${L_H}px;position:relative;display:flex;flex-direction:column;}
 .lbg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.13;filter:saturate(1.6);}
-.loverlay{position:absolute;inset:0;background:linear-gradient(140deg,rgba(6,12,24,0.97) 0%,rgba(6,12,24,0.93) 100%);}
+.loverlay{position:absolute;inset:0;background:linear-gradient(140deg,rgba(${bgRgb},0.97) 0%,rgba(${bgRgb},0.93) 100%);}
 .lcontent{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;}
-.ltopbar{height:5px;flex-shrink:0;background:linear-gradient(90deg,#FF6B00,#FF9A50,#FF6B00);}
+.ltopbar{height:5px;flex-shrink:0;background:linear-gradient(90deg,${a},${aL},${a});}
 .lhdr{padding:16px 40px 10px;flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between;}
 .ltitle{font-size:46px;font-weight:800;color:#fff;letter-spacing:-1.5px;line-height:1;}
-.lsubtitle{font-size:18px;font-weight:600;color:#FF6B00;margin-top:5px;}
+.lsubtitle{font-size:18px;font-weight:600;color:${a};margin-top:5px;}
 .lhandle{font-size:12px;color:#2e3e54;font-weight:600;}
-.lhr{height:1.5px;margin:0 40px;flex-shrink:0;background:linear-gradient(90deg,#FF6B00 0%,rgba(255,107,0,0.08) 60%,transparent 100%);}
+.lhr{height:1.5px;margin:0 40px;flex-shrink:0;background:linear-gradient(90deg,${a} 0%,rgba(${ar},${ag},${ab},0.08) 60%,transparent 100%);}
 .lcols{flex:1;display:grid;grid-template-columns:repeat(3,1fr);min-height:0;padding:12px 28px 0;}
 .lcol{padding:0 8px;display:flex;flex-direction:column;}
 .lcol-inner{flex:1;padding:16px 20px 16px 22px;display:flex;flex-direction:column;gap:10px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.07);}
-.lnum{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;letter-spacing:2px;opacity:0.7;}
+.lnum{font-family:'${theme.fontMono}',monospace;font-size:12px;font-weight:700;letter-spacing:2px;opacity:0.7;}
 .lbadge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2px;padding:4px 10px;border-radius:4px;width:fit-content;}
 .lhead{font-size:24px;font-weight:800;letter-spacing:-0.5px;line-height:1.1;}
 .lwhat{font-size:14.5px;color:#6a7e95;line-height:1.4;font-weight:500;}
@@ -111,8 +125,8 @@ html,body{width:${L_W}px;height:${L_H}px;overflow:hidden;background:#060c18;font
 </body></html>`;
 }
 
-export async function renderCheatsheet(content, bgImageBase64) {
-  const html    = buildLandscapeHtml(content, bgImageBase64 || null);
+export async function renderCheatsheet(content, bgImageBase64, theme = DEFAULT_THEME) {
+  const html    = buildLandscapeHtml(content, bgImageBase64 || null, theme);
   const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
   try {
     const page = await browser.newPage();
@@ -173,8 +187,12 @@ function buildVerticalCard(section, idx) {
 </div>`;
 }
 
-function buildVerticalHtml(content, bgBase64) {
+function buildVerticalHtml(content, bgBase64, theme = DEFAULT_THEME) {
   const cards  = (content.sections || []).slice(0, 3).map(buildVerticalCard).join("\n");
+  const a = theme.accent, aL = theme.accentLight;
+  const { r: ar, g: ag, b: ab } = hexToRgb(a);
+  const { r: br, g: bgc, b: bb } = hexToRgb(theme.bg);
+  const bgRgb = `${br},${bgc},${bb}`;
   const bgLayer = bgBase64
     ? `<div class="vbg" style="background-image:url('data:image/png;base64,${bgBase64}')"></div>`
     : "";
@@ -182,29 +200,29 @@ function buildVerticalHtml(content, bgBase64) {
   return `<!DOCTYPE html><html>
 <head>
 <meta charset="UTF-8"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="${theme.fontLink}" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:${V_W}px;height:${V_H}px;overflow:hidden;background:#060c18;font-family:'Space Grotesk',sans-serif;}
+html,body{width:${V_W}px;height:${V_H}px;overflow:hidden;background:${theme.bg};font-family:'${theme.fontHeading}',sans-serif;}
 .vwrap{width:${V_W}px;height:${V_H}px;position:relative;display:flex;flex-direction:column;}
 .vbg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.12;filter:saturate(1.5);}
-.voverlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(6,12,24,0.97) 0%,rgba(6,12,24,0.94) 100%);}
+.voverlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(${bgRgb},0.97) 0%,rgba(${bgRgb},0.94) 100%);}
 .vcontent{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;}
 /* Top accent */
-.vtopbar{height:7px;flex-shrink:0;background:linear-gradient(90deg,#FF6B00,#FF9A50,#FF6B00);}
+.vtopbar{height:7px;flex-shrink:0;background:linear-gradient(90deg,${a},${aL},${a});}
 /* Header */
 .vhdr{padding:28px 52px 16px;flex-shrink:0;}
 .vtitle{font-size:80px;font-weight:800;color:#fff;letter-spacing:-3px;line-height:1;margin-bottom:10px;}
-.vsubtitle{font-size:32px;font-weight:600;color:#FF6B00;line-height:1.2;}
+.vsubtitle{font-size:32px;font-weight:600;color:${a};line-height:1.2;}
 .vhandle{font-size:16px;color:#2e3e54;font-weight:600;margin-top:8px;}
-.vhr{height:2px;margin:0 52px;flex-shrink:0;background:linear-gradient(90deg,#FF6B00 0%,rgba(255,107,0,0.06) 65%,transparent 100%);}
+.vhr{height:2px;margin:0 52px;flex-shrink:0;background:linear-gradient(90deg,${a} 0%,rgba(${ar},${ag},${ab},0.06) 65%,transparent 100%);}
 /* Cards */
 .vcards{flex:1;display:flex;flex-direction:column;min-height:0;padding:10px 40px 0;}
 /* Individual card */
 .vcard{flex:1;display:flex;flex-direction:column;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;}
 /* Colored header bar */
 .vcard-hdr{padding:18px 26px;display:flex;align-items:center;gap:14px;flex-shrink:0;}
-.vnum{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;letter-spacing:2px;flex-shrink:0;opacity:0.8;}
+.vnum{font-family:'${theme.fontMono}',monospace;font-size:15px;font-weight:700;letter-spacing:2px;flex-shrink:0;opacity:0.8;}
 .vbadge{font-size:13px;font-weight:800;letter-spacing:2px;flex-shrink:0;}
 .vhead{font-size:32px;font-weight:800;letter-spacing:-0.8px;line-height:1.1;}
 /* Sub-sections */
@@ -243,8 +261,8 @@ html,body{width:${V_W}px;height:${V_H}px;overflow:hidden;background:#060c18;font
 </body></html>`;
 }
 
-export async function renderVerticalCheatsheet(content, bgImageBase64) {
-  const html    = buildVerticalHtml(content, bgImageBase64 || null);
+export async function renderVerticalCheatsheet(content, bgImageBase64, theme = DEFAULT_THEME) {
+  const html    = buildVerticalHtml(content, bgImageBase64 || null, theme);
   const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
   try {
     const page = await browser.newPage();

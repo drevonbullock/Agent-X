@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getBestFor } from "../analytics/learn.js";
+import { getCopyStyle } from "../analytics/design-variants.js";
 
 const client = new Anthropic();
 
@@ -103,7 +104,7 @@ function pick() {
   return { format, topic };
 }
 
-export async function generateLinkedInPost() {
+export async function generateLinkedInPost(copyStyleId = null) {
   let { format, topic } = pick();
 
   // Soft bias toward the format that's actually winning on LinkedIn. Falls back
@@ -117,14 +118,16 @@ export async function generateLinkedInPost() {
     }
   } catch { /* no learning data yet — keep weighted pick */ }
 
-  console.log(`[Agent X] Format: ${format} | Topic: ${topic}`);
+  // Optional copy-style variant from the optimizer (empty directive = current behavior).
+  const copyDirective = getCopyStyle(copyStyleId).directive;
+  console.log(`[Agent X] Format: ${format} | Topic: ${topic}${copyDirective ? ` | Style: ${copyStyleId}` : ""}`);
 
   const prompt = `${VOICE}
 
 Today's topic angle: ${topic}
 
 ${FORMATS[format].instruction}
-
+${copyDirective ? `\nStyle note: ${copyDirective}\n` : ""}
 Write only the post text. Follow the format exactly.`;
 
   const message = await client.messages.create({

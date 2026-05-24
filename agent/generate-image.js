@@ -3,6 +3,7 @@ import { renderCheatsheet, renderVerticalCheatsheet } from "../images/render-che
 import { renderNewsScreenshot } from "../images/render-news-screenshot.js";
 import { fetchNewsUrl } from "./fetch-news-url.js";
 import { generateGeminiImage } from "../images/gemini.js";
+import { getTheme } from "../analytics/design-variants.js";
 
 const client = new Anthropic();
 
@@ -110,7 +111,7 @@ Return only valid JSON. No explanation, no markdown fences.`,
 // ─── SHARED MODE DISPATCHER ───────────────────────────────────────────────────
 // Allowed modes: news | cheatsheet. Any unknown mode falls back to cheatsheet.
 
-async function dispatchMode(decision, postText, { isVertical = false } = {}) {
+async function dispatchMode(decision, postText, { isVertical = false, theme } = {}) {
   const mode = decision.mode;
 
   if (mode === "news") {
@@ -140,8 +141,8 @@ async function dispatchMode(decision, postText, { isVertical = false } = {}) {
     }
 
     return isVertical
-      ? await renderVerticalCheatsheet(content, bgBase64)
-      : await renderCheatsheet(content, bgBase64);
+      ? await renderVerticalCheatsheet(content, bgBase64, theme)
+      : await renderCheatsheet(content, bgBase64, theme);
   } catch (err) {
     console.warn(`[Agent X] Cheatsheet failed: ${err.message}`);
     return null;
@@ -150,7 +151,7 @@ async function dispatchMode(decision, postText, { isVertical = false } = {}) {
 
 // ─── INSTAGRAM — 1080x1920 vertical (9:16) ───────────────────────────────────
 
-export async function generateImageForInstagram(postText) {
+export async function generateImageForInstagram(postText, variantId = null) {
   let decision;
   try {
     decision = await selectImageMode(postText);
@@ -160,12 +161,12 @@ export async function generateImageForInstagram(postText) {
   }
 
   console.log(`[Instagram] Image mode: ${decision.mode.toUpperCase()} (9:16 vertical)`);
-  return dispatchMode(decision, postText, { isVertical: true });
+  return dispatchMode(decision, postText, { isVertical: true, theme: getTheme(variantId) });
 }
 
 // ─── LINKEDIN — 1200x675 landscape ───────────────────────────────────────────
 
-export async function generateImage(postText) {
+export async function generateImage(postText, variantId = null) {
   let decision;
   try {
     decision = await selectImageMode(postText);
@@ -175,5 +176,5 @@ export async function generateImage(postText) {
   }
 
   console.log(`[Agent X] Image mode: ${decision.mode.toUpperCase()}`);
-  return dispatchMode(decision, postText, { isVertical: false });
+  return dispatchMode(decision, postText, { isVertical: false, theme: getTheme(variantId) });
 }

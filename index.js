@@ -29,6 +29,7 @@ import { uploadYouTubeShort } from "./distributors/youtube-shorts.js";
 import { postTextToThreads } from "./distributors/threads.js";
 import { generateAndPostCarousel, generateAndPostCarouselToThreads } from "./modules/carousel-generator.js";
 import { handleInstagramWebhook } from "./modules/comment-reply.js";
+import { pickVariant } from "./analytics/index.js";
 import { startScheduler } from "./scheduler.js";
 
 // ─── STARTUP — RAW FOOTAGE CHECK ─────────────────────────────────────────────
@@ -110,7 +111,7 @@ async function loadPostCount(platform = null) {
   return count ?? 0;
 }
 
-async function logPost({ postId, postUrl, postText, format, postType, platform = "linkedin" }) {
+async function logPost({ postId, postUrl, postText, format, postType, platform = "linkedin", designVariant = null }) {
   const hook = postText.split(/[.!?\n]/)[0].trim().slice(0, 200);
   const { error } = await supabase.from("posts").insert({
     content: postText,
@@ -120,6 +121,7 @@ async function logPost({ postId, postUrl, postText, format, postType, platform =
     format,
     post_id: postId,
     post_url: postUrl,
+    design_variant: designVariant,
   });
   if (error) console.warn(`[Agent X] Supabase log failed (${platform}): ${error.message}`);
 }
@@ -168,21 +170,30 @@ export async function runLinkedIn(withImage = true) {
   }
 
   // ── TEXT / IMAGE MODE ───────────────────────────────────────────────────────
-  const { postText, format } = await generateLinkedInPost();
+  // Ask the optimizer which creative variant to run for this slot. Cold start
+  // returns the brand default, so output is unchanged until real data accrues.
+  let copyStyleId = null;
+  let imageVariantId = null;
+  if (withImage) imageVariantId = await pickVariant("linkedin", "image").catch(() => null);
+  else           copyStyleId    = await pickVariant("linkedin", "text").catch(() => null);
+
+  const { postText, format } = await generateLinkedInPost(copyStyleId);
   console.log(`[LinkedIn] Format: ${format} | "${postText.slice(0, 80)}..."`);
 
   const short = isShortPost(postText);
   let imageBuffer = null;
   let postType = "text";
+  let designVariant = copyStyleId; // text-only slots tag their copy style
 
   if (!withImage || short) {
     console.log(`[LinkedIn] ${!withImage ? "Text-only slot" : "Short post — skipping image"}`);
   } else {
     try {
-      imageBuffer = await generateImage(postText);
+      imageBuffer = await generateImage(postText, imageVariantId);
       if (imageBuffer) {
         postType = "image";
-        console.log(`[LinkedIn] Image rendered (${(imageBuffer.length / 1024).toFixed(0)} KB)`);
+        designVariant = imageVariantId;
+        console.log(`[LinkedIn] Image rendered (${(imageBuffer.length / 1024).toFixed(0)} KB) | theme: ${imageVariantId}`);
       }
     } catch (err) {
       console.warn(`[LinkedIn] Image render failed — text-only: ${err.message}`);
@@ -191,7 +202,7 @@ export async function runLinkedIn(withImage = true) {
 
   const { postId, postUrl } = await postToLinkedIn(postText, imageBuffer, null);
   console.log(`[LinkedIn] Posted! ID: ${postId} | ${postUrl}`);
-  await logPost({ postId, postUrl, postText, format, postType, platform: "linkedin" });
+  await logPost({ postId, postUrl, postText, format, postType, platform: "linkedin", designVariant });
 
   console.log(`[LinkedIn] Done.\n`);
   return { postId, postUrl, postText };

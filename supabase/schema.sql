@@ -132,3 +132,24 @@ CREATE TABLE IF NOT EXISTS experiments (
   decided_at         TIMESTAMPTZ,
   created_at         TIMESTAMPTZ DEFAULT now()
 );
+
+-- ─── ADAPTIVE CREATIVE OPTIMIZER ──────────────────────────────────────────────
+-- Which design theme / copy style a post used, so the optimizer can attribute
+-- engagement to a specific creative variant.
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS design_variant TEXT;
+
+-- One row per (platform, post_type). Tracks the current best-performing variant
+-- (champion), whether we're exploiting it or exploring challengers, and how many
+-- recent posts in a row have fallen below the rolling baseline. The optimizer
+-- only flips to 'explore' once underperform_streak crosses the threshold, so a
+-- single slow day never triggers a creative change.
+CREATE TABLE IF NOT EXISTS optimization_state (
+  platform           TEXT NOT NULL,
+  post_type          TEXT NOT NULL,
+  champion_variant   TEXT,
+  mode               TEXT DEFAULT 'exploit',   -- exploit | explore
+  underperform_streak INTEGER DEFAULT 0,
+  baseline_score     FLOAT DEFAULT 0,
+  updated_at         TIMESTAMPTZ DEFAULT now(),
+  PRIMARY KEY (platform, post_type)
+);

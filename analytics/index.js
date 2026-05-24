@@ -5,9 +5,11 @@ import { fetchThreadsMetrics } from "./fetch-threads.js";
 import { fetchLinkedInMetrics } from "./fetch-linkedin.js";
 import { learnPerPlatform } from "./learn.js";
 import { evaluateExperiments } from "./ab-testing.js";
+import { adaptAll } from "./optimizer.js";
 
 export { learnPerPlatform, getBestFor } from "./learn.js";
 export { createExperiment, evaluateExperiments, scorePost } from "./ab-testing.js";
+export { pickVariant, adaptAll } from "./optimizer.js";
 
 // Re-poll posts from the last N days — engagement keeps accruing for a while,
 // then plateaus, so there's no value re-fetching ancient rows.
@@ -88,6 +90,7 @@ export async function runAnalyticsCycle() {
   await syncAllMetrics();
   await learnPerPlatform();
   await evaluateExperiments();
+  await adaptAll();
 }
 
 // CLI: node analytics/index.js  (sync + learn + evaluate)

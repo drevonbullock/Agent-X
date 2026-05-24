@@ -109,6 +109,11 @@ analytics/            — Closes the learning loop: pulls REAL metrics back per 
                         getBestFor(platform, dimension) reader that biases generateLinkedInPost.
   ab-testing.js         createExperiment() pairs two posts; evaluateExperiments() scores +
                         picks a winner after the window; scorePost() shared scoring.
+  design-variants.js    IMAGE_THEMES (accent/bg/font presets) + COPY_STYLES (prompt
+                        directives). First entry of each = brand default. getTheme/getCopyStyle.
+  optimizer.js          pickVariant(platform, postType) chooses champion vs challenger;
+                        adaptAll() recomputes the rolling baseline, detects a 5-post
+                        decline (→ explore), and promotes winning variants (→ exploit).
 
 supabase/
   client.js             Default export: Supabase client built with SUPABASE_SECRET_KEY.
@@ -140,7 +145,8 @@ Tables (`supabase/schema.sql`):
 - `comment_replies` / `keyword_leads` — reply dedup + CTA-keyword lead capture.
 - `platform_performance` — per-platform learning aggregates (best `format`/`post_type` by avg engagement score), recomputed by `analytics/learn.js`.
 - `experiments` — A/B variant pairs + decided winner. Posts carry `experiment_id`/`variant`.
-- `posts.metrics_synced_at` — last time `analytics/` pulled live metrics for the row.
+- `optimization_state` — per `(platform, post_type)`: current `champion_variant`, `mode` (exploit|explore), `underperform_streak`, rolling `baseline_score`. Drives the adaptive creative loop.
+- `posts.metrics_synced_at` / `posts.design_variant` — last metric pull + which creative variant (theme/copy style) the post used.
 - **Storage buckets**: `agent-x-videos`, `agent-x-images` (public) — host media for platforms that require a public URL (Instagram/Threads).
 
 ## Analytics & Self-Learning (analytics/)
@@ -149,7 +155,14 @@ The columns `posts.views/likes/comments/shares/engagement_rate` are **only real 
 2. **Learn** (`learnPerPlatform`) — aggregate the last 30 days per platform into `platform_performance`, scored by `scorePost = likes + shares*2 + comments*3 + views*0.01`. `getBestFor("linkedin","format")` reads this and softly biases `generateLinkedInPost` toward the winning format (only once `sample_size ≥ 3`, ~50% of the time; otherwise falls back to the weighted pick — so behavior is unchanged until real data exists).
 3. **A/B** (`createExperiment` / `evaluateExperiments`) — pair two posted variants as an experiment; after a 24h window, compare synced scores, set the winner, and mark it `decided`. The winning posts feed `learnPerPlatform` naturally.
 - Platform coverage: Instagram + Threads via the existing tokens (need `*_manage_insights` scope); LinkedIn is best-effort (likes/comments via `socialActions`, impressions gated → stay 0).
-- CLI: `node analytics/index.js` (full cycle), `node analytics/learn.js`, `node analytics/ab-testing.js`.
+- CLI: `node analytics/index.js` (full cycle), `node analytics/learn.js`, `node analytics/ab-testing.js`, `node analytics/optimizer.js`.
+
+### Adaptive creative loop (`optimizer.js`, `design-variants.js`)
+On top of learning, the optimizer actively varies the creative and keeps what wins — currently wired into the **LinkedIn** image + text slots (`runLinkedIn`):
+- **Variants**: `IMAGE_THEMES` (accent/background/font presets the parameterized `render-cheatsheet.js` accepts) and `COPY_STYLES` (directives injected into `generateLinkedInPost`). The first of each is the brand default; cold start uses it, so output is unchanged until data exists. Each post is tagged with its `design_variant`.
+- **Pick** (`pickVariant`): in `exploit` mode it serves the champion (with a ~15% challenger probe); in `explore` mode it rotates challengers.
+- **Adapt** (`adaptAll`, in `runAnalyticsCycle`): recomputes a rolling baseline (median score of the last 20 posts per platform/post_type). It only flips to `explore` after **5 consecutive posts below baseline** (so one slow day never triggers a change), and promotes a challenger to champion once it beats the champion's average with ≥3 samples.
+- Scope: video is intentionally excluded (kept for manual review). IG/Threads wiring, a video approval gate, and Instagram competitor mining (Business Discovery + Claude vision) are planned follow-ups.
 
 ## Content Generation (agent/generate-post.js)
 - A single non-negotiable **VOICE** system prompt defines the persona and hard rules (see Global Post Rules).

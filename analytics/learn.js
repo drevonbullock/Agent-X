@@ -14,7 +14,7 @@ export async function learnPerPlatform() {
 
   const { data: posts, error } = await supabase
     .from("posts")
-    .select("platform, format, post_type, likes, comments, shares, views")
+    .select("platform, format, post_type, design_variant, likes, comments, shares, views")
     .gte("created_at", since);
 
   if (error) {
@@ -38,7 +38,7 @@ export async function learnPerPlatform() {
 
   for (const p of posts) {
     const score = scorePost(p);
-    for (const [dimension, value] of [["format", p.format], ["post_type", p.post_type]]) {
+    for (const [dimension, value] of [["format", p.format], ["post_type", p.post_type], ["design_variant", p.design_variant]]) {
       const cell = bump(p.platform, dimension, value);
       if (cell) {
         cell.total += score;
