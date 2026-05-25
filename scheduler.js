@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { runThreads, runLinkedIn, runVideo, runInstagram } from "./index.js";
-import { postLinkedInNewsImage, postInstagramNewsImage } from "./modules/news-agent.js";
+import { postLinkedInNewsImage, postInstagramNewsImage, postThreadsNewsImage } from "./modules/news-agent.js";
 import { checkPerf, processVariationQueue } from "./modules/variation-engine.js";
 import { runWeeklyAnalysis } from "./modules/feedback-loop.js";
 import { processYouTubeVideo } from "./modules/youtube-cutter.js";
@@ -60,6 +60,14 @@ export function startScheduler() {
     console.log(`[${new Date().toISOString()}] Instagram: 10:00 AM (news image)`);
     try { await postInstagramNewsImage(); }
     catch (err) { console.error(`[Scheduler] Instagram 10am failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  // ── THREADS NEWS IMAGE — 10:30am (paired offset from Instagram 10am) ─────
+  cron.schedule("30 10 * * *", async () => {
+    if (paused()) { console.log(`[Scheduler] PAUSED — Threads 10:30am news skipped`); return; }
+    console.log(`[${new Date().toISOString()}] Threads: 10:30 AM (news image)`);
+    try { await postThreadsNewsImage(); }
+    catch (err) { console.error(`[Scheduler] Threads 10:30am news failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   cron.schedule("0 14 * * *", async () => {
@@ -203,9 +211,10 @@ export function startScheduler() {
   }, { timezone: "America/New_York" });
 
   console.log("Scheduler active — all times EST:");
+  console.log(`  BRAND_PLATFORMS: ${process.env.BRAND_PLATFORMS ?? "(not set — defaulting to linkedin only)"}`);
   console.log("  LinkedIn  : 8:00am (news), 11:00am (cheatsheet), 2:00pm (text), 5:00pm (news), 8:00pm (cheatsheet)");
   console.log("  Instagram : 10:00am (news), 2:00pm (carousel), 6:00pm (carousel)");
-  console.log("  Threads   : 8:30am, 12:30pm, 4:30pm, 8:30pm (text | carousel every 3rd)");
+  console.log("  Threads   : 8:30am, 10:30am (news image), 12:30pm, 4:30pm, 8:30pm (text | carousel every 3rd)");
   console.log("  Video     : 9:00pm daily — one render, all platforms, held for review");
   console.log("  Var queue : every 30 minutes (crash-safe job queue)");
   console.log("  Variation : every 6 hours");

@@ -11,7 +11,7 @@ import { postCarouselToThreads } from "../distributors/threads.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATE_PATH = path.resolve(__dirname, "../templates/carousel-template.html");
-const BG_PATH = path.resolve(__dirname, "../remotion-videos/public/dre_square_v3.png");
+const BG_PATH = path.resolve(__dirname, "../assets/dre_square_v3.png");
 const client = new Anthropic();
 
 // Specific topics that generate concrete, save-worthy carousels.
@@ -71,8 +71,13 @@ function escHtml(s) {
 }
 
 function getBgDataUrl() {
-  const buf = fs.readFileSync(BG_PATH);
-  return `data:image/png;base64,${buf.toString("base64")}`;
+  try {
+    const buf = fs.readFileSync(BG_PATH);
+    return `data:image/png;base64,${buf.toString("base64")}`;
+  } catch {
+    console.warn(`[Carousel] Background image not found at ${BG_PATH} — using CSS gradient fallback`);
+    return "";
+  }
 }
 
 // Icons SVG for content slides — sized to 80x80 by template CSS

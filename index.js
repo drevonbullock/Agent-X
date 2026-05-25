@@ -145,7 +145,10 @@ export async function runVideo() {
 // 10am → news image   |   3pm → Carousel (static). Video handled by runVideo().
 
 export async function runInstagram() {
-  if (!AGENT_CONFIG.platforms.includes("instagram")) return;
+  if (!AGENT_CONFIG.platforms.includes("instagram")) {
+    console.log(`[Instagram] Skipped — 'instagram' not in BRAND_PLATFORMS (current: ${process.env.BRAND_PLATFORMS ?? "not set"}). Add instagram to Railway BRAND_PLATFORMS env var.`);
+    return;
+  }
   if (!process.env.INSTAGRAM_ACCESS_TOKEN) {
     console.log("[Instagram] Skipped — INSTAGRAM_ACCESS_TOKEN not set");
     return;
@@ -167,7 +170,10 @@ export async function runInstagram() {
 // Carousel every 3rd post. Text fills the rest. Video handled by runVideo().
 
 export async function runThreads() {
-  if (!AGENT_CONFIG.platforms.includes("threads")) return;
+  if (!AGENT_CONFIG.platforms.includes("threads")) {
+    console.log(`[Threads] Skipped — 'threads' not in BRAND_PLATFORMS (current: ${process.env.BRAND_PLATFORMS ?? "not set"})`);
+    return;
+  }
   if (!process.env.THREADS_ACCESS_TOKEN) {
     console.log("[Threads] Skipped — THREADS_ACCESS_TOKEN not set");
     return;

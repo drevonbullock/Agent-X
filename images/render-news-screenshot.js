@@ -1,4 +1,4 @@
-import { chromium } from "playwright";
+import puppeteer from "puppeteer";
 
 const BANNER_H = 60;
 const MAX_CONTENT_H = 1350 - BANNER_H; // 1290px content + 60px banner = 1350 total (4:5 Instagram max)
@@ -6,21 +6,20 @@ const MAX_CONTENT_H = 1350 - BANNER_H; // 1290px content + 60px banner = 1350 to
 export async function renderNewsScreenshot(url) {
   const domain = new URL(url).hostname.replace(/^www\./, "");
 
-  const browser = await chromium.launch({
+  const browser = await puppeteer.launch({
+    headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
   try {
-    const context = await browser.newContext({
-      viewport: { width: 1080, height: 2400 },
-      userAgent:
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    });
-
-    const page = await context.newPage();
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1080, height: 2400 });
+    await page.setUserAgent(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    );
 
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 15_000 });
-    await page.waitForTimeout(1200);
+    await new Promise((r) => setTimeout(r, 1200));
 
     // Reset scroll so getBoundingClientRect().top === document Y
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -40,7 +39,7 @@ export async function renderNewsScreenshot(url) {
       document.querySelectorAll(JUNK.join(",")).forEach((el) => el.remove());
     });
 
-    await page.waitForTimeout(300);
+    await new Promise((r) => setTimeout(r, 300));
 
     // Find the crop region: y=0 (page top, includes site header) → date/byline bottom
     const cropInfo = await page.evaluate(() => {

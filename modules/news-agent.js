@@ -5,7 +5,7 @@ import { postToLinkedIn } from "../agent/post-to-linkedin.js";
 import { generateImage, generateImageForInstagram } from "../agent/generate-image.js";
 import { renderNewsScreenshot } from "../images/render-news-screenshot.js";
 import { generateVideo } from "../agent/generate-video.js";
-import { postTextToThreads } from "../distributors/threads.js";
+import { postTextToThreads, postImageToThreads } from "../distributors/threads.js";
 import { postImageToInstagram } from "../distributors/instagram.js";
 
 const client = new Anthropic();
@@ -68,8 +68,10 @@ async function fetchLatestNews() {
 // ─── DEDUP CHECK ──────────────────────────────────────────────────────────────
 
 async function isArticleSeen(url) {
-  const { data } = await supabase.from("news_seen").select("id").eq("article_url", url).maybeSingle();
-  return !!data;
+  // Only block articles that were SUCCESSFULLY posted. Failed-post articles
+  // (posted=false) are retried — prevents news_seen filling up with dead articles.
+  const { data } = await supabase.from("news_seen").select("posted").eq("article_url", url).maybeSingle();
+  return !!data?.posted;
 }
 
 async function markArticleSeen(article, posted = false) {
@@ -304,9 +306,17 @@ export async function postInstagramNewsImage() {
   try {
     const caption = await generateInstagramReactiveCaption(target);
 
-    // Screenshot the actual article page — 1080×1920, starts at headline
-    const imageBuffer = await renderNewsScreenshot(target.url);
-    if (!imageBuffer) throw new Error("News screenshot returned null");
+    // Try live article screenshot first; fall back to generated cheatsheet image
+    let imageBuffer = null;
+    try {
+      imageBuffer = await renderNewsScreenshot(target.url);
+      if (!imageBuffer) throw new Error("null returned");
+      console.log(`[NewsAgent] Instagram: news screenshot captured`);
+    } catch (screenshotErr) {
+      console.warn(`[NewsAgent] Screenshot failed, using generated image: ${screenshotErr.message}`);
+      imageBuffer = await generateImageForInstagram(caption);
+    }
+    if (!imageBuffer) throw new Error("Both screenshot and image generation returned null");
 
     const imageUrl = await uploadImageToSupabase(imageBuffer);
     const { mediaId, postUrl } = await postImageToInstagram(imageUrl, caption);
@@ -315,6 +325,59 @@ export async function postInstagramNewsImage() {
     await logNewsPost(mediaId, postUrl, caption, target.url, "instagram");
   } catch (err) {
     console.error(`[NewsAgent] Instagram post failed: ${err.message}`);
+  }
+}
+
+// ─── SCHEDULED: THREADS NEWS IMAGE (paired with Instagram 10am slot) ─────────
+
+export async function postThreadsNewsImage() {
+  console.log(`[NewsAgent] Threads news image slot...`);
+  if (!process.env.THREADS_ACCESS_TOKEN) return;
+  if (!(await canPostScheduled("threads", 5))) return;
+
+  let articles;
+  try { articles = await fetchLatestNews(); }
+  catch (err) { console.error(`[NewsAgent] News fetch failed: ${err.message}`); return; }
+
+  let target = null;
+  for (const article of articles) {
+    if (!(await isArticleSeen(article.url))) { target = article; break; }
+  }
+  if (!target) { console.log(`[NewsAgent] No new articles — Threads slot skipped`); return; }
+
+  await markArticleSeen(target, false);
+
+  try {
+    const postText = await generateThreadsReactivePost(target);
+
+    // Try live screenshot first; fall back to a generated vertical cheatsheet
+    let imageBuffer = null;
+    try {
+      imageBuffer = await renderNewsScreenshot(target.url);
+      if (!imageBuffer) throw new Error("null returned");
+      console.log(`[NewsAgent] Threads: news screenshot captured`);
+    } catch (screenshotErr) {
+      console.warn(`[NewsAgent] Threads screenshot failed, using generated image: ${screenshotErr.message}`);
+      imageBuffer = await generateImageForInstagram(postText);
+    }
+
+    if (!imageBuffer) {
+      // Last resort: post text-only
+      console.warn(`[NewsAgent] Threads: image generation failed — posting text-only`);
+      const { postId, postUrl } = await postTextToThreads(postText);
+      await markArticleSeen(target, true);
+      await logNewsPost(postId, postUrl, postText, target.url, "threads");
+      console.log(`[NewsAgent] Threads news text posted! ${postUrl}`);
+      return;
+    }
+
+    const imageUrl = await uploadImageToSupabase(imageBuffer);
+    const { postId, postUrl } = await postImageToThreads(imageUrl, postText);
+    console.log(`[NewsAgent] Threads news image posted! ${postUrl}`);
+    await markArticleSeen(target, true);
+    await logNewsPost(postId, postUrl, postText, target.url, "threads");
+  } catch (err) {
+    console.error(`[NewsAgent] Threads post failed: ${err.message}`);
   }
 }
 
