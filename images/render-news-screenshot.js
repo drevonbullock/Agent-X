@@ -138,9 +138,9 @@ export async function renderNewsScreenshot(url) {
     }, { domainName: domain, top: bannerTop });
 
     // Clip exactly the region: headline → date → BCG banner
+    // Note: fullPage and clip are mutually exclusive in Puppeteer — clip alone is correct
     return await page.screenshot({
       type: "png",
-      fullPage: true,
       clip: {
         x: 0,
         y: cropInfo.top,
