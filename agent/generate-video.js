@@ -1,6 +1,7 @@
 import { generateHyperframesVideo } from "./generate-hyperframes-video.js";
 import { processRawFootage } from "./process-raw-footage.js";
 import { generateHeyGenVideo } from "./generate-heygen-avatar.js";
+import { generateHiggsfieldVideo } from "./generate-higgsfield.js";
 import fs from "fs";
 import path from "path";
 
@@ -57,11 +58,23 @@ export async function generateVideo(postText, videoScript, videoStyle) {
     return await processRawFootage(inputPath, videoScript);
   }
 
-  // ── PATH B — AI generated ────────────────────────────────────────────────
+  // ── PATH B — Higgsfield AI video ─────────────────────────────────────────
+  if (process.env.USE_HIGGSFIELD === "true") {
+    console.log(`[Agent X] PATH B — Higgsfield video generation`);
+    try {
+      const result = await generateHiggsfieldVideo(postText, videoScript);
+      if (result) return result;
+      console.warn("[Agent X] Higgsfield returned null — falling back");
+    } catch (err) {
+      console.warn(`[Agent X] Higgsfield failed (${err.message}) — falling back to HeyGen/Hyperframes`);
+    }
+  }
+
+  // ── PATH C — AI generated (HeyGen / Hyperframes) ─────────────────────────
   const useAvatar = !!process.env.HEYGEN_API_KEY && !!process.env.HEYGEN_AVATAR_ID;
 
   if (useAvatar) {
-    console.log(`[Agent X] PATH B — HeyGen avatar video`);
+    console.log(`[Agent X] PATH C — HeyGen avatar video`);
     const spokenScript = videoScript
       .map((s) => `${s.heading}. ${s.body || (s.points ?? []).join(" ")}`)
       .join(" ");
@@ -74,8 +87,8 @@ export async function generateVideo(postText, videoScript, videoStyle) {
     }
   }
 
-  // ── PATH B fallback — Hyperframes only ──────────────────────────────────
-  console.log(`[Agent X] PATH B — Hyperframes motion graphics`);
+  // ── PATH C fallback — Hyperframes only ──────────────────────────────────
+  console.log(`[Agent X] PATH C — Hyperframes motion graphics`);
 
   const resolvedStyle = videoStyle === "auto" || !videoStyle
     ? await selectVideoStyle(videoScript)
