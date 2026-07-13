@@ -191,15 +191,16 @@ Feeds the variant pool with rival-inspired designs. Weekly (`mineCompetitors`, S
 
 ## Image Modes (agent/generate-image.js)
 Claude (`selectImageMode`) picks exactly one. Older modes (QUOTE/DIAGRAM/COMIC/VISUAL) are retired from the router even though some renderers still exist:
-- **CHEATSHEET** (default) — Puppeteer renders a 3-section educational card. A Gemini-generated dark abstract background is layered behind it (falls back to a solid bg if Gemini fails). Landscape for LinkedIn, vertical for Instagram.
-- **NEWS** — only when the post names a real, findable company/launch. Firecrawl finds the article URL, Playwright screenshots it (`renderNewsScreenshot`). Falls back to cheatsheet if no URL.
+- **CHEATSHEET** (default) — Puppeteer renders a 3-section educational card. Background chain: Higgsfield live (CLI, only if installed+authed) → Higgsfield library (`images/backgrounds/`, committed premium PNGs, random pick via `images/background-library.js`) → Gemini → solid.
+- **NEWS** — only when the post names a real, findable company/launch. Firecrawl finds the article URL; `renderNewsScreenshot` (v2) captures the article and composites it inside a branded browser-window card (1080×1350: AI NEWS badge, date chip, domain URL bar, brand footer). Rejects HTTP ≥400 and soft-404 pages. Falls back to cheatsheet if no URL.
 - Any failure path returns `null` → text-only post.
 
 ## Video Pipeline (agent/generate-video.js)
 `generateVideo()` dispatches to:
 - **PATH A — Raw footage**: if `raw_footage/` has a clip, `process-raw-footage.js` transcribes, trims silence/fillers, color-grades, burns subtitles, and composites a Hyperframes overlay.
 - **HeyGen avatar**: talking-head video (`generate-heygen-avatar.js`) composited behind motion graphics.
-- **PATH B — Hyperframes** (default fallback): pure GSAP motion-graphics MP4 from the `videoScript`, with ElevenLabs voiceover, jingle/SFX, and fetched company logos.
+- **PATH B — Higgsfield CLI** (`USE_HIGGSFIELD=true`): full AI video via the `higgsfield` CLI — skipped with a clear log if the binary isn't installed on the host (Railway doesn't ship it).
+- **Hyperframes** (default fallback): pure GSAP motion-graphics MP4 from the `videoScript`, with ElevenLabs voiceover, jingle/SFX, and fetched company logos. A Higgsfield ambient cinematic loop (`assets/video-backgrounds/*.mp4`, rotated by timestamp) renders behind every screen as timed `<video>` segments; screens use translucent gradients so the motion shows through.
 - 4K masters are re-encoded to 1080p ≤50MB (`compressForUpload` in index.js) before Supabase upload, because Supabase caps at 50MB.
 - `ffmpeg` path is platform-specific: `/usr/bin/ffmpeg` on Linux, `/opt/homebrew/bin/ffmpeg` on macOS.
 
@@ -218,6 +219,10 @@ LINKEDIN_CLIENT_ID=  LINKEDIN_CLIENT_SECRET=  LINKEDIN_ACCESS_TOKEN=  LINKEDIN_P
 # Meta — Instagram + Threads
 INSTAGRAM_ACCESS_TOKEN=  INSTAGRAM_BUSINESS_ID=  INSTAGRAM_WEBHOOK_VERIFY_TOKEN=
 THREADS_ACCESS_TOKEN=    THREADS_USER_ID=        THREADS_USERNAME=
+# Meta tokens die every 60 days. modules/token-manager.js validates both at startup
+# (loud ❌ log if dead), auto-refreshes every 3 days, and persists refreshed tokens in
+# Supabase `platform_tokens` (a valid DB token beats env at boot; a valid env token
+# overwrites a dead DB row). After regenerating manually, just update the Railway env var.
 
 # Other platforms
 TIKTOK_ACCESS_TOKEN=

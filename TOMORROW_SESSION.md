@@ -1,25 +1,38 @@
 ## Agent X — Session Starter
-**Last updated:** 2026-05-06 (end of Session 10)
+**Last updated:** 2026-06-19 (post-diagnostic session)
 **Project path:** `/Users/drevonbullock/C.C. Agent X/Agent X`
 
 ---
 
-## FIRST THING NEXT SESSION — Fix LinkedIn Token (2 min)
+## FIRST THING NEXT SESSION — Wire Meta Webhook (5 min)
 
-LinkedIn access token expired. Run this once, browser opens, log in:
-```bash
-node auth/linkedin-auth.js
+Instagram comment auto-replies won't work until the webhook is registered in Meta's dashboard.
+
+1. Go to **developers.facebook.com/apps** → your app → **Webhooks**
+2. Add subscription → **Instagram** → click **Edit**
+3. Set:
+   - **Callback URL:** `https://<your-railway-domain>/webhook/instagram`
+   - **Verify Token:** `bcg-agentx-f1c0ef596142ed186b7d6453`
+4. Subscribe to: `comments`, `messages`
+
+That's it. The Railway server already handles the GET handshake — it'll verify instantly.
+
+---
+
+## VIDEO REVIEW DASHBOARD
+
+Videos are held for manual approval before posting. Access the queue at:
 ```
-Then confirm it works:
+https://<your-railway-domain>/review?token=6305c40d7835f8131fd0a5108e944aa6eb4cdae72ef93aec
+```
+Or via CLI:
 ```bash
-node --input-type=module <<'EOF'
-import "dotenv/config";
-import { postLinkedInNewsImage } from "./modules/news-agent.js";
-await postLinkedInNewsImage();
-EOF
+node index.js --review                  # list pending
+node index.js --approve <id>            # approve + publish immediately
+node index.js --reject <id>             # reject
 ```
 
-Instagram (403) was a temporary rate limit from test volume — clears on its own, no action needed.
+---
 
 ---
 

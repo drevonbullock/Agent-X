@@ -12,6 +12,8 @@ const EXPLOIT_EXPLORE_RATE = 0.15; // chance of trying a challenger while exploi
 const MANAGED = [
   { platform: "linkedin", postType: "image" },
   { platform: "linkedin", postType: "text" },
+  { platform: "instagram", postType: "image" },
+  { platform: "threads", postType: "text" },
 ];
 
 // ─── PURE HELPERS (unit-tested) ──────────────────────────────────────────────

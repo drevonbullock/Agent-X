@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getBestFor } from "../analytics/learn.js";
 import { getCopyStyle } from "../analytics/design-variants.js";
+import { readBrief } from "../modules/feedback-loop.js";
 
 const client = new Anthropic();
 
@@ -165,7 +166,7 @@ export async function generateLinkedInPost(copyStyleId = null) {
   // to the weighted pick until analytics has enough real data (see analytics/learn.js).
   try {
     const best = await getBestFor("linkedin", "format");
-    if (best && FORMATS[best] && best !== lastFormat && Math.random() < 0.5) {
+    if (best && FORMATS[best] && best !== lastFormat) {
       format = best;
       lastFormat = best;
       console.log(`[Agent X] Format biased to top performer: ${best}`);
@@ -176,8 +177,17 @@ export async function generateLinkedInPost(copyStyleId = null) {
   const copyDirective = getCopyStyle(copyStyleId).directive;
   console.log(`[Agent X] Format: ${format} | Topic: ${topic}${copyDirective ? ` | Style: ${copyStyleId}` : ""}`);
 
-  const prompt = `${VOICE}
+  // Inject last week's performance brief so the model avoids what flopped
+  // and leans into what actually got engagement.
+  const brief = readBrief();
+  const briefContext = brief
+    ? `\nPERFORMANCE BRIEF — what worked last week (use this, do not ignore it):
+- Top formats: ${(brief.top_formats ?? []).join(", ") || "none yet"}
+- Top topics: ${(brief.top_topics ?? []).join(", ") || "none yet"}${(brief.avoid_patterns ?? []).length ? `\n- AVOID these patterns: ${brief.avoid_patterns.join(", ")}` : ""}${brief.weekly_insight ? `\n- Key insight: ${brief.weekly_insight}` : ""}\n`
+    : "";
 
+  const prompt = `${VOICE}
+${briefContext}
 Today's topic angle: ${topic}
 
 ${FORMATS[format].instruction}
@@ -241,13 +251,18 @@ export async function generateThreadsPost() {
   const topic = THREADS_TOPICS[Math.floor(Math.random() * THREADS_TOPICS.length)];
   console.log(`[Threads] Generating post | Topic: ${topic}`);
 
+  const brief = readBrief();
+  const briefContext = brief && (brief.avoid_patterns ?? []).length
+    ? `\nAVOID these patterns that flopped last week: ${brief.avoid_patterns.join(", ")}\n`
+    : "";
+
   const message = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 256,
     messages: [{
       role: "user",
       content: `${THREADS_VOICE}
-
+${briefContext}
 Topic: ${topic}
 
 ${format}

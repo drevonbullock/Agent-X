@@ -128,3 +128,10 @@ Agent X always uses the service role key. Railway env var must be named `SUPABAS
 **Fix:** Strip the Authorization header from the PUT request to the signed URL.
 
 **Rule:** Pre-signed upload URLs (LinkedIn, AWS S3, Supabase) are already authenticated. Never add an Authorization header — it conflicts with the URL's own auth mechanism and causes 403s.
+
+## 2026-07-13 — Token expiry outage + Higgsfield upgrade session
+- **Instagram + Threads were down since ~June 18**: both Meta long-lived tokens expired (60-day lifetime). Nothing in the codebase refreshed them. Fix: `modules/token-manager.js` — startup validation (loud ❌ log), refresh every 3 days, refreshed tokens persisted in Supabase `platform_tokens` so they survive deploys. Lesson: any credential with an expiry needs an automated refresh loop AND a startup validation that fails loudly, the day it ships.
+- **USE_HIGGSFIELD=true was set on Railway but the CLI doesn't exist there** — PATH B silently failed and fell back every night. Fix: `isHiggsfieldCliAvailable()` fast check + explicit skip log. Lesson: gate optional-binary paths on availability, not just an env flag.
+- **Puppeteer ≥22 returns Uint8Array from page.screenshot()** — `.toString("base64")` on it silently produces garbage (broken data URIs). Always `Buffer.from(shot).toString("base64")`.
+- **News renderer would happily screenshot 404 pages.** Added HTTP ≥400 + soft-404 template guards that throw → news-agent falls back to cheatsheet.
+- Higgsfield assets are generated via the MCP connector at build time and committed to the repo (`images/backgrounds/`, `assets/video-backgrounds/`) — zero runtime dependency on Railway.

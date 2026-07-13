@@ -1,7 +1,7 @@
 import { generateHyperframesVideo } from "./generate-hyperframes-video.js";
 import { processRawFootage } from "./process-raw-footage.js";
 import { generateHeyGenVideo } from "./generate-heygen-avatar.js";
-import { generateHiggsfieldVideo } from "./generate-higgsfield.js";
+import { generateHiggsfieldVideo, isHiggsfieldCliAvailable } from "./generate-higgsfield.js";
 import fs from "fs";
 import path from "path";
 
@@ -59,7 +59,9 @@ export async function generateVideo(postText, videoScript, videoStyle) {
   }
 
   // ── PATH B — Higgsfield AI video ─────────────────────────────────────────
-  if (process.env.USE_HIGGSFIELD === "true") {
+  if (process.env.USE_HIGGSFIELD === "true" && !isHiggsfieldCliAvailable()) {
+    console.log(`[Agent X] PATH B skipped — 'higgsfield' CLI not installed on this host (needs the binary + 'higgsfield auth login'). Using Hyperframes.`);
+  } else if (process.env.USE_HIGGSFIELD === "true") {
     console.log(`[Agent X] PATH B — Higgsfield video generation`);
     try {
       const result = await generateHiggsfieldVideo(postText, videoScript);

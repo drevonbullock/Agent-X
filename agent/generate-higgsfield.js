@@ -21,6 +21,17 @@ async function downloadToFile(url, destPath) {
   fs.writeFileSync(destPath, buf);
 }
 
+// Fast check: is the CLI installed on this host? (Railway doesn't ship it —
+// nixpacks.toml would need the binary. Local needs `higgsfield auth login`.)
+export function isHiggsfieldCliAvailable() {
+  try {
+    execFileSync(HF_BIN, ["version"], { timeout: 10_000, stdio: "pipe" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function runHF(args, timeoutMs) {
   const raw = execFileSync(HF_BIN, args, { timeout: timeoutMs, maxBuffer: 10 * 1024 * 1024 }).toString().trim();
   const parsed = JSON.parse(raw);

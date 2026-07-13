@@ -197,3 +197,11 @@ CREATE TABLE IF NOT EXISTS design_themes (
   active      BOOLEAN DEFAULT true,
   updated_at  TIMESTAMPTZ DEFAULT now()
 );
+
+-- Meta token persistence — refreshed tokens survive deploys (modules/token-manager.js)
+CREATE TABLE IF NOT EXISTS platform_tokens (
+  platform     TEXT PRIMARY KEY,
+  access_token TEXT NOT NULL,
+  refreshed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at   TIMESTAMPTZ
+);

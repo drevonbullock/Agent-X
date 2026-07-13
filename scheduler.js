@@ -9,6 +9,8 @@ import { pollThreadsReplies } from "./modules/comment-reply.js";
 import { runAnalyticsCycle } from "./analytics/index.js";
 import { processReviewQueue } from "./modules/review-queue.js";
 import { mineCompetitors, loadDynamicThemes } from "./modules/competitor-research.js";
+import { checkRepeatEngagers } from "./modules/lead-capture.js";
+import { initTokens, refreshTokens } from "./modules/token-manager.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
@@ -17,6 +19,15 @@ export function startScheduler() {
 
   // Load competitor-derived design themes into the variant pool at startup.
   loadDynamicThemes().catch((err) => console.warn(`[Scheduler] loadDynamicThemes failed: ${err.message}`));
+
+  // Validate + load Meta tokens (Supabase-stored beats env seed). Logs loudly if dead.
+  initTokens().catch((err) => console.warn(`[Scheduler] initTokens failed: ${err.message}`));
+
+  // ── TOKEN REFRESH — every 3 days at 3:15am: keep IG/Threads tokens alive ──
+  cron.schedule("15 3 */3 * *", async () => {
+    try { await refreshTokens(); }
+    catch (err) { console.error(`[Scheduler] Token refresh failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
 
   // ── LINKEDIN — 5x/day: 2 news, 2 cheatsheet, 1 text ────────────────────
   cron.schedule("0 8 * * *", async () => {
@@ -149,8 +160,8 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] VariationEngine failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  // ── FEEDBACK LOOP — every Sunday at midnight ──────────────────────────────
-  cron.schedule("0 0 * * 0", async () => {
+  // ── FEEDBACK LOOP — every 3 days at midnight ─────────────────────────────
+  cron.schedule("0 0 */3 * *", async () => {
     if (paused()) { return; }
     try { await runWeeklyAnalysis(); }
     catch (err) { console.error(`[Scheduler] FeedbackLoop failed: ${err.message}`); }
@@ -190,6 +201,13 @@ export function startScheduler() {
     }
   }, { timezone: "America/New_York" });
 
+  // ── LEAD CAPTURE — every hour: detect repeat engagers → Telegram + GHL ──────
+  cron.schedule("0 * * * *", async () => {
+    if (paused()) { return; }
+    try { await checkRepeatEngagers(); }
+    catch (err) { console.error(`[Scheduler] LeadCapture failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
   // ── ANALYTICS — every 6 hours (offset :45): pull real metrics, learn, decide A/B ──
   cron.schedule("45 */6 * * *", async () => {
     if (paused()) { return; }
@@ -216,11 +234,12 @@ export function startScheduler() {
   console.log("  Instagram : 10:00am (news), 2:00pm (carousel), 6:00pm (carousel)");
   console.log("  Threads   : 8:30am, 10:30am (news image), 12:30pm, 4:30pm, 8:30pm (text | carousel every 3rd)");
   console.log("  Video     : 9:00pm daily — one render, all platforms, held for review");
+  console.log("  Leads     : every hour (repeat engager detection → Telegram + GHL)");
   console.log("  Var queue : every 30 minutes (crash-safe job queue)");
   console.log("  Variation : every 6 hours");
   console.log("  Replies   : every 15 minutes (Threads polling)");
   console.log("  Review    : every 10 minutes (publish approved videos)");
-  console.log("  Feedback  : Sundays midnight");
+  console.log("  Feedback  : every 3 days at midnight");
   console.log("  Competitor: Sundays 1:00am (IG Business Discovery + Claude vision → dynamic themes)");
   console.log("  YouTube   : 11:00am daily (if YOUTUBE_CHANNEL_ID set)");
   console.log("  HookTester: every 6 hours (:30 offset)");

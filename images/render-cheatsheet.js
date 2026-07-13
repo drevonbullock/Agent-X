@@ -1,5 +1,8 @@
 import puppeteer from "puppeteer";
 
+const BRAND_HANDLE = process.env.BRAND_HANDLE ?? "@DrevonBullock";
+const BRAND_NICHE  = process.env.BRAND_NICHE  ?? "AI automation for small businesses";
+
 function escHtml(s) {
   return String(s ?? "")
     .replace(/&/g, "&amp;")
@@ -78,14 +81,14 @@ function buildLandscapeHtml(content, bgBase64, theme = DEFAULT_THEME) {
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:${L_W}px;height:${L_H}px;overflow:hidden;background:${theme.bg};font-family:'${theme.fontHeading}',sans-serif;}
 .lwrap{width:${L_W}px;height:${L_H}px;position:relative;display:flex;flex-direction:column;}
-.lbg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.13;filter:saturate(1.6);}
-.loverlay{position:absolute;inset:0;background:linear-gradient(140deg,rgba(${bgRgb},0.97) 0%,rgba(${bgRgb},0.93) 100%);}
+.lbg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.34;filter:saturate(1.4) brightness(1.1);}
+.loverlay{position:absolute;inset:0;background:linear-gradient(140deg,rgba(${bgRgb},0.88) 0%,rgba(${bgRgb},0.78) 100%);}
 .lcontent{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;}
 .ltopbar{height:5px;flex-shrink:0;background:linear-gradient(90deg,${a},${aL},${a});}
 .lhdr{padding:16px 40px 10px;flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between;}
 .ltitle{font-size:46px;font-weight:800;color:#fff;letter-spacing:-1.5px;line-height:1;}
 .lsubtitle{font-size:18px;font-weight:600;color:${a};margin-top:5px;}
-.lhandle{font-size:12px;color:#2e3e54;font-weight:600;}
+.lhandle{font-size:12px;color:#6a7e95;font-weight:600;}
 .lhr{height:1.5px;margin:0 40px;flex-shrink:0;background:linear-gradient(90deg,${a} 0%,rgba(${ar},${ag},${ab},0.08) 60%,transparent 100%);}
 .lcols{flex:1;display:grid;grid-template-columns:repeat(3,1fr);min-height:0;padding:12px 28px 0;}
 .lcol{padding:0 8px;display:flex;flex-direction:column;}
@@ -101,7 +104,7 @@ html,body{width:${L_W}px;height:${L_H}px;overflow:hidden;background:${theme.bg};
 .ltags{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
 .ltag{font-size:11px;color:#4a6070;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.08);font-weight:600;letter-spacing:0.3px;}
 .lfooter{padding:0 40px 11px;flex-shrink:0;display:flex;justify-content:center;}
-.lftxt{font-size:11px;color:#1e2e3e;letter-spacing:0.5px;}
+.lftxt{font-size:11px;color:#5d7288;letter-spacing:0.5px;}
 </style>
 </head>
 <body>
@@ -115,11 +118,11 @@ html,body{width:${L_W}px;height:${L_H}px;overflow:hidden;background:${theme.bg};
         <div class="ltitle">${escHtml(content.title || "")}</div>
         <div class="lsubtitle">${escHtml(content.subtitle || "")}</div>
       </div>
-      <div class="lhandle">@DrevonBullock</div>
+      <div class="lhandle">${BRAND_HANDLE}</div>
     </div>
     <div class="lhr"></div>
     <div class="lcols">${cols}</div>
-    <div class="lfooter"><div class="lftxt">@DrevonBullock · AI Automation for Business Owners</div></div>
+    <div class="lfooter"><div class="lftxt">${BRAND_HANDLE} · ${BRAND_NICHE}</div></div>
   </div>
 </div>
 </body></html>`;
@@ -205,8 +208,8 @@ function buildVerticalHtml(content, bgBase64, theme = DEFAULT_THEME) {
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:${V_W}px;height:${V_H}px;overflow:hidden;background:${theme.bg};font-family:'${theme.fontHeading}',sans-serif;}
 .vwrap{width:${V_W}px;height:${V_H}px;position:relative;display:flex;flex-direction:column;}
-.vbg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.12;filter:saturate(1.5);}
-.voverlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(${bgRgb},0.97) 0%,rgba(${bgRgb},0.94) 100%);}
+.vbg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.34;filter:saturate(1.4) brightness(1.1);}
+.voverlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(${bgRgb},0.88) 0%,rgba(${bgRgb},0.78) 100%);}
 .vcontent{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;}
 /* Top accent */
 .vtopbar{height:7px;flex-shrink:0;background:linear-gradient(90deg,${a},${aL},${a});}
@@ -214,7 +217,7 @@ html,body{width:${V_W}px;height:${V_H}px;overflow:hidden;background:${theme.bg};
 .vhdr{padding:28px 52px 16px;flex-shrink:0;}
 .vtitle{font-size:80px;font-weight:800;color:#fff;letter-spacing:-3px;line-height:1;margin-bottom:10px;}
 .vsubtitle{font-size:32px;font-weight:600;color:${a};line-height:1.2;}
-.vhandle{font-size:16px;color:#2e3e54;font-weight:600;margin-top:8px;}
+.vhandle{font-size:16px;color:#6a7e95;font-weight:600;margin-top:8px;}
 .vhr{height:2px;margin:0 52px;flex-shrink:0;background:linear-gradient(90deg,${a} 0%,rgba(${ar},${ag},${ab},0.06) 65%,transparent 100%);}
 /* Cards */
 .vcards{flex:1;display:flex;flex-direction:column;min-height:0;padding:10px 40px 0;}
@@ -239,7 +242,7 @@ html,body{width:${V_W}px;height:${V_H}px;overflow:hidden;background:${theme.bg};
 .vtag{font-size:13px;font-weight:700;padding:6px 16px;border-radius:20px;border:1px solid;letter-spacing:0.3px;}
 /* Footer */
 .vfooter{padding:0 52px 18px;flex-shrink:0;text-align:center;}
-.vftxt{font-size:15px;color:#1e2e3e;letter-spacing:0.5px;}
+.vftxt{font-size:15px;color:#5d7288;letter-spacing:0.5px;}
 </style>
 </head>
 <body>
@@ -251,11 +254,11 @@ html,body{width:${V_W}px;height:${V_H}px;overflow:hidden;background:${theme.bg};
     <div class="vhdr">
       <div class="vtitle">${escHtml(content.title || "")}</div>
       <div class="vsubtitle">${escHtml(content.subtitle || "")}</div>
-      <div class="vhandle">@DrevonBullock</div>
+      <div class="vhandle">${BRAND_HANDLE}</div>
     </div>
     <div class="vhr"></div>
     <div class="vcards">${cards}</div>
-    <div class="vfooter"><div class="vftxt">@DrevonBullock · AI Automation for Business Owners</div></div>
+    <div class="vfooter"><div class="vftxt">${BRAND_HANDLE} · ${BRAND_NICHE}</div></div>
   </div>
 </div>
 </body></html>`;

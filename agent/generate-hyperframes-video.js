@@ -14,6 +14,9 @@ const GSAP_CDN = `<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsa
 const W = 1080;
 const H = 1920;
 
+const BRAND_HANDLE = process.env.BRAND_HANDLE ?? "@DrevonBullock";
+const BRAND_AUTHOR = process.env.BRAND_AUTHOR ?? "Drevon Bullock";
+
 const SILENT_STYLES = new Set(["hook_reveal", "review_card"]);
 
 function escHtml(s) {
@@ -27,6 +30,23 @@ function sfx(src, start, duration, idx) {
   return `<audio id="sfx-${idx}" class="clip" data-start="${t.toFixed(2)}" data-duration="${duration}" data-track-index="${idx}" src="${src}"></audio>`;
 }
 
+// ─── AMBIENT VIDEO LAYER (Higgsfield cinematic loop behind all screens) ──────
+// Sequential timed segments of the same clip tile across the full duration —
+// the framework owns playback, so this renders deterministically.
+const AMBIENT_SEGMENT_LEN = 10; // source clips are 10s
+
+function ambientLayer(paths, totalDur) {
+  if (!paths.ambient) return "";
+  const n = Math.ceil(totalDur / AMBIENT_SEGMENT_LEN);
+  let vids = "";
+  for (let i = 0; i < n; i++) {
+    const start = i * AMBIENT_SEGMENT_LEN;
+    const dur = Math.min(AMBIENT_SEGMENT_LEN, totalDur - start);
+    vids += `<video class="ambient-bg" id="ambient-${i}" data-start="${start.toFixed(2)}" data-duration="${dur.toFixed(2)}" data-track-index="${80 + i}" src="${paths.ambient}" muted playsinline></video>`;
+  }
+  return `<div id="ambient-wrap">${vids}<div id="ambient-overlay"></div></div>`;
+}
+
 // ─── SHARED CHROME (logo + watermark + jingle + riser) ───────────────────────
 function buildChrome(paths, totalDur) {
   const logoHtml = paths.logo
@@ -37,9 +57,10 @@ function buildChrome(paths, totalDur) {
     : "";
 
   return `
+  ${ambientLayer(paths, totalDur)}
   <audio id="bcg-jingle" class="clip" data-start="0" data-duration="1.5" data-track-index="50" src="${paths.jingle}"></audio>
   ${logoHtml}
-  <div id="bcg-watermark">@DrevonBullock&nbsp;•&nbsp;BCG</div>
+  <div id="bcg-watermark">${BRAND_HANDLE}&nbsp;•&nbsp;BCG</div>
   <div id="jingle-intro">
     <div id="jingle-bar"></div>
     <div id="jingle-label">BREAKING</div>
@@ -66,7 +87,10 @@ html,body{width:${W}px;height:${H}px;overflow:hidden;background:#0A0A0A;font-fam
 .stage{position:relative;width:${W}px;height:${H}px;overflow:hidden;}
 audio{display:none;}
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;}
-.screen-bg{position:absolute;inset:0;background:linear-gradient(135deg,#0A0A0A 0%,#1A1A2E 50%,#0A0A0A 100%);}
+.screen-bg{position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,10,14,0.60) 0%,rgba(26,26,46,0.45) 50%,rgba(10,10,14,0.60) 100%);}
+#ambient-wrap{position:absolute;inset:0;}
+.ambient-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.75;filter:brightness(1.28);}
+#ambient-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,14,28,0.55) 0%,rgba(8,14,28,0.30) 50%,rgba(8,14,28,0.60) 100%);}
 #logo-wrap{position:absolute;top:48px;right:48px;z-index:10;opacity:0;
   background:rgba(255,255,255,0.95);border-radius:16px;padding:10px;
   width:96px;height:96px;display:flex;align-items:center;justify-content:center;
@@ -624,10 +648,20 @@ export async function generateHyperframesVideo(videoScript, style, voiceoverPath
   const rel = (absOrRel) =>
     absOrRel ? path.relative(projectDir, path.resolve(absOrRel)) : null;
 
+  // Ambient Higgsfield background loop — rotate by timestamp (deterministic
+  // inside the composition; the pick happens here in Node, not in the HTML)
+  let ambientAbsPath = null;
+  try {
+    const ambientDir = path.resolve("assets/video-backgrounds");
+    const clips = fs.readdirSync(ambientDir).filter((f) => f.endsWith(".mp4"));
+    if (clips.length) ambientAbsPath = path.join(ambientDir, clips[timestamp % clips.length]);
+  } catch { /* no ambient library — screens render on gradient as before */ }
+
   const paths = {
     jingle:     rel("assets/bcg-jingle.mp3"),
     logo:       rel(logoAbsPath),
     screenshot: rel(screenshotAbsPath),
+    ambient:    rel(ambientAbsPath),
     sfx: {
       swoosh: rel("assets/sfx/swoosh.mp3"),
       pop:    rel("assets/sfx/pop.mp3"),
@@ -661,7 +695,7 @@ export async function generateHyperframesVideo(videoScript, style, voiceoverPath
   const ctaScreen = {
     screen:  videoScript.length + 1,
     heading: "Ready to automate?",
-    body:    "DM 'START' · @DrevonBullock",
+    body:    `DM 'START' · ${BRAND_HANDLE}`,
     isCTA:   true,
   };
   const fullScript = isCarousel ? [...videoScript, ctaScreen] : videoScript;

@@ -1,8 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { renderCheatsheet, renderVerticalCheatsheet } from "../images/render-cheatsheet.js";
+
+const BRAND_HANDLE = process.env.BRAND_HANDLE ?? "@DrevonBullock";
+const BRAND_AUTHOR = process.env.BRAND_AUTHOR ?? "Drevon Bullock";
 import { renderNewsScreenshot } from "../images/render-news-screenshot.js";
 import { fetchNewsUrl } from "./fetch-news-url.js";
 import { generateGeminiImage } from "../images/gemini.js";
+import { getRandomBackgroundBase64 } from "../images/background-library.js";
+import { generateHiggsfieldImage } from "./generate-higgsfield.js";
 import { getTheme } from "../analytics/design-variants.js";
 
 const client = new Anthropic();
@@ -94,7 +99,7 @@ Return only valid JSON. No explanation, no markdown fences.`,
       "tags": ["Tag1", "Tag2", "Tag3"]
     }
   ],
-  "footer": "@DrevonBullock • Bullock Consulting Group"
+  "footer": "${BRAND_HANDLE} • ${BRAND_AUTHOR}"
 }`,
       },
     ],
@@ -128,16 +133,40 @@ async function dispatchMode(decision, postText, { isVertical = false, theme } = 
   try {
     const content = await generateCheatsheetContent(postText);
 
+    // Background chain: Higgsfield live (CLI, unique per post) → Higgsfield
+    // library (premium, committed to repo) → Gemini → solid.
     let bgBase64 = null;
-    try {
-      const bgPrompt = isVertical
-        ? `Dark abstract digital art background for a business AI cheatsheet. Deep navy and black tones (#080E1C). Subtle glowing orange circuit-trace geometry, faint grid lines, soft light beams. No text, no characters, no faces. Premium editorial feel. Vertical portrait format.`
-        : `Dark abstract tech background for a business AI infographic card. Deep navy-black (#080E1C). Faint glowing orange geometric patterns, subtle circuit lines, soft light rays. No text, no people. Clean premium look. Wide landscape format.`;
-      const bgBuf = await generateGeminiImage(bgPrompt);
-      bgBase64 = bgBuf.toString("base64");
-      console.log(`[Agent X] Gemini background generated for cheatsheet`);
-    } catch (bgErr) {
-      console.warn(`[Agent X] Gemini bg failed — using solid bg: ${bgErr.message}`);
+
+    if (process.env.USE_HIGGSFIELD === "true") {
+      try {
+        const hfPrompt = `Premium abstract tech background for a business AI infographic card about "${(postText || "").slice(0, 120)}". Deep navy black base (#0d1830), subtle glowing orange (#FF6B00) geometric accents, soft volumetric light. No text, no letters, no people, no faces, no logos. Dark enough for white text overlays.`;
+        const url = await generateHiggsfieldImage(hfPrompt, { aspectRatio: isVertical ? "4:5" : "16:9" });
+        const res = await fetch(url);
+        if (res.ok) {
+          bgBase64 = Buffer.from(await res.arrayBuffer()).toString("base64");
+          console.log(`[Agent X] Higgsfield live background generated`);
+        }
+      } catch (hfErr) {
+        console.warn(`[Agent X] Higgsfield live bg unavailable (${hfErr.message.slice(0, 80)}) — trying library`);
+      }
+    }
+
+    if (!bgBase64) {
+      bgBase64 = getRandomBackgroundBase64();
+      if (bgBase64) console.log(`[Agent X] Higgsfield library background selected`);
+    }
+
+    if (!bgBase64) {
+      try {
+        const bgPrompt = isVertical
+          ? `Dark abstract digital art background for a business AI cheatsheet. Deep navy and black tones (#080E1C). Subtle glowing orange circuit-trace geometry, faint grid lines, soft light beams. No text, no characters, no faces. Premium editorial feel. Vertical portrait format.`
+          : `Dark abstract tech background for a business AI infographic card. Deep navy-black (#080E1C). Faint glowing orange geometric patterns, subtle circuit lines, soft light rays. No text, no people. Clean premium look. Wide landscape format.`;
+        const bgBuf = await generateGeminiImage(bgPrompt);
+        bgBase64 = Buffer.from(bgBuf).toString("base64");
+        console.log(`[Agent X] Gemini background generated for cheatsheet`);
+      } catch (bgErr) {
+        console.warn(`[Agent X] Gemini bg failed — using solid bg: ${bgErr.message}`);
+      }
     }
 
     return isVertical
