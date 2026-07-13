@@ -475,10 +475,11 @@ async function buildThreadsCaption(content) {
     max_tokens: 128,
     messages: [{
       role: "user",
-      content: `Write ONE punchy sentence caption for a Threads carousel post. The carousel covers:\n${context}\n\nRules: no explanation, no hashtags, no quotes, under 120 chars, reads like a real person texting a sharp take. Just the sentence.`,
+      content: `Write ONE punchy sentence caption for a Threads carousel post. The carousel covers:\n${context}\n\nRules: no explanation, no hashtags, no quotes, NEVER use em dashes or hyphens as pauses, under 120 chars, reads like a real person texting a sharp take. Just the sentence.`,
     }],
   });
-  return msg.content[0].text.trim().replace(/^["']|["']$/g, "");
+  // Hard voice rule: no em/en dashes ever — rewrite as a comma pause
+  return msg.content[0].text.trim().replace(/^["']|["']$/g, "").replace(/\s*[\u2014\u2013]\s*/g, ", ");
 }
 
 function buildCaption(content) {
