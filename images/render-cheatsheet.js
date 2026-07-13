@@ -142,50 +142,46 @@ export async function renderCheatsheet(content, bgImageBase64, theme = DEFAULT_T
 }
 
 // ─── INSTAGRAM VERTICAL — 1080×1350 ──────────────────────────────────────────
-// Redesigned: colored full-width header bar per section, "WHAT IT IS" /
-// "WHERE TO USE" sub-labels, 2-column bullet grid — matches reference infographic style.
+// v3 "Glass Infographic" (2026-07-13): frosted-glass section cards over the
+// Higgsfield background art + dense electric-infographic chrome — eyebrow +
+// ribbon title block, icon header pills, 2×2 point grids, colored tag chips,
+// 3-cell footer strip. Reverse-engineered from Dre's two references.
 
 const V_W = 1080;
 const V_H = 1350;
 
+// White glyph icons rotated per section (bolt / target / gears)
+const SECTION_ICONS = [
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+];
+
 function buildVerticalCard(section, idx) {
   const color = /^#[0-9A-Fa-f]{3,6}$/.test(section.color) ? section.color : "#FF6B00";
   const { r, g, b } = hexToRgb(color);
-  const headerBg = `rgba(${r},${g},${b},0.18)`;
-  const headerBd = `rgba(${r},${g},${b},0.40)`;
-  const num      = String(idx + 1).padStart(2, "0");
-  const badge    = section.badge ? escHtml(section.badge) : "";
-  const what     = section.what  ? `
-  <div class="vsub-section">
-    <div class="vsub-label">WHAT IT IS</div>
-    <p class="vwhat">${escHtml(section.what)}</p>
-  </div>` : "";
+  const icon = SECTION_ICONS[idx % SECTION_ICONS.length];
+  const badge = section.badge ? escHtml(section.badge) : "";
 
-  // Split points into 2 columns
   const pts = section.points || [];
   const gridItems = pts.map(p =>
-    `<div class="vgrid-item"><span class="vdot" style="background:${color}"></span><span>${escHtml(p)}</span></div>`
+    `<div class="vcell"><span class="vcheck" style="color:${color};border-color:rgba(${r},${g},${b},0.5);background:rgba(${r},${g},${b},0.12);">✓</span><span>${escHtml(p)}</span></div>`
   ).join("");
 
   const tags = (section.tags || []).map(t =>
-    `<span class="vtag" style="color:${color};border-color:rgba(${r},${g},${b},0.30);">${escHtml(t)}</span>`
+    `<span class="vtag" style="color:#0d1830;background:${color};">${escHtml(t)}</span>`
   ).join("");
 
-  const topBorder = idx > 0 ? "border-top:2px solid rgba(255,255,255,0.05);" : "";
-
-  return `<div class="vcard" style="${topBorder}">
-  <!-- Colored header bar -->
-  <div class="vcard-hdr" style="background:${headerBg};border-bottom:2px solid ${headerBd};border-left:5px solid ${color};">
-    <span class="vnum" style="color:${color};">${num}</span>
-    ${badge ? `<span class="vbadge" style="color:${color};">● ${badge}</span>` : ""}
-    <h3 class="vhead" style="color:#fff;">${escHtml(section.heading)}</h3>
+  return `<div class="vcard">
+  <div class="vcard-hdr">
+    <div class="vpill" style="background:rgba(${r},${g},${b},0.16);border:1.5px solid rgba(${r},${g},${b},0.55);">
+      <span class="vicon" style="color:${color};">${icon}</span>
+      <h3 class="vhead">${escHtml(section.heading)}</h3>
+    </div>
+    ${badge ? `<span class="vbadge" style="color:${color};">${badge}</span>` : ""}
   </div>
-  ${what}
-  <!-- 2-column bullet grid -->
-  ${gridItems ? `<div class="vsub-section vsub-use">
-    <div class="vsub-label">WHERE TO USE</div>
-    <div class="vgrid">${gridItems}</div>
-  </div>` : ""}
+  ${section.what ? `<p class="vwhat">${escHtml(section.what)}</p>` : ""}
+  ${gridItems ? `<div class="vgrid">${gridItems}</div>` : ""}
   ${tags ? `<div class="vtag-row">${tags}</div>` : ""}
 </div>`;
 }
@@ -193,12 +189,16 @@ function buildVerticalCard(section, idx) {
 function buildVerticalHtml(content, bgBase64, theme = DEFAULT_THEME) {
   const cards  = (content.sections || []).slice(0, 3).map(buildVerticalCard).join("\n");
   const a = theme.accent, aL = theme.accentLight;
-  const { r: ar, g: ag, b: ab } = hexToRgb(a);
   const { r: br, g: bgc, b: bb } = hexToRgb(theme.bg);
   const bgRgb = `${br},${bgc},${bb}`;
   const bgLayer = bgBase64
     ? `<div class="vbg" style="background-image:url('data:image/png;base64,${bgBase64}')"></div>`
     : "";
+
+  // Title splits: last word becomes the accent word (ref: "GRAPHIC DESIGN")
+  const titleWords = String(content.title || "").split(/\s+/).filter(Boolean);
+  const accentWord = titleWords.length > 1 ? titleWords.pop() : "";
+  const titleMain  = titleWords.join(" ");
 
   return `<!DOCTYPE html><html>
 <head>
@@ -208,57 +208,77 @@ function buildVerticalHtml(content, bgBase64, theme = DEFAULT_THEME) {
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:${V_W}px;height:${V_H}px;overflow:hidden;background:${theme.bg};font-family:'${theme.fontHeading}',sans-serif;}
 .vwrap{width:${V_W}px;height:${V_H}px;position:relative;display:flex;flex-direction:column;}
-.vbg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.34;filter:saturate(1.4) brightness(1.1);}
-.voverlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(${bgRgb},0.88) 0%,rgba(${bgRgb},0.78) 100%);}
-.vcontent{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;}
-/* Top accent */
-.vtopbar{height:7px;flex-shrink:0;background:linear-gradient(90deg,${a},${aL},${a});}
-/* Header */
-.vhdr{padding:28px 52px 16px;flex-shrink:0;}
-.vtitle{font-size:80px;font-weight:800;color:#fff;letter-spacing:-3px;line-height:1;margin-bottom:10px;}
-.vsubtitle{font-size:32px;font-weight:600;color:${a};line-height:1.2;}
-.vhandle{font-size:16px;color:#6a7e95;font-weight:600;margin-top:8px;}
-.vhr{height:2px;margin:0 52px;flex-shrink:0;background:linear-gradient(90deg,${a} 0%,rgba(${ar},${ag},${ab},0.06) 65%,transparent 100%);}
-/* Cards */
-.vcards{flex:1;display:flex;flex-direction:column;min-height:0;padding:10px 40px 0;}
-/* Individual card */
-.vcard{flex:1;display:flex;flex-direction:column;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;}
-/* Colored header bar */
-.vcard-hdr{padding:18px 26px;display:flex;align-items:center;gap:14px;flex-shrink:0;}
-.vnum{font-family:'${theme.fontMono}',monospace;font-size:15px;font-weight:700;letter-spacing:2px;flex-shrink:0;opacity:0.8;}
-.vbadge{font-size:13px;font-weight:800;letter-spacing:2px;flex-shrink:0;}
-.vhead{font-size:32px;font-weight:800;letter-spacing:-0.8px;line-height:1.1;}
-/* Sub-sections */
-.vsub-section{padding:14px 26px;flex-shrink:0;}
-.vsub-use{flex:1;}
-.vsub-label{font-size:11px;font-weight:800;letter-spacing:2.5px;color:#2e4060;margin-bottom:10px;}
-.vwhat{font-size:22px;color:#ddeaf5;line-height:1.4;font-weight:500;}
-/* 2-column grid */
-.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;}
-.vgrid-item{display:flex;align-items:flex-start;gap:10px;font-size:20px;color:#eaf2fa;line-height:1.35;font-weight:500;}
-.vdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:7px;}
-/* Tag row */
-.vtag-row{display:flex;flex-wrap:wrap;gap:8px;padding:12px 26px 16px;flex-shrink:0;border-top:1px solid rgba(255,255,255,0.05);}
-.vtag{font-size:13px;font-weight:700;padding:6px 16px;border-radius:20px;border:1px solid;letter-spacing:0.3px;}
-/* Footer */
-.vfooter{padding:0 52px 18px;flex-shrink:0;text-align:center;}
-.vftxt{font-size:15px;color:#5d7288;letter-spacing:0.5px;}
+/* Background art shows through the glass — much higher presence than v2 */
+.vbg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.55;filter:saturate(1.35) brightness(1.15);}
+.voverlay{position:absolute;inset:0;background:
+  radial-gradient(ellipse 80% 40% at 85% 0%,rgba(0,210,255,0.10) 0%,transparent 60%),
+  linear-gradient(165deg,rgba(${bgRgb},0.72) 0%,rgba(${bgRgb},0.55) 50%,rgba(${bgRgb},0.75) 100%);}
+/* Halftone dot patches (top-right / bottom-left, ref 2) */
+.vdots{position:absolute;pointer-events:none;opacity:0.22;z-index:1;
+  background-image:radial-gradient(circle,${a} 1.7px,transparent 2px);background-size:15px 15px;}
+.vcontent{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;padding:0 44px;}
+/* ── TITLE BLOCK ── */
+.veyebrow{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:34px;flex-shrink:0;}
+.veyebrow .line{height:3px;width:64px;background:${a};box-shadow:0 0 12px rgba(255,107,0,0.8);}
+.veyebrow .line.thin{height:1.5px;width:34px;opacity:0.6;}
+.veyebrow-txt{font-family:'${theme.fontMono}',monospace;font-size:20px;font-weight:700;letter-spacing:6px;color:#cfe0ef;}
+.vtitle{text-align:center;font-size:86px;font-weight:800;color:#fff;letter-spacing:-2.5px;line-height:1.02;margin-top:10px;flex-shrink:0;
+  text-shadow:0 4px 30px rgba(0,0,0,0.6);text-transform:uppercase;}
+.vtitle .acc{color:#00D2FF;text-shadow:0 0 40px rgba(0,210,255,0.55);}
+.vribbon{align-self:center;margin-top:14px;flex-shrink:0;background:${a};color:#0d1830;
+  font-size:26px;font-weight:800;letter-spacing:6px;padding:10px 44px;text-transform:uppercase;
+  clip-path:polygon(3% 0,97% 0,100% 50%,97% 100%,3% 100%,0 50%);box-shadow:0 6px 24px rgba(255,107,0,0.35);}
+/* ── GLASS CARDS ── */
+.vcards{flex:1;display:flex;flex-direction:column;gap:18px;min-height:0;margin-top:24px;}
+.vcard{flex:1;display:flex;flex-direction:column;padding:20px 28px;border-radius:22px;min-height:0;
+  background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.16);
+  backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);
+  box-shadow:0 16px 40px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.18);}
+.vcard-hdr{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-shrink:0;}
+.vpill{display:flex;align-items:center;gap:14px;border-radius:14px;padding:10px 20px;}
+.vicon{width:34px;height:34px;flex-shrink:0;display:flex;}
+.vicon svg{width:100%;height:100%;}
+.vhead{font-size:31px;font-weight:800;letter-spacing:-0.6px;color:#fff;line-height:1;}
+.vbadge{font-family:'${theme.fontMono}',monospace;font-size:14px;font-weight:700;letter-spacing:2.5px;flex-shrink:0;}
+.vwhat{font-size:21px;color:#dcebf7;line-height:1.35;font-weight:500;margin-top:12px;flex-shrink:0;}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;margin-top:14px;flex:1;align-content:center;}
+.vcell{display:flex;align-items:flex-start;gap:11px;font-size:19.5px;color:#f0f6fc;line-height:1.3;font-weight:500;}
+.vcheck{width:26px;height:26px;border-radius:8px;border:1.5px solid;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;margin-top:0;}
+.vtag-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;flex-shrink:0;}
+.vtag{font-size:14px;font-weight:800;padding:5px 16px;border-radius:6px;letter-spacing:0.5px;}
+/* ── FOOTER STRIP (ref 2) ── */
+.vfooter{display:flex;align-items:stretch;gap:0;margin:20px 0 26px;flex-shrink:0;border-radius:16px;overflow:hidden;
+  background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.14);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
+.vf-cell{flex:1;display:flex;align-items:center;justify-content:center;gap:12px;padding:16px 8px;}
+.vf-cell + .vf-cell{border-left:1.5px solid rgba(255,255,255,0.12);}
+.vf-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,${a},${aL});
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;flex-shrink:0;}
+.vf-txt{font-size:16px;font-weight:700;color:#e8f1f9;letter-spacing:0.3px;}
+.vf-sub{font-family:'${theme.fontMono}',monospace;font-size:14px;font-weight:500;color:#9fb4c8;letter-spacing:0.5px;}
 </style>
 </head>
 <body>
 <div class="vwrap">
   ${bgLayer}
   <div class="voverlay"></div>
+  <div class="vdots" style="top:0;right:0;width:340px;height:220px;"></div>
+  <div class="vdots" style="bottom:0;left:0;width:300px;height:190px;"></div>
   <div class="vcontent">
-    <div class="vtopbar"></div>
-    <div class="vhdr">
-      <div class="vtitle">${escHtml(content.title || "")}</div>
-      <div class="vsubtitle">${escHtml(content.subtitle || "")}</div>
-      <div class="vhandle">${BRAND_HANDLE}</div>
+    <div class="veyebrow">
+      <span class="line thin"></span><span class="line"></span>
+      <span class="veyebrow-txt">THE ULTIMATE</span>
+      <span class="line"></span><span class="line thin"></span>
     </div>
-    <div class="vhr"></div>
+    <div class="vtitle">${escHtml(titleMain)} ${accentWord ? `<span class="acc">${escHtml(accentWord)}</span>` : ""}</div>
+    <div class="vribbon">${escHtml(content.subtitle || "Cheat Sheet")}</div>
     <div class="vcards">${cards}</div>
-    <div class="vfooter"><div class="vftxt">${BRAND_HANDLE} · ${BRAND_NICHE}</div></div>
+    <div class="vfooter">
+      <div class="vf-cell"><span class="vf-mark">BX</span><span class="vf-txt">${BRAND_HANDLE}</span></div>
+      <div class="vf-cell"><span class="vf-sub">Systems that think.</span></div>
+      <div class="vf-cell"><span class="vf-sub">Results that speak.</span></div>
+    </div>
   </div>
 </div>
 </body></html>`;
