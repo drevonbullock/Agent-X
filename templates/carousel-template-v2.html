@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<!--
+  CAROUSEL TEMPLATE v2 — "Collage Editorial" (2026-07-13)
+  Reverse-engineered from two reference styles into BCG brand:
+    • Collage/sticker energy: starbursts, halftone die-cut stickers, torn paper,
+      topographic contour texture  (ref: @joaoh_dsgn)
+    • Brutalist editorial type: massive stacked mixed-weight caps, highlight
+      strips, serif-italic accent words, annotation dots, grain  (ref: @estudiomona.co)
+  Palette: navy #0d1830 canvas · orange #FF6B00 · cyan #00D2FF · cream #f2ede3
+  Canvas: 1080×1350 (4:5). CSS here is the locked source of truth — the
+  generator extracts <style> from this file. Slide markup below is reference;
+  the generator holds matching structures with {{PLACEHOLDERS}}.
+-->
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=JetBrains+Mono:wght@500;700&family=Instrument+Serif:ital@0;1&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:1080px;height:1350px;overflow:hidden;}
+.slide{position:relative;width:1080px;height:1350px;overflow:hidden;
+  background:#0d1830;font-family:'Space Grotesk',sans-serif;color:#f2ede3;}
+
+/* ── TEXTURE LAYERS ─────────────────────────────────────────────── */
+/* Topographic contour lines (ref 1 canvas texture) */
+.topo{position:absolute;inset:-20%;opacity:0.07;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420' viewBox='0 0 420 420'%3E%3Cg fill='none' stroke='%2300D2FF' stroke-width='1.5'%3E%3Cpath d='M60 210c0-80 70-150 150-150s150 70 150 150-70 150-150 150S60 290 60 210z'/%3E%3Cpath d='M100 210c0-60 50-110 110-110s110 50 110 110-50 110-110 110-110-50-110-110z'/%3E%3Cpath d='M140 210c0-40 30-70 70-70s70 30 70 70-30 70-70 70-70-30-70-70z'/%3E%3Cpath d='M20 60c40-30 90-20 120 10M280 380c50 10 90-10 120-40M-10 300c30 40 80 50 130 30M330 40c40 20 60 60 60 100'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:420px 420px;}
+/* Film grain (ref 2) */
+.grain{position:absolute;inset:0;opacity:0.10;pointer-events:none;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.7'/%3E%3C/svg%3E");}
+/* Halftone dot patch — decorative panel (ref 2 image texture) */
+.halftone{position:absolute;pointer-events:none;opacity:0.16;
+  background-image:radial-gradient(circle,#00D2FF 1.6px,transparent 1.9px);
+  background-size:13px 13px;}
+
+/* ── STARBURSTS (ref 1 lime bursts → BCG orange/cyan) ───────────── */
+.burst{position:absolute;pointer-events:none;}
+.burst svg{display:block;width:100%;height:100%;}
+.burst.b-orange svg path{fill:#FF6B00;}
+.burst.b-cyan svg path{fill:#00D2FF;}
+.burst.b-outline svg path{fill:none;stroke:#FF6B00;stroke-width:5;}
+
+/* ── STICKERS (Higgsfield halftone die-cuts) ────────────────────── */
+.sticker{position:absolute;pointer-events:none;
+  filter:drop-shadow(0 14px 30px rgba(0,0,0,0.5));}
+.sticker img{width:100%;height:auto;display:block;}
+
+/* ── TYPE SYSTEM (ref 2) ────────────────────────────────────────── */
+.mono{font-family:'JetBrains Mono',monospace;}
+.serifit{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;}
+/* Highlight strip: orange bar behind navy text */
+.hl{display:inline-block;background:#FF6B00;color:#0d1830;padding:0 22px 6px;
+  box-decoration-break:clone;-webkit-box-decoration-break:clone;}
+.hl-cyan{display:inline-block;background:#00D2FF;color:#0d1830;padding:0 22px 6px;}
+/* Outline text */
+.outline{color:transparent;-webkit-text-stroke:3px #f2ede3;}
+/* Underline stroke */
+.ustroke{text-decoration:underline;text-decoration-color:#FF6B00;
+  text-decoration-thickness:7px;text-underline-offset:10px;}
+
+/* ── CHROME ─────────────────────────────────────────────────────── */
+.top-row{position:absolute;top:52px;left:64px;right:64px;display:flex;
+  align-items:center;justify-content:space-between;z-index:20;}
+.handle-mono{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:500;
+  color:#8fa5bd;letter-spacing:1px;}
+.tag-chip{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;
+  letter-spacing:3px;color:#0d1830;background:#f2ede3;padding:10px 20px;
+  transform:rotate(2deg);box-shadow:4px 4px 0 #FF6B00;}
+.footer-row{position:absolute;bottom:48px;left:64px;right:64px;display:flex;
+  align-items:center;justify-content:space-between;z-index:20;}
+.sig{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;
+  color:#8fa5bd;letter-spacing:2px;}
+.share-save{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;
+  color:#FF6B00;letter-spacing:1px;}
+.page-num{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;
+  color:#f2ede3;background:rgba(242,237,227,0.10);border:1.5px solid rgba(242,237,227,0.35);
+  padding:8px 18px;border-radius:24px;letter-spacing:2px;}
+/* Vertical swipe pill on right edge (ref 2) */
+.swipe-pill{position:absolute;right:34px;top:50%;z-index:20;
+  transform:translateY(-50%) rotate(90deg);transform-origin:center;
+  font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700;
+  letter-spacing:3px;color:#f2ede3;border:2px solid rgba(242,237,227,0.5);
+  border-radius:30px;padding:10px 26px;white-space:nowrap;}
+
+/* ── ANNOTATION (ref 2 dot-notes) ───────────────────────────────── */
+.note{position:absolute;font-family:'Instrument Serif',serif;font-style:italic;
+  font-size:30px;color:#00D2FF;z-index:20;}
+.note .dot{display:inline-block;width:9px;height:9px;border-radius:50%;
+  background:#00D2FF;margin-right:12px;vertical-align:middle;}
+
+/* ── HOOK SLIDE ─────────────────────────────────────────────────── */
+.hook-stack{position:absolute;left:64px;top:250px;right:100px;z-index:15;}
+.hook-line{font-size:104px;font-weight:800;line-height:1.06;letter-spacing:-3px;
+  text-transform:uppercase;color:#f2ede3;}
+.hook-line + .hook-line{margin-top:10px;}
+.hook-line .serifit{font-size:110px;letter-spacing:0;text-transform:none;color:#00D2FF;}
+.hook-sub{position:absolute;left:64px;bottom:300px;width:560px;z-index:15;
+  font-size:31px;line-height:1.45;font-weight:500;color:#c3d2e2;}
+.hook-sub b{color:#f2ede3;}
+.hook-swipe{position:absolute;left:64px;bottom:150px;z-index:15;display:flex;
+  align-items:center;gap:14px;font-family:'JetBrains Mono',monospace;
+  font-size:23px;font-weight:700;color:#0d1830;background:#FF6B00;
+  padding:16px 28px;transform:rotate(-2deg);box-shadow:5px 5px 0 rgba(0,210,255,0.6);}
+
+/* ── CONTENT SLIDE ──────────────────────────────────────────────── */
+.content-head{position:absolute;left:64px;top:150px;right:120px;z-index:15;}
+.content-headline{font-size:72px;font-weight:800;line-height:1.08;letter-spacing:-2px;
+  text-transform:uppercase;color:#f2ede3;}
+.content-headline .serifit{color:#FF6B00;text-transform:none;font-size:78px;letter-spacing:0;}
+.rows{position:absolute;left:64px;right:80px;top:360px;bottom:160px;z-index:15;
+  display:flex;flex-direction:column;justify-content:space-evenly;}
+.row{display:flex;gap:34px;align-items:flex-start;padding:26px 0;}
+.row + .row{border-top:2px dashed rgba(242,237,227,0.18);}
+.row-num{font-family:'JetBrains Mono',monospace;font-size:56px;font-weight:700;
+  color:#FF6B00;line-height:1;flex-shrink:0;transform:rotate(-4deg);}
+.row:nth-child(2) .row-num{color:#00D2FF;}
+.row-title{font-size:39px;font-weight:800;text-transform:uppercase;color:#f2ede3;
+  letter-spacing:-0.5px;line-height:1.1;margin-bottom:10px;}
+.row-title .u{box-shadow:inset 0 -16px 0 rgba(255,107,0,0.65);}
+.row-body{font-size:28px;line-height:1.45;color:#b6c6d8;font-weight:500;max-width:800px;}
+
+/* ── CTA SLIDE ──────────────────────────────────────────────────── */
+.cta-stack{position:absolute;left:64px;top:230px;right:100px;z-index:15;}
+.cta-line{font-size:92px;font-weight:800;line-height:1.08;letter-spacing:-2.5px;
+  text-transform:uppercase;color:#f2ede3;}
+.cta-line + .cta-line{margin-top:10px;}
+.cta-line .serifit{text-transform:none;font-size:96px;letter-spacing:0;}
+.cta-body{position:absolute;left:64px;top:640px;width:600px;z-index:15;
+  font-size:30px;line-height:1.5;color:#c3d2e2;font-weight:500;}
+.keyword-card{position:absolute;left:64px;bottom:260px;z-index:16;
+  background:#f2ede3;color:#0d1830;padding:34px 42px;transform:rotate(-2deg);
+  box-shadow:8px 8px 0 #FF6B00;max-width:640px;}
+.keyword-card .kc-label{font-family:'JetBrains Mono',monospace;font-size:21px;
+  font-weight:700;letter-spacing:3px;color:#5d7288;margin-bottom:8px;}
+.keyword-card .kc-line{font-size:44px;font-weight:800;letter-spacing:-1px;line-height:1.15;}
+.keyword-card .kc-line .kw{background:#FF6B00;color:#0d1830;padding:0 14px 4px;}
+.follow-pill{position:absolute;left:64px;bottom:150px;z-index:16;
+  font-family:'JetBrains Mono',monospace;font-size:23px;font-weight:700;
+  color:#f2ede3;border:2.5px solid #00D2FF;border-radius:34px;padding:14px 30px;
+  letter-spacing:1px;box-shadow:0 0 26px rgba(0,210,255,0.35);}
+</style>
+</head>
+<body>
+<!-- Reference markup only — the generator builds slides from its own
+     placeholder structures that must match these class names. -->
+</body>
+</html>

@@ -10,8 +10,10 @@ import { postCarouselToInstagram } from "../distributors/instagram.js";
 import { postCarouselToThreads } from "../distributors/threads.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TEMPLATE_PATH = path.resolve(__dirname, "../templates/carousel-template.html");
-const BG_PATH = path.resolve(__dirname, "../assets/dre_square_v3.png");
+// v2 "Collage Editorial" template (2026-07-13) — navy/orange/cyan reverse-engineering
+// of the collage-sticker + brutalist-editorial reference styles. v1 kept for rollback.
+const TEMPLATE_PATH = path.resolve(__dirname, "../templates/carousel-template-v2.html");
+const STICKER_DIR = path.resolve(__dirname, "../assets/stickers");
 const client = new Anthropic();
 
 // Specific topics that generate concrete, save-worthy carousels.
@@ -70,34 +72,33 @@ function escHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
-function getBgDataUrl() {
+// Higgsfield halftone die-cut stickers (assets/stickers/*.png, transparent bg).
+// Two distinct picks per carousel run (hook + CTA). Returns data URIs or "".
+function pickStickers() {
   try {
-    const buf = fs.readFileSync(BG_PATH);
-    return `data:image/png;base64,${buf.toString("base64")}`;
+    const files = fs.readdirSync(STICKER_DIR).filter((f) => f.endsWith(".png"));
+    if (!files.length) return { hook: "", cta: "" };
+    const shuffled = [...files].sort(() => Math.random() - 0.5);
+    const toUri = (f) =>
+      `data:image/png;base64,${fs.readFileSync(path.join(STICKER_DIR, f)).toString("base64")}`;
+    return { hook: toUri(shuffled[0]), cta: toUri(shuffled[1] ?? shuffled[0]) };
   } catch {
-    console.warn(`[Carousel] Background image not found at ${BG_PATH} — using CSS gradient fallback`);
-    return "";
+    return { hook: "", cta: "" };
   }
 }
 
-// Icons SVG for content slides — sized to 80x80 by template CSS
-const ICONS_SVG = [
-  `<svg viewBox="0 0 24 24" fill="none" stroke="#00D2FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
-  `<svg viewBox="0 0 24 24" fill="none" stroke="#00D2FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
-  `<svg viewBox="0 0 24 24" fill="none" stroke="#00D2FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`,
-].join("\n");
+// Irregular 8-point starburst (ref-style) — color via .b-orange/.b-cyan/.b-outline
+const BURST_SVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 2 L59 36 L95 24 L68 52 L92 84 L55 66 L38 98 L36 62 L4 72 L28 46 L8 18 L44 34 Z"/></svg>`;
 
 // Replace all {{PLACEHOLDER}} values in slide HTML.
-// BG_IMAGE_PATH and ICONS_SVG injected raw (they're already safe HTML/data URLs).
+// Raw keys injected unescaped (already-safe data URIs / SVG).
 // All other values are HTML-escaped.
-function fillSlide(slideHtml, vars) {
-  let html = slideHtml
-    .replace(/\{\{BG_IMAGE_PATH\}\}/g, vars.BG_IMAGE_PATH ?? "")
-    .replace(/\{\{ICONS_SVG\}\}/g, vars.ICONS_SVG ?? "");
+const RAW_KEYS = new Set(["BG_IMAGE_PATH", "ICONS_SVG", "STICKER_HOOK", "STICKER_CTA", "BURST"]);
 
+function fillSlide(slideHtml, vars) {
+  let html = slideHtml.replaceAll("{{BURST}}", BURST_SVG);
   for (const [key, val] of Object.entries(vars)) {
-    if (key === "BG_IMAGE_PATH" || key === "ICONS_SVG") continue;
-    html = html.replaceAll(`{{${key}}}`, escHtml(val));
+    html = html.replaceAll(`{{${key}}}`, RAW_KEYS.has(key) ? (val ?? "") : escHtml(val));
   }
   return html;
 }
@@ -123,109 +124,114 @@ ${slideBody}
 // Update both the template file AND these strings if the layout ever changes.
 
 const HOOK_SLIDE = `<div class="slide" id="slide" data-type="hook">
-  <img class="bg-image" src="{{BG_IMAGE_PATH}}" alt="">
-  <div class="bg-gradient"></div>
-  <div class="bg-grid"></div>
+  <div class="topo"></div>
+  <div class="halftone" style="top:120px;right:0;width:380px;height:300px;"></div>
 
-  <svg class="geo" viewBox="0 0 1080 1080">
-    <circle cx="540" cy="540" r="400" fill="none" stroke="#00D2FF" stroke-width="2"/>
-    <circle cx="540" cy="540" r="290" fill="none" stroke="#00D2FF" stroke-width="1"/>
-    <circle cx="540" cy="540" r="180" fill="none" stroke="#00D2FF" stroke-width="1"/>
-    <line x1="140" y1="540" x2="940" y2="540" stroke="#00D2FF" stroke-width="1"/>
-    <line x1="540" y1="140" x2="540" y2="940" stroke="#00D2FF" stroke-width="1"/>
-  </svg>
+  <div class="burst b-orange" style="top:170px;right:88px;width:130px;height:130px;transform:rotate(14deg);">{{BURST}}</div>
+  <div class="burst b-cyan" style="bottom:420px;right:400px;width:64px;height:64px;transform:rotate(-20deg);">{{BURST}}</div>
+  <div class="burst b-outline" style="bottom:130px;left:610px;width:110px;height:110px;transform:rotate(28deg);">{{BURST}}</div>
 
-  <div class="vignette"></div>
-  <div class="bracket btl"></div>
-  <div class="bracket btr"></div>
-  <div class="bracket bbl"></div>
-  <div class="bracket bbr"></div>
-
-  <div class="hook-content">
-    <div class="topic-tag">{{TOPIC_TAG}}</div>
-    <div class="hook-headline">{{HEADLINE_LINE1}}<br>{{HEADLINE_LINE2}}<br><span class="accent">{{HEADLINE_LINE3}}</span></div>
-    <div class="hook-divider"></div>
-    <div class="hook-sub">{{SUBTEXT}}</div>
-    <div class="swipe-cta">Swipe to see all {{SLIDE_COUNT}} &nbsp;&#x203A;</div>
+  <div class="top-row">
+    <div class="handle-mono">@drevonbullock.ai</div>
+    <div class="tag-chip">{{TOPIC_TAG}}</div>
   </div>
 
-  <div class="footer">
-    <div class="signature">D R E &apos; V O N &nbsp; B U L L O C K</div>
-    <div class="share-save">Share &amp; Save &#x2197;</div>
+  <div class="hook-stack">
+    <div class="hook-line">{{HEADLINE_LINE1}}</div>
+    <div class="hook-line"><span class="hl">{{HEADLINE_LINE2}}</span></div>
+    <div class="hook-line"><span class="serifit">{{HEADLINE_LINE3}}</span></div>
   </div>
+
+  <div class="note" style="right:110px;top:760px;max-width:330px;"><span class="dot"></span>{{NOTE}}</div>
+
+  <div class="sticker" style="bottom:210px;right:70px;width:330px;transform:rotate(-7deg);">
+    <img src="{{STICKER_HOOK}}" alt="">
+  </div>
+
+  <div class="hook-sub"><b>What you'll get:</b> {{SUBTEXT}}</div>
+  <div class="hook-swipe">SWIPE &#x2192; ALL {{SLIDE_COUNT}} SLIDES</div>
+
+  <div class="footer-row">
+    <div class="sig">@DrevonBullock &bull; BCG</div>
+    <div class="share-save">SHARE &amp; SAVE &#x2197;</div>
+  </div>
+  <div class="grain"></div>
 </div>`;
 
 const CONTENT_SLIDE = `<div class="slide" id="slide" data-type="content">
-  <img class="bg-image" src="{{BG_IMAGE_PATH}}" alt="">
-  <div class="bg-gradient"></div>
-  <div class="bg-grid"></div>
-  <div class="vignette"></div>
-  <div class="bracket btl"></div>
-  <div class="bracket btr"></div>
-  <div class="bracket bbl"></div>
-  <div class="bracket bbr"></div>
+  <div class="topo"></div>
+  <div class="halftone" style="bottom:0;left:0;width:420px;height:260px;"></div>
 
-  <div class="content-wrap">
-    <div class="slide-tag">{{SLIDE_TAG}}</div>
-    <div class="content-headline">{{HEADLINE}}<br><span class="accent">{{HEADLINE_ACCENT}}</span></div>
-    <div class="content-divider"></div>
-    <div class="icons-row">{{ICONS_SVG}}</div>
-    <div class="cards-list">
-      <div class="card">
-        <div class="card-num">01</div>
-        <div><div class="card-title">{{POINT_1_TITLE}}</div><div class="card-sub">{{POINT_1_BODY}}</div></div>
-      </div>
-      <div class="card">
-        <div class="card-num">02</div>
-        <div><div class="card-title">{{POINT_2_TITLE}}</div><div class="card-sub">{{POINT_2_BODY}}</div></div>
-      </div>
-      <div class="card">
-        <div class="card-num">03</div>
-        <div><div class="card-title">{{POINT_3_TITLE}}</div><div class="card-sub">{{POINT_3_BODY}}</div></div>
-      </div>
+  <div class="burst b-cyan" style="top:118px;right:210px;width:74px;height:74px;transform:rotate(18deg);">{{BURST}}</div>
+  <div class="burst b-outline" style="bottom:96px;right:96px;width:92px;height:92px;transform:rotate(-14deg);">{{BURST}}</div>
+
+  <div class="top-row">
+    <div class="handle-mono">@drevonbullock.ai</div>
+    <div class="tag-chip">{{SLIDE_TAG}}</div>
+  </div>
+
+  <div class="content-head">
+    <div class="content-headline">{{HEADLINE}} <span class="serifit">{{HEADLINE_ACCENT}}</span></div>
+  </div>
+
+  <div class="rows">
+    <div class="row">
+      <div class="row-num">01</div>
+      <div><div class="row-title"><span class="u">{{POINT_1_TITLE}}</span></div><div class="row-body">{{POINT_1_BODY}}</div></div>
+    </div>
+    <div class="row">
+      <div class="row-num">02</div>
+      <div><div class="row-title"><span class="u">{{POINT_2_TITLE}}</span></div><div class="row-body">{{POINT_2_BODY}}</div></div>
+    </div>
+    <div class="row">
+      <div class="row-num">03</div>
+      <div><div class="row-title"><span class="u">{{POINT_3_TITLE}}</span></div><div class="row-body">{{POINT_3_BODY}}</div></div>
     </div>
   </div>
 
-  <div class="footer">
-    <div class="signature">D R E &apos; V O N &nbsp; B U L L O C K</div>
-    <div class="footer-right">
-      <div class="slide-num">{{SLIDE_NUM}}</div>
-      <div class="share-save">Share &amp; Save &#x2197;</div>
-    </div>
+  <div class="footer-row">
+    <div class="sig">@DrevonBullock &bull; BCG</div>
+    <div class="page-num">{{SLIDE_NUM}}</div>
+    <div class="share-save">SHARE &amp; SAVE &#x2197;</div>
   </div>
+  <div class="grain"></div>
 </div>`;
 
 const CTA_SLIDE = `<div class="slide" id="slide" data-type="cta">
-  <img class="bg-image" src="{{BG_IMAGE_PATH}}" alt="">
-  <div class="bg-gradient"></div>
-  <div class="bg-grid"></div>
+  <div class="topo"></div>
+  <div class="halftone" style="top:0;right:0;width:440px;height:280px;"></div>
 
-  <svg class="geo" viewBox="0 0 1080 1080">
-    <circle cx="540" cy="540" r="400" fill="none" stroke="#00D2FF" stroke-width="2"/>
-    <circle cx="540" cy="540" r="270" fill="none" stroke="#00D2FF" stroke-width="1"/>
-    <line x1="140" y1="540" x2="940" y2="540" stroke="#00D2FF" stroke-width="1"/>
-    <line x1="540" y1="140" x2="540" y2="940" stroke="#00D2FF" stroke-width="1"/>
-  </svg>
+  <div class="burst b-orange" style="top:150px;left:620px;width:96px;height:96px;transform:rotate(-16deg);">{{BURST}}</div>
+  <div class="burst b-cyan" style="bottom:480px;right:130px;width:70px;height:70px;transform:rotate(22deg);">{{BURST}}</div>
 
-  <div class="vignette"></div>
-  <div class="bracket btl"></div>
-  <div class="bracket btr"></div>
-  <div class="bracket bbl"></div>
-  <div class="bracket bbr"></div>
-
-  <div class="cta-content">
-    <div class="cta-tag">{{TOPIC_TAG}}</div>
-    <div class="cta-headline">{{CTA_LINE1}}<br>{{CTA_LINE2}}<br><span class="accent">{{CTA_LINE3}}</span></div>
-    <div class="cta-divider"></div>
-    <div class="cta-sub">{{CTA_BODY}}</div>
-    <div class="comment-cta">Comment <span class="keyword">"{{KEYWORD}}"</span> for the free {{RESOURCE}}</div>
-    <div class="follow-btn">Follow @drevonbullock.ai</div>
+  <div class="top-row">
+    <div class="handle-mono">@drevonbullock.ai</div>
+    <div class="tag-chip">{{TOPIC_TAG}}</div>
   </div>
 
-  <div class="footer">
-    <div class="signature">D R E &apos; V O N &nbsp; B U L L O C K</div>
-    <div class="share-save">Share &amp; Save &#x2197;</div>
+  <div class="cta-stack">
+    <div class="cta-line">{{CTA_LINE1}}</div>
+    <div class="cta-line"><span class="hl">{{CTA_LINE2}}</span></div>
+    <div class="cta-line"><span class="serifit" style="color:#00D2FF;">{{CTA_LINE3}}</span></div>
   </div>
+
+  <div class="cta-body">{{CTA_BODY}}</div>
+
+  <div class="sticker" style="top:700px;right:80px;width:290px;transform:rotate(6deg);">
+    <img src="{{STICKER_CTA}}" alt="">
+  </div>
+
+  <div class="keyword-card">
+    <div class="kc-label">FREE: {{RESOURCE}}</div>
+    <div class="kc-line">Comment <span class="kw">&quot;{{KEYWORD}}&quot;</span> and it's yours</div>
+  </div>
+  <div class="follow-pill">FOLLOW &rarr; @drevonbullock.ai</div>
+
+  <div class="footer-row">
+    <div class="sig">@DrevonBullock &bull; BCG</div>
+    <div class="share-save">SHARE &amp; SAVE &#x2197;</div>
+  </div>
+  <div class="grain"></div>
 </div>`;
 
 // ─── CONTENT GENERATION ───────────────────────────────────────────────────────
@@ -248,7 +254,8 @@ Required JSON shape:
   "hook": {
     "headline_line1": "first line of headline — strong verb or bold claim (max 5 words)",
     "headline_line2": "second line — continuation or contrast (max 5 words, NEVER empty)",
-    "headline_line3": "accent payoff line — the punchiest part (max 5 words)",
+    "headline_line3": "accent payoff phrase in lowercase — punchy, conversational (max 4 words)",
+    "note": "handwritten-style aside in lowercase (max 6 words, e.g. 'save this one for later')",
     "subtext": "1 sentence: what they will learn from this carousel (max 18 words)"
   },
   "slides": [
@@ -308,7 +315,7 @@ async function renderSlide(pageHtml, outPath) {
   });
   try {
     const page = await browser.newPage();
-    await page.setViewport({ width: 1080, height: 1080, deviceScaleFactor: 2 });
+    await page.setViewport({ width: 1080, height: 1350, deviceScaleFactor: 2 });
     // networkidle2 allows Google Fonts to load; 20s cap ensures we don't hang
     await page.setContent(pageHtml, { waitUntil: "networkidle2", timeout: 20000 }).catch(() => {});
     const buf = await page.screenshot({ type: "png" });
@@ -337,7 +344,7 @@ export async function renderCarousel(topic) {
   console.log(`[Carousel] Generating content for: "${topic}"`);
   const content = await generateCarouselContent(topic);
   const css = loadCss();
-  const bg = getBgDataUrl();
+  const stickers = pickStickers();
   const totalSlides = 1 + content.slides.length + 1; // hook + 3 content + cta
   const ts = Date.now();
   const tmpDir = path.join(os.tmpdir(), `carousel-${ts}`);
@@ -351,11 +358,12 @@ export async function renderCarousel(topic) {
   console.log(`[Carousel] Rendering slide 1/${totalSlides} — hook`);
   const hookBuf = await renderSlide(
     buildPage(css, fillSlide(HOOK_SLIDE, {
-      BG_IMAGE_PATH:  bg,
+      STICKER_HOOK:   stickers.hook,
       TOPIC_TAG:      content.topic_tag,
       HEADLINE_LINE1: up(content.hook.headline_line1),
       HEADLINE_LINE2: up(content.hook.headline_line2),
-      HEADLINE_LINE3: up(content.hook.headline_line3),
+      HEADLINE_LINE3: content.hook.headline_line3, // serif italic — keep case
+      NOTE:           content.hook.note ?? "save this for later",
       SUBTEXT:        content.hook.subtext,
       SLIDE_COUNT:    String(totalSlides),
     })),
@@ -370,11 +378,9 @@ export async function renderCarousel(topic) {
     console.log(`[Carousel] Rendering slide ${num}/${totalSlides} — content`);
     const buf = await renderSlide(
       buildPage(css, fillSlide(CONTENT_SLIDE, {
-        BG_IMAGE_PATH:   bg,
-        ICONS_SVG:       ICONS_SVG,
         SLIDE_TAG:       s.slide_tag,
         HEADLINE:        up(s.headline),
-        HEADLINE_ACCENT: up(s.headline_accent),
+        HEADLINE_ACCENT: s.headline_accent, // serif italic — keep case
         POINT_1_TITLE:   s.point_1_title,
         POINT_1_BODY:    s.point_1_body,
         POINT_2_TITLE:   s.point_2_title,
@@ -393,11 +399,11 @@ export async function renderCarousel(topic) {
   console.log(`[Carousel] Rendering slide ${ctaNum}/${totalSlides} — cta`);
   const ctaBuf = await renderSlide(
     buildPage(css, fillSlide(CTA_SLIDE, {
-      BG_IMAGE_PATH: bg,
+      STICKER_CTA:   stickers.cta,
       TOPIC_TAG:     content.topic_tag,
       CTA_LINE1:     up(content.cta.cta_line1),
       CTA_LINE2:     up(content.cta.cta_line2),
-      CTA_LINE3:     up(content.cta.cta_line3),
+      CTA_LINE3:     content.cta.cta_line3, // serif italic — keep case
       CTA_BODY:      content.cta.cta_body,
       KEYWORD:       content.cta.keyword,
       RESOURCE:      content.cta.resource,

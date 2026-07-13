@@ -160,6 +160,43 @@ export async function refreshTokens() {
   }
 }
 
+// ─── ANTHROPIC KEY HEALTH ────────────────────────────────────────────────────
+// Every post starts with a Claude call — if the key is dead or out of credits,
+// the WHOLE system is down on every platform. Costs ~1 token per boot.
+
+export async function checkAnthropicCredit() {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error("[Health] ❌❌ ANTHROPIC_API_KEY not set — ALL content generation is DOWN.");
+    return;
+  }
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1,
+        messages: [{ role: "user", content: "ping" }],
+      }),
+    });
+    const body = await res.json();
+    if (body.error) {
+      console.error(
+        `[Health] ❌❌ ANTHROPIC API REJECTED this key — ALL content generation is DOWN ` +
+        `on every platform: ${body.error.message}`
+      );
+    } else {
+      console.log("[Health] ✅ Anthropic API key OK");
+    }
+  } catch (err) {
+    console.warn(`[Health] Anthropic check network error (${err.message}) — will not block startup`);
+  }
+}
+
 // CLI: node modules/token-manager.js [--refresh]
 if (process.argv[1]?.endsWith("token-manager.js")) {
   const run = process.argv.includes("--refresh") ? refreshTokens : initTokens;

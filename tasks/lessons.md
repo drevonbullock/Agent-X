@@ -135,3 +135,5 @@ Agent X always uses the service role key. Railway env var must be named `SUPABAS
 - **Puppeteer ≥22 returns Uint8Array from page.screenshot()** — `.toString("base64")` on it silently produces garbage (broken data URIs). Always `Buffer.from(shot).toString("base64")`.
 - **News renderer would happily screenshot 404 pages.** Added HTTP ≥400 + soft-404 template guards that throw → news-agent falls back to cheatsheet.
 - Higgsfield assets are generated via the MCP connector at build time and committed to the repo (`images/backgrounds/`, `assets/video-backgrounds/`) — zero runtime dependency on Railway.
+- **Anthropic API credits ran out — silently killed ALL platforms at once** (every post starts with a Claude call; LinkedIn was down too despite a valid token). Added `checkAnthropicCredit()` startup health check (1 token/boot, loud ❌ log). Lesson: monitor the dependency EVERY workflow shares, not just per-platform credentials.
+- Carousel v2: serif-italic accent spans must set `text-transform:none` explicitly — parent slide lines are uppercase-transformed.

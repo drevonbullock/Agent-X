@@ -10,7 +10,7 @@ import { runAnalyticsCycle } from "./analytics/index.js";
 import { processReviewQueue } from "./modules/review-queue.js";
 import { mineCompetitors, loadDynamicThemes } from "./modules/competitor-research.js";
 import { checkRepeatEngagers } from "./modules/lead-capture.js";
-import { initTokens, refreshTokens } from "./modules/token-manager.js";
+import { initTokens, refreshTokens, checkAnthropicCredit } from "./modules/token-manager.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
@@ -22,6 +22,9 @@ export function startScheduler() {
 
   // Validate + load Meta tokens (Supabase-stored beats env seed). Logs loudly if dead.
   initTokens().catch((err) => console.warn(`[Scheduler] initTokens failed: ${err.message}`));
+
+  // Anthropic key health — a dead/out-of-credits key kills ALL platforms at once.
+  checkAnthropicCredit().catch((err) => console.warn(`[Scheduler] Anthropic health check failed: ${err.message}`));
 
   // ── TOKEN REFRESH — every 3 days at 3:15am: keep IG/Threads tokens alive ──
   cron.schedule("15 3 */3 * *", async () => {
