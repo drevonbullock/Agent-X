@@ -9,12 +9,11 @@ import "dotenv/config";
 // attract buyers, pure ragebait attracts dunk-farmers.
 // FREE CONTENT = WHAT / WHY / WHEN only. HOW stays paid.
 
-export const RECEIPTS = [
-  "Went from hospital kitchen to 13+ production AI systems, no coding background",
-  "Self-taught by building, not by degree",
-  "Ships real AI film/creative work (AS ABOVE, Rune Fall, Iron Gospel)",
-  "Builds in public — shows broken builds, not just wins",
-];
+// HARD RULE (Dre, 2026-07-13): posts NEVER mention his personal life, job
+// history, backstory, or how many systems he has. Topics argue themselves.
+// RECEIPT vs RAGEBAIT is an internal ratio tag only — receipts are claims
+// grounded in verifiable reality of shipped work, argued WITHOUT autobiography.
+export const RECEIPTS = [];
 
 // tag: RECEIPT = backed by Dre's lived proof. RAGEBAIT = pure fight-starter.
 export const LANES = [
@@ -33,7 +32,7 @@ export const LANES = [
       { claim: "AI already beats most humans at most desk jobs. We're negotiating denial, not capability.", tag: "RECEIPT", bait: "then why does every AI rollout still need human cleanup?" },
       { claim: "'AI will never replace X' just announces which job you're emotionally attached to.", tag: "RAGEBAIT", bait: "some jobs are protected by law, not emotion" },
       { claim: "You don't lose your job to AI. You lose it to the coworker who learned it first.", tag: "RECEIPT", bait: "until the company replaces that coworker too" },
-      { claim: "I went from a hospital kitchen to production AI systems. If I did it from the bottom, no white-collar job is safe.", tag: "RECEIPT", bait: "one person's story isn't a labor market" },
+      { claim: "The people laughing at AI are the exact people it's aimed at.", tag: "RAGEBAIT", bait: "plumbers are laughing too and they're fine" },
     ],
   },
   {
@@ -61,7 +60,8 @@ export const LANES = [
 // Voice mechanics injected into any generator using these topics.
 export const CONTROVERSY_VOICE = `
 CONTROVERSY MECHANICS (non-negotiable):
-- Write like Dre talking, not like a brand posting. Raw, first person, unapologetic. This is HIS opinion stated as fact and he does not care if you like it.
+- Write like a real person talking, not a brand posting. Raw, unapologetic opinion stated as fact by someone who does not care if you like it.
+- NEVER mention the author's personal life, job history, backstory, credentials, or how many systems he has built. No autobiography, no "I went from X to Y", no numbers about his own work. The topic argues itself.
 - Short brutal sentences. Punch, don't explain. Cut every word that sounds professional or polished. If it could survive a corporate comms review, rewrite it.
 - Never "in my opinion", never "I think", never "perhaps". Zero hedging. The second you soften it, the fight dies.
 - Talk AT the reader: "you", "your degree", "your job". Make it personal. Name what they're protecting (ego, comfort, sunk cost, identity).
@@ -119,10 +119,8 @@ DNA to preserve:
 - No hedging, no "in my opinion"
 - Provokes: argue back, pick a side, or tag someone
 
-MY RECEIPTS (only pull from these for the strongest angles):
-${RECEIPTS.map((r) => `- ${r}`).join("\n")}
-
 CONSTRAINTS:
+- NEVER reference the author's personal life, job history, backstory, or counts of his own work — claims must argue themselves
 - Free content = WHAT/WHY/WHEN only, never HOW
 - Flag each new topic as RECEIPT or RAGEBAIT
 - Keep the 2:1 receipt-to-ragebait ratio in the batch

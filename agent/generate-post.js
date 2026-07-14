@@ -195,7 +195,7 @@ export async function generateLinkedInPost(copyStyleId = null) {
     console.log(`[Agent X] Controversy lane: ${t.lane} | [${t.tag}]`);
     topicBlock = `Today's claim (state as settled fact): "${t.claim}"
 Lane: ${t.lane}
-Tag: ${t.tag}${t.tag === "RECEIPT" ? " — anchor it in Dre's real receipts (hospital kitchen to 13+ production AI systems, self-taught, ships real AI film work)." : ""}
+Tag: ${t.tag}
 Dangling counterargument to leave UNANSWERED as the final line's comment bait: "${t.bait}"`;
     voiceExtra = CONTROVERSY_VOICE;
   }
@@ -337,7 +337,7 @@ ${CONTROVERSY_VOICE}
 
 Today's claim (state it as settled fact, this is the spine of the video): "${t.claim}"
 Lane: ${t.lane}
-Tag: ${t.tag}${t.tag === "RECEIPT" ? " — anchor at least one screen in Dre's real receipts (hospital kitchen to 13+ production AI systems, self-taught, ships real AI film work)." : ""}
+Tag: ${t.tag}
 Comment bait to leave dangling in the caption, UNANSWERED: "${t.bait}"
 
 Return valid JSON matching this EXACT schema (screen 1 is always the hook, screens 2-5 argue the claim via WHAT/WHY/WHEN — never HOW):
