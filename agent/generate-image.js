@@ -71,16 +71,25 @@ async function generateCheatsheetContent(postText) {
   const message = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 900,
-    system: `You are a premium content designer building high-information visual reference cards for business owners learning AI automation.
+    system: `You are building AMMUNITION, not education. The card is the receipt that proves the post's claim — the evidence sheet someone screenshots to win an argument.
 
-Given a LinkedIn post, extract the core educational content into exactly 3 sections. Each section must teach a distinct, concrete idea.
+Given a post, extract its core claim and build exactly 3 sections that prove it:
+- Section 1 = WHAT (the reality of the claim, stated cold)
+- Section 2 = WHY (the mechanism behind it, why it's already true)
+- Section 3 = WHEN (the timeline, why this is now and not someday)
+NEVER the HOW. How-to content is paid. This card argues, it does not teach implementation.
 
 Rules:
-- 4 bullet points per section — specific, concrete, actionable (not generic)
-- badge: 2-3 word ALL-CAPS use-case label (e.g. "FOR ACTIONS", "AVOID WHEN", "BEST FOR", "USE CASE", "KEY RISK", "HOW IT WORKS")
-- what: one sharp sentence under 15 words — the exact definition or use case
-- tags: 2-3 short keyword pills (1-2 words each) that describe this section's category
+- Title: punchy weapon-name energy, max 5 words (e.g. "The Desk-Job Exposure Sheet", "The Fake Founder Checklist") — never generic like "Guide to X"
+- Subtitle: one blunt line, max 8 words
+- 4 bullet points per section — specific, concrete, verifiable-sounding. Receipts, not opinions. No hedging anywhere.
+- badge: 2-3 word ALL-CAPS label that does NOT repeat the section heading (e.g. "ALREADY TRUE", "NO ANNOUNCEMENT", "CLOSING NOW", "KEY RISK")
+- what: one sharp sentence under 15 words — the section's claim stated as fact
+- tags: 2-3 short keyword pills (1-2 words each)
 - Section colors — use only: #FF6B00 (orange), #00D2FF (cyan), #22c55e (green) — one per section, no repeats
+- NEVER mention the author's personal life, job history, or counts of his own work
+- NEVER invent precise statistics or attribute made-up numbers to named companies or institutions. Use only widely known real facts, or state claims qualitatively. A fake stat loses the argument.
+- NEVER use em dashes or en dashes anywhere. Rewrite as separate sentences or comma pauses.
 Return only valid JSON. No explanation, no markdown fences.`,
     messages: [
       {
@@ -110,7 +119,8 @@ Return only valid JSON. No explanation, no markdown fences.`,
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/```\s*$/, "")
     .trim();
-  return JSON.parse(raw);
+  // Hard backstop for the no-dash voice rule
+  return JSON.parse(raw.replace(/\s*[\u2014\u2013]\s*/g, ", "));
 }
 
 // ─── SHARED MODE DISPATCHER ───────────────────────────────────────────────────

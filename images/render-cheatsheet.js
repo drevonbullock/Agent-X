@@ -195,8 +195,9 @@ function buildVerticalHtml(content, bgBase64, theme = DEFAULT_THEME) {
     ? `<div class="vbg" style="background-image:url('data:image/png;base64,${bgBase64}')"></div>`
     : "";
 
-  // Title splits: last word becomes the accent word (ref: "GRAPHIC DESIGN")
-  const titleWords = String(content.title || "").split(/\s+/).filter(Boolean);
+  // Title splits: last word becomes the accent word (ref: "GRAPHIC DESIGN").
+  // Leading "The" is dropped — the eyebrow already says "THE ULTIMATE".
+  const titleWords = String(content.title || "").replace(/^the\s+/i, "").split(/\s+/).filter(Boolean);
   const accentWord = titleWords.length > 1 ? titleWords.pop() : "";
   const titleMain  = titleWords.join(" ");
 
