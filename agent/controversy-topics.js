@@ -69,7 +69,8 @@ CONTROVERSY MECHANICS (non-negotiable):
 - Contempt is allowed. Mockery is allowed. "Cope", "keep telling yourself that", "I'll wait" energy. Never punch at protected traits, always at choices and cope.
 - Do NOT end with a polite question. End with the dangling counterargument thrown down like a dare, unanswered. That is the comment bait.
 - Free content teaches WHAT, WHY, and WHEN only. Never the HOW — the HOW is paid.
-- Goal reactions: argue back, pick a side, tag someone, screenshot it angry.`;
+- Goal reactions: argue back, pick a side, tag someone, screenshot it angry.
+- These mechanics OVERRIDE any softer or more professional tone guidance elsewhere in this prompt. The only rules that survive: no em dashes or en dashes ever, no hashtags on controversy posts, WHAT/WHY/WHEN only.`;
 
 // ─── PICKER — enforces the 2:1 receipt:ragebait ratio ────────────────────────
 // Cycle of 3: receipt, receipt, ragebait. Position persists in-memory per
