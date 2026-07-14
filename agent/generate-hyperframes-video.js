@@ -498,23 +498,39 @@ function buildListCountdown(fullScript, screenDurations, paths) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"/>${GSAP_CDN}
 <style>
 ${SHARED_CSS}
+/* ── PAPER-CUT RESKIN (2026-07-13) — torn construction-paper collage ── */
 /* Hook */
 .hook-content{position:relative;z-index:3;flex:1;display:flex;flex-direction:column;
   align-items:center;justify-content:center;padding:120px 80px;}
-.hook-eyebrow{font-size:28px;font-weight:900;letter-spacing:8px;color:${ORANGE};
-  margin-bottom:48px;text-transform:uppercase;}
-.hook-words{text-align:center;line-height:1.1;width:100%;}
-.hw{display:inline-block;margin:0 4px;font-size:110px;font-weight:900;color:#fff;
-  text-shadow:0 0 60px rgba(255,107,0,0.2);opacity:0;}
-.hw-key{color:${ORANGE};text-shadow:0 0 100px rgba(255,107,0,0.9);}
+.hook-eyebrow{font-size:26px;font-weight:900;letter-spacing:7px;color:#0d1830;
+  background:${ORANGE};padding:12px 30px;margin-bottom:52px;text-transform:uppercase;
+  transform:rotate(-2.5deg);border-radius:4% 10% 5% 12%/40% 30% 45% 35%;
+  box-shadow:0 8px 0 rgba(0,0,0,0.35),0 14px 30px rgba(0,0,0,0.4);}
+.hook-words{text-align:center;line-height:1.35;width:100%;}
+.hw{display:inline-block;margin:6px 8px;padding:6px 24px 12px;font-size:96px;font-weight:900;
+  color:#0d1830;background:#f2ede3;opacity:0;
+  border-radius:5% 9% 6% 10%/35% 45% 30% 40%;
+  box-shadow:0 7px 0 rgba(0,0,0,0.3),0 16px 32px rgba(0,0,0,0.45);}
+.hw:nth-child(odd){transform:rotate(-1.6deg);}
+.hw:nth-child(even){transform:rotate(1.3deg);}
+.hw-key{color:#f2ede3;background:${ORANGE};
+  box-shadow:0 7px 0 rgba(0,0,0,0.35),0 18px 40px rgba(255,107,0,0.35);}
 /* Teach */
 .teach-content{position:relative;z-index:3;flex:1;display:flex;flex-direction:column;
-  justify-content:center;padding:120px 80px 80px 100px;}
-.screen-counter{font-size:30px;font-weight:800;color:${ORANGE};letter-spacing:4px;
-  margin-bottom:48px;opacity:0;}
-.teach-heading{font-size:82px;font-weight:900;color:#fff;line-height:1.15;
-  margin-bottom:36px;opacity:0;}
-.teach-body{font-size:48px;color:rgba(255,255,255,0.75);line-height:1.5;opacity:0;}
+  justify-content:center;padding:120px 80px 80px 90px;}
+.screen-counter{font-size:26px;font-weight:900;color:#f2ede3;letter-spacing:4px;
+  background:rgba(13,24,48,0.9);border:3px solid ${ORANGE};width:fit-content;
+  padding:10px 24px;margin-bottom:44px;opacity:0;transform:rotate(-2deg);
+  border-radius:8% 14% 9% 15%/45% 35% 50% 40%;
+  box-shadow:0 6px 0 rgba(0,0,0,0.3),0 12px 24px rgba(0,0,0,0.4);}
+.teach-heading{font-size:74px;font-weight:900;color:#0d1830;line-height:1.22;
+  margin-bottom:40px;opacity:0;background:#f2ede3;padding:34px 42px;
+  border-radius:2.5% 4% 3% 5%/9% 7% 10% 8%;transform:rotate(-0.8deg);
+  box-shadow:0 9px 0 rgba(0,0,0,0.32),0 22px 44px rgba(0,0,0,0.5);}
+.teach-body{font-size:44px;color:#f2ede3;line-height:1.55;opacity:0;font-weight:600;
+  background:rgba(13,24,48,0.88);padding:30px 38px;transform:rotate(0.6deg);
+  border-radius:3% 5% 3.5% 6%/10% 8% 12% 9%;border-left:10px solid ${ORANGE};
+  box-shadow:0 7px 0 rgba(0,0,0,0.3),0 16px 36px rgba(0,0,0,0.45);}
 /* Proof card */
 .proof-card{width:100%;border-radius:16px;overflow:hidden;margin-top:48px;opacity:0;
   border:1px solid rgba(255,255,255,0.12);box-shadow:0 16px 48px rgba(0,0,0,0.7);}

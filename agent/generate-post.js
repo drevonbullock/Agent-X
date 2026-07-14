@@ -5,6 +5,8 @@ import { readBrief } from "../modules/feedback-loop.js";
 
 const client = new Anthropic();
 
+import { pickControversyTopic, CONTROVERSY_VOICE } from "./controversy-topics.js";
+
 const VOICE = `You are Drevon Bullock — an AI automation builder in New York. You build real systems for real businesses. Your audience is founders, agency owners, and small business operators who are curious about AI but not technical.
 
 Voice rules (non-negotiable):
@@ -66,15 +68,13 @@ Final line: a short specific question the reader can actually answer. Not "what 
 
   contrarian: {
     weight: 4,
-    instruction: `FORMAT. Contrarian Take:
+    useControversyEngine: true, // topic comes from agent/controversy-topics.js
+    instruction: `FORMAT. Contrarian Take (controversy engine):
 Do NOT open with "Most people think" or "Everyone says" or "The common belief is." That opener is dead on LinkedIn.
-Instead open with a SHORT declarative statement that contradicts what your audience believes. One sentence. Make it land like a fact, not a debate topic.
-Examples of opening energy (do not copy):
-"Hiring more people before you fix your systems just means more chaos."
-"The businesses beating you right now aren't working harder. They removed the bottleneck you're still living with."
-Then deliver the real insight in 3-4 sentences. No hedging. No "in my experience."
-One sentence that makes them see their own business differently.
-Final line: a short pointed question they can disagree with or answer. Good example: "Is the thing slowing you down a people problem or a process problem?"`,
+Open with the claim you are given, stated as settled fact in one short declarative sentence. Not a debate topic. A fact.
+Then argue it in 3-4 sentences via WHAT, WHY, and WHEN only — never the HOW. No hedging. Never "in my experience" or "in my opinion."
+Attack the group's identity behind the opposing view, not just the idea.
+Final line: leave the dangling counterargument you are given hanging, unanswered, phrased so the reader has to argue back.`,
   },
 
   story: {
@@ -186,9 +186,24 @@ export async function generateLinkedInPost(copyStyleId = null) {
 - Top topics: ${(brief.top_topics ?? []).join(", ") || "none yet"}${(brief.avoid_patterns ?? []).length ? `\n- AVOID these patterns: ${brief.avoid_patterns.join(", ")}` : ""}${brief.weekly_insight ? `\n- Key insight: ${brief.weekly_insight}` : ""}\n`
     : "";
 
+  // Contrarian slots run on the controversy engine: claim stated as fact,
+  // 2:1 receipt:ragebait ratio, dangling counterargument as comment bait.
+  let topicBlock = `Today's topic angle: ${topic}`;
+  let voiceExtra = "";
+  if (FORMATS[format].useControversyEngine) {
+    const t = pickControversyTopic();
+    console.log(`[Agent X] Controversy lane: ${t.lane} | [${t.tag}]`);
+    topicBlock = `Today's claim (state as settled fact): "${t.claim}"
+Lane: ${t.lane}
+Tag: ${t.tag}${t.tag === "RECEIPT" ? " — anchor it in Dre's real receipts (hospital kitchen to 13+ production AI systems, self-taught, ships real AI film work)." : ""}
+Dangling counterargument to leave UNANSWERED as the final line's comment bait: "${t.bait}"`;
+    voiceExtra = CONTROVERSY_VOICE;
+  }
+
   const prompt = `${VOICE}
+${voiceExtra}
 ${briefContext}
-Today's topic angle: ${topic}
+${topicBlock}
 
 ${FORMATS[format].instruction}
 ${copyDirective ? `\nStyle note: ${copyDirective}\n` : ""}
@@ -312,21 +327,27 @@ Rules:
 Return ONLY valid JSON. No explanation, no markdown fences.`;
 
 export async function generateVideoPost() {
-  const topic = TOPICS[Math.floor(Math.random() * TOPICS.length)];
-  console.log(`[Agent X] VIDEO MODE | Topic: ${topic}`);
+  // Videos run on the controversy engine: blunt binary claims, 2:1
+  // receipt:ragebait ratio, dangling counterargument left as comment bait.
+  const t = pickControversyTopic();
+  console.log(`[Agent X] VIDEO MODE | Lane: ${t.lane} | [${t.tag}] ${t.claim}`);
 
   const prompt = `${VIDEO_SYSTEM_PROMPT}
+${CONTROVERSY_VOICE}
 
-Today's topic: ${topic}
+Today's claim (state it as settled fact, this is the spine of the video): "${t.claim}"
+Lane: ${t.lane}
+Tag: ${t.tag}${t.tag === "RECEIPT" ? " — anchor at least one screen in Dre's real receipts (hospital kitchen to 13+ production AI systems, self-taught, ships real AI film work)." : ""}
+Comment bait to leave dangling in the caption, UNANSWERED: "${t.bait}"
 
-Return valid JSON matching this EXACT schema (screen 1 is always the hook, screens 2-5 teach):
+Return valid JSON matching this EXACT schema (screen 1 is always the hook, screens 2-5 argue the claim via WHAT/WHY/WHEN — never HOW):
 {
-  "caption": "1-2 sentence LinkedIn hook. Different from screen 1.",
+  "caption": "2-3 sentences. Restate the claim as fact, then end with the dangling counterargument phrased so people have to argue back. No question marks softening it into a poll.",
   "videoScript": [
-    { "screen": 1, "heading": "Curiosity gap hook, 8 words max", "body": "" },
-    { "screen": 2, "heading": "First teaching point", "body": "1-2 sentence explanation." },
-    { "screen": 3, "heading": "Second teaching point", "body": "1-2 sentence explanation." },
-    { "screen": 4, "heading": "Third teaching point", "body": "1-2 sentence explanation." }
+    { "screen": 1, "heading": "The claim as a punch, 8 words max", "body": "" },
+    { "screen": 2, "heading": "First argument", "body": "1-2 sentence explanation. WHAT or WHY, never HOW." },
+    { "screen": 3, "heading": "Second argument", "body": "1-2 sentence explanation." },
+    { "screen": 4, "heading": "The receipt or the gut punch", "body": "1-2 sentence close that picks the fight." }
   ],
   "videoStyle": "auto"
 }`;

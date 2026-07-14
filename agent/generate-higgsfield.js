@@ -11,7 +11,8 @@ function buildVideoPrompt(videoScript, postText) {
     .map((s) => s.heading ?? s.body ?? (s.points ?? [])[0] ?? "")
     .filter(Boolean)
     .join(". ");
-  return `Cinematic vertical business video. ${hook}. ${points}. Dark modern aesthetic, professional typography, sharp motion graphics. 9:16.`;
+  // Paper-cut explainer style (Dre, 2026-07-13): handcrafted stop-motion collage
+  return `Paper cutout stop-motion explainer video, vertical 9:16. Layered construction-paper collage world in deep navy, cream, and orange with cyan accents: torn paper edges, visible paper tabs and shadows, handcrafted diorama depth, subtle stop-motion jitter. Scene illustrates: ${hook}. ${points}. Craft aesthetic like a paper theater, warm soft lighting, no text, no logos.`;
 }
 
 async function downloadToFile(url, destPath) {
