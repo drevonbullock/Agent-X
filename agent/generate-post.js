@@ -262,14 +262,39 @@ const THREADS_TOPICS = [
 ];
 
 export async function generateThreadsPost() {
-  const format = THREADS_FORMATS[Math.floor(Math.random() * THREADS_FORMATS.length)];
-  const topic = THREADS_TOPICS[Math.floor(Math.random() * THREADS_TOPICS.length)];
-  console.log(`[Threads] Generating post | Topic: ${topic}`);
-
   const brief = readBrief();
   const briefContext = brief && (brief.avoid_patterns ?? []).length
     ? `\nAVOID these patterns that flopped last week: ${brief.avoid_patterns.join(", ")}\n`
     : "";
+
+  // ~40% of Threads text posts run the controversy engine — Threads ranks on
+  // reply velocity, and one-take grenades are its native format. The rest stay
+  // in the educational voice so the profile isn't wall-to-wall fights.
+  if (Math.random() < 0.4) {
+    const t = pickControversyTopic();
+    console.log(`[Threads] Controversy post | Lane: ${t.lane} | [${t.tag}]`);
+    const message = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 256,
+      messages: [{
+        role: "user",
+        content: `${THREADS_VOICE}
+${CONTROVERSY_VOICE}
+${briefContext}
+Claim to state as settled fact: "${t.claim}"
+Dangling counterargument to leave UNANSWERED at the end: "${t.bait}"
+
+Write ONE Threads post, under 400 characters, single take, no line breaks needed. One claim, one punch, end on the bait like a dare. No hashtags, no emojis.
+
+Write only the post text. No quotes around it.`,
+      }],
+    });
+    return message.content[0].text.trim().replace(/\s*[\u2014\u2013]\s*/g, ", ");
+  }
+
+  const format = THREADS_FORMATS[Math.floor(Math.random() * THREADS_FORMATS.length)];
+  const topic = THREADS_TOPICS[Math.floor(Math.random() * THREADS_TOPICS.length)];
+  console.log(`[Threads] Generating post | Topic: ${topic}`);
 
   const message = await client.messages.create({
     model: "claude-sonnet-4-6",
