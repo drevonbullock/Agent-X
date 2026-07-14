@@ -92,9 +92,9 @@ export async function generateVideo(postText, videoScript, videoStyle) {
   // ── PATH C fallback — Hyperframes only ──────────────────────────────────
   console.log(`[Agent X] PATH C — Hyperframes motion graphics`);
 
-  const resolvedStyle = videoStyle === "auto" || !videoStyle
-    ? await selectVideoStyle(videoScript)
-    : videoStyle;
+  // Paper-cut reskin currently exists only on list_countdown — pin it until
+  // the other styles get the treatment (auto-selection re-enabled then).
+  const resolvedStyle = "list_countdown";
 
   console.log(`[Agent X] Format: ${resolvedStyle}`);
   console.log(`[Agent X] Rendering with Hyperframes...`);
