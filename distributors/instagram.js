@@ -143,22 +143,29 @@ export async function postCarouselToInstagram(imageUrls, caption) {
   if (!token) throw new Error("INSTAGRAM_ACCESS_TOKEN not set in .env");
   const businessId = getBusinessId();
 
-  // Step 1: Create a child container for each image
+  // Step 1: Create a child container per item.
+  // Items are image URL strings (back-compat) or { type: "video"|"image", url }.
   const childIds = [];
-  for (const imageUrl of imageUrls) {
+  for (const item of imageUrls) {
+    const isVideo = typeof item === "object" && item.type === "video";
+    const url = typeof item === "string" ? item : item.url;
     const res = await fetch(`${API_BASE}/${businessId}/media`, {
       method: "POST",
       headers: igHeaders(),
-      body: JSON.stringify({ image_url: imageUrl, is_carousel_item: true }),
+      body: JSON.stringify(
+        isVideo
+          ? { media_type: "VIDEO", video_url: url, is_carousel_item: true }
+          : { image_url: url, is_carousel_item: true }
+      ),
     });
     if (!res.ok) {
       const body = await res.text();
       throw new Error(`Instagram carousel child failed (${res.status}): ${body}`);
     }
     const { id } = await res.json();
-    await waitForContainer(id);
+    await waitForContainer(id, isVideo ? 40 : 10); // video children transcode slowly
     childIds.push(id);
-    console.log(`[Instagram] Carousel child ready: ${id}`);
+    console.log(`[Instagram] Carousel child ready: ${id}${isVideo ? " (video)" : ""}`);
   }
 
   // Step 2: Create the carousel container

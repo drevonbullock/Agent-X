@@ -1,5 +1,6 @@
 import "dotenv/config";
 import Anthropic from "@anthropic-ai/sdk";
+import { execSync } from "child_process";
 import puppeteer from "puppeteer";
 import fs from "fs";
 import os from "os";
@@ -87,13 +88,21 @@ function pickStickers() {
   }
 }
 
+// Headline lines auto-shrink with length so they can never wrap into chaos.
+// Returns an inline font-size style for a hook/CTA line.
+function fitFont(text, base = 104) {
+  const len = String(text ?? "").length;
+  const px = len <= 11 ? base : len <= 15 ? Math.round(base * 0.84) : len <= 19 ? Math.round(base * 0.72) : Math.round(base * 0.6);
+  return `font-size:${px}px;`;
+}
+
 // Irregular 8-point starburst (ref-style) — color via .b-orange/.b-cyan/.b-outline
 const BURST_SVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 2 L59 36 L95 24 L68 52 L92 84 L55 66 L38 98 L36 62 L4 72 L28 46 L8 18 L44 34 Z"/></svg>`;
 
 // Replace all {{PLACEHOLDER}} values in slide HTML.
 // Raw keys injected unescaped (already-safe data URIs / SVG).
 // All other values are HTML-escaped.
-const RAW_KEYS = new Set(["BG_IMAGE_PATH", "ICONS_SVG", "STICKER_HOOK", "STICKER_CTA", "BURST"]);
+const RAW_KEYS = new Set(["BG_IMAGE_PATH", "ICONS_SVG", "STICKER_HOOK", "STICKER_CTA", "BURST", "LINE1_SIZE", "LINE2_SIZE", "LINE3_SIZE"]);
 
 function fillSlide(slideHtml, vars) {
   let html = slideHtml.replaceAll("{{BURST}}", BURST_SVG);
@@ -136,20 +145,21 @@ const HOOK_SLIDE = `<div class="slide" id="slide" data-type="hook">
     <div class="tag-chip">{{TOPIC_TAG}}</div>
   </div>
 
-  <div class="hook-stack">
-    <div class="hook-line">{{HEADLINE_LINE1}}</div>
-    <div class="hook-line"><span class="hl">{{HEADLINE_LINE2}}</span></div>
-    <div class="hook-line"><span class="serifit">{{HEADLINE_LINE3}}</span></div>
-  </div>
-
-  <div class="note" style="right:110px;top:760px;max-width:330px;"><span class="dot"></span>{{NOTE}}</div>
+  <div class="note" style="right:110px;top:730px;max-width:330px;"><span class="dot"></span>{{NOTE}}</div>
 
   <div class="sticker" style="bottom:210px;right:70px;width:330px;transform:rotate(-7deg);">
     <img src="{{STICKER_HOOK}}" alt="">
   </div>
 
-  <div class="hook-sub"><b>What you'll get:</b> {{SUBTEXT}}</div>
-  <div class="hook-swipe">SWIPE &#x2192; ALL {{SLIDE_COUNT}} SLIDES</div>
+  <div class="hook-flow">
+    <div class="hook-stack">
+      <div class="hook-line" style="{{LINE1_SIZE}}">{{HEADLINE_LINE1}}</div>
+      <div class="hook-line" style="{{LINE2_SIZE}}"><span class="hl">{{HEADLINE_LINE2}}</span></div>
+      <div class="hook-line" style="{{LINE3_SIZE}}"><span class="serifit">{{HEADLINE_LINE3}}</span></div>
+    </div>
+    <div class="hook-sub"><b>What you'll get:</b> {{SUBTEXT}}</div>
+    <div class="hook-swipe">SWIPE &#x2192; ALL {{SLIDE_COUNT}} SLIDES</div>
+  </div>
 
   <div class="footer-row">
     <div class="sig">@DrevonBullock &bull; BCG</div>
@@ -209,23 +219,23 @@ const CTA_SLIDE = `<div class="slide" id="slide" data-type="cta">
     <div class="tag-chip">{{TOPIC_TAG}}</div>
   </div>
 
-  <div class="cta-stack">
-    <div class="cta-line">{{CTA_LINE1}}</div>
-    <div class="cta-line"><span class="hl">{{CTA_LINE2}}</span></div>
-    <div class="cta-line"><span class="serifit" style="color:#00D2FF;">{{CTA_LINE3}}</span></div>
-  </div>
-
-  <div class="cta-body">{{CTA_BODY}}</div>
-
-  <div class="sticker" style="top:700px;right:80px;width:290px;transform:rotate(6deg);">
+  <div class="sticker" style="top:640px;right:64px;width:270px;transform:rotate(6deg);">
     <img src="{{STICKER_CTA}}" alt="">
   </div>
 
-  <div class="keyword-card">
-    <div class="kc-label">FREE: {{RESOURCE}}</div>
-    <div class="kc-line">Comment <span class="kw">&quot;{{KEYWORD}}&quot;</span> and it's yours</div>
+  <div class="cta-flow">
+    <div class="cta-stack">
+      <div class="cta-line" style="{{LINE1_SIZE}}">{{CTA_LINE1}}</div>
+      <div class="cta-line" style="{{LINE2_SIZE}}"><span class="hl">{{CTA_LINE2}}</span></div>
+      <div class="cta-line" style="{{LINE3_SIZE}}"><span class="serifit" style="color:#00D2FF;">{{CTA_LINE3}}</span></div>
+    </div>
+    <div class="cta-body">{{CTA_BODY}}</div>
+    <div class="keyword-card">
+      <div class="kc-label">FREE: {{RESOURCE}}</div>
+      <div class="kc-line">Comment <span class="kw">&quot;{{KEYWORD}}&quot;</span> and it's yours</div>
+    </div>
+    <div class="follow-pill">FOLLOW &rarr; @drevonbullock.ai</div>
   </div>
-  <div class="follow-pill">FOLLOW &rarr; @drevonbullock.ai</div>
 
   <div class="footer-row">
     <div class="sig">@DrevonBullock &bull; BCG</div>
@@ -233,6 +243,72 @@ const CTA_SLIDE = `<div class="slide" id="slide" data-type="cta">
   </div>
   <div class="grain"></div>
 </div>`;
+
+// ─── ANIMATED VIDEO COVER (slide 1) ──────────────────────────────────────────
+// Renders the hook slide as a 7s Hyperframes MP4 (1080×1350): title lines punch
+// in, the orange starburst rotates, the sticker pops and wobbles, the swipe chip
+// pulses. IG/Threads get { type: "video", url } as the first carousel child.
+// Any failure falls back to the static hook image.
+
+const GSAP_CDN = `<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>`;
+const COVER_DUR = 7;
+
+async function renderHookCoverVideo(css, hookBody, ts) {
+  const projectSlug = `carousel-cover-${ts}`;
+  const projectDir = path.resolve(`video-projects/${projectSlug}`);
+  const outputPath = path.resolve(`generated_imgs/${projectSlug}.mp4`);
+  fs.mkdirSync(path.join(projectDir, "renders"), { recursive: true });
+  fs.mkdirSync("generated_imgs", { recursive: true });
+
+  fs.writeFileSync(path.join(projectDir, "hyperframes.json"), JSON.stringify({
+    "$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
+    "registry": "https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry",
+    "paths": { "blocks": "compositions", "components": "compositions/components", "assets": "assets" },
+  }, null, 2));
+  fs.writeFileSync(path.join(projectDir, "meta.json"), JSON.stringify({
+    id: projectSlug, name: projectSlug, createdAt: new Date().toISOString(),
+  }, null, 2));
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>${GSAP_CDN}
+<style>
+${css}
+html,body{width:1080px;height:1350px;overflow:hidden;background:#0d1830;}
+</style></head><body>
+<div id="composition" class="clip" data-composition-id="carousel-cover"
+  data-start="0" data-width="1080" data-height="1350" data-duration="${COVER_DUR}" data-track-index="0">
+${hookBody}
+</div>
+<script>(() => {
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo('.tag-chip',{scale:0,rotation:-10},{scale:1,rotation:2,duration:0.45,ease:'back.out(2)'},0.1);
+  tl.fromTo('.hook-line',{y:70,opacity:0},{y:0,opacity:1,duration:0.55,stagger:0.2,ease:'back.out(1.5)'},0.25);
+  tl.fromTo('.hook-sub',{opacity:0,y:20},{opacity:1,y:0,duration:0.5,ease:'power2.out'},1.1);
+  tl.fromTo('.note',{opacity:0},{opacity:1,duration:0.5,ease:'power2.out'},1.5);
+  tl.fromTo('.sticker',{scale:0,rotation:-30},{scale:1,rotation:-7,duration:0.6,ease:'back.out(1.6)'},0.9);
+  tl.to('.sticker',{rotation:-2,duration:0.9,yoyo:true,repeat:5,ease:'sine.inOut'},1.6);
+  tl.to('.burst.b-orange',{rotation:'+=360',duration:${COVER_DUR - 0.5},ease:'none'},0.5);
+  tl.to('.burst.b-cyan',{rotation:'-=200',duration:${COVER_DUR - 1},ease:'none'},1);
+  tl.fromTo('.hook-swipe',{opacity:0,x:-30},{opacity:1,x:0,duration:0.45,ease:'back.out(1.6)'},1.4);
+  tl.to('.hook-swipe',{scale:1.05,duration:0.55,yoyo:true,repeat:8,ease:'sine.inOut'},1.9);
+  tl.to({},{duration:${COVER_DUR}},0);
+  window.__timelines = window.__timelines || {};
+  window.__timelines['carousel-cover'] = tl;
+})();</script></body></html>`;
+
+  fs.writeFileSync(path.join(projectDir, "index.html"), html, "utf8");
+  execSync(`npx hyperframes render "${projectDir}" --output "${outputPath}" --quality standard`,
+    { cwd: projectDir, stdio: "pipe", timeout: 8 * 60 * 1000 });
+
+  const buf = fs.readFileSync(outputPath);
+  const storagePath = `carousels/${ts}/cover.mp4`;
+  const { error } = await supabase.storage
+    .from("agent-x-videos")
+    .upload(storagePath, buf, { contentType: "video/mp4", upsert: true });
+  if (error) throw new Error(`Cover video upload failed: ${error.message}`);
+  const { data } = supabase.storage.from("agent-x-videos").getPublicUrl(storagePath);
+  console.log(`[Carousel] Video cover ready (${(buf.length / 1024 / 1024).toFixed(1)} MB): ${data.publicUrl}`);
+  return data.publicUrl;
+}
 
 // ─── CONTENT GENERATION ───────────────────────────────────────────────────────
 
@@ -354,22 +430,37 @@ export async function renderCarousel(topic) {
 
   const up = (s) => String(s ?? "").toUpperCase();
 
-  // Hook
+  // Hook — animated video cover first (Jens-style), static image fallback
   console.log(`[Carousel] Rendering slide 1/${totalSlides} — hook`);
-  const hookBuf = await renderSlide(
-    buildPage(css, fillSlide(HOOK_SLIDE, {
-      STICKER_HOOK:   stickers.hook,
-      TOPIC_TAG:      content.topic_tag,
-      HEADLINE_LINE1: up(content.hook.headline_line1),
-      HEADLINE_LINE2: up(content.hook.headline_line2),
-      HEADLINE_LINE3: content.hook.headline_line3, // serif italic — keep case
-      NOTE:           content.hook.note ?? "save this for later",
-      SUBTEXT:        content.hook.subtext,
-      SLIDE_COUNT:    String(totalSlides),
-    })),
-    path.join(tmpDir, "slide-01.png")
-  );
-  imageUrls.push(await uploadSlide(hookBuf, `carousels/${ts}/slide-01.png`));
+  const hookBody = fillSlide(HOOK_SLIDE, {
+    STICKER_HOOK:   stickers.hook,
+    TOPIC_TAG:      content.topic_tag,
+    LINE1_SIZE:     fitFont(content.hook.headline_line1),
+    LINE2_SIZE:     fitFont(content.hook.headline_line2),
+    LINE3_SIZE:     fitFont(content.hook.headline_line3, 110),
+    HEADLINE_LINE1: up(content.hook.headline_line1),
+    HEADLINE_LINE2: up(content.hook.headline_line2),
+    HEADLINE_LINE3: content.hook.headline_line3, // serif italic — keep case
+    NOTE:           content.hook.note ?? "save this for later",
+    SUBTEXT:        content.hook.subtext,
+    SLIDE_COUNT:    String(totalSlides),
+  });
+
+  let coverDone = false;
+  if (process.env.CAROUSEL_VIDEO_COVER !== "false") {
+    try {
+      const coverUrl = await renderHookCoverVideo(css, hookBody, ts);
+      imageUrls.push({ type: "video", url: coverUrl });
+      coverDone = true;
+    } catch (err) {
+      console.warn(`[Carousel] Video cover failed (${String(err.message).slice(0, 120)}) — using static hook image`);
+    }
+  }
+
+  if (!coverDone) {
+    const hookBuf = await renderSlide(buildPage(css, hookBody), path.join(tmpDir, "slide-01.png"));
+    imageUrls.push(await uploadSlide(hookBuf, `carousels/${ts}/slide-01.png`));
+  }
 
   // Content slides
   for (let i = 0; i < content.slides.length; i++) {
@@ -401,6 +492,9 @@ export async function renderCarousel(topic) {
     buildPage(css, fillSlide(CTA_SLIDE, {
       STICKER_CTA:   stickers.cta,
       TOPIC_TAG:     content.topic_tag,
+      LINE1_SIZE:    fitFont(content.cta.cta_line1, 92),
+      LINE2_SIZE:    fitFont(content.cta.cta_line2, 92),
+      LINE3_SIZE:    fitFont(content.cta.cta_line3, 96),
       CTA_LINE1:     up(content.cta.cta_line1),
       CTA_LINE2:     up(content.cta.cta_line2),
       CTA_LINE3:     content.cta.cta_line3, // serif italic — keep case

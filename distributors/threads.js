@@ -122,20 +122,23 @@ export async function postCarouselToThreads(imageUrls, caption) {
   const { token, userId } = getCredentials();
   const trimmed = caption.slice(0, MAX_TEXT_CHARS);
 
-  // Step 1: Create a child container for each image
+  // Step 1: Create a child container per item.
+  // Items are image URL strings (back-compat) or { type: "video"|"image", url }.
   const childIds = [];
-  for (const imageUrl of imageUrls) {
-    const id = await createContainer(userId, token, {
-      media_type: "IMAGE",
-      image_url: imageUrl,
-      is_carousel_item: "true",
-    });
+  let hasVideo = false;
+  for (const item of imageUrls) {
+    const isVideo = typeof item === "object" && item.type === "video";
+    const url = typeof item === "string" ? item : item.url;
+    const id = await createContainer(userId, token, isVideo
+      ? { media_type: "VIDEO", video_url: url, is_carousel_item: "true" }
+      : { media_type: "IMAGE", image_url: url, is_carousel_item: "true" });
+    if (isVideo) { hasVideo = true; await waitForProcessing(id, token); }
     childIds.push(id);
-    console.log(`[Threads] Carousel child created: ${id}`);
+    console.log(`[Threads] Carousel child created: ${id}${isVideo ? " (video)" : ""}`);
   }
 
   // Step 2: Wait for child containers to be ready before referencing them
-  await new Promise((r) => setTimeout(r, 5000));
+  await new Promise((r) => setTimeout(r, hasVideo ? 10000 : 5000));
 
   // Step 3: Create carousel container
   const containerId = await createContainer(userId, token, {
