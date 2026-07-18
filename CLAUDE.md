@@ -141,7 +141,7 @@ test-*.js  run-reel.js   Ad-hoc manual test entry points (not part of the schedu
 
 ## Platforms & Schedule (all EST)
 - **LinkedIn** — 4x/day: 8am image, 12pm news image, 4pm text, 8pm image. Single images only, no carousels, no video.
-- **Instagram** — 10am news image. 3pm carousel path exists in code (`runInstagram`) but isn't currently scheduled.
+- **Instagram** — 5x/day: 10am news card, 12pm/2pm/6pm carousels (animated video cover + image slides), 8pm news card.
 - **Threads** — 4x/day at :30 offsets. Text by default; carousel every 3rd post.
 - **Video — one daily cadence for the whole system.** `runVideo()` (7pm cron) is the ONLY place video renders. It builds one clip, then `enqueueVideo()` parks it in `review_queue` (pending). On approval it cross-posts to **all enabled platforms** (LinkedIn, Instagram, Threads) plus TikTok/YouTube Shorts where tokens are set — `videoTargets()` in `index.js`. Images and written posts auto-publish; video never does.
 - **Background loops**: variation queue (30m), Threads reply polling (15m), review-queue publish (10m), variation engine (6h), hook tester (6h :30), analytics sync+learn+A/B+adapt (6h :45), weekly feedback (Sun midnight), competitor mining (Sun 1am), YouTube cutter (11am, if `YOUTUBE_CHANNEL_ID`).

@@ -68,7 +68,7 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] LinkedIn 8pm failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  // ── INSTAGRAM — 3x/day: 10am news, 2pm carousel, 7pm carousel ───────────
+  // ── INSTAGRAM — 5x/day: 10am news, 12pm/2pm/6pm carousels, 8pm news ─────
   cron.schedule("0 10 * * *", async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 10am skipped`); return; }
     console.log(`[${new Date().toISOString()}] Instagram: 10:00 AM (news image)`);
@@ -84,11 +84,25 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] Threads 10:30am news failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
+  cron.schedule("0 12 * * *", async () => {
+    if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 12pm skipped`); return; }
+    console.log(`[${new Date().toISOString()}] Instagram: 12:00 PM (carousel)`);
+    try { await runInstagram(); }
+    catch (err) { console.error(`[Scheduler] Instagram 12pm failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
   cron.schedule("0 14 * * *", async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 2pm skipped`); return; }
     console.log(`[${new Date().toISOString()}] Instagram: 2:00 PM (carousel)`);
     try { await runInstagram(); }
     catch (err) { console.error(`[Scheduler] Instagram 2pm failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  cron.schedule("0 20 * * *", async () => {
+    if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 8pm skipped`); return; }
+    console.log(`[${new Date().toISOString()}] Instagram: 8:00 PM (news image)`);
+    try { await postInstagramNewsImage(); }
+    catch (err) { console.error(`[Scheduler] Instagram 8pm failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   cron.schedule("0 18 * * *", async () => {
@@ -234,7 +248,7 @@ export function startScheduler() {
   console.log("Scheduler active — all times EST:");
   console.log(`  BRAND_PLATFORMS: ${process.env.BRAND_PLATFORMS ?? "(not set — defaulting to linkedin only)"}`);
   console.log("  LinkedIn  : 8:00am (news), 11:00am (cheatsheet), 2:00pm (text), 5:00pm (news), 8:00pm (cheatsheet)");
-  console.log("  Instagram : 10:00am (news), 2:00pm (carousel), 6:00pm (carousel)");
+  console.log("  Instagram : 10:00am (news), 12:00pm/2:00pm/6:00pm (carousels), 8:00pm (news)");
   console.log("  Threads   : 8:30am, 10:30am (news image), 12:30pm, 4:30pm, 8:30pm (text | carousel every 3rd)");
   console.log("  Video     : 9:00pm daily — one render, all platforms, held for review");
   console.log("  Leads     : every hour (repeat engager detection → Telegram + GHL)");

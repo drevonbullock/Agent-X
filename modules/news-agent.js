@@ -289,7 +289,7 @@ export async function postLinkedInNewsImage() {
 export async function postInstagramNewsImage() {
   console.log(`[NewsAgent] Instagram news image slot...`);
   if (!process.env.INSTAGRAM_ACCESS_TOKEN) return;
-  if (!(await canPostScheduled("instagram", 3))) return;
+  if (!(await canPostScheduled("instagram", 5))) return;
 
   let articles;
   try { articles = await fetchLatestNews(); }
