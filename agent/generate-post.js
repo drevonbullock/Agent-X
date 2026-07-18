@@ -370,9 +370,9 @@ Return valid JSON matching this EXACT schema (screen 1 is always the hook, scree
   "caption": "2-3 sentences. Restate the claim as fact, then end with the dangling counterargument phrased so people have to argue back. No question marks softening it into a poll.",
   "videoScript": [
     { "screen": 1, "heading": "The claim as a punch, 8 words max", "body": "" },
-    { "screen": 2, "heading": "First argument", "body": "1-2 sentence explanation. WHAT or WHY, never HOW." },
-    { "screen": 3, "heading": "Second argument", "body": "1-2 sentence explanation." },
-    { "screen": 4, "heading": "The receipt or the gut punch", "body": "1-2 sentence close that picks the fight." }
+    { "screen": 2, "heading": "First argument", "body": "ONE punchy sentence, 18 words max. WHAT or WHY, never HOW." },
+    { "screen": 3, "heading": "Second argument", "body": "ONE punchy sentence, 18 words max." },
+    { "screen": 4, "heading": "The receipt or the gut punch", "body": "ONE sentence close that picks the fight, 18 words max." }
   ],
   "videoStyle": "auto"
 }`;
