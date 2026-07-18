@@ -11,6 +11,7 @@ import { processReviewQueue } from "./modules/review-queue.js";
 import { mineCompetitors, loadDynamicThemes } from "./modules/competitor-research.js";
 import { checkRepeatEngagers } from "./modules/lead-capture.js";
 import { initTokens, refreshTokens, checkAnthropicCredit } from "./modules/token-manager.js";
+import { isHiggsfieldCliAvailable } from "./agent/generate-higgsfield.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
@@ -115,6 +116,13 @@ export function startScheduler() {
   // ── VIDEO — 1x/day at 9pm: one render, fanned out to all platforms (held for review) ──
   cron.schedule("0 21 * * *", async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — daily video skipped`); return; }
+    // Dre rejected the card-style Hyperframes look (2026-07-18). Videos only
+    // render via the scene-based paper-cut pipeline, which needs the
+    // authenticated higgsfield CLI. Set VIDEO_ALLOW_FALLBACK=true to override.
+    if (!isHiggsfieldCliAvailable() && process.env.VIDEO_ALLOW_FALLBACK !== "true") {
+      console.log(`[Scheduler] Video skipped — higgsfield CLI not authenticated on this host (paper-cut pipeline required).`);
+      return;
+    }
     console.log(`[${new Date().toISOString()}] Video: 9:00 PM (all platforms, held for review)`);
     try { await runVideo(); }
     catch (err) { console.error(`[Scheduler] Daily video failed: ${err.message}`); }
