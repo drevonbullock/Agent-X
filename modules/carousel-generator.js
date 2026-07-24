@@ -251,33 +251,26 @@ const CTA_SLIDE = `<div class="slide" id="slide" data-type="cta">
 // Any failure falls back to the static hook image.
 
 const GSAP_CDN = `<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>`;
-const COVER_DUR = 7;
+const COVER_DUR = 6;
+const COVER_FPS = 24;
+const FFMPEG = fs.existsSync("/opt/homebrew/bin/ffmpeg") ? "/opt/homebrew/bin/ffmpeg" : "/usr/bin/ffmpeg";
 
+// Animated hook cover, rendered with Puppeteer frame-capture + ffmpeg — the
+// exact stack that already works on Railway (the image slides use Puppeteer,
+// ffmpeg is installed via nixpacks). No Hyperframes CLI dependency, which was
+// silently failing on Railway and dropping every carousel to a static cover.
 async function renderHookCoverVideo(css, hookBody, ts) {
   const projectSlug = `carousel-cover-${ts}`;
-  const projectDir = path.resolve(`video-projects/${projectSlug}`);
-  const outputPath = path.resolve(`generated_imgs/${projectSlug}.mp4`);
-  fs.mkdirSync(path.join(projectDir, "renders"), { recursive: true });
-  fs.mkdirSync("generated_imgs", { recursive: true });
-
-  fs.writeFileSync(path.join(projectDir, "hyperframes.json"), JSON.stringify({
-    "$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
-    "registry": "https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry",
-    "paths": { "blocks": "compositions", "components": "compositions/components", "assets": "assets" },
-  }, null, 2));
-  fs.writeFileSync(path.join(projectDir, "meta.json"), JSON.stringify({
-    id: projectSlug, name: projectSlug, createdAt: new Date().toISOString(),
-  }, null, 2));
+  const framesDir = path.join(os.tmpdir(), projectSlug);
+  const outputPath = path.join(os.tmpdir(), `${projectSlug}.mp4`);
+  fs.mkdirSync(framesDir, { recursive: true });
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>${GSAP_CDN}
 <style>
 ${css}
 html,body{width:1080px;height:1350px;overflow:hidden;background:#0d1830;}
 </style></head><body>
-<div id="composition" class="clip" data-composition-id="carousel-cover"
-  data-start="0" data-width="1080" data-height="1350" data-duration="${COVER_DUR}" data-track-index="0">
 ${hookBody}
-</div>
 <script>(() => {
   const tl = gsap.timeline({ paused: true });
   tl.fromTo('.tag-chip',{scale:0,rotation:-10},{scale:1,rotation:2,duration:0.45,ease:'back.out(2)'},0.1);
@@ -285,21 +278,42 @@ ${hookBody}
   tl.fromTo('.hook-sub',{opacity:0,y:20},{opacity:1,y:0,duration:0.5,ease:'power2.out'},1.1);
   tl.fromTo('.note',{opacity:0},{opacity:1,duration:0.5,ease:'power2.out'},1.5);
   tl.fromTo('.sticker',{scale:0,rotation:-30},{scale:1,rotation:-7,duration:0.6,ease:'back.out(1.6)'},0.9);
-  tl.to('.sticker',{rotation:-2,duration:0.9,yoyo:true,repeat:5,ease:'sine.inOut'},1.6);
+  tl.to('.sticker',{rotation:-2,duration:0.9,yoyo:true,repeat:4,ease:'sine.inOut'},1.6);
   tl.to('.burst.b-orange',{rotation:'+=360',duration:${COVER_DUR - 0.5},ease:'none'},0.5);
   tl.to('.burst.b-cyan',{rotation:'-=200',duration:${COVER_DUR - 1},ease:'none'},1);
   tl.fromTo('.hook-swipe',{opacity:0,x:-30},{opacity:1,x:0,duration:0.45,ease:'back.out(1.6)'},1.4);
-  tl.to('.hook-swipe',{scale:1.05,duration:0.55,yoyo:true,repeat:8,ease:'sine.inOut'},1.9);
-  tl.to({},{duration:${COVER_DUR}},0);
-  window.__timelines = window.__timelines || {};
-  window.__timelines['carousel-cover'] = tl;
+  tl.to('.hook-swipe',{scale:1.05,duration:0.55,yoyo:true,repeat:6,ease:'sine.inOut'},1.9);
+  window.__coverTl = tl;
 })();</script></body></html>`;
 
-  fs.writeFileSync(path.join(projectDir, "index.html"), html, "utf8");
-  execSync(`npx hyperframes render "${projectDir}" --output "${outputPath}" --quality standard`,
-    { cwd: projectDir, stdio: "pipe", timeout: 8 * 60 * 1000 });
+  // 1. Capture frames by seeking the GSAP timeline
+  const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1080, height: 1350, deviceScaleFactor: 1 });
+    await page.setContent(html, { waitUntil: "networkidle2", timeout: 25_000 });
+    const totalFrames = COVER_DUR * COVER_FPS;
+    for (let f = 0; f < totalFrames; f++) {
+      await page.evaluate((t) => {
+        if (window.__coverTl) window.__coverTl.seek(t);
+      }, f / COVER_FPS);
+      const framePath = path.join(framesDir, `frame_${String(f).padStart(4, "0")}.png`);
+      fs.writeFileSync(framePath, Buffer.from(await page.screenshot({ type: "png" })));
+    }
+  } finally {
+    await browser.close();
+  }
+
+  // 2. Encode frames → MP4 (yuv420p for IG/Threads compatibility)
+  execSync(
+    `${FFMPEG} -y -framerate ${COVER_FPS} -i "${path.join(framesDir, "frame_%04d.png")}" ` +
+    `-c:v libx264 -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart "${outputPath}"`,
+    { stdio: "pipe", timeout: 4 * 60 * 1000 }
+  );
+  fs.rmSync(framesDir, { recursive: true, force: true });
 
   const buf = fs.readFileSync(outputPath);
+  fs.rmSync(outputPath, { force: true });
   const storagePath = `carousels/${ts}/cover.mp4`;
   const { error } = await supabase.storage
     .from("agent-x-videos")
