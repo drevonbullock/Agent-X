@@ -164,6 +164,36 @@ export async function refreshTokens() {
 // Every post starts with a Claude call — if the key is dead or out of credits,
 // the WHOLE system is down on every platform. Costs ~1 token per boot.
 
+// ─── LINKEDIN TOKEN HEALTH ───────────────────────────────────────────────────
+// LinkedIn tokens expire ~60 days and CANNOT be auto-refreshed (no refresh-token
+// grant here). When dead, LinkedIn silently posts text-only. Shout at boot so
+// Dre knows to re-run `node auth/linkedin-auth.js`.
+
+export async function checkLinkedInToken() {
+  const token = process.env.LINKEDIN_ACCESS_TOKEN;
+  if (!token) {
+    console.error("[Tokens] ❌❌ LINKEDIN_ACCESS_TOKEN not set — LinkedIn images are DOWN.");
+    return;
+  }
+  try {
+    const res = await fetch("https://api.linkedin.com/v2/userinfo", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      console.log("[Tokens] ✅ linkedin: valid");
+    } else if (res.status === 401) {
+      console.error(
+        "[Tokens] ❌❌ LINKEDIN TOKEN EXPIRED — posts go out as TEXT-ONLY (no images/cheatsheets/news cards). " +
+        "Re-run `node auth/linkedin-auth.js` and update Railway env var LINKEDIN_ACCESS_TOKEN."
+      );
+    } else {
+      console.warn(`[Tokens] ⚠️ linkedin: unexpected status ${res.status}`);
+    }
+  } catch (err) {
+    console.warn(`[Tokens] linkedin check network error (${err.message}) — not blocking startup`);
+  }
+}
+
 export async function checkAnthropicCredit() {
   if (!process.env.ANTHROPIC_API_KEY) {
     console.error("[Health] ❌❌ ANTHROPIC_API_KEY not set — ALL content generation is DOWN.");
