@@ -15,7 +15,7 @@ platforms) is driven by `BRAND_*` env vars and resolved into `AGENT_CONFIG` in
 - **Runtime**: Node.js (ES Modules, `"type": "module"`). Native `fetch` (Node 18+) — no Axios, no platform SDKs except where noted.
 - **Text AI**: Anthropic Claude via `@anthropic-ai/sdk`. `claude-sonnet-4-6` for content/scripts, `claude-haiku-4-5-20251001` for fast routing (style detection, comment replies). Some older modules still reference the `claude-sonnet-4-20250514` alias.
 - **Image AI**: Google **Gemini 2.5 Flash Image** (`images/gemini.js`) for backgrounds + comic art. NOT Imagen 3 — that reference is stale.
-- **Image rendering**: Puppeteer + inline HTML/CSS (cheatsheets, quote cards, carousels, comics). Playwright/Chromium for live news screenshots.
+- **Image rendering**: Puppeteer + inline HTML/CSS (news cards, carousels). Carousel video covers use Puppeteer frame-capture + ffmpeg.
 - **Video**: **Hyperframes** (GSAP motion-graphics renderer, the primary pipeline) + HeyGen avatars + raw-footage processing. Runway Gen-3 (image-to-video), Topaz (upscale), ElevenLabs (voiceover/SFX/jingle), `ffmpeg`/`yt-dlp` shell out. Shotstack code exists (`format-agent.js`, `shotstack-enhance.js`) but the main pipeline has moved off it.
 - **Data**: Supabase (Postgres + Storage) is the system of record — post log, analytics, crash-safe job queue, dedup tables. Replaces the old `post_count.json`.
 - **Scheduler**: `node-cron` (all times `America/New_York`).
@@ -53,9 +53,8 @@ agent/                — Generation + direct-post primitives
   generate-post.js      generateLinkedInPost() {postText,format}; generateThreadsPost() string;
                         generateVideoPost() {caption,videoScript,videoStyle}. Holds the
                         VOICE system prompt, weighted FORMATS, and TOPICS pools.
-  generate-image.js     generateImage(postText) [LinkedIn 1200x675];
-                        generateImageForInstagram(postText) [9:16 vertical].
-                        Claude picks mode: CHEATSHEET (default) or NEWS. Returns Buffer|null.
+  generate-image.js     generateImage / generateImageForInstagram(postText) → news card
+                        (1080x1350) or null. Haiku relevance gate first; cheatsheet REMOVED.
   generate-video.js     generateVideo(postText, videoScript, videoStyle) → routes to
                         raw footage (PATH A), HeyGen avatar, or Hyperframes (PATH B).
   generate-hyperframes-video.js  Builds GSAP HTML, lints + renders MP4 via Hyperframes.
@@ -73,8 +72,7 @@ agent/                — Generation + direct-post primitives
 
 images/               — Renderers (most output PNG Buffers)
   gemini.js             generateGeminiImage(prompt) — Gemini 2.5 Flash Image, retry on 503/429.
-  render-cheatsheet.js  renderCheatsheet / renderVerticalCheatsheet — 3-section infographic.
-  render-news-screenshot.js  renderNewsScreenshot(url) — cropped live article + BCG banner.
+  render-news-screenshot.js  renderNewsScreenshot(url) — editorial news cover from og: meta (v3).
   render-quote-card.js  renderQuoteCard / renderSquareCard / renderVerticalCard.
   render-boardroom.js   3-panel anime comic (Gemini art + dialogue overlay).
   chart.js / quote-card.js  Legacy canvas renderers, not in main flow.
