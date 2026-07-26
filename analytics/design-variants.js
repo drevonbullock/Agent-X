@@ -1,7 +1,9 @@
 // Adaptive creative variant library.
 //
 // IMAGE_THEMES drive the look of rendered cards (accent color, background, font
-// pairing). The renderer (images/render-cheatsheet.js) takes one of these and
+// pairing). NOTE: IMAGE_THEMES are inert since the cheatsheet renderer was
+// removed (2026-07-24) — no image renderer consumes themes. COPY_STYLES is
+// still live and feeds generateLinkedInPost. Originally this took one of these and
 // reproduces the brand default when none is passed. COPY_STYLES are directive
 // snippets injected into the written-post prompt to vary structure/voice.
 //

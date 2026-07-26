@@ -271,9 +271,11 @@ export async function postLinkedInNewsImage() {
     const postText = await generateReactivePost(target);
     let imageBuffer = null;
     try {
-      imageBuffer = await generateImage(postText);
+      // Render the article we already selected — never re-search for it.
+      // (Re-searching risked pairing the post with a different article.)
+      imageBuffer = await renderNewsScreenshot(target.url);
     } catch (imgErr) {
-      console.warn(`[NewsAgent] LinkedIn image failed, posting text-only: ${imgErr.message}`);
+      console.warn(`[NewsAgent] LinkedIn news card failed, posting text-only: ${imgErr.message}`);
     }
     const { postId, postUrl } = await postToLinkedIn(postText, imageBuffer, null);
     console.log(`[NewsAgent] LinkedIn news image posted! ${postUrl}`);

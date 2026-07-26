@@ -36,7 +36,7 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] Token refresh failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  // ── LINKEDIN — 5x/day: 2 news, 2 cheatsheet, 1 text ────────────────────
+  // ── LINKEDIN — 5x/day: 2 news cards, 3 text (cheatsheet removed 2026-07-24) ──
   cron.schedule("0 8 * * *", async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn 8am skipped`); return; }
     console.log(`[${new Date().toISOString()}] LinkedIn: 8:00 AM (news image)`);
@@ -46,8 +46,8 @@ export function startScheduler() {
 
   cron.schedule("0 11 * * *", async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn 11am skipped`); return; }
-    console.log(`[${new Date().toISOString()}] LinkedIn: 11:00 AM (cheatsheet post)`);
-    try { await runLinkedIn(true); }
+    console.log(`[${new Date().toISOString()}] LinkedIn: 11:00 AM (text post)`);
+    try { await runLinkedIn(false); }
     catch (err) { console.error(`[Scheduler] LinkedIn 11am failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
@@ -67,8 +67,8 @@ export function startScheduler() {
 
   cron.schedule("0 20 * * *", async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn 8pm skipped`); return; }
-    console.log(`[${new Date().toISOString()}] LinkedIn: 8:00 PM (cheatsheet post)`);
-    try { await runLinkedIn(true); }
+    console.log(`[${new Date().toISOString()}] LinkedIn: 8:00 PM (text post)`);
+    try { await runLinkedIn(false); }
     catch (err) { console.error(`[Scheduler] LinkedIn 8pm failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
@@ -258,7 +258,7 @@ export function startScheduler() {
 
   console.log("Scheduler active — all times EST:");
   console.log(`  BRAND_PLATFORMS: ${process.env.BRAND_PLATFORMS ?? "(not set — defaulting to linkedin only)"}`);
-  console.log("  LinkedIn  : 8:00am (news), 11:00am (cheatsheet), 2:00pm (text), 5:00pm (news), 8:00pm (cheatsheet)");
+  console.log("  LinkedIn  : 8:00am (news), 11:00am (text), 2:00pm (text), 5:00pm (news), 8:00pm (text)");
   console.log("  Instagram : 10:00am (news), 12:00pm/2:00pm/6:00pm (carousels), 8:00pm (news)");
   console.log("  Threads   : 8:30am, 10:30am (news image), 12:30pm, 4:30pm, 8:30pm (text | carousel every 3rd)");
   console.log("  Video     : 9:00pm daily — one render, all platforms, held for review");

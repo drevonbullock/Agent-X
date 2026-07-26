@@ -142,6 +142,7 @@ test-*.js  run-reel.js   Ad-hoc manual test entry points (not part of the schedu
 ## Platforms & Schedule (all EST)
 - **LinkedIn** — 4x/day: 8am image, 12pm news image, 4pm text, 8pm image. Single images only, no carousels, no video.
 - **Instagram** — 5x/day: 10am news card, 12pm/2pm/6pm carousels (animated video cover + image slides), 8pm news card.
+- **LinkedIn** — 5x/day: 8am + 5pm news cards, 11am/2pm/8pm text (controversy engine). No cheatsheets.
 - **Threads** — 4x/day at :30 offsets. Text by default; carousel every 3rd post.
 - **Video — one daily cadence for the whole system.** `runVideo()` (7pm cron) is the ONLY place video renders. It builds one clip, then `enqueueVideo()` parks it in `review_queue` (pending). On approval it cross-posts to **all enabled platforms** (LinkedIn, Instagram, Threads) plus TikTok/YouTube Shorts where tokens are set — `videoTargets()` in `index.js`. Images and written posts auto-publish; video never does.
 - **Background loops**: variation queue (30m), Threads reply polling (15m), review-queue publish (10m), variation engine (6h), hook tester (6h :30), analytics sync+learn+A/B+adapt (6h :45), weekly feedback (Sun midnight), competitor mining (Sun 1am), YouTube cutter (11am, if `YOUTUBE_CHANNEL_ID`).
@@ -190,10 +191,12 @@ Feeds the variant pool with rival-inspired designs. Weekly (`mineCompetitors`, S
 - **Video** (`generateVideoPost`) returns `{caption, videoScript[], videoStyle}` as strict JSON; screen 1 is always an 8-word hook, screens 2–5 teach.
 
 ## Image Modes (agent/generate-image.js)
-Claude (`selectImageMode`) picks exactly one. Older modes (QUOTE/DIAGRAM/COMIC/VISUAL) are retired from the router even though some renderers still exist:
-- **CHEATSHEET** (default) — Puppeteer renders a 3-section educational card. Background chain: Higgsfield live (CLI, only if installed+authed) → Higgsfield library (`images/backgrounds/`, committed premium PNGs, random pick via `images/background-library.js`) → Gemini → solid.
-- **NEWS** — only when the post names a real, findable company/launch. Firecrawl finds the article URL; `renderNewsScreenshot` (v2) captures the article and composites it inside a branded browser-window card (1080×1350: AI NEWS badge, date chip, domain URL bar, brand footer). Rejects HTTP ≥400 and soft-404 pages. Falls back to cheatsheet if no URL.
-- Any failure path returns `null` → text-only post.
+**Cheatsheet mode was REMOVED entirely on 2026-07-24** (Dre: posting too consistently / repetitive). `images/render-cheatsheet.js` is deleted.
+- **NEWS CARD** is now the only image format — the editorial magazine cover in `images/render-news-screenshot.js` (v3), built from the source article's og: meta tags.
+- A Haiku **relevance gate** (`isNewsWorthy`) runs first: only posts naming a real company/institution AND a concrete event get a card. Opinion/controversy posts return `null` → text-only. Without this gate Firecrawl returns a loosely-related article and pairs an unrelated headline+photo with the post.
+- `modules/news-agent.js` renders `target.url` **directly** (it already selected the article) rather than re-searching — never mismatches.
+- Any failure returns `null` → text-only post. That is intentional: a text controversy post beats a filler graphic.
+- `analytics/design-variants.js` IMAGE_THEMES are now inert (no image renderer consumes themes); COPY_STYLES remains live for text.
 
 ## Video Pipeline (agent/generate-video.js)
 `generateVideo()` dispatches to:
