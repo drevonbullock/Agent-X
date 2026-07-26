@@ -159,64 +159,58 @@ function pick() {
   return { format, topic };
 }
 
-export async function generateLinkedInPost(copyStyleId = null) {
-  let { format, topic } = pick();
+// ─── CONVERSATION-STARTER VOICE (scheduled TEXT posts) ───────────────────────
+// Dre (2026-07-24): text posts on LinkedIn + Threads must be CASUAL, brief
+// conversation starters — not statements, not the harsh controversy voice
+// (that stays on the paper-cut videos). Same pillar topics as subject matter,
+// completely different delivery.
+const CONVERSATION_VOICE = `You are Drevon Bullock posting a short, casual text post. Think texting a smart friend, not publishing a manifesto.
 
-  // Soft bias toward the format that's actually winning on LinkedIn. Falls back
-  // to the weighted pick until analytics has enough real data (see analytics/learn.js).
-  try {
-    const best = await getBestFor("linkedin", "format");
-    if (best && FORMATS[best] && best !== lastFormat) {
-      format = best;
-      lastFormat = best;
-      console.log(`[Agent X] Format biased to top performer: ${best}`);
-    }
-  } catch { /* no learning data yet — keep weighted pick */ }
+RULES:
+- Casual and human. Relaxed, a little playful. First person.
+- BRIEF. 1 to 3 short sentences. Aim under 280 characters. No walls of text, no lists, no line-break drama.
+- It is a CONVERSATION STARTER, not a statement. Share a thought or observation and genuinely invite people in.
+- End with a light, real question or an open hook that makes someone want to reply. Curiosity, not a debate challenge.
+- Have an opinion but hold it loosely. Never harsh, never contemptuous, no "cope" or "I'll wait" energy. Approachable.
+- No hashtags. No emojis. Never use em dashes or en dashes, just write short separate sentences.
+- Never mention your personal life, job history, or how many systems you have built. The idea carries it.
+- Write ONLY the post text. No quotes around it, no preamble.`;
 
-  // Optional copy-style variant from the optimizer (empty directive = current behavior).
-  const copyDirective = getCopyStyle(copyStyleId).directive;
-  console.log(`[Agent X] Format: ${format} | Topic: ${topic}${copyDirective ? ` | Style: ${copyStyleId}` : ""}`);
-
-  // Inject last week's performance brief so the model avoids what flopped
-  // and leans into what actually got engagement.
+// Shared generator for all scheduled text posts. Seeds subject matter from the
+// controversy lanes (keeps the content pillars) but delivers it casually.
+export async function generateConversationStarter({ maxChars = 500 } = {}) {
+  const t = pickControversyTopic();
   const brief = readBrief();
-  const briefContext = brief
-    ? `\nPERFORMANCE BRIEF — what worked last week (use this, do not ignore it):
-- Top formats: ${(brief.top_formats ?? []).join(", ") || "none yet"}
-- Top topics: ${(brief.top_topics ?? []).join(", ") || "none yet"}${(brief.avoid_patterns ?? []).length ? `\n- AVOID these patterns: ${brief.avoid_patterns.join(", ")}` : ""}${brief.weekly_insight ? `\n- Key insight: ${brief.weekly_insight}` : ""}\n`
-    : "";
-
-  // Contrarian slots run on the controversy engine: claim stated as fact,
-  // 2:1 receipt:ragebait ratio, dangling counterargument as comment bait.
-  let topicBlock = `Today's topic angle: ${topic}`;
-  let voiceExtra = "";
-  if (FORMATS[format].useControversyEngine) {
-    const t = pickControversyTopic();
-    console.log(`[Agent X] Controversy lane: ${t.lane} | [${t.tag}]`);
-    topicBlock = `Today's claim (state as settled fact): "${t.claim}"
-Lane: ${t.lane}
-Tag: ${t.tag}
-Dangling counterargument to leave UNANSWERED as the final line's comment bait: "${t.bait}"`;
-    voiceExtra = CONTROVERSY_VOICE;
-  }
-
-  const prompt = `${VOICE}
-${voiceExtra}
-${briefContext}
-${topicBlock}
-
-${FORMATS[format].instruction}
-${copyDirective ? `\nStyle note: ${copyDirective}\n` : ""}
-Write only the post text. Follow the format exactly.`;
-
+  const avoid = brief && (brief.avoid_patterns ?? []).length
+    ? `\nAVOID these tired patterns: ${brief.avoid_patterns.join(", ")}\n` : "";
+  console.log(`[Agent X] Conversation starter | Lane: ${t.lane}`);
   const message = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  });
+    max_tokens: 220,
+    messages: [{
+      role: "user",
+      content: `${CONVERSATION_VOICE}
+${avoid}
+Underlying idea to spin into a casual conversation starter (soften it, do NOT state it as harsh fact): "${t.claim}"
+An angle people naturally have feelings about: "${t.bait}"
 
-  const postText = message.content[0].text.trim();
-  return { postText, format };
+Write one casual, brief conversation starter under ${maxChars} characters. Make people want to reply.`,
+    }],
+  });
+  return message.content[0].text.trim()
+    .replace(/^["']|["']$/g, "")
+    .replace(/\s*[\u2014\u2013]\s*/g, ", ")
+    .slice(0, maxChars);
+}
+
+
+
+export async function generateLinkedInPost(_copyStyleId = null) {
+  // All scheduled LinkedIn text posts are casual conversation starters now
+  // (Dre, 2026-07-24). News cards are handled separately by news-agent; the
+  // harsh statement voice lives only on the videos.
+  const postText = await generateConversationStarter({ maxChars: 600 });
+  return { postText, format: "conversation" };
 }
 
 // ─── THREADS POST ────────────────────────────────────────────────────────────
@@ -262,56 +256,8 @@ const THREADS_TOPICS = [
 ];
 
 export async function generateThreadsPost() {
-  const brief = readBrief();
-  const briefContext = brief && (brief.avoid_patterns ?? []).length
-    ? `\nAVOID these patterns that flopped last week: ${brief.avoid_patterns.join(", ")}\n`
-    : "";
-
-  // ~40% of Threads text posts run the controversy engine — Threads ranks on
-  // reply velocity, and one-take grenades are its native format. The rest stay
-  // in the educational voice so the profile isn't wall-to-wall fights.
-  if (Math.random() < 0.4) {
-    const t = pickControversyTopic();
-    console.log(`[Threads] Controversy post | Lane: ${t.lane} | [${t.tag}]`);
-    const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 256,
-      messages: [{
-        role: "user",
-        content: `${THREADS_VOICE}
-${CONTROVERSY_VOICE}
-${briefContext}
-Claim to state as settled fact: "${t.claim}"
-Dangling counterargument to leave UNANSWERED at the end: "${t.bait}"
-
-Write ONE Threads post, under 400 characters, single take, no line breaks needed. One claim, one punch, end on the bait like a dare. No hashtags, no emojis.
-
-Write only the post text. No quotes around it.`,
-      }],
-    });
-    return message.content[0].text.trim().replace(/\s*[\u2014\u2013]\s*/g, ", ");
-  }
-
-  const format = THREADS_FORMATS[Math.floor(Math.random() * THREADS_FORMATS.length)];
-  const topic = THREADS_TOPICS[Math.floor(Math.random() * THREADS_TOPICS.length)];
-  console.log(`[Threads] Generating post | Topic: ${topic}`);
-
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 256,
-    messages: [{
-      role: "user",
-      content: `${THREADS_VOICE}
-${briefContext}
-Topic: ${topic}
-
-${format}
-
-Write only the post text. No quotes around it.`,
-    }],
-  });
-
-  return message.content[0].text.trim();
+  // Casual conversation starter, Threads-length (Dre, 2026-07-24).
+  return generateConversationStarter({ maxChars: 480 });
 }
 
 // ─── VIDEO MODE ──────────────────────────────────────────────────────────────

@@ -195,6 +195,9 @@ const DAILY_CAP = 3;
 const COOLDOWN_HOURS = 4;
 
 // Cap-only check for scheduled slots (no cooldown — scheduler controls timing)
+// dailyCap counts ALL posts for the platform today (carousels double-log as
+// image+carousel rows). News slots are explicit scheduled calls now, so the
+// caps are set ABOVE daily volume — a runaway backstop, not a per-slot gate.
 async function canPostScheduled(platform, dailyCap) {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -253,7 +256,7 @@ async function canPost(platform = "linkedin") {
 
 export async function postLinkedInNewsImage() {
   console.log(`[NewsAgent] LinkedIn news image slot...`);
-  if (!(await canPostScheduled("linkedin", 4))) return;
+  if (!(await canPostScheduled("linkedin", 8))) return;
 
   let articles;
   try { articles = await fetchLatestNews(); }
@@ -291,7 +294,7 @@ export async function postLinkedInNewsImage() {
 export async function postInstagramNewsImage() {
   console.log(`[NewsAgent] Instagram news image slot...`);
   if (!process.env.INSTAGRAM_ACCESS_TOKEN) return;
-  if (!(await canPostScheduled("instagram", 5))) return;
+  if (!(await canPostScheduled("instagram", 10))) return;
 
   let articles;
   try { articles = await fetchLatestNews(); }
@@ -335,7 +338,7 @@ export async function postInstagramNewsImage() {
 export async function postThreadsNewsImage() {
   console.log(`[NewsAgent] Threads news image slot...`);
   if (!process.env.THREADS_ACCESS_TOKEN) return;
-  if (!(await canPostScheduled("threads", 5))) return;
+  if (!(await canPostScheduled("threads", 8))) return;
 
   let articles;
   try { articles = await fetchLatestNews(); }

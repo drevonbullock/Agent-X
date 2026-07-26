@@ -180,7 +180,9 @@ export async function runThreads() {
   }
 
   const threadsCount   = await loadPostCount("threads");
-  const isCarouselSlot = (threadsCount + 1) % 3 === 0;
+  // Threads is text + news only now (Dre, 2026-07-24). Carousels live on
+  // Instagram. Carousel code below is kept for manual use but never scheduled.
+  const isCarouselSlot = false;
 
   console.log(`\n[Threads] Starting run | post #${threadsCount + 1} | ${isCarouselSlot ? "carousel" : "text"}`);
 
