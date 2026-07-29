@@ -101,7 +101,8 @@ A breaking news story just dropped. Write a sharp, punchy caption for an image p
 Rules:
 - First 2 lines are everything — they show before "more." Make them stop the scroll.
 - Lead with what this means for business owners right now, not a summary of the news
-- End with a short direct question to drive comments (comments are the top engagement signal)
+- Second-to-last line: a short direct question to drive comments
+- Last line: prompt a SEND ("send this to a founder who should see it") — sending to DMs is Instagram's #1 ranking signal in 2026
 - Max 400 characters total
 - NO hashtags — Instagram removed hashtag following in Dec 2024, they don't drive reach anymore
 - No em dashes, no filler phrases, no hype

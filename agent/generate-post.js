@@ -179,19 +179,27 @@ RULES:
 
 // Shared generator for all scheduled text posts. Seeds subject matter from the
 // controversy lanes (keeps the content pillars) but delivers it casually.
-export async function generateConversationStarter({ maxChars = 500 } = {}) {
+export async function generateConversationStarter({ maxChars = 500, platform = "linkedin" } = {}) {
   const t = pickControversyTopic();
   const brief = readBrief();
   const avoid = brief && (brief.avoid_patterns ?? []).length
     ? `\nAVOID these tired patterns: ${brief.avoid_patterns.join(", ")}\n` : "";
-  console.log(`[Agent X] Conversation starter | Lane: ${t.lane}`);
+
+  // Threads ranks almost entirely on REPLY VELOCITY \u2014 it's a conversation app.
+  // Tune for the fastest possible reply: punchier, shorter, a take or question
+  // people feel compelled to answer in one tap.
+  const threadsTune = platform === "threads"
+    ? `\nTHREADS MODE: This is Threads, which ranks on how FAST people reply. Be punchier and shorter than usual (aim 1-2 sentences). Land a mild take or a pointed question that someone can answer in one tap without thinking hard. Slightly more opinionated than LinkedIn, still not mean. The goal is a fast reply, not a like.\n`
+    : "";
+
+  console.log(`[Agent X] Conversation starter | ${platform} | Lane: ${t.lane}`);
   const message = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 220,
     messages: [{
       role: "user",
       content: `${CONVERSATION_VOICE}
-${avoid}
+${threadsTune}${avoid}
 Underlying idea to spin into a casual conversation starter (soften it, do NOT state it as harsh fact): "${t.claim}"
 An angle people naturally have feelings about: "${t.bait}"
 
@@ -271,8 +279,8 @@ const THREADS_TOPICS = [
 ];
 
 export async function generateThreadsPost() {
-  // Casual conversation starter, Threads-length (Dre, 2026-07-24).
-  return generateConversationStarter({ maxChars: 480 });
+  // Reply-velocity-optimized conversation starter, Threads-length (2026-07-29).
+  return generateConversationStarter({ maxChars: 480, platform: "threads" });
 }
 
 // ─── VIDEO MODE ──────────────────────────────────────────────────────────────

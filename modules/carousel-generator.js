@@ -593,29 +593,31 @@ async function buildThreadsCaption(content) {
 function buildCaption(content) {
   const h = content.hook;
   const cta = content.cta;
-  // First 2 lines are what show before "more" on Instagram — make them count.
-  // Subtext is the real hook sentence. Headline words alone don't stop the scroll.
-  const firstLine = h.subtext || `${h.headline_line1} ${h.headline_line2}`.trim();
-  const secondLine = `Swipe to see all ${1 + content.slides.length + 1} slides.`;
+  const clean = (s) => String(s ?? "").replace(/\s*[—–]\s*/g, ", ");
+
+  // Instagram 2026 ranking signals, in order: SENDS (share to DM) > SAVES >
+  // COMMENTS > likes. So the caption is built to trigger all three, plus a
+  // keyword-rich first line for caption SEO (IG now indexes caption text and
+  // downweights hashtags). One or two hashtags only, as categorization.
+  const firstLine = clean(h.subtext || `${h.headline_line1} ${h.headline_line2}`.trim());
+
+  // A genuine question drives comments; explicit send/save CTAs drive the top signals.
+  const question = clean(cta.cta_body || "Which one would move the needle most for you?");
 
   const lines = [
     firstLine,
-    secondLine,
     "",
+    // SEND is IG's #1 signal — ask for it explicitly and by persona.
+    `Know a founder or operator who needs this? Send it to them.`,
+    `Save it so you actually use it later.`,
+    "",
+    question,
+    "",
+    `Comment "${cta.keyword}" and I'll send you ${cta.resource} in your DMs.`,
+    "",
+    `AI automation for small business.`,
+    `#aiautomation #smallbusiness`,
   ];
-  content.slides.forEach((s, i) => {
-    lines.push(`${i + 1}. ${s.point_1_title} — ${s.point_1_body}`);
-  });
-  // Instagram removed hashtag following in Dec 2024 — hashtags no longer drive reach.
-  // Caption keywords and saves/DM shares are the top signals now.
-  lines.push(
-    "",
-    `Save this. You'll want to come back to it.`,
-    "",
-    `Comment "${cta.keyword}" and I'll send you ${cta.resource} straight to your DMs.`,
-    "",
-    `AI automation. Small business systems. Time back in your week.`
-  );
   return lines.join("\n").slice(0, 2200);
 }
 
