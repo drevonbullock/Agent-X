@@ -140,7 +140,7 @@ test-*.js  run-reel.js   Ad-hoc manual test entry points (not part of the schedu
 ## Platforms & Schedule (all EST)
 - **LinkedIn** — 4x/day: 8am image, 12pm news image, 4pm text, 8pm image. Single images only, no carousels, no video.
 - **Instagram** — 5x/day: 10am news card, 12pm/2pm/6pm carousels (animated video cover + image slides), 8pm news card.
-- **LinkedIn** — 7x/day: 8am + 5pm news cards, 5 casual conversation-starter text posts (10am/12pm/2pm/4pm/7pm).
+- **LinkedIn** — 1x/day: single conversation-starter text post at 9:30am ET (golden hour). Frequency cut from 7x to 1x on 2026-07-29 for engagement (LinkedIn suppresses flooders). Seed-comment + comment auto-reply are coded but GATED behind LINKEDIN_COMMENT_API=true — socialActions needs LinkedIn's gated Community Management API (w_member_social returns 403).
 - **Threads** — 4x/day at :30 offsets. Text by default; carousel every 3rd post.
 - **Video — one daily cadence for the whole system.** `runVideo()` (7pm cron) is the ONLY place video renders. It builds one clip, then `enqueueVideo()` parks it in `review_queue` (pending). On approval it cross-posts to **all enabled platforms** (LinkedIn, Instagram, Threads) plus TikTok/YouTube Shorts where tokens are set — `videoTargets()` in `index.js`. Images and written posts auto-publish; video never does.
 - **Background loops**: variation queue (30m), Threads reply polling (15m), review-queue publish (10m), variation engine (6h), hook tester (6h :30), analytics sync+learn+A/B+adapt (6h :45), weekly feedback (Sun midnight), competitor mining (Sun 1am), YouTube cutter (11am, if `YOUTUBE_CHANNEL_ID`).

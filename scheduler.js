@@ -5,7 +5,7 @@ import { checkPerf, processVariationQueue } from "./modules/variation-engine.js"
 import { runWeeklyAnalysis } from "./modules/feedback-loop.js";
 import { processYouTubeVideo } from "./modules/youtube-cutter.js";
 import { analyzeHookPerformance } from "./modules/hook-tester.js";
-import { pollThreadsReplies } from "./modules/comment-reply.js";
+import { pollThreadsReplies, pollLinkedInComments } from "./modules/comment-reply.js";
 import { runAnalyticsCycle } from "./analytics/index.js";
 import { processReviewQueue } from "./modules/review-queue.js";
 import { mineCompetitors, loadDynamicThemes } from "./modules/competitor-research.js";
@@ -36,26 +36,24 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] Token refresh failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  // ── LINKEDIN — 7x/day: 5 text (casual conversation starters) + 2 news ────
-  const liText = (label) => async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn ${label} skipped`); return; }
-    console.log(`[${new Date().toISOString()}] LinkedIn: ${label} (text)`);
+  // ── LINKEDIN — 1x/day at the golden hour (engagement-optimized 2026-07-29) ──
+  // ONE high-effort conversation-starter post concentrates all engagement + the
+  // author's own replies into a single window. Frequent posting fragments reach
+  // and LinkedIn suppresses flooders, so 7x/day was working against engagement.
+  // News cards moved off LinkedIn (still on IG/Threads).
+  cron.schedule("30 9 * * *", async () => {
+    if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn skipped`); return; }
+    console.log(`[${new Date().toISOString()}] LinkedIn: 9:30 AM (conversation starter)`);
     try { await runLinkedIn(false); }
-    catch (err) { console.error(`[Scheduler] LinkedIn ${label} failed: ${err.message}`); }
-  };
-  const liNews = (label) => async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — LinkedIn ${label} skipped`); return; }
-    console.log(`[${new Date().toISOString()}] LinkedIn: ${label} (news image)`);
-    try { await postLinkedInNewsImage(); }
-    catch (err) { console.error(`[Scheduler] LinkedIn ${label} failed: ${err.message}`); }
-  };
-  cron.schedule("0 8 * * *",  liNews("8:00am"),  { timezone: "America/New_York" });
-  cron.schedule("0 10 * * *", liText("10:00am"), { timezone: "America/New_York" });
-  cron.schedule("0 12 * * *", liText("12:00pm"), { timezone: "America/New_York" });
-  cron.schedule("0 14 * * *", liText("2:00pm"),  { timezone: "America/New_York" });
-  cron.schedule("0 16 * * *", liText("4:00pm"),  { timezone: "America/New_York" });
-  cron.schedule("0 17 * * *", liNews("5:00pm"),  { timezone: "America/New_York" });
-  cron.schedule("0 19 * * *", liText("7:00pm"),  { timezone: "America/New_York" });
+    catch (err) { console.error(`[Scheduler] LinkedIn failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  // ── LINKEDIN COMMENT AUTO-REPLY — every 20 min (author replies = #1 signal) ──
+  cron.schedule("*/20 * * * *", async () => {
+    if (paused()) return;
+    try { await pollLinkedInComments(); }
+    catch (err) { console.error(`[Scheduler] LinkedIn replies failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
 
   // ── INSTAGRAM — 5x/day: 10am news, 12pm/2pm/6pm carousels, 8pm news ─────
   cron.schedule("0 10 * * *", async () => {
@@ -227,7 +225,7 @@ export function startScheduler() {
 
   console.log("Scheduler active — all times EST:");
   console.log(`  BRAND_PLATFORMS: ${process.env.BRAND_PLATFORMS ?? "(not set — defaulting to linkedin only)"}`);
-  console.log("  LinkedIn  : 7x/day — 5 text (casual starters) + 2 news (8am, 5pm)");
+  console.log("  LinkedIn  : 1x/day — 9:30am conversation starter + seed comment + 20-min auto-reply");
   console.log("  Instagram : 10:00am (news), 12:00pm/2:00pm/6:00pm (carousels), 8:00pm (news)");
   console.log("  Threads   : 7x/day — 5 text (casual starters) + 2 news (9:30am, 5:30pm)");
   console.log("  Video     : 9:00pm daily — one render, all platforms, held for review");

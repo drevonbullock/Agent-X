@@ -13,10 +13,10 @@ export const AGENT_CONFIG = {
 
 import fs from "fs";
 import http from "http";
-import { generateLinkedInPost, generateVideoPost, generateThreadsPost } from "./agent/generate-post.js";
+import { generateLinkedInPost, generateVideoPost, generateThreadsPost, generateSeedComment } from "./agent/generate-post.js";
 import { generateImage } from "./agent/generate-image.js";
 import { generateVideo } from "./agent/generate-video.js";
-import { postToLinkedIn } from "./agent/post-to-linkedin.js";
+import { postToLinkedIn, postCommentToLinkedIn } from "./agent/post-to-linkedin.js";
 import { postTextToThreads } from "./distributors/threads.js";
 import { generateAndPostCarousel, generateAndPostCarouselToThreads, CAROUSEL_TOPICS } from "./modules/carousel-generator.js";
 import { handleInstagramWebhook } from "./modules/comment-reply.js";
@@ -110,6 +110,18 @@ export async function runLinkedIn(withImage = true) {
   const { postId, postUrl } = await postToLinkedIn(postText, imageBuffer, null);
   console.log(`[LinkedIn] Posted! ID: ${postId} | ${postUrl}`);
   await logPost({ postId, postUrl, postText, format, postType, platform: "linkedin", designVariant });
+
+  // First-comment seed — kickstarts the thread. Requires LinkedIn's gated
+  // Community Management API (socialActions); off until LINKEDIN_COMMENT_API=true.
+  if (process.env.LINKEDIN_COMMENT_API === "true") {
+    try {
+      const seed = await generateSeedComment(postText);
+      await postCommentToLinkedIn(postId, seed);
+      console.log(`[LinkedIn] Seed comment posted.`);
+    } catch (err) {
+      console.warn(`[LinkedIn] Seed comment failed: ${err.message}`);
+    }
+  }
 
   console.log(`[LinkedIn] Done.\n`);
   return { postId, postUrl, postText };

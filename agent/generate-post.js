@@ -167,9 +167,10 @@ function pick() {
 const CONVERSATION_VOICE = `You are Drevon Bullock posting a short, casual text post. Think texting a smart friend, not publishing a manifesto.
 
 RULES:
+- THE FIRST LINE IS EVERYTHING. LinkedIn hides everything after the first ~8 words behind "see more", so line one must stop the scroll on its own: a surprising observation, a mild hot take, or a question that pokes at something people quietly feel. NO slow wind-up. Ban openers like "Feels like", "I've been thinking", "Something I noticed". Open on the sharpest part.
 - Casual and human. Relaxed, a little playful. First person.
 - BRIEF. 1 to 3 short sentences. Aim under 280 characters. No walls of text, no lists, no line-break drama.
-- It is a CONVERSATION STARTER, not a statement. Share a thought or observation and genuinely invite people in.
+- It is a CONVERSATION STARTER, not a statement. After the hook, share the thought and genuinely invite people in.
 - End with a light, real question or an open hook that makes someone want to reply. Curiosity, not a debate challenge.
 - Have an opinion but hold it loosely. Never harsh, never contemptuous, no "cope" or "I'll wait" energy. Approachable.
 - No hashtags. No emojis. Never use em dashes or en dashes, just write short separate sentences.
@@ -204,6 +205,20 @@ Write one casual, brief conversation starter under ${maxChars} characters. Make 
 }
 
 
+
+
+// First-comment seed to kickstart the thread on our own post (golden-hour engagement).
+export async function generateSeedComment(postText) {
+  const msg = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 90,
+    messages: [{
+      role: "user",
+      content: `Here is a post I just published:\n"""${postText}"""\n\nWrite a SHORT first comment I can drop on my own post to kickstart the conversation. One or two sentences, casual, first person. Either add a sharper angle or ask a pointed follow-up that makes people want to weigh in. No hashtags, no emojis, no em dashes. Write only the comment text.`,
+    }],
+  });
+  return msg.content[0].text.trim().replace(/^["']|["']$/g, "").replace(/\s*[\u2014\u2013]\s*/g, ", ");
+}
 
 export async function generateLinkedInPost(_copyStyleId = null) {
   // All scheduled LinkedIn text posts are casual conversation starters now

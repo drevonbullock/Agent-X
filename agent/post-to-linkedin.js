@@ -197,3 +197,45 @@ export async function postToLinkedIn(postText, imageBuffer = null, videoAsset = 
 
   return { postId, postUrl };
 }
+
+// ─── COMMENTS (social actions) ───────────────────────────────────────────────
+// Used for the first-comment seed and golden-hour auto-replies. socialActions is
+// a /v2 endpoint — it must NOT carry the LinkedIn-Version header (that's /rest).
+
+function linkedInV2Headers() {
+  return {
+    Authorization: `Bearer ${process.env.LINKEDIN_ACCESS_TOKEN}`,
+    "X-Restli-Protocol-Version": "2.0.0",
+    "Content-Type": "application/json",
+  };
+}
+
+// Post a comment on one of our posts. Pass parentCommentUrn to reply to a comment.
+export async function postCommentToLinkedIn(postUrn, text, parentCommentUrn = null) {
+  const personUrn = process.env.LINKEDIN_PERSON_URN;
+  if (!personUrn) throw new Error("LINKEDIN_PERSON_URN not set");
+  const body = { actor: personUrn, object: postUrn, message: { text } };
+  if (parentCommentUrn) body.parentComment = parentCommentUrn;
+  const res = await fetch(`${API_BASE}/v2/socialActions/${encodeURIComponent(postUrn)}/comments`, {
+    method: "POST",
+    headers: linkedInV2Headers(),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`LinkedIn comment failed (${res.status}): ${(await res.text()).slice(0, 200)}`);
+  return res.json().catch(() => ({}));
+}
+
+// Fetch comments on one of our posts.
+export async function getLinkedInComments(postUrn) {
+  const res = await fetch(
+    `${API_BASE}/v2/socialActions/${encodeURIComponent(postUrn)}/comments?count=50`,
+    { headers: linkedInV2Headers() }
+  );
+  if (!res.ok) throw new Error(`LinkedIn comments fetch failed (${res.status})`);
+  const data = await res.json();
+  return (data.elements ?? []).map((c) => ({
+    id: c.$URN ?? c.commentUrn ?? c.id ?? "",
+    text: c.message?.text ?? "",
+    actor: c.actor ?? "",
+  })).filter((c) => c.id && c.text);
+}

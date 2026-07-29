@@ -1,6 +1,7 @@
 import "dotenv/config";
 import Anthropic from "@anthropic-ai/sdk";
 import supabase from "../supabase/client.js";
+import { getLinkedInComments, postCommentToLinkedIn } from "../agent/post-to-linkedin.js";
 
 const client = new Anthropic();
 
@@ -262,4 +263,58 @@ async function postThreadsReply(userId, token, replyToId, text) {
     const body = await pubRes.text();
     throw new Error(`Threads reply publish failed (${pubRes.status}): ${body}`);
   }
+}
+
+// ─── LINKEDIN COMMENT AUTO-REPLY ──────────────────────────────────────────────
+// LinkedIn's #1 ranking signal is the AUTHOR replying to comments, fast. Polls
+// our LinkedIn posts from the last 24h and replies to any new comment. Deduped
+// via comment_replies, same as Threads. Also captures CTA-keyword leads.
+
+export async function pollLinkedInComments() {
+  // LinkedIn's comment API (socialActions) needs the gated Community Management
+  // API product — w_member_social does NOT grant it (confirmed 403 ACCESS_DENIED
+  // 2026-07-29). Stays off until LINKEDIN_COMMENT_API=true (i.e. access granted).
+  if (process.env.LINKEDIN_COMMENT_API !== "true") return;
+  if (!process.env.LINKEDIN_ACCESS_TOKEN) return;
+  const personUrn = process.env.LINKEDIN_PERSON_URN;
+
+  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const { data: posts, error } = await supabase
+    .from("posts")
+    .select("post_id, content")
+    .eq("platform", "linkedin")
+    .gte("created_at", since)
+    .not("post_id", "is", null);
+  if (error || !posts?.length) return;
+
+  let replied = 0;
+  for (const p of posts) {
+    let comments;
+    try { comments = await getLinkedInComments(p.post_id); }
+    catch { continue; } // post may be too new or comments disabled
+    for (const c of comments) {
+      if (c.actor === personUrn) continue;      // skip our own comments/seed
+      if (await hasReplied(c.id)) continue;
+
+      const kw = detectKeyword(c.text);
+      if (kw) {
+        await logKeywordLead({
+          platform: "linkedin", commentId: c.id, postId: p.post_id,
+          commenterName: c.actor, commenterId: c.actor, keyword: kw, commentText: c.text,
+        });
+      }
+      try {
+        const reply = await generateReply(c.text, p.content ?? "");
+        await postCommentToLinkedIn(p.post_id, reply, c.id);
+        await logReply({
+          platform: "linkedin", commentId: c.id, postId: p.post_id,
+          commenterName: c.actor, commentText: c.text, replyText: reply,
+        });
+        replied++;
+      } catch (err) {
+        console.warn(`[LinkedInReply] reply failed: ${err.message}`);
+      }
+    }
+  }
+  if (replied) console.log(`[LinkedInReply] replied to ${replied} comment(s)`);
 }
