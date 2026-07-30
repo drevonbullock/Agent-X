@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import supabase from "../supabase/client.js";
 import { postCarouselToInstagram, postImageToInstagram } from "../distributors/instagram.js";
-import { writeVersus, writeOrder, writeLesson, writeCaption, ARCHETYPES } from "./wick-copy.js";
+import { writeVersusCarousel, writeOrderCarousel, writeLesson, writeCaption, ARCHETYPES } from "./wick-copy.js";
 import {
   hfAvailable, generateScene, download, tmpDir,
   versusPanelPrompt, costumePrompt, lessonScenePrompt,
@@ -46,15 +46,33 @@ async function scene(prompt, dir, name, aspect, jobIds) {
 
 // ─── BUILDERS — each returns { slideBuffers[], copy, format, sub_type, pillar } ──
 
-async function buildTwoPanel(spec, format, dir, jobIds) {
-  console.log(`[Wick] ${format}: "${spec.top_label}" / "${spec.bottom_label}"`);
-  const topPath = await scene(versusPanelPrompt(spec.top_scene, { ancient: true }), dir, "top", "3:2", jobIds);
-  const bottomPath = await scene(versusPanelPrompt(spec.bottom_scene, { ancient: false }), dir, "bottom", "3:2", jobIds);
-  const buf = await compositeTwoPanel({
-    topPath, bottomPath,
-    topLabel: spec.top_label, bottomLabel: spec.bottom_label,
-  });
-  return { slideBuffers: [buf], copy: spec, format, sub_type: spec.sub_type, pillar: spec.pillar };
+// VERSUS / ORDER — a 5 slide carousel: 4 two-panel comparisons on one theme,
+// then a CTA slide. Each comparison slide is 2 generated panels stacked, so a
+// full carousel is 9 generations (8 panels + 1 CTA scene).
+async function buildComparisonCarousel(c, format, dir, jobIds) {
+  console.log(`[Wick] ${format} carousel: "${c.theme}" (${c.pairs.length} comparisons + CTA)`);
+  const buffers = [];
+
+  for (let i = 0; i < c.pairs.length; i++) {
+    const pair = c.pairs[i];
+    console.log(`[Wick]   ${i + 1}/${c.pairs.length}: "${pair.top_label}" / "${pair.bottom_label}"`);
+    const topPath = await scene(versusPanelPrompt(pair.top_scene, { ancient: true }), dir, `p${i}-top`, "3:2", jobIds);
+    const botPath = await scene(versusPanelPrompt(pair.bottom_scene, { ancient: false }), dir, `p${i}-bot`, "3:2", jobIds);
+    buffers.push(await compositeTwoPanel({
+      topPath, bottomPath: botPath,
+      topLabel: pair.top_label, bottomLabel: pair.bottom_label,
+    }));
+  }
+
+  const ctaPath = await scene(lessonScenePrompt(c.cta_scene), dir, "cta", "4:5", jobIds);
+  buffers.push(await compositeCta({
+    scenePath: ctaPath,
+    closingLine: c.closing_line,
+    keyword: c.keyword,
+    resource: c.resource,
+  }));
+
+  return { slideBuffers: buffers, copy: c, format, sub_type: c.sub_type, pillar: c.pillar };
 }
 
 async function buildCostume(dir, jobIds) {
@@ -123,8 +141,11 @@ export async function runWeeklyBatch({ versus = 2, order = 1, rotating = "auto" 
   console.log(`\n[Wick] Batch ${batchId} starting`);
 
   // Step 2 of the pipeline: write ALL copy first, before any image.
-  const versusSpecs = versus > 0 ? await writeVersus(versus) : [];
-  const orderSpecs = order > 0 ? await writeOrder(order) : [];
+  // Each VERSUS/ORDER slot is now a themed 5 slide carousel (4 comparisons + CTA).
+  const versusSpecs = [];
+  for (let i = 0; i < versus; i++) versusSpecs.push(await writeVersusCarousel());
+  const orderSpecs = [];
+  for (let i = 0; i < order; i++) orderSpecs.push(await writeOrderCarousel());
 
   // Rotate the 4th slot between COSTUME and LESSON.
   let rotate = rotating;
@@ -148,7 +169,7 @@ export async function runWeeklyBatch({ versus = 2, order = 1, rotating = "auto" 
     try {
       let built;
       if (job.kind === "VERSUS" || job.kind === "ORDER") {
-        built = await buildTwoPanel(job.spec, job.kind, dir, jobIds);
+        built = await buildComparisonCarousel(job.spec, job.kind, dir, jobIds);
       } else if (job.kind === "COSTUME") {
         built = await buildCostume(dir, jobIds);
       } else {

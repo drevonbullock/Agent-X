@@ -40,9 +40,11 @@ HARD NEVERS:
 - NEVER name a real modern company, product, app or living person, and NEVER
   make a specific factual claim about one (no "Company X removed the confirmation
   screen and volume spiked"). Those claims cannot be verified and one debunk
-  costs more than a year of posts earns. Describe the MECHANISM generically:
-  "the apps are built so the tap comes before the thought". Historical figures
-  and genuinely documented ancient practice are the only named specifics allowed.
+  costs more than a year of posts earns. Describe the MECHANISM generically
+  instead, in your own fresh wording every time. Historical figures and genuinely
+  documented ancient practice are the only named specifics allowed.
+- NEVER reuse a phrase that appears in these instructions. Every line you write
+  must be newly worded. The examples here are for RHYTHM only, never for copying.
 - NEVER invent statistics, percentages, study results or research findings.
 - NEVER use the sage register. No "dear seeker", no "ancient ones", no faux
   scripture. Wick is wise; the writing sounds like a friend who reads a lot.
@@ -68,86 +70,118 @@ function parseJson(raw) {
 
 // ─── VERSUS — two-panel comparison (the engine format) ───────────────────────
 
-export async function writeVersus(count = 1) {
+export async function writeVersusCarousel() {
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 2000,
+    max_tokens: 3000,
     messages: [{
       role: "user",
       content: `${BRAND_RULES}
 
-FORMAT: VERSUS. Two stacked panels arguing with each other. Primary sub-type is
-ANCIENT vs MODERN: every piece of genuine ancient practice implies a modern failure.
-The top label states the ancient reality, the bottom label states the modern one.
-Short labels. The bottom line should land like a quiet accusation the reader
-recognizes about themselves.
+FORMAT: VERSUS CAROUSEL. Five slides. Slides 1 to 4 are two-panel ANCIENT vs MODERN
+comparisons that ALL belong to ONE theme. Slide 5 is a call to action.
+
+This is the engine format. Pick a single theme (one pillar), then write FOUR
+different comparisons inside it. They must escalate: slide 1 is the most
+recognizable and scroll-stopping, slide 4 is the one that stings most. Each is a
+complete standalone thought, but together they build one argument.
+
+Top label = the ancient reality. Bottom label = the modern one, landing like a
+quiet accusation the reader recognizes about themselves.
 
 Reference rhythm (do not copy these, write new ones):
 "Marcus Aurelius journaled to know himself" / "You scroll to forget yourself"
 "Diogenes owned one cup" / "You own forty-seven subscriptions"
 "The Stoics practiced poverty on purpose" / "You practice it by accident"
 
-Write ${count === 1 ? "1 VERSUS post" : count + " DIFFERENT VERSUS posts"}. Overproduce internally, then return only the best.
-
-Return JSON array, one object each:
-[{
+Return JSON object:
+{
+  "theme": "short internal name for the theme",
   "pillar": "Money|Systems|Mind|Behaviour",
   "sub_type": "ancient_vs_modern",
-  "top_label": "the ancient line, max 9 words",
-  "bottom_label": "the modern line, max 9 words",
-  "top_scene": "One dense sentence describing a concrete ancient scene for Wick: what he is doing, 3-4 named physical objects, the setting. No character description, he is supplied separately.",
-  "bottom_scene": "One dense sentence describing the modern mirror scene: what Wick is doing, 3-4 named modern objects, the setting.",
-  "hidden_rule": "the rule this reveals, one sentence, for internal use"
-}]`,
+  "hidden_rule": "the rule the whole set reveals, one sentence",
+  "pairs": [
+    {
+      "top_label": "the ancient line, max 9 words",
+      "bottom_label": "the modern line, max 9 words",
+      "top_scene": "One dense sentence: what Wick is doing in a concrete ancient scene, 3-4 named physical objects, the setting. No character description, he is supplied separately.",
+      "bottom_scene": "One dense sentence: the modern mirror scene, what Wick is doing, 3-4 named modern objects, the setting."
+    }
+  ],
+  "closing_line": "One sentence that reframes all four at once.",
+  "keyword": "WISDOM|RITUAL|STOIC|SAGE",
+  "resource": "name of the free text resource the keyword delivers",
+  "cta_scene": "One dense sentence: a closing scene for Wick that visually gathers the theme, 3-4 named objects."
+}
+
+Exactly 4 pairs.`,
     }],
   });
-  return parseJson(msg.content[0].text).map((p) => ({
+  const c = parseJson(msg.content[0].text);
+  c.pairs = (c.pairs ?? []).slice(0, 4).map((p) => ({
     ...p,
     top_label: stripDashes(p.top_label),
     bottom_label: stripDashes(p.bottom_label),
   }));
+  c.closing_line = stripDashes(c.closing_line);
+  return c;
 }
 
 // ─── ORDER — imperative two-panel (command, then turn or arithmetic) ─────────
 
-export async function writeOrder(count = 1) {
+export async function writeOrderCarousel() {
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 1600,
+    max_tokens: 2600,
     messages: [{
       role: "user",
       content: `${BRAND_RULES}
 
-FORMAT: ORDER. Two panels. Panel one gives a command. Panel two either inverts it
-(the turn) or does the arithmetic on it. The ARITHMETIC variant is strongest
-because the number persuades so the copy does not have to. Prefer arithmetic.
+FORMAT: ORDER CAROUSEL. Five slides. Slides 1 to 4 are two-panel imperatives that
+ALL belong to ONE theme. Slide 5 is a call to action.
+
+Panel one gives a command. Panel two either inverts it (the turn) or does the
+arithmetic on it. The ARITHMETIC variant is strongest because the number persuades
+so the copy does not have to. Use arithmetic on at least two of the four.
 
 Reference rhythm (do not copy):
 "Read ten pages a day." / "That's fifteen books a year."
 "Wake before the house." / "Tell no one."
 "Save two dollars a day." / "That's seven hundred and thirty a year."
 
-All arithmetic MUST be correct. Check the multiplication.
+All arithmetic MUST be correct. Check every multiplication.
 
-Write ${count === 1 ? "1 ORDER post" : count + " DIFFERENT ORDER posts"}.
-
-Return JSON array:
-[{
+Return JSON object:
+{
+  "theme": "short internal name",
   "pillar": "Money|Systems|Mind|Behaviour",
-  "sub_type": "arithmetic|turn",
-  "top_label": "the command, max 8 words",
-  "bottom_label": "the turn or the arithmetic, max 10 words",
-  "top_scene": "One dense sentence: concrete scene for Wick performing the command, 3-4 named objects, setting.",
-  "bottom_scene": "One dense sentence: the payoff scene, 3-4 named objects showing accumulation or consequence.",
-  "hidden_rule": "one sentence, internal"
-}]`,
+  "sub_type": "imperative",
+  "hidden_rule": "one sentence",
+  "pairs": [
+    {
+      "top_label": "the command, max 8 words",
+      "bottom_label": "the turn or the arithmetic, max 10 words",
+      "top_scene": "One dense sentence: Wick performing the command, 3-4 named objects, setting.",
+      "bottom_scene": "One dense sentence: the payoff scene, 3-4 named objects showing accumulation or consequence."
+    }
+  ],
+  "closing_line": "One sentence that reframes all four.",
+  "keyword": "WISDOM|RITUAL|STOIC|SAGE",
+  "resource": "name of the free text resource",
+  "cta_scene": "One dense sentence: closing scene for Wick, 3-4 named objects."
+}
+
+Exactly 4 pairs.`,
     }],
   });
-  return parseJson(msg.content[0].text).map((p) => ({
+  const c = parseJson(msg.content[0].text);
+  c.pairs = (c.pairs ?? []).slice(0, 4).map((p) => ({
     ...p,
     top_label: stripDashes(p.top_label),
     bottom_label: stripDashes(p.bottom_label),
   }));
+  c.closing_line = stripDashes(c.closing_line);
+  return c;
 }
 
 // ─── COSTUME — archetype carousel, 8 archetypes + CTA ────────────────────────
@@ -229,7 +263,7 @@ export async function writeCaption(post) {
     ? `A carousel titled "${post.copy.cover_headline}" covering: ${post.copy.items.map((i) => i.title).join(", ")}.`
     : post.format === "COSTUME"
       ? `An archetype carousel: ${(post.copy.archetypes ?? []).map((a) => a.label).join(", ")}.`
-      : `A two panel post. Top: "${post.copy.top_label}". Bottom: "${post.copy.bottom_label}".`;
+      : `A ${post.copy.pairs?.length ?? 4} slide comparison carousel on the theme "${post.copy.theme}". The comparisons are: ${(post.copy.pairs ?? []).map((p) => `"${p.top_label}" vs "${p.bottom_label}"`).join("; ")}.`;
 
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
