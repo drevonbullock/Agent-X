@@ -23,6 +23,7 @@ import { handleInstagramWebhook } from "./modules/comment-reply.js";
 import { pickVariant } from "./analytics/index.js";
 import { logPost } from "./supabase/log-post.js";
 import { enqueueVideo, processReviewQueue, listPendingReviews, decideReview, renderReviewPageHtml } from "./modules/review-queue.js";
+import { listPendingWick, decideWick, renderWickPageHtml } from "./modules/wicks-wisdom.js";
 import { startScheduler } from "./scheduler.js";
 
 // ─── STARTUP — RAW FOOTAGE CHECK ─────────────────────────────────────────────
@@ -60,7 +61,7 @@ function isShortPost(text) {
 function videoTargets() {
   const t = [];
   if (AGENT_CONFIG.platforms.includes("linkedin")) t.push("linkedin");
-  if (AGENT_CONFIG.platforms.includes("instagram") && process.env.INSTAGRAM_ACCESS_TOKEN) t.push("instagram");
+  // Instagram is Wick's Wisdom now (2026-07-30) — Agent X videos never go there.
   if (AGENT_CONFIG.platforms.includes("threads")   && process.env.THREADS_ACCESS_TOKEN)   t.push("threads");
   if (AGENT_CONFIG.platforms.includes("tiktok")    && process.env.TIKTOK_ACCESS_TOKEN)     t.push("tiktok");
   if (AGENT_CONFIG.platforms.includes("youtube")   && process.env.YOUTUBE_REFRESH_TOKEN)   t.push("youtube");

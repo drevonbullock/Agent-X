@@ -10,6 +10,8 @@ import { runAnalyticsCycle } from "./analytics/index.js";
 import { processReviewQueue } from "./modules/review-queue.js";
 import { mineCompetitors, loadDynamicThemes } from "./modules/competitor-research.js";
 import { checkRepeatEngagers } from "./modules/lead-capture.js";
+import { runWeeklyBatch, publishNextApproved } from "./modules/wicks-wisdom.js";
+import { pollTelegramApprovals } from "./modules/wick-telegram.js";
 import { initTokens, refreshTokens, checkAnthropicCredit, checkLinkedInToken } from "./modules/token-manager.js";
 import { isHiggsfieldCliAvailable } from "./agent/generate-higgsfield.js";
 import supabase from "./supabase/client.js";
@@ -55,40 +57,29 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] LinkedIn replies failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  // ── INSTAGRAM — 5x/day: 10am news, 12pm/2pm/6pm carousels, 8pm news ─────
-  cron.schedule("0 10 * * *", async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 10am skipped`); return; }
-    console.log(`[${new Date().toISOString()}] Instagram: 10:00 AM (news image)`);
-    try { await postInstagramNewsImage(); }
-    catch (err) { console.error(`[Scheduler] Instagram 10am failed: ${err.message}`); }
+  // ── INSTAGRAM — Agent X no longer posts to Instagram (2026-07-30). ────────
+  // The account was repurposed to WICK'S WISDOM, a separate faceless brand with
+  // its own batch pipeline (modules/wicks-wisdom.js) + human approval gate.
+  // Same IG account and token; different content system entirely.
+
+  // ── WICK'S WISDOM — publish approved posts Mon/Wed/Fri/Sun 10am ET ───────
+  cron.schedule("0 10 * * 1,3,5,0", async () => {
+    if (paused()) { console.log(`[Scheduler] PAUSED — Wick publish skipped`); return; }
+    try { await publishNextApproved(); }
+    catch (err) { console.error(`[Scheduler] Wick publish failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  cron.schedule("0 12 * * *", async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 12pm skipped`); return; }
-    console.log(`[${new Date().toISOString()}] Instagram: 12:00 PM (carousel)`);
-    try { await runInstagram(); }
-    catch (err) { console.error(`[Scheduler] Instagram 12pm failed: ${err.message}`); }
+  // ── WICK'S WISDOM — build next weekly batch Sunday 6am (QUEUED, never posted) ──
+  cron.schedule("0 6 * * 0", async () => {
+    if (paused()) return;
+    try { await runWeeklyBatch(); }
+    catch (err) { console.error(`[Scheduler] Wick batch failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  cron.schedule("0 14 * * *", async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 2pm skipped`); return; }
-    console.log(`[${new Date().toISOString()}] Instagram: 2:00 PM (carousel)`);
-    try { await runInstagram(); }
-    catch (err) { console.error(`[Scheduler] Instagram 2pm failed: ${err.message}`); }
-  }, { timezone: "America/New_York" });
-
-  cron.schedule("0 20 * * *", async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 8pm skipped`); return; }
-    console.log(`[${new Date().toISOString()}] Instagram: 8:00 PM (news image)`);
-    try { await postInstagramNewsImage(); }
-    catch (err) { console.error(`[Scheduler] Instagram 8pm failed: ${err.message}`); }
-  }, { timezone: "America/New_York" });
-
-  cron.schedule("0 18 * * *", async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — Instagram 6pm skipped`); return; }
-    console.log(`[${new Date().toISOString()}] Instagram: 6:00 PM (carousel)`);
-    try { await runInstagram(); }
-    catch (err) { console.error(`[Scheduler] Instagram 6pm failed: ${err.message}`); }
+  // ── WICK APPROVALS — poll Telegram for Approve/Reject taps every 2 min ───
+  cron.schedule("*/2 * * * *", async () => {
+    try { await pollTelegramApprovals(); }
+    catch (err) { console.error(`[Scheduler] Wick Telegram poll failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── VIDEO — 1x/day at 9pm: one render, fanned out to all platforms (held for review) ──
@@ -226,7 +217,7 @@ export function startScheduler() {
   console.log("Scheduler active — all times EST:");
   console.log(`  BRAND_PLATFORMS: ${process.env.BRAND_PLATFORMS ?? "(not set — defaulting to linkedin only)"}`);
   console.log("  LinkedIn  : 1x/day — 9:30am conversation starter + seed comment + 20-min auto-reply");
-  console.log("  Instagram : 10:00am (news), 12:00pm/2:00pm/6:00pm (carousels), 8:00pm (news)");
+  console.log("  Instagram : Wick's Wisdom — Mon/Wed/Fri/Sun 10am (approved batches only)");
   console.log("  Threads   : 7x/day — 5 text (casual starters) + 2 news (9:30am, 5:30pm)");
   console.log("  Video     : 9:00pm daily — one render, all platforms, held for review");
   console.log("  Leads     : every hour (repeat engager detection → Telegram + GHL)");

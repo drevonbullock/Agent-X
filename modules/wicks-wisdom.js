@@ -1,0 +1,318 @@
+import "dotenv/config";
+import fs from "fs";
+import path from "path";
+import supabase from "../supabase/client.js";
+import { postCarouselToInstagram, postImageToInstagram } from "../distributors/instagram.js";
+import { writeVersus, writeOrder, writeLesson, writeCaption, ARCHETYPES } from "./wick-copy.js";
+import {
+  hfAvailable, generateScene, download, tmpDir,
+  versusPanelPrompt, costumePrompt, lessonScenePrompt,
+  compositeTwoPanel, compositeCostume, compositeLessonCover,
+  compositeLessonItem, compositeCta,
+} from "./wick-render.js";
+
+// ─── WICK'S WISDOM — ORCHESTRATOR ────────────────────────────────────────────
+// Weekly batch → Supabase queue → HUMAN APPROVAL → publish to the same Instagram
+// account Agent X already uses (same token, same business id, new brand).
+//
+// NOTHING publishes without explicit approval. That gate is the whole design.
+
+const BUCKET = "agent-x-images";
+
+async function uploadSlide(buffer, storagePath) {
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(storagePath, buffer, { contentType: "image/jpeg", upsert: true });
+  if (error) throw new Error(`Upload failed: ${error.message}`);
+  return supabase.storage.from(BUCKET).getPublicUrl(storagePath).data.publicUrl;
+}
+
+// Generate a scene and return its local path. Retries individual panels only
+// (never whole pairs or carousels) per the skill's retry policy.
+async function scene(prompt, dir, name, aspect, jobIds) {
+  let lastErr;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const { url, jobId } = generateScene(prompt, aspect);
+      if (jobId) jobIds.push(jobId);
+      return await download(url, path.join(dir, `${name}.png`));
+    } catch (err) {
+      lastErr = err;
+      console.warn(`[Wick] ${name} attempt ${attempt} failed: ${String(err.message).slice(0, 120)}`);
+    }
+  }
+  throw lastErr;
+}
+
+// ─── BUILDERS — each returns { slideBuffers[], copy, format, sub_type, pillar } ──
+
+async function buildTwoPanel(spec, format, dir, jobIds) {
+  console.log(`[Wick] ${format}: "${spec.top_label}" / "${spec.bottom_label}"`);
+  const topPath = await scene(versusPanelPrompt(spec.top_scene, { ancient: true }), dir, "top", "3:2", jobIds);
+  const bottomPath = await scene(versusPanelPrompt(spec.bottom_scene, { ancient: false }), dir, "bottom", "3:2", jobIds);
+  const buf = await compositeTwoPanel({
+    topPath, bottomPath,
+    topLabel: spec.top_label, bottomLabel: spec.bottom_label,
+  });
+  return { slideBuffers: [buf], copy: spec, format, sub_type: spec.sub_type, pillar: spec.pillar };
+}
+
+async function buildCostume(dir, jobIds) {
+  // 8 archetype slides + 1 CTA. Weighted toward flame-native archetypes.
+  const picks = [...ARCHETYPES];
+  console.log(`[Wick] COSTUME: ${picks.length} archetypes + CTA`);
+  const buffers = [];
+  for (const a of picks) {
+    const p = await scene(costumePrompt(a), dir, `arch-${a.bold.toLowerCase()}`, "4:5", jobIds);
+    buffers.push(await compositeCostume({ scenePath: p, label: a.label, boldWord: a.bold }));
+  }
+  const ctaScene = await scene(lessonScenePrompt(
+    "sits at a worn wooden desk writing on a sheet of papyrus with a reed pen, eight small hand drawn sketches pinned to the wall above the desk in a row, a stack of scrolls and a clay cup at the desk edge, a quiet study at night"
+  ), dir, "cta", "4:5", jobIds);
+  buffers.push(await compositeCta({
+    scenePath: ctaScene,
+    closingLine: "Eight minds. Most people only ever build one.",
+    keyword: "SAGE",
+    resource: "all eight",
+  }));
+  return {
+    slideBuffers: buffers,
+    copy: { archetypes: picks, hidden_rule: "Character is a set of roles you can practise, not a fixed trait." },
+    format: "COSTUME", sub_type: "archetype", pillar: "Mind",
+  };
+}
+
+async function buildLesson(dir, jobIds) {
+  const l = await writeLesson();
+  console.log(`[Wick] LESSON: "${l.cover_headline}" (${l.items.length} items)`);
+  const buffers = [];
+
+  const coverPath = await scene(lessonScenePrompt(l.cover_scene), dir, "cover", "4:5", jobIds);
+  buffers.push(await compositeLessonCover({ scenePath: coverPath, headline: l.cover_headline }));
+
+  for (const item of l.items) {
+    const p = await scene(lessonScenePrompt(item.scene), dir, `item-${item.number}`, "4:5", jobIds);
+    buffers.push(await compositeLessonItem({
+      scenePath: p, number: item.number, title: item.title,
+      problem: item.problem, solution: item.solution,
+    }));
+  }
+
+  // Recap CTA — every item becomes a labelled signpost pointing down the wrong road.
+  const signposts = l.items.map((i) => i.signpost).filter(Boolean);
+  const recapPath = await scene(lessonScenePrompt(
+    `stands at a fork in a dirt road at golden hour, ${signposts.length} weathered wooden signposts crowded along the left hand road each pointing down it, a single clear road on the right leading toward distant sunlit hills, tall grass and two old trees framing the fork`
+  ), dir, "recap", "4:5", jobIds);
+  buffers.push(await compositeCta({
+    scenePath: recapPath, closingLine: l.closing_line,
+    keyword: l.keyword, resource: l.resource,
+  }));
+
+  return { slideBuffers: buffers, copy: l, format: "LESSON", sub_type: "problem_solution", pillar: l.pillar };
+}
+
+// ─── BATCH ───────────────────────────────────────────────────────────────────
+// Default weekly mix from the cadence config: 2 VERSUS, 1 ORDER, 1 COSTUME|LESSON.
+
+export async function runWeeklyBatch({ versus = 2, order = 1, rotating = "auto" } = {}) {
+  if (!hfAvailable()) {
+    console.log("[Wick] Skipped — higgsfield CLI not authenticated on this host.");
+    return { skipped: true };
+  }
+  const batchId = `wick-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
+  console.log(`\n[Wick] Batch ${batchId} starting`);
+
+  // Step 2 of the pipeline: write ALL copy first, before any image.
+  const versusSpecs = versus > 0 ? await writeVersus(versus) : [];
+  const orderSpecs = order > 0 ? await writeOrder(order) : [];
+
+  // Rotate the 4th slot between COSTUME and LESSON.
+  let rotate = rotating;
+  if (rotate === "auto") {
+    const { count } = await supabase.from("wick_posts")
+      .select("*", { count: "exact", head: true }).eq("format", "COSTUME");
+    rotate = (count ?? 0) % 2 === 0 ? "COSTUME" : "LESSON";
+  }
+
+  const jobs = [
+    ...versusSpecs.map((s) => ({ kind: "VERSUS", spec: s })),
+    ...orderSpecs.map((s) => ({ kind: "ORDER", spec: s })),
+    { kind: rotate },
+  ];
+
+  const created = [];
+  for (let i = 0; i < jobs.length; i++) {
+    const job = jobs[i];
+    const dir = tmpDir(batchId, i);
+    const jobIds = [];
+    try {
+      let built;
+      if (job.kind === "VERSUS" || job.kind === "ORDER") {
+        built = await buildTwoPanel(job.spec, job.kind, dir, jobIds);
+      } else if (job.kind === "COSTUME") {
+        built = await buildCostume(dir, jobIds);
+      } else {
+        built = await buildLesson(dir, jobIds);
+      }
+
+      const caption = await writeCaption(built);
+
+      const urls = [];
+      for (let s = 0; s < built.slideBuffers.length; s++) {
+        urls.push(await uploadSlide(
+          built.slideBuffers[s],
+          `wick/${batchId}/${i}/slide-${String(s + 1).padStart(2, "0")}.jpg`
+        ));
+      }
+
+      const { data, error } = await supabase.from("wick_posts").insert({
+        batch_id: batchId, format: built.format, sub_type: built.sub_type,
+        pillar: built.pillar, slot_index: i, copy: built.copy, caption,
+        slide_urls: urls, hf_job_ids: jobIds, status: "pending",
+      }).select().single();
+      if (error) throw new Error(`DB insert failed: ${error.message}`);
+
+      created.push(data);
+      console.log(`[Wick] Queued ${built.format} (${urls.length} slide${urls.length > 1 ? "s" : ""}) → pending approval`);
+    } catch (err) {
+      console.error(`[Wick] Post ${i} (${job.kind}) failed: ${err.message}`);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  // Push the whole week to Telegram with Approve / Reject buttons.
+  if (created.length) {
+    try {
+      const { sendBatchToTelegram } = await import("./wick-telegram.js");
+      await sendBatchToTelegram(created);
+    } catch (err) {
+      console.warn(`[Wick] Telegram send failed (batch still pending at /wick): ${err.message}`);
+    }
+  }
+
+  console.log(`[Wick] Batch ${batchId} done — ${created.length} post(s) awaiting approval\n`);
+  return { batchId, created };
+}
+
+// ─── APPROVAL ────────────────────────────────────────────────────────────────
+
+export async function listPendingWick() {
+  const { data } = await supabase.from("wick_posts")
+    .select("*").eq("status", "pending").order("created_at", { ascending: true });
+  return data ?? [];
+}
+
+export async function decideWick(id, action) {
+  const status = action === "approve" ? "approved" : "rejected";
+  const { error } = await supabase.from("wick_posts").update({ status }).eq("id", id);
+  if (error) throw new Error(error.message);
+  console.log(`[Wick] ${id} → ${status}`);
+  return status;
+}
+
+// ─── PUBLISH — one approved post per scheduled slot ──────────────────────────
+
+export async function publishNextApproved() {
+  const { data } = await supabase.from("wick_posts")
+    .select("*").eq("status", "approved")
+    .order("created_at", { ascending: true }).limit(1);
+  const post = data?.[0];
+  if (!post) { console.log("[Wick] No approved posts queued — nothing to publish."); return null; }
+
+  const urls = post.slide_urls ?? [];
+  if (!urls.length) throw new Error("Post has no slides");
+
+  console.log(`[Wick] Publishing ${post.format} (${urls.length} slide${urls.length > 1 ? "s" : ""})...`);
+  try {
+    const res = urls.length === 1
+      ? await postImageToInstagram(urls[0], post.caption)
+      : await postCarouselToInstagram(urls, post.caption);
+
+    await supabase.from("wick_posts").update({
+      status: "posted",
+      ig_media_id: res.mediaId ?? null,
+      post_url: res.postUrl ?? null,
+      published_at: new Date().toISOString(),
+    }).eq("id", post.id);
+
+    console.log(`[Wick] Published: ${res.postUrl}`);
+    try {
+      const { notifyPublished } = await import("./wick-telegram.js");
+      await notifyPublished(post, res.postUrl);
+    } catch { /* notification is best effort */ }
+    return res;
+  } catch (err) {
+    // Never restart the whole flow after a publish failure — it creates a
+    // duplicate parent container. Leave it approved and let the next slot retry.
+    console.error(`[Wick] Publish failed (stays approved for retry): ${err.message}`);
+    throw err;
+  }
+}
+
+// ─── /wick DASHBOARD ─────────────────────────────────────────────────────────
+
+export function renderWickPageHtml(posts) {
+  const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const token = process.env.REVIEW_TOKEN ?? process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN ?? "";
+
+  const cards = posts.map((p) => {
+    const slides = (p.slide_urls ?? []).map((u, i) =>
+      `<img src="${esc(u)}" loading="lazy" title="slide ${i + 1}">`).join("");
+    return `<div class="card">
+      <div class="meta"><span class="fmt">${esc(p.format)}</span>
+        <span class="pill">${esc(p.pillar ?? "")}</span>
+        <span class="pill">${esc(p.sub_type ?? "")}</span>
+        <span class="dim">${(p.slide_urls ?? []).length} slides</span></div>
+      <div class="strip">${slides}</div>
+      <pre class="cap">${esc(p.caption)}</pre>
+      <div class="actions">
+        <a class="btn ok" href="/wick/decide?id=${p.id}&action=approve&token=${encodeURIComponent(token)}">Approve</a>
+        <a class="btn no" href="/wick/decide?id=${p.id}&action=reject&token=${encodeURIComponent(token)}">Reject</a>
+      </div></div>`;
+  }).join("");
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wick's Wisdom — Approval</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e0e0e;color:#f0f0f0;font-family:-apple-system,system-ui,sans-serif;padding:22px;}
+h1{font-size:26px;margin-bottom:4px;} .sub{color:#9a9a9a;font-size:14px;margin-bottom:24px;}
+.card{background:#1a1917;border:1px solid #2c2a27;border-radius:10px;padding:18px;margin-bottom:22px;}
+.meta{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.fmt{background:#F5A524;color:#0e0e0e;font-weight:700;font-size:12px;letter-spacing:1.5px;padding:5px 11px;border-radius:4px;}
+.pill{border:1px solid #3a3733;color:#c9c2b8;font-size:12px;padding:4px 10px;border-radius:20px;}
+.dim{color:#8a8580;font-size:12px;margin-left:auto;}
+.strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;}
+.strip img{height:290px;border-radius:6px;flex:0 0 auto;border:1px solid #2c2a27;}
+.cap{white-space:pre-wrap;font-family:inherit;font-size:14px;line-height:1.55;color:#ded7cd;
+  background:#111010;border:1px solid #262421;border-radius:6px;padding:14px;margin-bottom:14px;}
+.actions{display:flex;gap:10px;}
+.btn{flex:1;text-align:center;text-decoration:none;font-weight:700;font-size:15px;padding:13px;border-radius:6px;}
+.ok{background:#F5A524;color:#0e0e0e;} .no{background:#2a2724;color:#e0d9cf;}
+.empty{color:#8a8580;padding:40px 0;text-align:center;}
+</style></head><body>
+<h1>Wick's Wisdom</h1>
+<div class="sub">${posts.length} post${posts.length === 1 ? "" : "s"} awaiting approval. Nothing publishes until you approve it.</div>
+${cards || '<div class="empty">Nothing pending. Next batch builds Sunday 6am.</div>'}
+</body></html>`;
+}
+
+// CLI: node modules/wicks-wisdom.js [--batch|--list|--approve <id>|--publish]
+if (process.argv[1]?.endsWith("wicks-wisdom.js")) {
+  const a = process.argv;
+  const run = async () => {
+    if (a.includes("--batch")) return runWeeklyBatch();
+    if (a.includes("--list")) {
+      const p = await listPendingWick();
+      p.forEach((x) => console.log(`${x.id} | ${x.format} | ${(x.slide_urls ?? []).length} slides | ${String(x.caption).slice(0, 60)}...`));
+      return;
+    }
+    if (a.includes("--approve")) return decideWick(a[a.indexOf("--approve") + 1], "approve");
+    if (a.includes("--reject")) return decideWick(a[a.indexOf("--reject") + 1], "reject");
+    if (a.includes("--publish")) return publishNextApproved();
+    console.log("usage: --batch | --list | --approve <id> | --reject <id> | --publish");
+  };
+  run().then(() => process.exit(0)).catch((e) => { console.error(e.message); process.exit(1); });
+}
