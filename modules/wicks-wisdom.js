@@ -130,9 +130,21 @@ async function buildLesson(dir, jobIds) {
 }
 
 // ─── BATCH ───────────────────────────────────────────────────────────────────
-// Default weekly mix from the cadence config: 2 VERSUS, 1 ORDER, 1 COSTUME|LESSON.
+// Feeds the 2/day publish schedule: 14 posts per week. The mix is deliberately
+// spread across formats so the 9am/12pm alternation always has an alternative
+// in the queue. VERSUS leads because it is the highest share-rate format.
+//
+// Cost note: a comparison carousel is 9 generations, COSTUME/LESSON are 9 and 7.
+// At ~7 credits per generation a full 14 post week is roughly 850 credits.
+// Dial WICK_POSTS_PER_WEEK down if that outruns the credit budget.
 
-export async function runWeeklyBatch({ versus = 2, order = 1, rotating = "auto" } = {}) {
+export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) {
+  const perWeek = parseInt(process.env.WICK_POSTS_PER_WEEK ?? "14", 10);
+  // Ratio: half VERSUS (the engine), a third ORDER (cheap, high forward rate),
+  // the remainder COSTUME/LESSON rotating.
+  const rotatingCount = Math.max(1, Math.round(perWeek * 0.15));
+  versus = versus ?? Math.round((perWeek - rotatingCount) * 0.6);
+  order  = order  ?? (perWeek - rotatingCount - versus);
   if (!hfAvailable()) {
     console.log("[Wick] Skipped — higgsfield CLI not authenticated on this host.");
     return { skipped: true };
@@ -158,8 +170,11 @@ export async function runWeeklyBatch({ versus = 2, order = 1, rotating = "auto" 
   const jobs = [
     ...versusSpecs.map((s) => ({ kind: "VERSUS", spec: s })),
     ...orderSpecs.map((s) => ({ kind: "ORDER", spec: s })),
-    { kind: rotate },
+    ...Array.from({ length: rotatingCount }, (_, n) => ({
+      kind: n % 2 === 0 ? rotate : (rotate === "COSTUME" ? "LESSON" : "COSTUME"),
+    })),
   ];
+  console.log(`[Wick] Plan: ${versus} VERSUS, ${order} ORDER, ${rotatingCount} ${rotate}/alt = ${jobs.length} posts`);
 
   const created = [];
   for (let i = 0; i < jobs.length; i++) {
@@ -235,11 +250,24 @@ export async function decideWick(id, action) {
 // ─── PUBLISH — one approved post per scheduled slot ──────────────────────────
 
 export async function publishNextApproved() {
-  const { data } = await supabase.from("wick_posts")
+  // Pull the approved queue oldest first.
+  const { data: queue } = await supabase.from("wick_posts")
     .select("*").eq("status", "approved")
-    .order("created_at", { ascending: true }).limit(1);
-  const post = data?.[0];
-  if (!post) { console.log("[Wick] No approved posts queued — nothing to publish."); return null; }
+    .order("created_at", { ascending: true });
+  if (!queue?.length) { console.log("[Wick] No approved posts queued — nothing to publish."); return null; }
+
+  // Alternate styles: prefer the oldest approved post whose format differs from
+  // the one published most recently. Falls back to plain FIFO when the queue is
+  // all one format, so a single-format queue still drains.
+  const { data: last } = await supabase.from("wick_posts")
+    .select("format").eq("status", "posted")
+    .order("published_at", { ascending: false }).limit(1);
+  const lastFormat = last?.[0]?.format ?? null;
+
+  const post = queue.find((p) => p.format !== lastFormat) ?? queue[0];
+  if (lastFormat) {
+    console.log(`[Wick] Last posted: ${lastFormat} → now: ${post.format}${post.format === lastFormat ? " (no alternative in queue)" : ""}`);
+  }
 
   const urls = post.slide_urls ?? [];
   if (!urls.length) throw new Error("Post has no slides");

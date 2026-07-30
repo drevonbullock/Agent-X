@@ -62,12 +62,18 @@ export function startScheduler() {
   // its own batch pipeline (modules/wicks-wisdom.js) + human approval gate.
   // Same IG account and token; different content system entirely.
 
-  // ── WICK'S WISDOM — publish approved posts Mon/Wed/Fri/Sun 10am ET ───────
-  cron.schedule("0 10 * * 1,3,5,0", async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — Wick publish skipped`); return; }
+  // ── WICK'S WISDOM — 2 posts/day at 9am and 12pm ET ───────────────────────
+  // Each slot publishes the oldest APPROVED post whose format differs from the
+  // last one published, so the feed alternates styles instead of running four
+  // VERSUS carousels back to back.
+  const wickPublish = (label) => async () => {
+    if (paused()) { console.log(`[Scheduler] PAUSED — Wick ${label} skipped`); return; }
+    console.log(`[${new Date().toISOString()}] Wick: ${label}`);
     try { await publishNextApproved(); }
-    catch (err) { console.error(`[Scheduler] Wick publish failed: ${err.message}`); }
-  }, { timezone: "America/New_York" });
+    catch (err) { console.error(`[Scheduler] Wick ${label} failed: ${err.message}`); }
+  };
+  cron.schedule("0 9 * * *",  wickPublish("9:00am"),  { timezone: "America/New_York" });
+  cron.schedule("0 12 * * *", wickPublish("12:00pm"), { timezone: "America/New_York" });
 
   // ── WICK'S WISDOM — build next weekly batch Sunday 6am (QUEUED, never posted) ──
   cron.schedule("0 6 * * 0", async () => {
@@ -217,7 +223,7 @@ export function startScheduler() {
   console.log("Scheduler active — all times EST:");
   console.log(`  BRAND_PLATFORMS: ${process.env.BRAND_PLATFORMS ?? "(not set — defaulting to linkedin only)"}`);
   console.log("  LinkedIn  : 1x/day — 9:30am conversation starter + seed comment + 20-min auto-reply");
-  console.log("  Instagram : Wick's Wisdom — Mon/Wed/Fri/Sun 10am (approved batches only)");
+  console.log("  Instagram : Wick's Wisdom — 9:00am + 12:00pm daily (approved only, styles alternate)");
   console.log("  Threads   : 7x/day — 5 text (casual starters) + 2 news (9:30am, 5:30pm)");
   console.log("  Video     : 9:00pm daily — one render, all platforms, held for review");
   console.log("  Leads     : every hour (repeat engager detection → Telegram + GHL)");
