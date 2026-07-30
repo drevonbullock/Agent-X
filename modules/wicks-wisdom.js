@@ -201,15 +201,21 @@ export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) 
         ));
       }
 
+      // AUTO MODE (Dre, 2026-07-30): posts are queued already approved and
+      // publish on their slot without a human gate. Set WICK_AUTO_PUBLISH=false
+      // to restore the approval gate from the original spec.
+      const autoPublish = process.env.WICK_AUTO_PUBLISH !== "false";
+
       const { data, error } = await supabase.from("wick_posts").insert({
         batch_id: batchId, format: built.format, sub_type: built.sub_type,
         pillar: built.pillar, slot_index: i, copy: built.copy, caption,
-        slide_urls: urls, hf_job_ids: jobIds, status: "pending",
+        slide_urls: urls, hf_job_ids: jobIds,
+        status: autoPublish ? "approved" : "pending",
       }).select().single();
       if (error) throw new Error(`DB insert failed: ${error.message}`);
 
       created.push(data);
-      console.log(`[Wick] Queued ${built.format} (${urls.length} slide${urls.length > 1 ? "s" : ""}) → pending approval`);
+      console.log(`[Wick] Queued ${built.format} (${urls.length} slide${urls.length > 1 ? "s" : ""}) → ${autoPublish ? "auto-publishing on schedule" : "pending approval"}`);
     } catch (err) {
       console.error(`[Wick] Post ${i} (${job.kind}) failed: ${err.message}`);
     } finally {
@@ -227,7 +233,8 @@ export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) 
     }
   }
 
-  console.log(`[Wick] Batch ${batchId} done — ${created.length} post(s) awaiting approval\n`);
+  const mode = process.env.WICK_AUTO_PUBLISH !== "false" ? "queued for auto-publish" : "awaiting approval";
+  console.log(`[Wick] Batch ${batchId} done — ${created.length} post(s) ${mode}\n`);
   return { batchId, created };
 }
 

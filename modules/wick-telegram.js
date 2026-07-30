@@ -2,10 +2,10 @@ import "dotenv/config";
 import supabase from "../supabase/client.js";
 import { decideWick } from "./wicks-wisdom.js";
 
-// ─── WICK'S WISDOM — TELEGRAM APPROVAL ───────────────────────────────────────
-// Sunday: the whole week's batch is pushed to Telegram, one message group per
-// post (slides as an album + caption), each with Approve / Reject buttons.
-// Tapping a button updates the row. Nothing publishes until Approve is tapped.
+// ─── WICK'S WISDOM — TELEGRAM ────────────────────────────────────────────────
+// AUTO MODE (default): the Sunday batch is queued already approved and publishes
+// on schedule. Telegram is a NOTIFICATION with a Pull kill switch per post, not
+// a gate. Set WICK_AUTO_PUBLISH=false to restore the Approve/Reject gate.
 //
 // Uses long-polling (getUpdates) rather than a webhook so it works on any host
 // without a public URL. Offset is persisted so restarts don't replay old taps.
@@ -48,9 +48,12 @@ export async function sendBatchToTelegram(posts) {
   }
   if (!posts?.length) return false;
 
+  const auto = process.env.WICK_AUTO_PUBLISH !== "false";
   await tg("sendMessage", {
     chat_id: chatId,
-    text: `🕯️ *Wick's Wisdom — weekly batch*\n${posts.length} post${posts.length === 1 ? "" : "s"} ready for approval.\nNothing publishes until you tap Approve.`,
+    text: auto
+      ? `🕯️ *Wick's Wisdom — weekly batch*\n${posts.length} post${posts.length === 1 ? "" : "s"} queued, publishing automatically at 9am and 12pm.\nTap Pull on anything you do not want to go out.`
+      : `🕯️ *Wick's Wisdom — weekly batch*\n${posts.length} post${posts.length === 1 ? "" : "s"} ready for approval.\nNothing publishes until you tap Approve.`,
     parse_mode: "Markdown",
   });
 
@@ -80,10 +83,14 @@ export async function sendBatchToTelegram(posts) {
         text: `*${p.format}*\n\n${p.caption ?? ""}`,
         parse_mode: "Markdown",
         reply_markup: {
-          inline_keyboard: [[
-            { text: "✅ Approve", callback_data: `wick:approve:${p.id}` },
-            { text: "❌ Reject",  callback_data: `wick:reject:${p.id}` },
-          ]],
+          // In auto mode the post is already queued to publish, so the only
+          // action needed is a kill switch. In gated mode both buttons show.
+          inline_keyboard: [auto
+            ? [{ text: "🚫 Pull this one", callback_data: `wick:reject:${p.id}` }]
+            : [
+                { text: "✅ Approve", callback_data: `wick:approve:${p.id}` },
+                { text: "❌ Reject",  callback_data: `wick:reject:${p.id}` },
+              ]],
         },
       });
     } catch (err) {
@@ -125,14 +132,14 @@ export async function pollTelegramApprovals() {
       const status = await decideWick(id, action);
       await tg("answerCallbackQuery", {
         callback_query_id: cq.id,
-        text: status === "approved" ? "Approved — will publish on its slot" : "Rejected",
+        text: status === "approved" ? "Approved — will publish on its slot" : "Pulled — will not publish",
       });
       // Replace the buttons with the decision so it can't be double-tapped.
       await tg("editMessageReplyMarkup", {
         chat_id: cq.message.chat.id,
         message_id: cq.message.message_id,
         reply_markup: { inline_keyboard: [[{
-          text: status === "approved" ? "✅ Approved" : "❌ Rejected",
+          text: status === "approved" ? "✅ Approved" : "🚫 Pulled",
           callback_data: "wick:done",
         }]] },
       }).catch(() => {});
