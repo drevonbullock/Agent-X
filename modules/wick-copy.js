@@ -543,10 +543,16 @@ Exactly 5 items.`,
 
 export async function writeCaption(post) {
   const context = post.format === "LESSON"
-    ? `A carousel titled "${post.copy.cover_headline}" covering: ${post.copy.items.map((i) => i.title).join(", ")}.`
+    ? `A carousel titled "${post.copy.cover_headline}" covering: ${(post.copy.items?.map((i) => i.title) ?? post.copy.labels?.slice(1, 6) ?? []).join(", ")}.`
     : post.format === "COSTUME"
-      ? `A cast carousel showing every role inside the mechanic: ${(post.copy.roles ?? []).map((r) => r.label).join(", ")}.`
-      : `A ${post.copy.pairs?.length ?? 4} slide comparison carousel on the theme "${post.copy.theme}". The comparisons are: ${(post.copy.pairs ?? []).map((p) => `"${p.top_label}" vs "${p.bottom_label}"`).join("; ")}.`;
+      ? `A cast carousel showing every role inside the mechanic: ${(post.copy.roles?.map((r) => r.label) ?? post.copy.labels ?? []).join(", ")}.`
+      : post.copy.pairs?.length
+        ? `A ${post.copy.pairs.length} slide comparison carousel on the theme "${post.copy.theme}". The comparisons are: ${post.copy.pairs.map((p) => `"${p.top_label}" vs "${p.bottom_label}"`).join("; ")}.`
+        : post.copy.lines?.length
+          ? `A carousel on "${post.copy.theme}" built from one repeating line: ${post.copy.lines.map((l) => `"${l.label}"`).join("; ")}. It ends on: "${post.copy.reveal_line ?? ""}".`
+          : post.copy.beats?.length
+            ? `A parable told by ${post.copy.speaker ?? "an everyday object"}: ${post.copy.beats.map((b) => `"${b.bubble}"`).join(" -> ")}. It lands on: "${post.copy.application ?? ""}".`
+            : `A carousel on the theme "${post.copy.theme}". The slides read: ${(post.copy.labels ?? []).map((l) => `"${l}"`).join("; ")}${post.copy.counters?.length ? `, answered by: ${post.copy.counters.map((l) => `"${l}"`).join("; ")}` : ""}.`;
 
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
