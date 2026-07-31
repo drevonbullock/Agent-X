@@ -171,10 +171,29 @@ export function versusPanelPrompt(sceneText, { owned, expression, seed = 0 }) {
   });
 }
 
+// Wick is a CANDLE. Asking for "a wardrobe over his wax body" made the model
+// draw a human in clothes with a flame for a head: dress shirt, slacks, leather
+// shoes, human shoulders and hips. That is a different character. Dre: "he's a
+// candlestick, why does he have human bodies?"
+//
+// The anatomy is non-negotiable and gets restated on every costume frame, and
+// wardrobe is demoted to small props sitting ON the candle rather than a body.
+const CANDLE_ANATOMY =
+  "CRITICAL ANATOMY: he is a CANDLE, not a person in costume. His body is a short " +
+  "cream wax cylinder with soft drips down the sides, and nothing else. No human " +
+  "torso, no shoulders, no chest, no hips, no waist, no neck. His arms are thin " +
+  "black rubber-hose tubes ending in rounded black mitten hands, and his legs are " +
+  "thin black rubber-hose tubes ending in simple rounded feet. The flame is his " +
+  "whole head. Clothing NEVER replaces the wax cylinder and never gives him a human " +
+  "silhouette: any garment is a small accessory resting on, wrapped around, or " +
+  "hanging off the candle body, and the cream wax with its drips stays clearly " +
+  "visible. Keep his proportions identical to the reference: flame head roughly the " +
+  "same height as the wax body.";
+
 export function costumePrompt(a, seed = 0) {
   const { camera } = variety(seed);
   return scenePrompt({
-    scene: `${a.pose || "stands in a pose that fits the role"}, ${a.wardrobe}, in ${a.setting}. ${a.beat}. His expression is ${a.expression || "calm and composed"}.`,
+    scene: `${a.pose || "stands in a pose that fits the role"}, wearing ${a.wardrobe} as a small accessory on his wax candle body, in ${a.setting}. ${a.beat}. His expression is ${a.expression || "calm and composed"}. ${CANDLE_ANATOMY}`,
     lighting: "His golden flame head is the primary light source, throwing warm amber light across the scene, the edges falling into deep soft shadow.",
     palette: PALETTE_WARM,
     extra: `${camera} Generous empty space across the middle of the frame for a text label. Absolutely no text anywhere in the image.`,
@@ -233,7 +252,26 @@ const dataUri = (p) => {
   return `data:${mime};base64,${fs.readFileSync(p).toString("base64")}`;
 };
 
-const FONTS = `<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">`;
+// Fonts are EMBEDDED, not fetched. The Google Fonts <link> silently failed to
+// resolve inside the headless shell, so every slide had been rendering in the
+// system fallback: Anton's condensed display face never actually appeared, which
+// is why the covers looked generic. A base64 @font-face cannot fail, cannot be
+// slow, and cannot vary between this machine and Railway.
+function fontFace(family, file, weight = "400") {
+  try {
+    const b64 = fs.readFileSync(path.join(process.cwd(), "assets", "fonts", file)).toString("base64");
+    return `@font-face{font-family:'${family}';font-weight:${weight};font-display:block;` +
+           `src:url(data:font/truetype;charset=utf-8;base64,${b64}) format('truetype');}`;
+  } catch {
+    console.warn(`[Wick] font ${file} missing — falling back to system sans`);
+    return "";
+  }
+}
+
+const FONTS = `<style>
+${fontFace("Anton", "Anton-Regular.ttf")}
+${fontFace("DM Sans", "DMSans.ttf", "100 900")}
+</style>`;
 
 const BASE_CSS = `
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -308,21 +346,46 @@ ${BASE_CSS}
 }
 
 // LESSON cover — scene with a huge condensed headline low in the frame.
+// The cover is a THUMBNAIL first and a slide second. On a profile grid it is
+// rendered about 360px wide, so the old 62-104px headline shrank to roughly 25px
+// and read as grey texture. Dre: "it has to pop, instantly legible."
+//
+// So the headline now dominates the frame rather than sitting in the bottom
+// margin: 2x the type size, top-anchored, with the leading count knocked out in
+// the brand amber so the eye lands on "5" before it reads a single word.
 export async function compositeLessonCover({ scenePath, headline }) {
-  scenePath = fitJpeg(scenePath, W, H);
-  const len = String(headline).length;
-  const size = len <= 26 ? 104 : len <= 38 ? 88 : len <= 52 ? 74 : 62;
+  scenePath = fitJpeg(scenePath, W, H, 0.10);
+  const text = String(headline).toUpperCase();
+  const len = text.length;
+  // Sized so the longest realistic headline still clears ~45px at grid scale.
+  const size = len <= 22 ? 196 : len <= 30 ? 172 : len <= 40 ? 150 : len <= 52 ? 126 : 108;
+
+  // Lead with the count. "5 WAYS FREE TRIALS..." -> amber "5", white remainder.
+  const m = text.match(/^(\d+)\s+(.*)$/s);
+  const inner = m
+    ? `<span class="n">${esc(m[1])}</span> ${esc(m[2])}`
+    : esc(text);
+
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
 .bg{position:absolute;inset:0;} .bg img{width:100%;height:100%;object-fit:cover;display:block;}
-.head{position:absolute;left:56px;right:56px;bottom:112px;z-index:20;text-align:center;
-  font-family:'Anton',sans-serif;font-size:${size}px;line-height:1.02;letter-spacing:0.5px;
-  color:#fff;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,0.95),0 2px 5px rgba(0,0,0,0.95);}
+/* Heavier scrim than the shared one: big type needs a floor to sit on. */
+.cover-shade{position:absolute;inset:0;z-index:10;
+  background:linear-gradient(180deg,rgba(8,6,4,0.35) 0%,rgba(8,6,4,0.10) 22%,rgba(8,6,4,0.30) 42%,rgba(8,6,4,0.88) 62%,rgba(8,6,4,0.97) 100%);}
+.head{position:absolute;left:48px;right:48px;bottom:150px;z-index:20;text-align:left;
+  font-family:'Anton',sans-serif;font-size:${size}px;line-height:0.93;letter-spacing:-0.5px;
+  color:#fff;text-transform:uppercase;
+  text-shadow:0 6px 34px rgba(0,0,0,0.95),0 2px 6px rgba(0,0,0,0.9);}
+.head .n{color:#F5A524;}
+.kicker{position:absolute;left:48px;right:48px;bottom:96px;z-index:20;
+  font-family:'DM Sans',sans-serif;font-weight:700;font-size:30px;letter-spacing:3px;
+  color:#F5A524;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,0.9);}
 </style></head><body>
 <div class="slide">
   <div class="bg"><img src="${dataUri(scenePath)}"></div>
-  <div class="shade"></div>
-  <div class="head">${esc(headline)}</div>
+  <div class="cover-shade"></div>
+  <div class="head">${inner}</div>
+  <div class="kicker">Swipe</div>
   <div class="wm">${esc(WATERMARK)}</div>
 </div></body></html>`;
   return renderHtml(html);

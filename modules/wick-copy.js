@@ -314,7 +314,7 @@ Return JSON object:
       "note": "One sentence on what this role actually does in the mechanic.",
       "pose": "His body position in this scene. Vary it hard across the six: crouching, leaning, seated, mid stride, turned away, reaching. Never two the same.",
       "expression": "His facial expression, matched to the role. Specific and emotionally precise.",
-      "wardrobe": "modern clothing over his wax body that reads the role instantly, e.g. a courier's windbreaker, a cashier's apron, a tailored blazer",
+      "wardrobe": "ONE small accessory that reads the role instantly and sits ON a candle without giving it a human body. A hard hat, a headset, a lanyard, a visor, a name badge, a tool belt slung round the wax, a scarf, a tiny apron. NEVER a shirt, suit, trousers, shoes or anything implying a torso or legs.",
       "setting": "One dense sentence: a PRESENT DAY setting with 3-4 named modern objects.",
       "beat": "The one small action he is caught mid performing."
     }
