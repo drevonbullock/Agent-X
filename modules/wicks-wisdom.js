@@ -12,10 +12,12 @@ import {
 } from "./wick-render.js";
 
 // ─── WICK'S WISDOM — ORCHESTRATOR ────────────────────────────────────────────
-// Weekly batch → Supabase queue → HUMAN APPROVAL → publish to the same Instagram
-// account Agent X already uses (same token, same business id, new brand).
+// Weekly batch → Supabase queue → publish to the same Instagram account Agent X
+// already uses (same token, same business id, new brand).
 //
-// NOTHING publishes without explicit approval. That gate is the whole design.
+// AUTO MODE (Dre, 2026-07-30): posts are queued already approved and publish on
+// their 9am/12pm slot with no human gate. Telegram notifies with a per-post Pull
+// kill switch. Set WICK_AUTO_PUBLISH=false to restore the approval gate.
 
 const BUCKET = "agent-x-images";
 
