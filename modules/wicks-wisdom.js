@@ -58,15 +58,15 @@ async function buildComparisonCarousel(c, format, dir, jobIds) {
   for (let i = 0; i < c.pairs.length; i++) {
     const pair = c.pairs[i];
     console.log(`[Wick]   ${i + 1}/${c.pairs.length}: "${pair.top_label}" / "${pair.bottom_label}"`);
-    const topPath = await scene(versusPanelPrompt(pair.top_scene, { ancient: true }), dir, `p${i}-top`, "3:2", jobIds);
-    const botPath = await scene(versusPanelPrompt(pair.bottom_scene, { ancient: false }), dir, `p${i}-bot`, "3:2", jobIds);
+    const topPath = await scene(versusPanelPrompt(pair.top_scene, { ancient: true,  expression: pair.top_expression }),    dir, `p${i}-top`, "3:2", jobIds);
+    const botPath = await scene(versusPanelPrompt(pair.bottom_scene, { ancient: false, expression: pair.bottom_expression }), dir, `p${i}-bot`, "3:2", jobIds);
     buffers.push(await compositeTwoPanel({
       topPath, bottomPath: botPath,
       topLabel: pair.top_label, bottomLabel: pair.bottom_label,
     }));
   }
 
-  const ctaPath = await scene(lessonScenePrompt(c.cta_scene), dir, "cta", "4:5", jobIds);
+  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression), dir, "cta", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: ctaPath,
     closingLine: c.closing_line,
@@ -107,11 +107,11 @@ async function buildLesson(dir, jobIds) {
   console.log(`[Wick] LESSON: "${l.cover_headline}" (${l.items.length} items)`);
   const buffers = [];
 
-  const coverPath = await scene(lessonScenePrompt(l.cover_scene), dir, "cover", "4:5", jobIds);
+  const coverPath = await scene(lessonScenePrompt(l.cover_scene, l.cover_expression), dir, "cover", "4:5", jobIds);
   buffers.push(await compositeLessonCover({ scenePath: coverPath, headline: l.cover_headline }));
 
   for (const item of l.items) {
-    const p = await scene(lessonScenePrompt(item.scene), dir, `item-${item.number}`, "4:5", jobIds);
+    const p = await scene(lessonScenePrompt(item.scene, item.expression), dir, `item-${item.number}`, "4:5", jobIds);
     buffers.push(await compositeLessonItem({
       scenePath: p, number: item.number, title: item.title,
       problem: item.problem, solution: item.solution,

@@ -105,14 +105,20 @@ Return JSON object:
       "top_label": "the ancient line, max 9 words",
       "bottom_label": "the modern line, max 9 words",
       "top_scene": "One dense sentence: what Wick is doing in a concrete ancient scene, 3-4 named physical objects, the setting. No character description, he is supplied separately.",
-      "bottom_scene": "One dense sentence: the modern mirror scene, what Wick is doing, 3-4 named modern objects, the setting."
+      "top_expression": "His facial expression in the ancient panel. Be specific and emotionally precise: calm and absorbed, quietly proud, focused, content, resolute, serene. Match the feeling of the scene.",
+      "bottom_scene": "One dense sentence: the modern mirror scene, what Wick is doing, 3-4 named modern objects, the setting.",
+      "bottom_expression": "His facial expression in the modern panel. Usually the emotional cost: hollow and vacant, anxious, defeated, numb, quietly ashamed, exhausted. Match the feeling of the scene."
     }
   ],
   "closing_line": "One sentence that reframes all four at once.",
   "keyword": "WISDOM|RITUAL|STOIC|SAGE",
   "resource": "name of the free text resource the keyword delivers",
-  "cta_scene": "One dense sentence: a closing scene for Wick that visually gathers the theme, 3-4 named objects."
+  "cta_scene": "One dense sentence: a closing scene for Wick that visually gathers the theme, 3-4 named objects.",
+  "cta_expression": "His expression in the closing scene. Usually warm, resolved, quietly hopeful, or knowing."
 }
+
+EXPRESSION MATTERS. Wick's face must carry the emotion of every scene. A serious
+scene gets a serious face. A hopeful one gets warmth. Never default to smiling.
 
 Exactly 4 pairs.`,
     }],
@@ -162,14 +168,20 @@ Return JSON object:
       "top_label": "the command, max 8 words",
       "bottom_label": "the turn or the arithmetic, max 10 words",
       "top_scene": "One dense sentence: Wick performing the command, 3-4 named objects, setting.",
-      "bottom_scene": "One dense sentence: the payoff scene, 3-4 named objects showing accumulation or consequence."
+      "top_expression": "His expression performing the command. Specific: determined, focused, quietly disciplined, resolute.",
+      "bottom_scene": "One dense sentence: the payoff scene, 3-4 named objects showing accumulation or consequence.",
+      "bottom_expression": "His expression at the payoff. Specific: quietly satisfied, awed, proud, steady."
     }
   ],
   "closing_line": "One sentence that reframes all four.",
   "keyword": "WISDOM|RITUAL|STOIC|SAGE",
   "resource": "name of the free text resource",
-  "cta_scene": "One dense sentence: closing scene for Wick, 3-4 named objects."
+  "cta_scene": "One dense sentence: closing scene for Wick, 3-4 named objects.",
+  "cta_expression": "His expression in the closing scene."
 }
+
+EXPRESSION MATTERS. Wick's face must carry the emotion of every scene. Never
+default to smiling.
 
 Exactly 4 pairs.`,
     }],
@@ -187,14 +199,14 @@ Exactly 4 pairs.`,
 // ─── COSTUME — archetype carousel, 8 archetypes + CTA ────────────────────────
 
 export const ARCHETYPES = [
-  { label: "Think like a Stoic",      bold: "Stoic",    pillar: "Mind",      wardrobe: "a simple white toga draped over his wax body", setting: "an open marble colonnade with a violent storm raging beyond the columns, sheeting rain and trees bent sideways", beat: "his flame burns perfectly straight and undisturbed despite the storm" },
-  { label: "Watch like a Monk",       bold: "Monk",     pillar: "Mind",      wardrobe: "a coarse undyed wool habit over his wax body", setting: "a stone cloister before dawn, a single arched window, a worn prayer bench, a clay water bowl", beat: "he sits perfectly still watching the doorway, hands folded" },
-  { label: "Plan like an Engineer",   bold: "Engineer", pillar: "Systems",   wardrobe: "a leather work apron over his wax body", setting: "a workshop with an unrolled aqueduct blueprint on a heavy table, bronze calipers, a real stone aqueduct visible through the arch", beat: "he measures the blueprint with the calipers" },
-  { label: "Count like a Merchant",   bold: "Merchant", pillar: "Money",     wardrobe: "a russet merchant robe over his wax body", setting: "a storeroom counting table with a bronze balance scale, sorted stacks of coins, an open ledger, sealed amphorae behind", beat: "he weighs coins on the balance, focused" },
-  { label: "Save like a Farmer",      bold: "Farmer",   pillar: "Money",     wardrobe: "a rough homespun tunic over his wax body", setting: "a stone granary at harvest, full grain sacks, a wooden scoop, a sealed storage jar, bare winter fields through the door", beat: "he sets aside one sack separate from the rest" },
-  { label: "Question like Socrates",  bold: "Socrates", pillar: "Behaviour", wardrobe: "a pale draped himation over his wax body", setting: "a sunlit market square with stone steps, a fruit stall, a small group of listeners seated on the steps", beat: "one mitten hand open in a questioning gesture" },
-  { label: "Speak like a Diplomat",   bold: "Diplomat", pillar: "Behaviour", wardrobe: "a deep blue formal robe over his wax body", setting: "a quiet negotiation chamber, a long polished table, two sealed scrolls, a carafe of water, empty chairs opposite", beat: "he listens with hands still, saying nothing yet" },
-  { label: "Endure like a Spartan",   bold: "Spartan",  pillar: "Behaviour", wardrobe: "a crimson wool cloak over his wax body", setting: "a rocky mountain pass at cold dawn, a bronze helmet resting on the rock beside him, a worn leather pack, frost on stone", beat: "his flame burns low but completely steady in the cold wind" },
+  { label: "Think like a Stoic", expression: "calm, composed, completely unbothered",      bold: "Stoic",    pillar: "Mind",      wardrobe: "a simple white toga draped over his wax body", setting: "an open marble colonnade with a violent storm raging beyond the columns, sheeting rain and trees bent sideways", beat: "his flame burns perfectly straight and undisturbed despite the storm" },
+  { label: "Watch like a Monk", expression: "still, alert, patiently observant",       bold: "Monk",     pillar: "Mind",      wardrobe: "a coarse undyed wool habit over his wax body", setting: "a stone cloister before dawn, a single arched window, a worn prayer bench, a clay water bowl", beat: "he sits perfectly still watching the doorway, hands folded" },
+  { label: "Plan like an Engineer", expression: "focused, absorbed in the measurement",   bold: "Engineer", pillar: "Systems",   wardrobe: "a leather work apron over his wax body", setting: "a workshop with an unrolled aqueduct blueprint on a heavy table, bronze calipers, a real stone aqueduct visible through the arch", beat: "he measures the blueprint with the calipers" },
+  { label: "Count like a Merchant", expression: "sharp, precise, quietly shrewd",   bold: "Merchant", pillar: "Money",     wardrobe: "a russet merchant robe over his wax body", setting: "a storeroom counting table with a bronze balance scale, sorted stacks of coins, an open ledger, sealed amphorae behind", beat: "he weighs coins on the balance, focused" },
+  { label: "Save like a Farmer", expression: "steady, disciplined, thinking ahead",      bold: "Farmer",   pillar: "Money",     wardrobe: "a rough homespun tunic over his wax body", setting: "a stone granary at harvest, full grain sacks, a wooden scoop, a sealed storage jar, bare winter fields through the door", beat: "he sets aside one sack separate from the rest" },
+  { label: "Question like Socrates", expression: "curious, warm, genuinely interested",  bold: "Socrates", pillar: "Behaviour", wardrobe: "a pale draped himation over his wax body", setting: "a sunlit market square with stone steps, a fruit stall, a small group of listeners seated on the steps", beat: "one mitten hand open in a questioning gesture" },
+  { label: "Speak like a Diplomat", expression: "attentive, measured, deliberately silent",   bold: "Diplomat", pillar: "Behaviour", wardrobe: "a deep blue formal robe over his wax body", setting: "a quiet negotiation chamber, a long polished table, two sealed scrolls, a carafe of water, empty chairs opposite", beat: "he listens with hands still, saying nothing yet" },
+  { label: "Endure like a Spartan", expression: "grim, resolute, jaw set against the cold",   bold: "Spartan",  pillar: "Behaviour", wardrobe: "a crimson wool cloak over his wax body", setting: "a rocky mountain pass at cold dawn, a bronze helmet resting on the rock beside him, a worn leather pack, frost on stone", beat: "his flame burns low but completely steady in the cold wind" },
 ];
 
 // ─── LESSON — problem/solution carousel, 7 slides ────────────────────────────
@@ -226,6 +238,7 @@ Return JSON object:
   "pillar": "Money|Systems|Mind|Behaviour",
   "cover_headline": "ALL CAPS headline promising a count, max 8 words",
   "cover_scene": "One dense sentence: the cover scene for Wick, 3-4 named objects, setting.",
+  "cover_expression": "His expression on the cover, matched to the headline's tone.",
   "items": [
     {
       "number": 1,
@@ -233,6 +246,7 @@ Return JSON object:
       "problem": "2 to 3 sentences naming the trap, in second person.",
       "solution": "2 to 3 sentences naming the practice and the cost of skipping it. NEVER a method.",
       "scene": "One dense sentence: scene for Wick illustrating this item, 3-4 named objects.",
+      "expression": "His facial expression in this scene, emotionally matched to the problem being shown. Specific: troubled, weary, uneasy, resigned, alert.",
       "signpost": "2 to 3 word label for the recap slide signpost"
     }
   ],
@@ -240,6 +254,9 @@ Return JSON object:
   "keyword": "WISDOM|RITUAL|STOIC|SAGE",
   "resource": "name of the free text resource the keyword delivers"
 }
+
+EXPRESSION MATTERS. Wick's face must carry the emotion of every scene. A post
+about loss gets a sombre face, not a smile.
 
 Exactly 5 items.`,
     }],

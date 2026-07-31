@@ -33,12 +33,18 @@ export function hfAvailable() {
   catch { return false; }
 }
 
+// gpt_image_2 accepts only 1:1, 4:3, 3:4, 16:9, 9:16, 3:2, 2:3 — it REJECTS 4:5.
+// Ask for 3:4 (the nearest vertical) and let the compositor normalize to the
+// exact 1080x1350 Instagram needs. Without this every CTA, COSTUME and LESSON
+// slide fails at generation time.
+const ASPECT_MAP = { "4:5": "3:4", "5:4": "4:3" };
+
 // Generate one image. Returns { url, jobId }.
-export function generateScene(prompt, aspect = "4:5") {
+export function generateScene(prompt, aspect = "3:4") {
   const raw = execFileSync(HF_BIN, [
     "generate", "create", MODEL,
     "--prompt", prompt,
-    "--aspect_ratio", aspect,
+    "--aspect_ratio", ASPECT_MAP[aspect] ?? aspect,
     "--quality", "high",
     "--resolution", "2k",
     "--wait", "--wait-timeout", "12m",
@@ -76,12 +82,12 @@ export function scenePrompt({ scene, lighting, palette, extra = "" }) {
     `${lighting} ${STYLE_STACK} ${palette} ${extra}`.replace(/\s+/g, " ").trim();
 }
 
-export function versusPanelPrompt(sceneText, { ancient }) {
+export function versusPanelPrompt(sceneText, { ancient, expression }) {
   const lighting = ancient
     ? "His own golden flame head is the only light source, throwing warm amber light across the objects nearest him, everything else falling into deep soft shadow."
     : "Cold blue-white light from a modern screen washes across him, flattening his warm glow to a weak surviving amber core on his face, the rest of the room in cold dim shadow.";
   return scenePrompt({
-    scene: sceneText,
+    scene: `${sceneText} His expression is ${expression || (ancient ? "calm and absorbed" : "hollow and vacant")}.`,
     lighting,
     palette: ancient ? PALETTE_WARM : PALETTE_COLD,
     extra: "Wide shot, character clearly visible, room for a text label across the lower third. Absolutely no text anywhere in the image.",
@@ -90,16 +96,16 @@ export function versusPanelPrompt(sceneText, { ancient }) {
 
 export function costumePrompt(a) {
   return scenePrompt({
-    scene: `sits or stands in a calm confident pose, ${a.wardrobe}, in ${a.setting}. ${a.beat}.`,
+    scene: `sits or stands in a pose that fits the role, ${a.wardrobe}, in ${a.setting}. ${a.beat}. His expression is ${a.expression || "calm and composed"}.`,
     lighting: "His golden flame head is the primary light source, throwing warm amber light across the scene, the edges falling into deep soft shadow.",
     palette: PALETTE_WARM,
     extra: "Wide shot, character centered, generous empty space across the middle of the frame for a text label. Absolutely no text anywhere in the image.",
   });
 }
 
-export function lessonScenePrompt(sceneText) {
+export function lessonScenePrompt(sceneText, expression) {
   return scenePrompt({
-    scene: sceneText,
+    scene: expression ? `${sceneText} His expression is ${expression}.` : sceneText,
     lighting: "His golden flame head is the only light source, throwing warm amber light across the nearest objects, long soft shadows behind.",
     palette: PALETTE_WARM,
     extra: "Composed so the character and objects sit in the UPPER portion of the frame with clear space below. Absolutely no text anywhere in the image.",
