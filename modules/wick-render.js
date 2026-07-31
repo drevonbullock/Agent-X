@@ -219,12 +219,17 @@ const FFMPEG = fs.existsSync("/opt/homebrew/bin/ffmpeg") ? "/opt/homebrew/bin/ff
 // A 2k PNG base64-encoded into HTML is tens of megabytes, and two of them on one
 // page reliably times out Puppeteer's screenshot. Downscale to the size the slot
 // actually needs and convert to JPEG first — this is a ~50x size reduction.
-function fitJpeg(srcPath, targetW, targetH) {
-  const out = srcPath.replace(/\.(png|jpg|jpeg|webp)$/i, "") + `_fit_${targetW}x${targetH}.jpg`;
+// `yBias` picks where a tall source gets cropped: 0.5 is centred, lower keeps
+// the top. Wick is composed upper-centre in almost every scene, so a centred
+// crop into a short band decapitates him and loses the face, which is the one
+// element that has to survive. Short bands crop high instead.
+function fitJpeg(srcPath, targetW, targetH, yBias = 0.5) {
+  const out = srcPath.replace(/\.(png|jpg|jpeg|webp)$/i, "") + `_fit_${targetW}x${targetH}_${yBias}.jpg`;
+  const y = yBias === 0.5 ? "(ih-oh)/2" : `(ih-oh)*${yBias}`;
   try {
     execFileSync(FFMPEG, [
       "-y", "-i", srcPath,
-      "-vf", `scale=${targetW}:${targetH}:force_original_aspect_ratio=increase,crop=${targetW}:${targetH}`,
+      "-vf", `scale=${targetW}:${targetH}:force_original_aspect_ratio=increase,crop=${targetW}:${targetH}:(iw-ow)/2:${y}`,
       "-q:v", "3", out,
     ], { stdio: "pipe", timeout: 60_000 });
     return out;
@@ -336,7 +341,7 @@ ${BASE_CSS}
 
 // LESSON interior — scene top, numbered headline, PROBLEM / SOLUTION on black.
 export async function compositeLessonItem({ scenePath, number, title, problem, solution }) {
-  scenePath = fitJpeg(scenePath, W, 560);
+  scenePath = fitJpeg(scenePath, W, 560, 0.12);
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
 .slide{display:flex;flex-direction:column;background:#0a0806;}
@@ -365,7 +370,7 @@ ${BASE_CSS}
 
 // CTA / recap slide — scene, closing line, keyword in amber.
 export async function compositeCta({ scenePath, closingLine, keyword, resource }) {
-  scenePath = fitJpeg(scenePath, W, 790);
+  scenePath = fitJpeg(scenePath, W, 790, 0.25);
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
 .slide{display:flex;flex-direction:column;background:#0a0806;}
