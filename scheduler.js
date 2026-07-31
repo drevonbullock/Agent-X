@@ -12,6 +12,7 @@ import { mineCompetitors, loadDynamicThemes } from "./modules/competitor-researc
 import { checkRepeatEngagers } from "./modules/lead-capture.js";
 import { runWeeklyBatch, publishNextApproved } from "./modules/wicks-wisdom.js";
 import { pollTelegramApprovals } from "./modules/wick-telegram.js";
+import { syncWickMetrics } from "./modules/wick-analytics.js";
 import { initTokens, refreshTokens, checkAnthropicCredit, checkLinkedInToken, checkTelegram } from "./modules/token-manager.js";
 import { isHiggsfieldCliAvailable } from "./agent/generate-higgsfield.js";
 import supabase from "./supabase/client.js";
@@ -206,6 +207,11 @@ export function startScheduler() {
     if (paused()) { return; }
     try { await runAnalyticsCycle(); }
     catch (err) { console.error(`[Scheduler] Analytics failed: ${err.message}`); }
+    // Wick lives in wick_posts, which runAnalyticsCycle never touches, so its
+    // shares/saves would stay at zero. The brand optimises for shares, so this
+    // is the one metric that has to be real.
+    try { await syncWickMetrics(); }
+    catch (err) { console.error(`[Scheduler] Wick metrics sync failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── HOOK TESTER — every 6 hours (offset :30) ─────────────────────────────
