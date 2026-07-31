@@ -82,12 +82,23 @@ export function hfAvailable() {
 // slide fails at generation time.
 const ASPECT_MAP = { "4:5": "3:4", "5:4": "4:3" };
 
+// nano_banana_pro renders UI text into scenes even when the style stack forbids
+// it (observed 2026-07-31: a laptop drawn with "Banking App" and invented dollar
+// figures). Every label we ship is composited, and a generated number reads as a
+// real figure, so the ban gets restated in the strongest terms for that model.
+const NO_TEXT_HARD =
+  " CRITICAL: render absolutely no text, no letters, no numbers, no digits, no " +
+  "currency amounts, no words, no UI labels, no menu items, no app interfaces, no " +
+  "signage, no logos and no writing of any kind anywhere in this image. Any screen, " +
+  "paper, notebook, sign or display must be completely blank, showing only abstract " +
+  "shapes, blocks, lines or glowing colour with no readable characters whatsoever.";
+
 function runModel(model, prompt, aspect) {
   // nano_banana_pro accepts 4:5 natively and takes no quality flag.
   const isNB = model.startsWith("nano_banana");
   const args = [
     "generate", "create", model,
-    "--prompt", prompt,
+    "--prompt", isNB ? prompt + NO_TEXT_HARD : prompt,
     "--aspect_ratio", isNB ? aspect : (ASPECT_MAP[aspect] ?? aspect),
     "--resolution", "2k",
     "--wait", "--wait-timeout", "12m",
