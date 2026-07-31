@@ -305,18 +305,25 @@ ${BASE_CSS}
 .panel.top{top:0;} .panel.bot{bottom:0;}
 .panel img{width:100%;height:100%;object-fit:cover;display:block;}
 .seam{position:absolute;top:${(H - 4) / 2}px;left:0;width:${W}px;height:4px;background:#0d0b09;z-index:30;}
-.plabel{position:absolute;left:64px;right:64px;bottom:34px;z-index:20;text-align:center;
-  font-family:'DM Sans',sans-serif;font-weight:700;font-size:44px;line-height:1.18;color:#fff;
-  text-shadow:0 3px 16px rgba(0,0,0,0.9),0 1px 3px rgba(0,0,0,0.9);}
-.pshade{position:absolute;left:0;right:0;bottom:0;height:52%;
-  background:linear-gradient(180deg,transparent 0%,rgba(8,6,4,0.78) 62%,rgba(8,6,4,0.92) 100%);}
+/* Label sits INSIDE the art, about a third up from the panel's base, and the
+   scene stays visible behind it. The old scrim ran to 92% opacity across the
+   bottom half, which read as a black bar with a caption pasted under the picture
+   and threw away the art we had just paid for. Legibility now comes from a hard
+   drop shadow plus a soft local pool behind the text, the way the reference does
+   it. */
+.plabel{position:absolute;left:70px;right:70px;bottom:${Math.round(((H - 4) / 2) * 0.22)}px;
+  z-index:20;text-align:center;
+  font-family:'DM Sans',sans-serif;font-weight:700;font-size:46px;line-height:1.2;color:#fff;
+  text-shadow:0 2px 4px rgba(0,0,0,0.98),0 4px 18px rgba(0,0,0,0.92),0 0 46px rgba(0,0,0,0.85);}
+.pshade{position:absolute;left:0;right:0;bottom:0;height:46%;
+  background:linear-gradient(180deg,transparent 0%,rgba(8,6,4,0.30) 55%,rgba(8,6,4,0.52) 100%);}
 </style></head><body>
 <div class="slide">
   <div class="panel top"><img src="${dataUri(topPath)}"><div class="pshade"></div>
     <div class="plabel">${esc(topLabel)}</div></div>
   <div class="seam"></div>
   <div class="panel bot"><img src="${dataUri(bottomPath)}"><div class="pshade"></div>
-    <div class="plabel" style="bottom:74px">${esc(bottomLabel)}</div></div>
+    <div class="plabel">${esc(bottomLabel)}</div></div>
   <div class="wm">${esc(WATERMARK)}</div>
 </div></body></html>`;
   return renderHtml(html);
@@ -372,13 +379,13 @@ ${BASE_CSS}
 /* Heavier scrim than the shared one: big type needs a floor to sit on. */
 .cover-shade{position:absolute;inset:0;z-index:10;
   background:linear-gradient(180deg,rgba(8,6,4,0.35) 0%,rgba(8,6,4,0.10) 22%,rgba(8,6,4,0.30) 42%,rgba(8,6,4,0.88) 62%,rgba(8,6,4,0.97) 100%);}
-.head{position:absolute;left:48px;right:48px;bottom:150px;z-index:20;text-align:left;
-  font-family:'Anton',sans-serif;font-size:${size}px;line-height:0.93;letter-spacing:-0.5px;
+.head{position:absolute;left:56px;right:56px;bottom:158px;z-index:20;text-align:center;
+  font-family:'Anton',sans-serif;font-size:${size}px;line-height:0.96;letter-spacing:0px;
   color:#fff;text-transform:uppercase;
   text-shadow:0 6px 34px rgba(0,0,0,0.95),0 2px 6px rgba(0,0,0,0.9);}
 .head .n{color:#F5A524;}
-.kicker{position:absolute;left:48px;right:48px;bottom:96px;z-index:20;
-  font-family:'DM Sans',sans-serif;font-weight:700;font-size:30px;letter-spacing:3px;
+.kicker{position:absolute;left:56px;right:56px;bottom:100px;z-index:20;text-align:center;
+  font-family:'DM Sans',sans-serif;font-weight:700;font-size:28px;letter-spacing:4px;
   color:#F5A524;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,0.9);}
 </style></head><body>
 <div class="slide">
@@ -392,28 +399,43 @@ ${BASE_CSS}
 }
 
 // LESSON interior — scene top, numbered headline, PROBLEM / SOLUTION on black.
+// Body slide, matched to the reference account's layout (Dre supplied it as the
+// target): art bleeding across the top, then EVERYTHING CENTRE ALIGNED under it.
+// A bold sentence-case headline, a full line of air, then short paragraphs with
+// generous space between them.
+//
+// The old version was left-aligned with "PROBLEM:" / "SOLUTION" chips in amber.
+// The chips read as a worksheet rather than a story, and the ragged left edge is
+// what Dre meant by "too much to the left". Centre alignment with real breathing
+// room is doing the work here, not the labels.
 export async function compositeLessonItem({ scenePath, number, title, problem, solution }) {
-  scenePath = fitJpeg(scenePath, W, 560, 0.12);
+  scenePath = fitJpeg(scenePath, W, 700, 0.10);
+  // Long copy shrinks a step so the block always clears the watermark.
+  const chars = String(problem).length + String(solution).length;
+  const body = chars > 300 ? 27 : chars > 230 ? 29 : 31;
+  const head = String(title).length > 34 ? 42 : 48;
+
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
 .slide{display:flex;flex-direction:column;background:#0a0806;}
-.top{position:relative;width:${W}px;height:560px;flex-shrink:0;overflow:hidden;}
+.top{position:relative;width:${W}px;height:700px;flex-shrink:0;overflow:hidden;}
 .top img{width:100%;height:100%;object-fit:cover;display:block;}
-.topfade{position:absolute;left:0;right:0;bottom:0;height:40%;
+.topfade{position:absolute;left:0;right:0;bottom:0;height:34%;
   background:linear-gradient(180deg,transparent,#0a0806);}
-.body{flex:1;padding:26px 58px 0;display:flex;flex-direction:column;}
-.h{font-family:'DM Sans',sans-serif;font-weight:700;font-size:46px;line-height:1.14;color:#fff;margin-bottom:24px;}
-.lbl{font-family:'DM Sans',sans-serif;font-weight:700;font-size:25px;letter-spacing:1.6px;
-  color:#F5A524;margin-bottom:9px;}
-.txt{font-family:'DM Sans',sans-serif;font-weight:400;font-size:29px;line-height:1.42;
-  color:#ece5dd;margin-bottom:26px;}
+.body{flex:1;padding:0 66px 96px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;}
+.h{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${head}px;line-height:1.16;
+  color:#fff;margin-bottom:30px;}
+.h .n{color:#F5A524;}
+.txt{font-family:'DM Sans',sans-serif;font-weight:400;font-size:${body}px;line-height:1.46;
+  color:#ece5dd;margin-bottom:26px;max-width:900px;}
 </style></head><body>
 <div class="slide">
   <div class="top"><img src="${dataUri(scenePath)}"><div class="topfade"></div></div>
   <div class="body">
-    <div class="h">${esc(number)}. ${esc(title)}</div>
-    <div class="lbl">PROBLEM:</div><div class="txt">${esc(problem)}</div>
-    <div class="lbl">SOLUTION</div><div class="txt">${esc(solution)}</div>
+    <div class="h"><span class="n">${esc(number)}.</span> ${esc(title)}</div>
+    <div class="txt">${esc(problem)}</div>
+    <div class="txt">${esc(solution)}</div>
   </div>
   <div class="wm">${esc(WATERMARK)}</div>
 </div></body></html>`;

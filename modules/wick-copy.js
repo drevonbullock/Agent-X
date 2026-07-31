@@ -176,8 +176,8 @@ Return JSON object:
   "hidden_rule": "the rule the whole set reveals, one sentence, and it must name the handoff between the two pillars",
   "pairs": [
     {
-      "top_label": "the owner line, max 9 words",
-      "bottom_label": "the reader's default, max 9 words",
+      "top_label": "the owner line, max 7 words. Punchier is better. Reference rhythm: 'You talk too much'. Short enough to read in one glance at thumbnail size.",
+      "bottom_label": "the reader's default, max 7 words. Reference rhythm: 'Start a Podcast.' Land it hard and stop.",
       "top_scene": "One dense sentence that SHOWS the top label. Name his body position, the single action that proves the claim, 3-4 named modern objects, and the setting. Present day. No character description, he is supplied separately.",
       "top_expression": "His facial expression in the owner panel. Be specific and emotionally precise: focused, quietly certain, unhurried, deliberate, clear eyed. Match the feeling of the scene.",
       "bottom_scene": "One dense sentence that SHOWS the bottom label. Name his body position, the action that proves it, 3-4 named modern objects, the setting. Must visually rhyme with the top scene while showing the opposite outcome.",
