@@ -140,15 +140,17 @@ export function scenePrompt({ scene, lighting, palette, extra = "" }) {
     `${lighting} ${STYLE_STACK} ${palette} ${extra}`.replace(/\s+/g, " ").trim();
 }
 
-export function versusPanelPrompt(sceneText, { ancient, expression, seed = 0 }) {
+// `owned` = the panel where he is holding the controls. Both panels are present
+// day; the split is warm self-lit versus cold screen-lit, never old versus new.
+export function versusPanelPrompt(sceneText, { owned, expression, seed = 0 }) {
   const { camera, pose } = variety(seed);
-  const lighting = ancient
+  const lighting = owned
     ? "His own golden flame head is the only light source, throwing warm amber light across the objects nearest him, everything else falling into deep soft shadow."
-    : "Cold blue-white light from a modern screen washes across him, flattening his warm glow to a weak surviving amber core on his face, the rest of the room in cold dim shadow.";
+    : "Cold blue-white light from a phone or laptop screen washes across him, flattening his warm glow to a weak surviving amber core on his face, the rest of the room in cold dim shadow.";
   return scenePrompt({
-    scene: `${sceneText} ${pose} His expression is ${expression || (ancient ? "calm and absorbed" : "hollow and vacant")}.`,
+    scene: `${sceneText} ${pose} His expression is ${expression || (owned ? "focused and unhurried" : "hollow and vacant")}.`,
     lighting,
-    palette: ancient ? PALETTE_WARM : PALETTE_COLD,
+    palette: owned ? PALETTE_WARM : PALETTE_COLD,
     extra: `${camera} Character clearly visible, room for a text label across the lower third. Absolutely no text anywhere in the image.`,
   });
 }

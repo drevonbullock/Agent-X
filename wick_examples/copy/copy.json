@@ -1,0 +1,260 @@
+{
+  "VERSUS": {
+    "topic": {
+      "id": 6,
+      "lane": "HYBRID",
+      "title": "Why Free Trials Work on You Every Time",
+      "hook": "Loss aversion plus defaults",
+      "payoff": "Subscription drift engineering"
+    },
+    "copy": {
+      "theme": "subscription_drift_engineering",
+      "pillar": "Systems",
+      "pillar_link": "Behaviour to Money",
+      "sub_type": "owner_vs_owned",
+      "hidden_rule": "The default setting is a financial decision someone else made for your Behaviour, and it keeps collecting long after the trial ends.",
+      "pairs": [
+        {
+          "top_label": "He set the cancellation reminder before signing up.",
+          "bottom_label": "You planned to cancel. Then forgot you started.",
+          "top_scene": "He is at a kitchen counter with a laptop open to a signup page, thumb already tapping a calendar app on his phone to drop a reminder four days before the trial window closes, a glass of water beside the keyboard.",
+          "top_expression": "Calm and methodical, like someone who has already closed the loop before the loop even opens.",
+          "bottom_scene": "He is on a couch, phone screen showing a bank notification for a charge he does not immediately recognise, a delivery box unopened on the floor beside him, the TV still running in the background.",
+          "bottom_expression": "Quietly hollow, the slow recognition of someone who knows the answer and does not want to say it."
+        },
+        {
+          "top_label": "He reads the opt-out before the opt-in.",
+          "bottom_label": "You clicked agree without reading anything.",
+          "top_scene": "He is at a standing desk, scrolling a terms page on a monitor with one finger while a notepad beside the keyboard holds two bullet points he has already written down about cancellation timing and auto-renewal dates.",
+          "top_expression": "Focused and unhurried, the look of someone who treats the fine print as the actual product.",
+          "bottom_scene": "He is slumped at the same desk days later, headphones around his neck, browser open to a support chat where he has typed the word 'refund' and is waiting for a reply that will not come.",
+          "bottom_expression": "Low and resigned, the particular stillness of someone who knows the answer is no before anyone says it."
+        },
+        {
+          "top_label": "He audits active subscriptions on a fixed date monthly.",
+          "bottom_label": "You discover them when the balance drops unexpectedly.",
+          "top_scene": "He is at a small home office desk on the first of the month, a spreadsheet open on the laptop beside a coffee mug, methodically checking each line against a list he printed and taped to the wall above the monitor.",
+          "top_expression": "Deliberate and clear-eyed, the expression of someone doing maintenance rather than damage control.",
+          "bottom_scene": "He is standing in a supermarket aisle, phone out, staring at a banking app notification mid-shop, a basket hanging from one arm, the expression arriving before the thought does.",
+          "bottom_expression": "Tight and anxious, the specific discomfort of doing the maths in public."
+        },
+        {
+          "top_label": "He counts the trials running before he sleeps.",
+          "bottom_label": "You are the revenue line on someone else's forecast.",
+          "top_scene": "He is in bed, phone face down on the nightstand, a small notebook open on his chest where he has written a short list of three active trials with their end dates and the word 'cancel' checked against two of them.",
+          "top_expression": "Settled and quietly certain, the ease of someone who closed every open door before lying down.",
+          "bottom_scene": "He is in the same bed, phone screen bright in the dark, scrolling back through three months of card statements with his thumb, the room lit only by the screen and the numbers adding up faster than he expected.",
+          "bottom_expression": "Tired and exposed, the kind of stillness that is not rest."
+        }
+      ],
+      "closing_line": "The trial is free because the default setting is the product, and your Behaviour is what keeps paying for it.",
+      "keyword": "LEDGER",
+      "resource": "The Subscription Drift Audit: a plain-text walkthrough for finding and valuing every recurring charge running in the background",
+      "cta_scene": "He is at a kitchen table with a printed bank statement, a pen, and a laptop open to a plain spreadsheet, drawing a single line through each charge he has already decided on, the overhead light on and the phone face down beside the mug.",
+      "cta_expression": "Quietly resolved, the look of someone finishing a conversation they have been avoiding and finding it shorter than they feared."
+    }
+  },
+  "ORDER": {
+    "topic": {
+      "id": 19,
+      "lane": "HYBRID",
+      "title": "Why Ten Dollars a Month Feels Like Nothing",
+      "hook": "Denomination effect",
+      "payoff": "The annual number"
+    },
+    "copy": {
+      "theme": "denomination_effect_annual_reveal",
+      "pillar": "Money",
+      "pillar_link": "Behaviour to Money",
+      "sub_type": "imperative",
+      "hidden_rule": "The brain treats a small monthly number as harmless, so the behaviour of ignoring it compounds silently into a four-figure annual drain.",
+      "pairs": [
+        {
+          "top_label": "Read the monthly charge as a yearly number",
+          "bottom_label": "Ten dollars is one hundred and twenty dollars",
+          "top_scene": "Wick sits at a kitchen counter, credit card statement open on a laptop, pen tapping the screen where a recurring line reads $9.99, phone face-down beside a cold coffee.",
+          "top_expression": "Focused, jaw set, fully present with the number.",
+          "bottom_scene": "He writes $119.88 on a sticky note and presses it over the $9.99 line on the screen, the annual figure suddenly crowding the monitor.",
+          "bottom_expression": "Quietly awed, the scale of it landing on his face for the first time."
+        },
+        {
+          "top_label": "Count every monthly line, not just the obvious ones",
+          "bottom_label": "Six small charges become seven hundred and twenty dollars",
+          "top_scene": "Wick scrolls a banking app on his phone under office fluorescent lights, highlighting six separate monthly charges with his thumb, a notepad open on the desk beside his keyboard.",
+          "top_expression": "Methodical, unhurried, the kind of focus that refuses to look away.",
+          "bottom_scene": "The notepad shows a column of six annual conversions totalling $720, circled twice, resting next to a full water bottle and a closed laptop.",
+          "bottom_expression": "Steady, resolved, as if something that was blurry has just sharpened into a clear shape."
+        },
+        {
+          "top_label": "Stop letting the billing cycle set the frame",
+          "bottom_label": "The cycle resets. The cost never does.",
+          "top_scene": "Wick stands at a standing desk, deleting a recurring calendar reminder that read 'subscription renews' from a monitor, the room around him showing an open planner and a half-packed gym bag.",
+          "top_expression": "Determined, cutting away something that had been running unexamined.",
+          "bottom_scene": "He opens a spreadsheet on a second screen where the same charge now sits in a yearly column, the total row highlighted in yellow, the planner beside it still open.",
+          "bottom_expression": "Unsettled in a useful way, like a door has been opened into a room he should have entered earlier."
+        },
+        {
+          "top_label": "Write the annual cost before you approve the monthly one",
+          "bottom_label": "Fifteen dollars becomes one hundred and eighty dollars at checkout",
+          "top_scene": "Wick pauses at a checkout screen on his laptop, delivery box from a previous order still on the floor behind him, cursor hovering over the subscribe button while he types $180 into the notes field of his phone.",
+          "top_expression": "Resolute, choosing the harder frame on purpose.",
+          "bottom_scene": "He closes the laptop without clicking, the $180 note still visible on the phone screen beside an empty coffee mug and the unopened delivery box.",
+          "bottom_expression": "Quietly satisfied, not smug, just accurate about what the number actually was."
+        }
+      ],
+      "closing_line": "The monthly format is a design decision, and it was not made in your favour.",
+      "keyword": "LEDGER",
+      "resource": "The Annual Cost Audit: a free line-by-line reframe",
+      "cta_scene": "Wick sits cross-legged on an apartment floor, back against the sofa, laptop open to a spreadsheet, printed bank statements fanned across the hardwood floor, phone beside him showing a calculator with a four-digit total on the screen.",
+      "cta_expression": "Calm and a little unsettled, the way a person looks when the numbers finally tell the truth."
+    }
+  },
+  "COSTUME": {
+    "topic": {
+      "id": 30,
+      "lane": "MONEY_SYSTEMS",
+      "title": "Where Your Money Goes When You Swipe",
+      "hook": "The invisible chain taking a cut",
+      "payoff": "The invisible chain taking a cut"
+    },
+    "copy": {
+      "theme": "invisible_chain_cut",
+      "pillar": "Money",
+      "pillar_link": "Money into Systems",
+      "hidden_rule": "Every swipe passes through a chain of parties who each extracted their fee before your money reached the place you thought you were paying.",
+      "roles": [
+        {
+          "label": "The one who sets the rails",
+          "bold": "rails",
+          "note": "This party built the network that every card transaction must travel through, and charges a toll on every single journey.",
+          "pose": "Standing with arms wide open, palms up, as if presenting the floor beneath everyone's feet.",
+          "expression": "Calm and proprietary, the look of someone who owns the road and knows no one can bypass it.",
+          "wardrobe": "A charcoal infrastructure-engineer blazer over a plain white shirt, ID lanyard hanging loose.",
+          "setting": "A glass-walled server room, rows of blinking rack units, a wall-mounted network diagram, a floor-level cable tray running the length of the room.",
+          "beat": "Tapping a single node on the wall diagram with one finger, as if to say: it all passes here."
+        },
+        {
+          "label": "The one who issued your card",
+          "bold": "issued",
+          "note": "This party stamped your name on the card, fronted your spending power, and negotiated the slice of every transaction they collect in return.",
+          "pose": "Seated forward in a chair, elbows on knees, hands loosely clasped.",
+          "expression": "Measured confidence, the look of someone who already knows the quarterly number before the quarter ends.",
+          "wardrobe": "A fitted navy suit jacket, no tie, small enamel logo pin on the lapel.",
+          "setting": "A corner office, a thin laptop open to a spreadsheet, a phone face-down on the desk, a floor-to-ceiling window overlooking a city block.",
+          "beat": "Scrolling a column of interchange figures with one thumb without breaking eye contact."
+        },
+        {
+          "label": "The one who handles the merchant",
+          "bold": "handles",
+          "note": "This party sells the seller their ability to accept cards at all, skimming a processing fee from every transaction that flows through their terminal.",
+          "pose": "Standing at a counter, leaning slightly forward on both forearms.",
+          "expression": "Helpful and slightly too smooth, the face of a salesperson who has already closed.",
+          "wardrobe": "A light grey button-down with sleeves rolled to the elbow, a branded lanyard with a card reader clipped to it.",
+          "setting": "A small retail back office, a receipt printer on a shelf, a tablet showing a transaction dashboard, a stack of onboarding paperwork, a half-empty coffee mug.",
+          "beat": "Sliding a rate sheet across the counter with two fingers."
+        },
+        {
+          "label": "The one absorbing the cost",
+          "bold": "absorbing",
+          "note": "This is the merchant, the party that technically pays the processing fee and quietly folds it into every price on the shelf.",
+          "pose": "Crouching behind a low counter, restocking a shelf with both hands.",
+          "expression": "Focused and resigned, the look of someone who has done the margin math too many times.",
+          "wardrobe": "A plain grey apron over a long-sleeve shirt, a pen tucked behind one ear.",
+          "setting": "A neighbourhood storefront, a card terminal on the counter above, a phone showing a bank notification, cardboard stock boxes stacked against the wall.",
+          "beat": "Pausing mid-restock to glance up at the terminal display, then returning to the boxes."
+        },
+        {
+          "label": "The one who built the reward layer",
+          "bold": "reward",
+          "note": "This party designed the points and cashback system that makes swiping feel like winning while the interchange fees that fund those rewards come out of the merchant's margin.",
+          "pose": "Mid-stride across an open floor, holding a tablet in one hand.",
+          "expression": "Energised and slightly theatrical, the look of someone who knows the trick and enjoys watching it land.",
+          "wardrobe": "A slim-cut bomber jacket in muted olive, a branded tote slung over one shoulder.",
+          "setting": "A bright open-plan office, a standing desk with dual monitors showing a loyalty dashboard, a whiteboard covered in funnel diagrams, a cold brew bottle on the edge of the desk.",
+          "beat": "Swiping left on the tablet to reveal a new reward tier graphic, not stopping his stride."
+        },
+        {
+          "label": "The one who never sees the fee",
+          "bold": "never",
+          "note": "This is the cardholder, the only party in the chain who experiences the swipe as free while every other participant has already priced their cut into the system around them.",
+          "pose": "Turned slightly away from the camera, tapping a card on a terminal, weight on one foot.",
+          "expression": "Distracted and unbothered, the face of someone whose attention is already on the next thing.",
+          "wardrobe": "Casual streetwear, a puffer jacket unzipped, earbuds in, phone in the other hand.",
+          "setting": "A busy checkout lane, a self-service terminal with a glowing tap target, a canvas tote bag on the counter, a conveyor belt with a few grocery items.",
+          "beat": "Already pulling the card away before the approval tone has finished."
+        }
+      ],
+      "closing_line": "Six parties touch every swipe, and only one of them thinks it was free.",
+      "keyword": "LEDGER",
+      "resource": "The Swipe Ledger: a plain-language breakdown of who collects what between your card and the register",
+      "cta_scene": "Wick at a kitchen counter, a card in one hand, a phone showing a transaction notification, a laptop open to a spreadsheet, a takeout container beside the keyboard.",
+      "cta_expression": "Direct and unhurried, the look of someone who has counted every line and wants you to count yours."
+    }
+  },
+  "LESSON": {
+    "topic": {
+      "id": 15,
+      "lane": "HYBRID",
+      "title": "Why Your Budget Dies in Week Three",
+      "hook": "Planning fallacy",
+      "payoff": "Structural failure of fixed budgets"
+    },
+    "copy": {
+      "pillar": "Mind",
+      "pillar_link": "Mind wires into Money: the planning fallacy is a cognitive glitch that manufactures structural budget collapse",
+      "cover_headline": "5 REASONS YOUR BUDGET COLLAPSES IN WEEK THREE",
+      "cover_scene": "Wick sits at a kitchen island, open laptop showing a spreadsheet, a coffee cup sweating a ring onto the counter, a stack of unopened delivery receipts beside his hand, overhead light harsh and fluorescent.",
+      "cover_expression": "Flat, unsurprised, like a man who has watched this exact failure play out before and is tired of being right.",
+      "items": [
+        {
+          "number": 1,
+          "title": "You Budgeted the Month You Imagined",
+          "problem": "On day one you build the budget around a version of the month that has no surprises, no detours, and no friction. That version of the month has never actually arrived. The numbers feel right because your brain is pattern-matching against a fantasy, not a record.",
+          "solution": "The practice is called reference-class forecasting: you set your numbers against what the last several months actually cost, not what you wished they had. Skipping it means your budget is priced for a life you do not live, and it will crack the moment the real month shows up.",
+          "scene": "Wick at a standing desk, scrolling through three months of bank statements on a laptop, a yellow legal pad next to him covered in crossed-out numbers, a phone face-down nearby.",
+          "expression": "Troubled, jaw tight, the look of someone confronting a gap they knew was there but avoided naming.",
+          "signpost": "Wrong Month"
+        },
+        {
+          "number": 2,
+          "title": "One-Off Costs Are Always On",
+          "problem": "You label the car service, the renewal fee, and the birthday dinner as exceptions and leave them out of the baseline. But exceptions arrive every single month. Only the category changes. The spend does not.",
+          "solution": "The practice is treating irregular costs as a fixed monthly line by averaging their annual total. Skipping it means a real expense hits a category that holds zero allocation, and the whole structure absorbs the shock by failing.",
+          "scene": "Wick standing in a parking garage, a service invoice in one hand, phone open to a banking app in the other, concrete pillars and overhead strip lighting around him.",
+          "expression": "Resigned, shoulders slightly dropped, the face of someone absorbing a cost they already knew was coming but never prepared for.",
+          "signpost": "Hidden Regulars"
+        },
+        {
+          "number": 3,
+          "title": "Optimism Is Priced Into Every Line",
+          "problem": "Your grocery line reflects what you intend to spend, not what you spend when tired on a Wednesday. Your transport line assumes no surge pricing, no detours, no last-minute trips. Every category carries a quiet discount for best-case behaviour that your actual self does not deliver.",
+          "solution": "The practice is padding each behavioural category by the gap between your stated intention and your tracked average. Skipping it means the budget works in a spreadsheet and fails in a body, every time.",
+          "scene": "Wick in a rideshare backseat at night, city lights blurring past the window, staring at a receipt notification on his phone, laptop bag between his feet.",
+          "expression": "Uneasy, mouth slightly pressed, caught mid-calculation between what he planned and what just happened.",
+          "signpost": "Built-In Discount"
+        },
+        {
+          "number": 4,
+          "title": "The Budget Has No Pressure Valve",
+          "problem": "A fixed budget treats every dollar as load-bearing. When one category runs over, there is nowhere for the pressure to go, so it buckles the whole structure. Most people respond by abandoning the budget entirely rather than adjusting one line.",
+          "solution": "The practice is building a flex allocation that absorbs variance before it becomes a crisis. Skipping it means a twenty-dollar overage in week two becomes a permission slip to stop tracking entirely, which costs orders of magnitude more by month-end.",
+          "scene": "Wick at a cafe table, coffee in hand, staring at a cracked phone screen showing a budgeting spreadsheet with one row highlighted in red, earbuds on the table beside him.",
+          "expression": "Alert but weary, the expression of someone watching a small problem become a big one in real time.",
+          "signpost": "No Release Valve"
+        },
+        {
+          "number": 5,
+          "title": "Week Three Is When Reality Invoices You",
+          "problem": "The first two weeks feel controlled because the big fixed costs have cleared and the irregular ones have not arrived yet. Week three is when the gap between the plan and the actual month becomes impossible to ignore. This is not bad luck. It is the schedule of reality.",
+          "solution": "The practice is a mid-month check against actuals before week three, not during it. Skipping it means you meet the invoice from reality with no runway left to adjust, and the month ends in a write-off instead of a correction.",
+          "scene": "Wick at a home desk late at night, a lamp casting yellow light onto a notebook, a laptop open to a spreadsheet, a glass of water beside it, the window dark behind him.",
+          "expression": "Sombre, still, the face of someone doing the accounting they should have done ten days ago.",
+          "signpost": "Reality's Invoice"
+        }
+      ],
+      "closing_line": "The budget did not fail in week three. It failed on day one, when you priced it for the month you hoped for instead of the month you always get.",
+      "keyword": "RESET",
+      "resource": "The Mid-Month Reality Check: a guided worksheet for catching budget drift before it becomes collapse"
+    }
+  }
+}

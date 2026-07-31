@@ -3,7 +3,8 @@ import fs from "fs";
 import path from "path";
 import supabase from "../supabase/client.js";
 import { postCarouselToInstagram, postImageToInstagram } from "../distributors/instagram.js";
-import { writeVersusCarousel, writeOrderCarousel, writeLesson, writeCaption, ARCHETYPES } from "./wick-copy.js";
+import { writeVersusCarousel, writeOrderCarousel, writeCostume, writeLesson, writeCaption } from "./wick-copy.js";
+import { pickTopics } from "./wick-topics.js";
 import {
   hfAvailable, generateScene, download, tmpDir,
   versusPanelPrompt, costumePrompt, lessonScenePrompt,
@@ -58,8 +59,8 @@ async function buildComparisonCarousel(c, format, dir, jobIds) {
   for (let i = 0; i < c.pairs.length; i++) {
     const pair = c.pairs[i];
     console.log(`[Wick]   ${i + 1}/${c.pairs.length}: "${pair.top_label}" / "${pair.bottom_label}"`);
-    const topPath = await scene(versusPanelPrompt(pair.top_scene, { ancient: true,  expression: pair.top_expression,  seed: i * 2 }),     dir, `p${i}-top`, "3:2", jobIds);
-    const botPath = await scene(versusPanelPrompt(pair.bottom_scene, { ancient: false, expression: pair.bottom_expression, seed: i * 2 + 1 }), dir, `p${i}-bot`, "3:2", jobIds);
+    const topPath = await scene(versusPanelPrompt(pair.top_scene, { owned: true,  expression: pair.top_expression,  seed: i * 2 }),     dir, `p${i}-top`, "3:2", jobIds);
+    const botPath = await scene(versusPanelPrompt(pair.bottom_scene, { owned: false, expression: pair.bottom_expression, seed: i * 2 + 1 }), dir, `p${i}-bot`, "3:2", jobIds);
     buffers.push(await compositeTwoPanel({
       topPath, bottomPath: botPath,
       topLabel: pair.top_label, bottomLabel: pair.bottom_label,
@@ -77,33 +78,32 @@ async function buildComparisonCarousel(c, format, dir, jobIds) {
   return { slideBuffers: buffers, copy: c, format, sub_type: c.sub_type, pillar: c.pillar };
 }
 
-async function buildCostume(dir, jobIds) {
-  // 8 archetype slides + 1 CTA. Weighted toward flame-native archetypes.
-  const picks = [...ARCHETYPES];
-  console.log(`[Wick] COSTUME: ${picks.length} archetypes + CTA`);
+async function buildCostume(topic, dir, jobIds) {
+  // 6 role slides + 1 CTA. The cast is written per topic, not a fixed list.
+  const c = await writeCostume(topic);
+  console.log(`[Wick] COSTUME: "${c.theme}" (${c.roles.length} roles + CTA)`);
   const buffers = [];
-  for (const a of picks) {
-    const p = await scene(costumePrompt(a, picks.indexOf(a)), dir, `arch-${a.bold.toLowerCase()}`, "4:5", jobIds);
-    buffers.push(await compositeCostume({ scenePath: p, label: a.label, boldWord: a.bold }));
+  for (let i = 0; i < c.roles.length; i++) {
+    const r = c.roles[i];
+    console.log(`[Wick]   ${i + 1}/${c.roles.length}: ${r.label}`);
+    const p = await scene(costumePrompt(r, i), dir, `role-${i}`, "4:5", jobIds);
+    buffers.push(await compositeCostume({ scenePath: p, label: r.label, boldWord: r.bold }));
   }
-  const ctaScene = await scene(lessonScenePrompt(
-    "sits at a worn wooden desk writing on a sheet of papyrus with a reed pen, eight small hand drawn sketches pinned to the wall above the desk in a row, a stack of scrolls and a clay cup at the desk edge, a quiet study at night"
-  ), dir, "cta", "4:5", jobIds);
+  const ctaScene = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression), dir, "cta", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: ctaScene,
-    closingLine: "Eight minds. Most people only ever build one.",
-    keyword: "SAGE",
-    resource: "all eight",
+    closingLine: c.closing_line,
+    keyword: c.keyword,
+    resource: c.resource,
   }));
   return {
-    slideBuffers: buffers,
-    copy: { archetypes: picks, hidden_rule: "Character is a set of roles you can practise, not a fixed trait." },
-    format: "COSTUME", sub_type: "archetype", pillar: "Mind",
+    slideBuffers: buffers, copy: c,
+    format: "COSTUME", sub_type: "cast", pillar: c.pillar,
   };
 }
 
-async function buildLesson(dir, jobIds) {
-  const l = await writeLesson();
+async function buildLesson(topic, dir, jobIds) {
+  const l = await writeLesson(topic);
   console.log(`[Wick] LESSON: "${l.cover_headline}" (${l.items.length} items)`);
   const buffers = [];
 
@@ -121,7 +121,7 @@ async function buildLesson(dir, jobIds) {
   // Recap CTA — every item becomes a labelled signpost pointing down the wrong road.
   const signposts = l.items.map((i) => i.signpost).filter(Boolean);
   const recapPath = await scene(lessonScenePrompt(
-    `stands at a fork in a dirt road at golden hour, ${signposts.length} weathered wooden signposts crowded along the left hand road each pointing down it, a single clear road on the right leading toward distant sunlit hills, tall grass and two old trees framing the fork`
+    `stands on a city sidewalk at dusk at a five way junction, ${signposts.length} illuminated overhead direction signs crowded above the left hand street all pointing the same way, one clear open street to the right leading toward lit towers, a bus shelter and parked cars framing the junction`
   ), dir, "recap", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: recapPath, closingLine: l.closing_line,
@@ -136,8 +136,9 @@ async function buildLesson(dir, jobIds) {
 // spread across formats so the 9am/12pm alternation always has an alternative
 // in the queue. VERSUS leads because it is the highest share-rate format.
 //
-// Cost note: a comparison carousel is 9 generations, COSTUME/LESSON are 9 and 7.
-// At ~7 credits per generation a full 14 post week is roughly 850 credits.
+// Cost note: a comparison carousel is 9 generations, COSTUME is 7, LESSON is 7.
+// At ~7 credits per generation (gpt_image_2) a 14 post week is roughly 800 credits;
+// nano_banana_pro is 2 credits and cuts that to ~230. Switch via WICK_IMAGE_MODEL.
 // Dial WICK_POSTS_PER_WEEK down if that outruns the credit budget.
 
 export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) {
@@ -154,12 +155,13 @@ export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) 
   const batchId = `wick-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
   console.log(`\n[Wick] Batch ${batchId} starting`);
 
-  // Step 2 of the pipeline: write ALL copy first, before any image.
-  // Each VERSUS/ORDER slot is now a themed 5 slide carousel (4 comparisons + CTA).
-  const versusSpecs = [];
-  for (let i = 0; i < versus; i++) versusSpecs.push(await writeVersusCarousel());
-  const orderSpecs = [];
-  for (let i = 0; i < order; i++) orderSpecs.push(await writeOrderCarousel());
+  // Topics come from the fixed 30 episode registry at the 80/10/10 lane mix.
+  // The copy engine is never allowed to choose its own subject: that is what
+  // produced philosophy posts instead of Mind/Behaviour/Money/Systems ones.
+  const topics = await pickTopics(perWeek);
+  if (topics.length < perWeek) {
+    console.warn(`[Wick] Only ${topics.length} unused topics for ${perWeek} slots — the registry is cycling.`);
+  }
 
   // Rotate the 4th slot between COSTUME and LESSON.
   let rotate = rotating;
@@ -169,13 +171,25 @@ export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) 
     rotate = (count ?? 0) % 2 === 0 ? "COSTUME" : "LESSON";
   }
 
-  const jobs = [
-    ...versusSpecs.map((s) => ({ kind: "VERSUS", spec: s })),
-    ...orderSpecs.map((s) => ({ kind: "ORDER", spec: s })),
-    ...Array.from({ length: rotatingCount }, (_, n) => ({
-      kind: n % 2 === 0 ? rotate : (rotate === "COSTUME" ? "LESSON" : "COSTUME"),
-    })),
+  // Assign a format to each topic, then write ALL copy before any image.
+  const kinds = [
+    ...Array.from({ length: versus }, () => "VERSUS"),
+    ...Array.from({ length: order }, () => "ORDER"),
+    ...Array.from({ length: rotatingCount }, (_, n) =>
+      n % 2 === 0 ? rotate : (rotate === "COSTUME" ? "LESSON" : "COSTUME")),
   ];
+
+  const jobs = [];
+  for (let i = 0; i < kinds.length; i++) {
+    const topic = topics[i % topics.length];
+    if (!topic) break;
+    const kind = kinds[i];
+    console.log(`[Wick] copy ${i + 1}/${kinds.length} ${kind} <- #${topic.id} ${topic.title}`);
+    const spec = kind === "VERSUS" ? await writeVersusCarousel(topic)
+               : kind === "ORDER"  ? await writeOrderCarousel(topic)
+               : null; // COSTUME/LESSON write their copy inside their builder
+    jobs.push({ kind, spec, topic });
+  }
   console.log(`[Wick] Plan: ${versus} VERSUS, ${order} ORDER, ${rotatingCount} ${rotate}/alt = ${jobs.length} posts`);
 
   const created = [];
@@ -188,9 +202,9 @@ export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) 
       if (job.kind === "VERSUS" || job.kind === "ORDER") {
         built = await buildComparisonCarousel(job.spec, job.kind, dir, jobIds);
       } else if (job.kind === "COSTUME") {
-        built = await buildCostume(dir, jobIds);
+        built = await buildCostume(job.topic, dir, jobIds);
       } else {
-        built = await buildLesson(dir, jobIds);
+        built = await buildLesson(job.topic, dir, jobIds);
       }
 
       const caption = await writeCaption(built);
@@ -211,6 +225,7 @@ export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) 
       const { data, error } = await supabase.from("wick_posts").insert({
         batch_id: batchId, format: built.format, sub_type: built.sub_type,
         pillar: built.pillar, slot_index: i, copy: built.copy, caption,
+        topic_id: job.topic?.id ?? null,
         slide_urls: urls, hf_job_ids: jobIds,
         status: autoPublish ? "approved" : "pending",
       }).select().single();

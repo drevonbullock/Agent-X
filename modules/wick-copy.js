@@ -8,17 +8,31 @@ const client = new Anthropic();
 // overproduce and cut). Copy is the cheap part and decides everything.
 //
 // Pillars: Money, Systems, Mind, Behaviour. There is no fifth.
-// Formula: lead with the BEHAVIOUR, land on the MONEY.
-// Every post must reveal a HIDDEN RULE that was always operating on the reader.
+// Every post connects TWO of them. The whole point of the page is that they are
+// one machine: how you think sets what you do, what you do builds the system,
+// the system decides what you keep. A post that sits inside a single pillar is
+// a quote page post, not a Wick's Wisdom post.
+//
+// Everything is PRESENT DAY. No philosophy, no philosophers, no antiquity.
 
 export const PILLARS = ["Money", "Systems", "Mind", "Behaviour"];
+
+// Free-resource keywords people DM. Kept plain and modern on purpose.
+export const KEYWORDS = ["SYSTEM", "RESET", "LEDGER", "BLUEPRINT"];
 
 const BRAND_RULES = `
 WICK'S WISDOM — non-negotiable content rules.
 
-THE LANE: hidden rules. Every post reveals a rule that was always operating on the
-reader and that nobody named for them. If it doesn't reveal a hidden rule, it isn't
-a Wick's Wisdom post.
+THE FOUR PILLARS: Mind, Behaviour, Money, Systems. There is no fifth.
+
+THE INTEGRATION RULE (the most important rule on this page): every post must
+connect TWO pillars and show the wiring between them. Mind changes Behaviour.
+Behaviour compounds into Money. Systems decide which behaviours are easy. Money
+buys back Mind. Name the link and make the reader feel the handoff. A post that
+lives inside one pillar has failed, however good the line sounds.
+
+THE LANE: hidden rules. Every post reveals a rule that was already running the
+reader's life that nobody named for them.
 
 THE FORMULA: lead with the behaviour, land on the money. Open on a feeling the
 reader recognizes. Reveal the mechanic underneath it. Behaviour is the hook; money
@@ -28,38 +42,67 @@ THE MECHANISM RULE: the money layer is always a MECHANISM, never a lecture. Expl
 how a system exploits or rewards a predictable human tendency. NEVER tell anyone
 what to buy, invest in, or do with their money. No financial advice, ever.
 
+THIS PAGE IS NOT A PHILOSOPHY PAGE. This is the rule that gets broken most, so
+read it twice:
+- NEVER mention philosophy, a philosopher, or a school of thought. No Stoics, no
+  Stoicism, no Marcus Aurelius, no Seneca, no Socrates, no Epictetus, no Diogenes,
+  no Buddhism, no monks, no ancient Greece or Rome, no "the ancients".
+- NEVER reference history at all. No historical figures, no old civilisations, no
+  "for thousands of years", no antiquity as a source of authority.
+- NEVER write abstract wisdom for its own sake. Every claim must cash out into
+  something a person does on a Tuesday and something it costs or earns them.
+- Every scene is PRESENT DAY. Phones, laptops, apartments, gyms, cars, offices,
+  storefronts, kitchens, delivery boxes. No togas, scrolls, oil lamps, stone
+  colonnades, granaries or candles-as-props.
+
 HARD NEVERS:
-- NEVER fabricate history. No invented bans, fake attributions, or research that
-  does not exist. This brand enters ancient wisdom where readers know primary
-  sources. One credible debunk costs more than a year of posts earns. Only use
-  genuinely real practices, people and terms. If unsure of a fact, do not use it.
 - NEVER claim proof that does not exist. No follower counts, revenue figures, or
   origin stories. No app CTAs. The app does not exist.
 - NEVER teach HOW. WHAT, WHY and WHEN only. Name the practice and the cost of
   skipping it; the method stays behind the paywall.
-- NEVER name a real modern company, product, app or living person, and NEVER
-  make a specific factual claim about one (no "Company X removed the confirmation
-  screen and volume spiked"). Those claims cannot be verified and one debunk
-  costs more than a year of posts earns. Describe the MECHANISM generically
-  instead, in your own fresh wording every time. Historical figures and genuinely
-  documented ancient practice are the only named specifics allowed.
+- NEVER name a real company, product, app or living person, and NEVER make a
+  specific factual claim about one (no "Company X removed the confirmation screen
+  and volume spiked"). Those claims cannot be verified and one debunk costs more
+  than a year of posts earns. Describe the MECHANISM generically instead, in your
+  own fresh wording every time.
 - NEVER reuse a phrase that appears in these instructions. Every line you write
   must be newly worded. The examples here are for RHYTHM only, never for copying.
 - NEVER invent statistics, percentages, study results or research findings.
-- NEVER use the sage register. No "dear seeker", no "ancient ones", no faux
-  scripture. Wick is wise; the writing sounds like a friend who reads a lot.
+- NEVER invent a person or an anecdote. No "one guy I know", no "a friend of
+  mine", no "I had a client who". The author's private life is never content and
+  a made up example is a fabricated proof. When beat 3 needs something concrete,
+  use ARITHMETIC on a hypothetical the reader can check ("six charges at twelve
+  dollars is eight hundred and sixty four a year"), never a story about a person.
+  Every number you write must actually multiply out. Check it.
+- NEVER use the sage register. No "dear seeker", no faux scripture, no fortune
+  cookie lines. Wick sounds like a sharp friend who has run the numbers.
 - NEVER use em dashes or en dashes. Write separate sentences instead.
-- No hashtags in body copy.
-
-TRUE MATERIAL that survives an expert (use freely): Stoics rehearsed misfortune
-deliberately (praemeditatio malorum). Pythagoreans required years of silence from
-new students. Marcus Aurelius wrote a private notebook never meant to be read.
-Diogenes lived in a jar and owned almost nothing. Seneca wrote letters on time and
-money. Epictetus was born enslaved and taught inner freedom. Roman households
-buried savings in sealed jars.`;
+- No hashtags in body copy.`;
 
 function stripDashes(s) {
   return String(s ?? "").replace(/\s*[—–]\s*/g, ", ").trim();
+}
+
+// The topic is handed to the model as a fixed assignment. It writes the carousel
+// FOR this subject and never chooses its own, which is what caused drift.
+function topicBrief(topic) {
+  const lane = {
+    HYBRID: `This is a HYBRID post, the page's main lane. The behavioural mechanic is the hook and the money consequence is the payoff. Both halves must be present and the handoff between them must be explicit.`,
+    MIND_BEHAVIOUR: `This is a MIND into BEHAVIOUR post. Show how the thought pattern produces the action. Money may appear at the edge but is not the subject.`,
+    MONEY_SYSTEMS: `This is a MONEY into SYSTEMS post. Show how the machine is built, who designed it that way, and who it pays. Explain the mechanism, never give advice.`,
+  }[topic.lane];
+
+  return `YOUR ASSIGNED TOPIC. Write about this and nothing else.
+
+TITLE: ${topic.title}
+BEHAVIOURAL MECHANIC: ${topic.hook}
+WHERE IT LANDS: ${topic.payoff}
+
+${lane}
+
+The title above is the subject, not a line to quote. Do not print it on a slide
+verbatim. Every slide must serve this one topic. Do not widen it into a general
+lesson about life, and do not reach for any other subject.`;
 }
 
 function parseJson(raw) {
@@ -70,7 +113,8 @@ function parseJson(raw) {
 
 // ─── VERSUS — two-panel comparison (the engine format) ───────────────────────
 
-export async function writeVersusCarousel() {
+export async function writeVersusCarousel(topic) {
+  if (!topic) throw new Error("writeVersusCarousel requires a topic from wick-topics.js");
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 3000,
@@ -78,42 +122,51 @@ export async function writeVersusCarousel() {
       role: "user",
       content: `${BRAND_RULES}
 
-FORMAT: VERSUS CAROUSEL. Five slides. Slides 1 to 4 are two-panel ANCIENT vs MODERN
-comparisons that ALL belong to ONE theme. Slide 5 is a call to action.
+${topicBrief(topic)}
 
-This is the engine format. Pick a single theme (one pillar), then write FOUR
-different comparisons inside it. They must escalate: slide 1 is the most
+FORMAT: VERSUS CAROUSEL. Five slides. Slides 1 to 4 are two-panel comparisons that
+ALL belong to ONE theme. Slide 5 is a call to action. Every scene is present day.
+
+This is the engine format. Pick one theme that WIRES TWO PILLARS TOGETHER, then
+write FOUR different comparisons inside it. They must escalate: slide 1 is the most
 recognizable and scroll-stopping, slide 4 is the one that stings most. Each is a
-complete standalone thought, but together they build one argument.
+complete standalone thought, but together they build one argument about how the
+first pillar feeds the second.
 
-Top label = the ancient reality. Bottom label = the modern one, landing like a
-quiet accusation the reader recognizes about themselves.
+THE CONTRAST IS NOT OLD VERSUS NEW. It is RUNS THE SYSTEM versus RUN BY IT. Both
+panels are the same modern world. The difference is who is holding the controls.
 
-Reference rhythm (do not copy these, write new ones):
-"Marcus Aurelius journaled to know himself" / "You scroll to forget yourself"
-"Diogenes owned one cup" / "You own forty-seven subscriptions"
-"The Stoics practiced poverty on purpose" / "You practice it by accident"
+Top label = the person who owns the mechanic. Written in third person or as a plain
+statement of what that person does. This panel is warm and lit by his own flame.
+Bottom label = the reader's default, landing like a quiet accusation they recognize
+about themselves. Written in second person. This panel is cold and lit by a screen.
+
+Reference rhythm only, never copy the content:
+"He decides what his morning is for" / "Your morning is decided by whoever posts first"
+"She knows what her week actually cost" / "You find out when the card declines"
+"He picked the number before he walked in" / "You picked it after they asked"
 
 Return JSON object:
 {
   "theme": "short internal name for the theme",
-  "pillar": "Money|Systems|Mind|Behaviour",
-  "sub_type": "ancient_vs_modern",
-  "hidden_rule": "the rule the whole set reveals, one sentence",
+  "pillar": "the primary pillar: Money|Systems|Mind|Behaviour",
+  "pillar_link": "the two pillars this set wires together, e.g. Mind to Money",
+  "sub_type": "owner_vs_owned",
+  "hidden_rule": "the rule the whole set reveals, one sentence, and it must name the handoff between the two pillars",
   "pairs": [
     {
-      "top_label": "the ancient line, max 9 words",
-      "bottom_label": "the modern line, max 9 words",
-      "top_scene": "One dense sentence: what Wick is doing in a concrete ancient scene, 3-4 named physical objects, the setting. No character description, he is supplied separately.",
-      "top_expression": "His facial expression in the ancient panel. Be specific and emotionally precise: calm and absorbed, quietly proud, focused, content, resolute, serene. Match the feeling of the scene.",
-      "bottom_scene": "One dense sentence: the modern mirror scene, what Wick is doing, 3-4 named modern objects, the setting.",
-      "bottom_expression": "His facial expression in the modern panel. Usually the emotional cost: hollow and vacant, anxious, defeated, numb, quietly ashamed, exhausted. Match the feeling of the scene."
+      "top_label": "the owner line, max 9 words",
+      "bottom_label": "the reader's default, max 9 words",
+      "top_scene": "One dense sentence: what Wick is doing in a concrete PRESENT DAY scene, 3-4 named modern physical objects, the setting. No character description, he is supplied separately.",
+      "top_expression": "His facial expression in the owner panel. Be specific and emotionally precise: focused, quietly certain, unhurried, deliberate, clear eyed. Match the feeling of the scene.",
+      "bottom_scene": "One dense sentence: the mirror scene in the same modern world, what Wick is doing, 3-4 named modern objects, the setting.",
+      "bottom_expression": "His facial expression in the second panel. Usually the emotional cost: hollow and vacant, anxious, defeated, numb, quietly ashamed, exhausted. Match the feeling of the scene."
     }
   ],
-  "closing_line": "One sentence that reframes all four at once.",
-  "keyword": "WISDOM|RITUAL|STOIC|SAGE",
+  "closing_line": "One sentence that reframes all four at once and lands the pillar handoff.",
+  "keyword": "SYSTEM|RESET|LEDGER|BLUEPRINT",
   "resource": "name of the free text resource the keyword delivers",
-  "cta_scene": "One dense sentence: a closing scene for Wick that visually gathers the theme, 3-4 named objects.",
+  "cta_scene": "One dense sentence: a closing PRESENT DAY scene for Wick that visually gathers the theme, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene. Usually warm, resolved, quietly hopeful, or knowing."
 }
 
@@ -135,7 +188,8 @@ Exactly 4 pairs.`,
 
 // ─── ORDER — imperative two-panel (command, then turn or arithmetic) ─────────
 
-export async function writeOrderCarousel() {
+export async function writeOrderCarousel(topic) {
+  if (!topic) throw new Error("writeOrderCarousel requires a topic from wick-topics.js");
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 2600,
@@ -143,17 +197,19 @@ export async function writeOrderCarousel() {
       role: "user",
       content: `${BRAND_RULES}
 
+${topicBrief(topic)}
+
 FORMAT: ORDER CAROUSEL. Five slides. Slides 1 to 4 are two-panel imperatives that
-ALL belong to ONE theme. Slide 5 is a call to action.
+all serve the assigned topic. Slide 5 is a call to action. Every scene is present day.
 
 Panel one gives a command. Panel two either inverts it (the turn) or does the
 arithmetic on it. The ARITHMETIC variant is strongest because the number persuades
 so the copy does not have to. Use arithmetic on at least two of the four.
 
-Reference rhythm (do not copy):
-"Read ten pages a day." / "That's fifteen books a year."
-"Wake before the house." / "Tell no one."
-"Save two dollars a day." / "That's seven hundred and thirty a year."
+Reference rhythm only, never copy the content:
+"Check the balance every Friday." / "That's fifty two chances to catch it early."
+"Name the feeling before you open the app." / "The cart empties itself."
+"Add the annual number to the label." / "Nothing costs ten dollars."
 
 All arithmetic MUST be correct. Check every multiplication.
 
@@ -161,22 +217,23 @@ Return JSON object:
 {
   "theme": "short internal name",
   "pillar": "Money|Systems|Mind|Behaviour",
+  "pillar_link": "the two pillars this set wires together, e.g. Behaviour to Money",
   "sub_type": "imperative",
-  "hidden_rule": "one sentence",
+  "hidden_rule": "one sentence naming the handoff between the two pillars",
   "pairs": [
     {
       "top_label": "the command, max 8 words",
       "bottom_label": "the turn or the arithmetic, max 10 words",
-      "top_scene": "One dense sentence: Wick performing the command, 3-4 named objects, setting.",
+      "top_scene": "One dense sentence: Wick performing the command in a PRESENT DAY setting, 3-4 named modern objects.",
       "top_expression": "His expression performing the command. Specific: determined, focused, quietly disciplined, resolute.",
-      "bottom_scene": "One dense sentence: the payoff scene, 3-4 named objects showing accumulation or consequence.",
+      "bottom_scene": "One dense sentence: the payoff scene in the same modern world, 3-4 named modern objects showing accumulation or consequence.",
       "bottom_expression": "His expression at the payoff. Specific: quietly satisfied, awed, proud, steady."
     }
   ],
   "closing_line": "One sentence that reframes all four.",
-  "keyword": "WISDOM|RITUAL|STOIC|SAGE",
+  "keyword": "SYSTEM|RESET|LEDGER|BLUEPRINT",
   "resource": "name of the free text resource",
-  "cta_scene": "One dense sentence: closing scene for Wick, 3-4 named objects.",
+  "cta_scene": "One dense sentence: closing PRESENT DAY scene for Wick, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene."
 }
 
@@ -196,28 +253,85 @@ Exactly 4 pairs.`,
   return c;
 }
 
-// ─── COSTUME — archetype carousel, 8 archetypes + CTA ────────────────────────
+// ─── COSTUME — the cast inside the mechanic, 6 roles + CTA ───────────────────
+// Was a fixed list of philosopher archetypes. It is now written per topic: the
+// actors who make the mechanic run, or the modes the reader switches between.
+// Wick plays every one of them, so the reader sees the whole machine as one page.
 
-export const ARCHETYPES = [
-  { label: "Think like a Stoic", pose: "sits perfectly upright and motionless on a stone bench, mitten hands folded in his lap", expression: "calm, composed, completely unbothered",      bold: "Stoic",    pillar: "Mind",      wardrobe: "a simple white toga draped over his wax body", setting: "an open marble colonnade with a violent storm raging beyond the columns, sheeting rain and trees bent sideways", beat: "his flame burns perfectly straight and undisturbed despite the storm" },
-  { label: "Watch like a Monk", pose: "kneels low near the floor, head turned toward the doorway, one hand resting on his knee", expression: "still, alert, patiently observant",       bold: "Monk",     pillar: "Mind",      wardrobe: "a coarse undyed wool habit over his wax body", setting: "a stone cloister before dawn, a single arched window, a worn prayer bench, a clay water bowl", beat: "he sits perfectly still watching the doorway, hands folded" },
-  { label: "Plan like an Engineer", pose: "leans forward over the table on both hands, weight on his arms, studying the plan", expression: "focused, absorbed in the measurement",   bold: "Engineer", pillar: "Systems",   wardrobe: "a leather work apron over his wax body", setting: "a workshop with an unrolled aqueduct blueprint on a heavy table, bronze calipers, a real stone aqueduct visible through the arch", beat: "he measures the blueprint with the calipers" },
-  { label: "Count like a Merchant", pose: "sits perched on a stool, one arm reaching across the table to adjust the scale", expression: "sharp, precise, quietly shrewd",   bold: "Merchant", pillar: "Money",     wardrobe: "a russet merchant robe over his wax body", setting: "a storeroom counting table with a bronze balance scale, sorted stacks of coins, an open ledger, sealed amphorae behind", beat: "he weighs coins on the balance, focused" },
-  { label: "Save like a Farmer", pose: "crouches low with both arms wrapped around a heavy grain sack, mid lift", expression: "steady, disciplined, thinking ahead",      bold: "Farmer",   pillar: "Money",     wardrobe: "a rough homespun tunic over his wax body", setting: "a stone granary at harvest, full grain sacks, a wooden scoop, a sealed storage jar, bare winter fields through the door", beat: "he sets aside one sack separate from the rest" },
-  { label: "Question like Socrates", pose: "stands mid stride with one arm swept outward in an open questioning gesture, body turned toward the listeners", expression: "curious, warm, genuinely interested",  bold: "Socrates", pillar: "Behaviour", wardrobe: "a pale draped himation over his wax body", setting: "a sunlit market square with stone steps, a fruit stall, a small group of listeners seated on the steps", beat: "one mitten hand open in a questioning gesture" },
-  { label: "Speak like a Diplomat", pose: "sits back in a chair with arms folded, head slightly tilted, deliberately still", expression: "attentive, measured, deliberately silent",   bold: "Diplomat", pillar: "Behaviour", wardrobe: "a deep blue formal robe over his wax body", setting: "a quiet negotiation chamber, a long polished table, two sealed scrolls, a carafe of water, empty chairs opposite", beat: "he listens with hands still, saying nothing yet" },
-  { label: "Endure like a Spartan", pose: "stands braced against the wind, one leg forward, cloak whipping, shoulders squared", expression: "grim, resolute, jaw set against the cold",   bold: "Spartan",  pillar: "Behaviour", wardrobe: "a crimson wool cloak over his wax body", setting: "a rocky mountain pass at cold dawn, a bronze helmet resting on the rock beside him, a worn leather pack, frost on stone", beat: "his flame burns low but completely steady in the cold wind" },
-];
+export async function writeCostume(topic) {
+  if (!topic) throw new Error("writeCostume requires a topic from wick-topics.js");
+  const angle = topic.lane === "MONEY_SYSTEMS"
+    ? `Cast the ACTORS IN THE CHAIN. Each role is a party that profits from, designs, or absorbs the cost of this mechanic. The reader should finish the carousel understanding who is paid at every step and by whom.`
+    : `Cast the MODES THE READER SWITCHES BETWEEN. Each role is a version of a person that shows up at a different point in this mechanic. One of them is the one that costs them money. Do not label which; let the reader recognize themselves.`;
+
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 3000,
+    messages: [{
+      role: "user",
+      content: `${BRAND_RULES}
+
+${topicBrief(topic)}
+
+FORMAT: COSTUME CAROUSEL. Seven slides. Six role slides plus a call to action.
+Wick wears each role in turn. Every setting is present day.
+
+${angle}
+
+Each role gets a short label written as a plain job or mode, not an aspiration.
+"The one who sets the price" is right. "Think like a Stoic" is exactly wrong and
+so is anything that names a historical figure or a philosophy.
+
+Return JSON object:
+{
+  "theme": "short internal name",
+  "pillar": "Money|Systems|Mind|Behaviour",
+  "pillar_link": "the two pillars this wires together",
+  "hidden_rule": "one sentence naming what the full cast reveals",
+  "roles": [
+    {
+      "label": "the role, max 5 words, plain and modern",
+      "bold": "the single most important word in the label, for emphasis",
+      "note": "One sentence on what this role actually does in the mechanic.",
+      "pose": "His body position in this scene. Vary it hard across the six: crouching, leaning, seated, mid stride, turned away, reaching. Never two the same.",
+      "expression": "His facial expression, matched to the role. Specific and emotionally precise.",
+      "wardrobe": "modern clothing over his wax body that reads the role instantly, e.g. a courier's windbreaker, a cashier's apron, a tailored blazer",
+      "setting": "One dense sentence: a PRESENT DAY setting with 3-4 named modern objects.",
+      "beat": "The one small action he is caught mid performing."
+    }
+  ],
+  "closing_line": "One sentence that lands the whole cast at once.",
+  "keyword": "SYSTEM|RESET|LEDGER|BLUEPRINT",
+  "resource": "name of the free text resource",
+  "cta_scene": "One dense sentence: closing PRESENT DAY scene, 3-4 named modern objects.",
+  "cta_expression": "His expression in the closing scene."
+}
+
+Exactly 6 roles.`,
+    }],
+  });
+  const c = parseJson(msg.content[0].text);
+  c.roles = (c.roles ?? []).slice(0, 6).map((r) => ({
+    ...r,
+    label: stripDashes(r.label),
+    note: stripDashes(r.note),
+  }));
+  c.closing_line = stripDashes(c.closing_line);
+  return c;
+}
 
 // ─── LESSON — problem/solution carousel, 7 slides ────────────────────────────
 
-export async function writeLesson() {
+export async function writeLesson(topic) {
+  if (!topic) throw new Error("writeLesson requires a topic from wick-topics.js");
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 2600,
     messages: [{
       role: "user",
       content: `${BRAND_RULES}
+
+${topicBrief(topic)}
 
 FORMAT: LESSON. A 7 slide problem/solution carousel. Slide 1 is a cover whose
 headline promises a count. Slides 2 to 6 are one numbered item each with a PROBLEM
@@ -228,16 +342,17 @@ The SOLUTION blocks must obey the HOW rule: name the practice and the cost of
 skipping it, never the step by step method. "Rehearse the loss before it arrives"
 is allowed. A protocol for doing it is not.
 
-Cover headline examples for rhythm (write a new one):
-"5 Signs You're Living Someone Else's Life"
-"7 Ways You're Quietly Losing Money"
-"6 Ancient Habits That Fix A Modern Head"
+Cover headline rhythm only, write a new one for the assigned topic:
+"5 SIGNS THE FEE WAS THE POINT"
+"6 WAYS THE PRICE WAS SET BEFORE YOU ARRIVED"
+"5 REASONS THE BUDGET NEVER HAD A CHANCE"
 
 Return JSON object:
 {
   "pillar": "Money|Systems|Mind|Behaviour",
+  "pillar_link": "the two pillars this wires together",
   "cover_headline": "ALL CAPS headline promising a count, max 8 words",
-  "cover_scene": "One dense sentence: the cover scene for Wick, 3-4 named objects, setting.",
+  "cover_scene": "One dense sentence: the PRESENT DAY cover scene for Wick, 3-4 named modern objects, setting.",
   "cover_expression": "His expression on the cover, matched to the headline's tone.",
   "items": [
     {
@@ -245,13 +360,13 @@ Return JSON object:
       "title": "Short item title, max 6 words",
       "problem": "2 to 3 sentences naming the trap, in second person.",
       "solution": "2 to 3 sentences naming the practice and the cost of skipping it. NEVER a method.",
-      "scene": "One dense sentence: scene for Wick illustrating this item, 3-4 named objects.",
+      "scene": "One dense sentence: PRESENT DAY scene for Wick illustrating this item, 3-4 named modern objects.",
       "expression": "His facial expression in this scene, emotionally matched to the problem being shown. Specific: troubled, weary, uneasy, resigned, alert.",
       "signpost": "2 to 3 word label for the recap slide signpost"
     }
   ],
   "closing_line": "One sentence that reframes the whole list.",
-  "keyword": "WISDOM|RITUAL|STOIC|SAGE",
+  "keyword": "SYSTEM|RESET|LEDGER|BLUEPRINT",
   "resource": "name of the free text resource the keyword delivers"
 }
 
@@ -279,7 +394,7 @@ export async function writeCaption(post) {
   const context = post.format === "LESSON"
     ? `A carousel titled "${post.copy.cover_headline}" covering: ${post.copy.items.map((i) => i.title).join(", ")}.`
     : post.format === "COSTUME"
-      ? `An archetype carousel: ${(post.copy.archetypes ?? []).map((a) => a.label).join(", ")}.`
+      ? `A cast carousel showing every role inside the mechanic: ${(post.copy.roles ?? []).map((r) => r.label).join(", ")}.`
       : `A ${post.copy.pairs?.length ?? 4} slide comparison carousel on the theme "${post.copy.theme}". The comparisons are: ${(post.copy.pairs ?? []).map((p) => `"${p.top_label}" vs "${p.bottom_label}"`).join("; ")}.`;
 
   const msg = await client.messages.create({
