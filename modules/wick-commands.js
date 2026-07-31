@@ -114,9 +114,19 @@ export async function cmdStatus() {
   const id = process.env.INSTAGRAM_BUSINESS_ID;
   if (token && id) {
     try {
-      const r = await fetch(`https://graph.instagram.com/v21.0/${id}?fields=username&access_token=${token}`);
+      const r = await fetch(`https://graph.instagram.com/v21.0/${id}?fields=username,followers_count&access_token=${token}`);
       const j = await r.json();
       out.push(`Instagram: ${j.username ? `✅ @${j.username}` : `❌ ${j.error?.message ?? "rejected"}`}`);
+      // The CTA plan is staged on follower count: shares and reposts only until
+      // 1,000, then a free asset. Surfacing the number means the switch happens
+      // on evidence rather than on a guess about when we got there.
+      if (typeof j.followers_count === "number") {
+        const n = j.followers_count;
+        out.push(`Followers: *${fmtNum(n)}*`);
+        out.push(n >= 1000
+          ? `🎯 Past 1,000. Time to swap the CTA to a free asset.`
+          : `CTA: shares + reposts (${fmtNum(1000 - n)} to go before the free asset)`);
+      }
     } catch { out.push("Instagram: ⚠️ check failed"); }
   } else out.push("Instagram: ❌ not configured");
 

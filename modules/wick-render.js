@@ -423,6 +423,8 @@ ${BASE_CSS}
   color:#ece5dd;margin-bottom:32px;}
 .r3{font-family:'DM Sans',sans-serif;font-weight:700;font-size:36px;line-height:1.3;color:#fff;}
 .r3 b{color:#F5A524;}
+.r4{font-family:'DM Sans',sans-serif;font-weight:700;font-size:30px;line-height:1.3;
+  color:#F5A524;margin-top:20px;}
 </style></head><body>
 <div class="slide">
   <div class="bg"><img src="${dataUri(scenePath)}"></div><div class="rshade"></div>
@@ -430,6 +432,7 @@ ${BASE_CSS}
     <div class="r1">${esc(revealLine)}</div>
     ${closingLine ? `<div class="r2">${esc(closingLine)}</div>` : ""}
     <div class="r3">Send this to <b>${esc(sendTo)}</b>.</div>
+    <div class="r4">Repost it if it landed.</div>
   </div>
   <div class="wm">${esc(WATERMARK)}</div>
 </div></body></html>`;
@@ -601,6 +604,8 @@ ${BASE_CSS}
 .body{flex:1;padding:14px 62px 0;display:flex;flex-direction:column;justify-content:center;text-align:center;}
 .l1{font-family:'DM Sans',sans-serif;font-weight:700;font-size:42px;line-height:1.24;color:#fff;margin-bottom:26px;}
 .l2{font-family:'DM Sans',sans-serif;font-weight:700;font-size:38px;line-height:1.3;color:#fff;}
+.l3{font-family:'DM Sans',sans-serif;font-weight:700;font-size:32px;line-height:1.3;
+  color:#F5A524;margin-top:22px;}
 .kw{color:#F5A524;}
 </style></head><body>
 <div class="slide">
@@ -610,6 +615,7 @@ ${BASE_CSS}
     <div class="l2">${sendTo
       ? `Send this to <span class="kw">${esc(sendTo)}</span>.`
       : `Comment <span class="kw">${esc(keyword)}</span> and I'll send you ${esc(resource)}.`}</div>
+    <div class="l3">Repost it if it landed.</div>
   </div>
   <div class="wm">${esc(WATERMARK)}</div>
 </div></body></html>`;
