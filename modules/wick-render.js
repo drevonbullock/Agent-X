@@ -12,6 +12,10 @@ import puppeteer from "puppeteer";
 const HF_BIN = process.env.HF_BIN || "higgsfield";
 const WICK_ELEMENT = process.env.WICK_ELEMENT_ID || "5e934732-6de4-438a-b3a6-024144603518";
 const MODEL = process.env.WICK_IMAGE_MODEL || "gpt_image_2";
+// Backup model. nano_banana_pro is 2 credits vs gpt_image_2's 7 and handles pure
+// scenes well. Every Wick frame is a pure scene (all text is composited by us,
+// never generated), so the fallback loses nothing but cost.
+const FALLBACK_MODEL = process.env.WICK_FALLBACK_MODEL || "nano_banana_pro";
 
 // The locked style stack. Appended to EVERY scene prompt, never varied.
 // This is what makes 200 posts look like one page.
@@ -26,6 +30,45 @@ const PALETTE_COLD = "Cold blue-grey with a weak surviving amber core on his fac
 
 const el = () => `<<<${WICK_ELEMENT}>>>`;
 
+// ─── POSE + CAMERA VARIETY ───────────────────────────────────────────────────
+// Without this every frame is the same front-on standing pose with one arm up,
+// which reads as a sticker pack rather than a character living in scenes.
+// A deterministic index keeps a single carousel varied while staying repeatable.
+
+const CAMERAS = [
+  "Wide establishing shot, camera at his eye level.",
+  "Low angle looking slightly up at him, making him feel larger in the frame.",
+  "High angle looking gently down, the world bigger than he is.",
+  "Medium shot from a three quarter angle, camera slightly off to one side.",
+  "Over the shoulder from behind him, looking past him into the scene.",
+  "Close medium shot, camera near the ground looking across at him.",
+  "Wide shot with him small in a large space, dwarfed by the setting.",
+  "Slight dutch tilt, camera angled a few degrees off level for unease.",
+];
+
+const POSES = [
+  "He is mid stride, one leg forward, body leaning into the movement, arms swinging naturally.",
+  "He is crouched low, weight on his heels, one mitten hand braced on the ground.",
+  "He is seated, shoulders relaxed forward, elbows resting on his knees.",
+  "He is turned three quarters away, glancing back over one shoulder.",
+  "He is reaching forward with one arm extended, torso twisted with the effort.",
+  "He is standing with arms folded across his wax body, weight on one leg.",
+  "He is leaning against something in the scene, one shoulder taking his weight.",
+  "He is kneeling on one knee, head bowed toward what he is doing.",
+  "He is stretched upward on tiptoe, both arms raised toward something above him.",
+  "He is slumped, shoulders collapsed, arms hanging loose at his sides.",
+  "He is walking away from camera into the depth of the scene.",
+  "He is bent forward at the waist, absorbed in something close in front of him.",
+];
+
+// Deterministic per-slide pick so a carousel varies but re-runs are stable.
+function variety(seed = 0) {
+  return {
+    camera: CAMERAS[seed % CAMERAS.length],
+    pose: POSES[(seed * 5 + 3) % POSES.length],
+  };
+}
+
 // ─── HIGGSFIELD ──────────────────────────────────────────────────────────────
 
 export function hfAvailable() {
@@ -39,17 +82,32 @@ export function hfAvailable() {
 // slide fails at generation time.
 const ASPECT_MAP = { "4:5": "3:4", "5:4": "4:3" };
 
-// Generate one image. Returns { url, jobId }.
-export function generateScene(prompt, aspect = "3:4") {
-  const raw = execFileSync(HF_BIN, [
-    "generate", "create", MODEL,
+function runModel(model, prompt, aspect) {
+  // nano_banana_pro accepts 4:5 natively and takes no quality flag.
+  const isNB = model.startsWith("nano_banana");
+  const args = [
+    "generate", "create", model,
     "--prompt", prompt,
-    "--aspect_ratio", ASPECT_MAP[aspect] ?? aspect,
-    "--quality", "high",
+    "--aspect_ratio", isNB ? aspect : (ASPECT_MAP[aspect] ?? aspect),
     "--resolution", "2k",
     "--wait", "--wait-timeout", "12m",
     "--json",
-  ], { timeout: 15 * 60 * 1000, maxBuffer: 20 * 1024 * 1024 }).toString().trim();
+  ];
+  if (!isNB) args.splice(args.indexOf("--resolution"), 0, "--quality", "high");
+  return execFileSync(HF_BIN, args, { timeout: 15 * 60 * 1000, maxBuffer: 20 * 1024 * 1024 }).toString().trim();
+}
+
+// Generate one image. Returns { url, jobId, model }.
+// Tries the primary model, falls back to the cheaper backup on failure.
+export function generateScene(prompt, aspect = "3:4") {
+  let raw, usedModel = MODEL;
+  try {
+    raw = runModel(MODEL, prompt, aspect);
+  } catch (err) {
+    console.warn(`[Wick] ${MODEL} failed (${String(err.message).slice(0, 80)}) — falling back to ${FALLBACK_MODEL}`);
+    usedModel = FALLBACK_MODEL;
+    raw = runModel(FALLBACK_MODEL, prompt, aspect);
+  }
 
   const parsed = JSON.parse(raw);
   const jobs = Array.isArray(parsed) ? parsed : [parsed];
@@ -63,7 +121,7 @@ export function generateScene(prompt, aspect = "3:4") {
   if (!url) {
     throw new Error(`Higgsfield returned no result URL (status: ${job.status ?? "unknown"})`);
   }
-  return { url, jobId: job.id ?? null };
+  return { url, jobId: job.id ?? null, model: usedModel };
 }
 
 export async function download(url, destPath) {
@@ -82,33 +140,36 @@ export function scenePrompt({ scene, lighting, palette, extra = "" }) {
     `${lighting} ${STYLE_STACK} ${palette} ${extra}`.replace(/\s+/g, " ").trim();
 }
 
-export function versusPanelPrompt(sceneText, { ancient, expression }) {
+export function versusPanelPrompt(sceneText, { ancient, expression, seed = 0 }) {
+  const { camera, pose } = variety(seed);
   const lighting = ancient
     ? "His own golden flame head is the only light source, throwing warm amber light across the objects nearest him, everything else falling into deep soft shadow."
     : "Cold blue-white light from a modern screen washes across him, flattening his warm glow to a weak surviving amber core on his face, the rest of the room in cold dim shadow.";
   return scenePrompt({
-    scene: `${sceneText} His expression is ${expression || (ancient ? "calm and absorbed" : "hollow and vacant")}.`,
+    scene: `${sceneText} ${pose} His expression is ${expression || (ancient ? "calm and absorbed" : "hollow and vacant")}.`,
     lighting,
     palette: ancient ? PALETTE_WARM : PALETTE_COLD,
-    extra: "Wide shot, character clearly visible, room for a text label across the lower third. Absolutely no text anywhere in the image.",
+    extra: `${camera} Character clearly visible, room for a text label across the lower third. Absolutely no text anywhere in the image.`,
   });
 }
 
-export function costumePrompt(a) {
+export function costumePrompt(a, seed = 0) {
+  const { camera } = variety(seed);
   return scenePrompt({
-    scene: `sits or stands in a pose that fits the role, ${a.wardrobe}, in ${a.setting}. ${a.beat}. His expression is ${a.expression || "calm and composed"}.`,
+    scene: `${a.pose || "stands in a pose that fits the role"}, ${a.wardrobe}, in ${a.setting}. ${a.beat}. His expression is ${a.expression || "calm and composed"}.`,
     lighting: "His golden flame head is the primary light source, throwing warm amber light across the scene, the edges falling into deep soft shadow.",
     palette: PALETTE_WARM,
-    extra: "Wide shot, character centered, generous empty space across the middle of the frame for a text label. Absolutely no text anywhere in the image.",
+    extra: `${camera} Generous empty space across the middle of the frame for a text label. Absolutely no text anywhere in the image.`,
   });
 }
 
-export function lessonScenePrompt(sceneText, expression) {
+export function lessonScenePrompt(sceneText, expression, seed = 0) {
+  const { camera, pose } = variety(seed + 2);
   return scenePrompt({
-    scene: expression ? `${sceneText} His expression is ${expression}.` : sceneText,
+    scene: `${sceneText} ${pose}${expression ? ` His expression is ${expression}.` : ""}`,
     lighting: "His golden flame head is the only light source, throwing warm amber light across the nearest objects, long soft shadows behind.",
     palette: PALETTE_WARM,
-    extra: "Composed so the character and objects sit in the UPPER portion of the frame with clear space below. Absolutely no text anywhere in the image.",
+    extra: `${camera} Composed so the character and objects sit in the UPPER portion of the frame with clear space below. Absolutely no text anywhere in the image.`,
   });
 }
 

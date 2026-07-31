@@ -58,8 +58,8 @@ async function buildComparisonCarousel(c, format, dir, jobIds) {
   for (let i = 0; i < c.pairs.length; i++) {
     const pair = c.pairs[i];
     console.log(`[Wick]   ${i + 1}/${c.pairs.length}: "${pair.top_label}" / "${pair.bottom_label}"`);
-    const topPath = await scene(versusPanelPrompt(pair.top_scene, { ancient: true,  expression: pair.top_expression }),    dir, `p${i}-top`, "3:2", jobIds);
-    const botPath = await scene(versusPanelPrompt(pair.bottom_scene, { ancient: false, expression: pair.bottom_expression }), dir, `p${i}-bot`, "3:2", jobIds);
+    const topPath = await scene(versusPanelPrompt(pair.top_scene, { ancient: true,  expression: pair.top_expression,  seed: i * 2 }),     dir, `p${i}-top`, "3:2", jobIds);
+    const botPath = await scene(versusPanelPrompt(pair.bottom_scene, { ancient: false, expression: pair.bottom_expression, seed: i * 2 + 1 }), dir, `p${i}-bot`, "3:2", jobIds);
     buffers.push(await compositeTwoPanel({
       topPath, bottomPath: botPath,
       topLabel: pair.top_label, bottomLabel: pair.bottom_label,
@@ -83,7 +83,7 @@ async function buildCostume(dir, jobIds) {
   console.log(`[Wick] COSTUME: ${picks.length} archetypes + CTA`);
   const buffers = [];
   for (const a of picks) {
-    const p = await scene(costumePrompt(a), dir, `arch-${a.bold.toLowerCase()}`, "4:5", jobIds);
+    const p = await scene(costumePrompt(a, picks.indexOf(a)), dir, `arch-${a.bold.toLowerCase()}`, "4:5", jobIds);
     buffers.push(await compositeCostume({ scenePath: p, label: a.label, boldWord: a.bold }));
   }
   const ctaScene = await scene(lessonScenePrompt(
@@ -111,7 +111,7 @@ async function buildLesson(dir, jobIds) {
   buffers.push(await compositeLessonCover({ scenePath: coverPath, headline: l.cover_headline }));
 
   for (const item of l.items) {
-    const p = await scene(lessonScenePrompt(item.scene, item.expression), dir, `item-${item.number}`, "4:5", jobIds);
+    const p = await scene(lessonScenePrompt(item.scene, item.expression, item.number), dir, `item-${item.number}`, "4:5", jobIds);
     buffers.push(await compositeLessonItem({
       scenePath: p, number: item.number, title: item.title,
       problem: item.problem, solution: item.solution,
