@@ -130,22 +130,67 @@ async function buildLesson(topic, dir, jobIds) {
 }
 
 // ─── BATCH ───────────────────────────────────────────────────────────────────
-// Feeds the 2/day publish schedule: 14 posts per week. The mix is deliberately
-// spread across formats so the 9am/12pm alternation always has an alternative
-// in the queue. VERSUS leads because it is the highest share-rate format.
+// Feeds the 2/day publish schedule: 14 posts per week. Format mix is decided by
+// planFormats(): even rotation while any format is under-tested, then weighted
+// by measured shares per like.
 //
 // Cost note: a comparison carousel is 9 generations, COSTUME is 7, LESSON is 7.
 // At ~7 credits per generation (gpt_image_2) a 14 post week is roughly 800 credits;
 // nano_banana_pro is 2 credits and cuts that to ~230. Switch via WICK_IMAGE_MODEL.
 // Dial WICK_POSTS_PER_WEEK down if that outruns the credit budget.
 
+const FORMATS = ["VERSUS", "ORDER", "COSTUME", "LESSON"];
+const MIN_SAMPLES = 3;
+
+// Which formats to build, and how many of each.
+//
+// This used to hardcode 60% VERSUS because the brand doc asserts VERSUS is the
+// highest share-rate format. That is an assumption, not a measurement, and it
+// starved LESSON to zero in a 6 post batch, which made the shares-per-like
+// scoreboard unable to ever rank it. Optimising for an unverified winner while
+// removing the means to verify it is the wrong order of operations.
+//
+// So: until every format has MIN_SAMPLES published posts, deal them out evenly
+// and learn something. After that, weight toward what actually earns forwards.
+async function planFormats(perWeek) {
+  const { data } = await supabase.from("wick_posts")
+    .select("format,likes,shares").eq("status", "posted");
+
+  const stats = new Map(FORMATS.map((f) => [f, { n: 0, likes: 0, shares: 0 }]));
+  for (const p of data ?? []) {
+    const s = stats.get(p.format);
+    if (!s) continue;
+    s.n++; s.likes += p.likes ?? 0; s.shares += p.shares ?? 0;
+  }
+
+  const underTested = FORMATS.filter((f) => stats.get(f).n < MIN_SAMPLES);
+  if (underTested.length) {
+    // Even rotation, starting with the least-tested formats.
+    const order = [...FORMATS].sort((a, b) => stats.get(a).n - stats.get(b).n);
+    const plan = Array.from({ length: perWeek }, (_, i) => order[i % order.length]);
+    console.log(`[Wick] Testing phase: ${underTested.join(", ")} under ${MIN_SAMPLES} posts. Rotating all four evenly.`);
+    return plan;
+  }
+
+  // Every format has a real sample. Weight by shares per like, the metric the
+  // brand actually optimises for, with a floor so nothing is fully retired.
+  const scored = FORMATS.map((f) => {
+    const s = stats.get(f);
+    return { f, score: s.likes > 0 ? s.shares / s.likes : 0 };
+  }).sort((a, b) => b.score - a.score);
+  const weights = [0.4, 0.3, 0.2, 0.1];
+  const plan = [];
+  scored.forEach((s, i) => {
+    const n = Math.max(1, Math.round(perWeek * weights[i]));
+    for (let k = 0; k < n && plan.length < perWeek; k++) plan.push(s.f);
+  });
+  while (plan.length < perWeek) plan.push(scored[0].f);
+  console.log(`[Wick] Weighting by shares/like: ${scored.map((s) => `${s.f} ${s.score.toFixed(3)}`).join(", ")}`);
+  return plan.slice(0, perWeek);
+}
+
 export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) {
   const perWeek = parseInt(process.env.WICK_POSTS_PER_WEEK ?? "14", 10);
-  // Ratio: half VERSUS (the engine), a third ORDER (cheap, high forward rate),
-  // the remainder COSTUME/LESSON rotating.
-  const rotatingCount = Math.max(1, Math.round(perWeek * 0.15));
-  versus = versus ?? Math.round((perWeek - rotatingCount) * 0.6);
-  order  = order  ?? (perWeek - rotatingCount - versus);
   if (!hfAvailable()) {
     console.log("[Wick] Skipped — higgsfield CLI not authenticated on this host.");
     return { skipped: true };
@@ -161,21 +206,16 @@ export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) 
     console.warn(`[Wick] Only ${topics.length} unused topics for ${perWeek} slots — the registry is cycling.`);
   }
 
-  // Rotate the 4th slot between COSTUME and LESSON.
-  let rotate = rotating;
-  if (rotate === "auto") {
-    const { count } = await supabase.from("wick_posts")
-      .select("*", { count: "exact", head: true }).eq("format", "COSTUME");
-    rotate = (count ?? 0) % 2 === 0 ? "COSTUME" : "LESSON";
-  }
-
   // Assign a format to each topic, then write ALL copy before any image.
-  const kinds = [
-    ...Array.from({ length: versus }, () => "VERSUS"),
-    ...Array.from({ length: order }, () => "ORDER"),
-    ...Array.from({ length: rotatingCount }, (_, n) =>
-      n % 2 === 0 ? rotate : (rotate === "COSTUME" ? "LESSON" : "COSTUME")),
-  ];
+  // Explicit versus/order counts still win when passed, for one-off runs.
+  const kinds = (versus != null || order != null)
+    ? [
+        ...Array.from({ length: versus ?? 0 }, () => "VERSUS"),
+        ...Array.from({ length: order ?? 0 }, () => "ORDER"),
+        ...Array.from({ length: Math.max(0, perWeek - (versus ?? 0) - (order ?? 0)) },
+          (_, n) => (n % 2 === 0 ? "COSTUME" : "LESSON")),
+      ]
+    : await planFormats(perWeek);
 
   const jobs = [];
   for (let i = 0; i < kinds.length; i++) {
@@ -188,7 +228,7 @@ export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) 
                : null; // COSTUME/LESSON write their copy inside their builder
     jobs.push({ kind, spec, topic });
   }
-  console.log(`[Wick] Plan: ${versus} VERSUS, ${order} ORDER, ${rotatingCount} ${rotate}/alt = ${jobs.length} posts`);
+  console.log(`[Wick] Plan: ${kinds.join(", ")} = ${jobs.length} posts`);
 
   const created = [];
   for (let i = 0; i < jobs.length; i++) {
