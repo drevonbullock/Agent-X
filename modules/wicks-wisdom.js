@@ -189,8 +189,10 @@ async function planFormats(perWeek) {
   return plan.slice(0, perWeek);
 }
 
-export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) {
-  const perWeek = parseInt(process.env.WICK_POSTS_PER_WEEK ?? "14", 10);
+// opts.formats — explicit format list, e.g. ["LESSON"]. Used to top up a format
+// the automatic plan under-served, without re-running a whole batch.
+export async function runWeeklyBatch({ versus, order, formats, rotating = "auto" } = {}) {
+  const perWeek = formats?.length ?? parseInt(process.env.WICK_POSTS_PER_WEEK ?? "14", 10);
   if (!hfAvailable()) {
     console.log("[Wick] Skipped — higgsfield CLI not authenticated on this host.");
     return { skipped: true };
@@ -208,7 +210,8 @@ export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) 
 
   // Assign a format to each topic, then write ALL copy before any image.
   // Explicit versus/order counts still win when passed, for one-off runs.
-  const kinds = (versus != null || order != null)
+  const kinds = formats?.length ? formats
+    : (versus != null || order != null)
     ? [
         ...Array.from({ length: versus ?? 0 }, () => "VERSUS"),
         ...Array.from({ length: order ?? 0 }, () => "ORDER"),
