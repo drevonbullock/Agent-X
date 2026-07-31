@@ -100,6 +100,16 @@ async function save(p, buffers, copy, caption, jobIds) {
   });
   if (error) throw new Error(`insert: ${error.message}`);
   console.log(`   saved ${urls.length} slides`);
+
+  // Deliver immediately. A post nobody can see is a post that does not exist.
+  try {
+    const { data: row } = await supabase.from("wick_posts")
+      .select("*").eq("batch_id", BATCH).eq("slot_index", p.n).single();
+    const { sendPostToTelegram } = await import("../modules/wick-telegram.js");
+    if (row && await sendPostToTelegram(row)) console.log("   pushed to Telegram");
+  } catch (err) {
+    console.warn(`   Telegram push failed (post is saved): ${err.message}`);
+  }
 }
 
 // ─── BUILDERS ────────────────────────────────────────────────────────────────

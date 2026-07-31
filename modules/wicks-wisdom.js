@@ -346,6 +346,17 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
 
       created.push(data);
       console.log(`[Wick] Queued ${built.format} (${urls.length} slide${urls.length > 1 ? "s" : ""}) → ${autoPublish ? "auto-publishing on schedule" : "pending approval"}`);
+
+      // Push THIS post the moment it exists, not the whole batch at the end.
+      // A batch takes hours, so end-of-run delivery meant Dre sat with finished
+      // posts sitting invisible in the database. Failure here is logged and
+      // swallowed: a Telegram outage must never lose a post that already built.
+      try {
+        const { sendPostToTelegram } = await import("./wick-telegram.js");
+        await sendPostToTelegram(data);
+      } catch (err) {
+        console.warn(`[Wick] Telegram push failed for slot ${i} (post is saved, use /preview): ${err.message}`);
+      }
     } catch (err) {
       console.error(`[Wick] Post ${i} (${job.kind}) failed: ${err.message}`);
     } finally {
@@ -353,13 +364,13 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
     }
   }
 
-  // Push the whole week to Telegram with Approve / Reject buttons.
+  // Each post was already pushed as it was built, so this is just the summary.
   if (created.length) {
     try {
-      const { sendBatchToTelegram } = await import("./wick-telegram.js");
-      await sendBatchToTelegram(created);
+      const { notifyBatchDone } = await import("./wick-telegram.js");
+      await notifyBatchDone(created);
     } catch (err) {
-      console.warn(`[Wick] Telegram send failed (batch still pending at /wick): ${err.message}`);
+      console.warn(`[Wick] batch summary failed: ${err.message}`);
     }
   }
 

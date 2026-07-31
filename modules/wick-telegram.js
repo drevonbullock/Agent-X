@@ -40,6 +40,47 @@ async function setOffset(v) {
 
 // ─── SEND THE WEEKLY BATCH FOR APPROVAL ──────────────────────────────────────
 
+// One post, delivered the moment it exists. This is the unit that matters:
+// a batch runs for hours, so waiting for the whole run to finish meant finished
+// posts sat invisible in the database while Dre had nothing to look at.
+export async function sendPostToTelegram(p) {
+  const { chatId, ok } = creds();
+  if (!ok) {
+    console.warn("[WickTG] TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set — post stays at /wick");
+    return false;
+  }
+  const auto = process.env.WICK_AUTO_PUBLISH !== "false";
+  const urls = (p.slide_urls ?? []).slice(0, 10);
+  try {
+    if (urls.length > 1) {
+      await tg("sendMediaGroup", {
+        chat_id: chatId,
+        media: urls.map((u, i) => ({
+          type: "photo", media: u,
+          ...(i === 0 ? { caption: `${p.format} · ${p.pillar ?? ""} · ${urls.length} slides` } : {}),
+        })),
+      });
+    } else if (urls.length === 1) {
+      await tg("sendPhoto", { chat_id: chatId, photo: urls[0], caption: `${p.format} · ${p.pillar ?? ""}` });
+    }
+    await tg("sendMessage", {
+      chat_id: chatId,
+      text: `*${p.format}*\n\n${p.caption ?? ""}`,
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [[
+          { text: "✅ Approve", callback_data: `wick:approve:${p.id}` },
+          { text: auto ? "🚫 Pull this one" : "❌ Reject", callback_data: `wick:reject:${p.id}` },
+        ]],
+      },
+    });
+    return true;
+  } catch (err) {
+    console.warn(`[WickTG] send failed for ${p.id}: ${err.message}`);
+    return false;
+  }
+}
+
 export async function sendBatchToTelegram(posts) {
   const { chatId, ok } = creds();
   if (!ok) {
@@ -52,11 +93,18 @@ export async function sendBatchToTelegram(posts) {
   await tg("sendMessage", {
     chat_id: chatId,
     text: auto
-      ? `🕯️ *Wick's Wisdom — weekly batch*\n${posts.length} post${posts.length === 1 ? "" : "s"} queued, publishing automatically at 9am and 12pm.\nTap Pull on anything you do not want to go out.`
-      : `🕯️ *Wick's Wisdom — weekly batch*\n${posts.length} post${posts.length === 1 ? "" : "s"} ready for approval.\nNothing publishes until you tap Approve.`,
+      ? `🕯️ *Wick's Wisdom*\n${posts.length} post${posts.length === 1 ? "" : "s"} queued, publishing automatically at 9am and 12pm.\nTap Pull on anything you do not want to go out.`
+      : `🕯️ *Wick's Wisdom*\n${posts.length} post${posts.length === 1 ? "" : "s"} ready for approval.\nNothing publishes until you tap Approve.`,
     parse_mode: "Markdown",
   });
 
+  for (const p of posts) await sendPostToTelegram(p);
+  console.log(`[WickTG] Sent ${posts.length} post(s) to Telegram`);
+  return true;
+}
+
+// Retained for the old call shape used by scripts.
+async function _legacyBatchBody(posts, chatId, auto) {
   for (const p of posts) {
     const urls = (p.slide_urls ?? []).slice(0, 10);
     try {
@@ -97,7 +145,6 @@ export async function sendBatchToTelegram(posts) {
       console.warn(`[WickTG] send failed for ${p.id}: ${err.message}`);
     }
   }
-  console.log(`[WickTG] Sent ${posts.length} post(s) to Telegram for approval`);
   return true;
 }
 
@@ -198,4 +245,19 @@ if (process.argv[1]?.endsWith("wick-telegram.js")) {
     await pollTelegramApprovals();
   };
   run().then(() => process.exit(0)).catch((e) => { console.error(e.message); process.exit(1); });
+}
+
+// Sent once a batch finishes. Each post was already delivered as it was built,
+// so this only closes the loop with a count and the publish cadence.
+export async function notifyBatchDone(posts) {
+  const { chatId, ok } = creds();
+  if (!ok || !posts?.length) return;
+  const byFormat = posts.reduce((m, p) => ({ ...m, [p.format]: (m[p.format] ?? 0) + 1 }), {});
+  const mix = Object.entries(byFormat).map(([f, n]) => `${n} ${f}`).join(", ");
+  const days = Math.ceil(posts.length / 2);
+  await tg("sendMessage", {
+    chat_id: chatId,
+    text: `🕯️ *Batch complete*\n${posts.length} posts (${mix})\nThat is ~${days} day${days === 1 ? "" : "s"} at 2/day.\n\nSend /queue any time to see what is waiting.`,
+    parse_mode: "Markdown",
+  }).catch(() => {});
 }
