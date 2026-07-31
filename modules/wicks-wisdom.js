@@ -71,8 +71,7 @@ async function buildComparisonCarousel(c, format, dir, jobIds) {
   buffers.push(await compositeCta({
     scenePath: ctaPath,
     closingLine: c.closing_line,
-    keyword: c.keyword,
-    resource: c.resource,
+    sendTo: c.send_to, keyword: c.keyword, resource: c.resource,
   }));
 
   return { slideBuffers: buffers, copy: c, format, sub_type: c.sub_type, pillar: c.pillar };
@@ -93,8 +92,7 @@ async function buildCostume(topic, dir, jobIds) {
   buffers.push(await compositeCta({
     scenePath: ctaScene,
     closingLine: c.closing_line,
-    keyword: c.keyword,
-    resource: c.resource,
+    sendTo: c.send_to, keyword: c.keyword, resource: c.resource,
   }));
   return {
     slideBuffers: buffers, copy: c,
@@ -125,7 +123,7 @@ async function buildLesson(topic, dir, jobIds) {
   ), dir, "recap", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: recapPath, closingLine: l.closing_line,
-    keyword: l.keyword, resource: l.resource,
+    sendTo: l.send_to, keyword: l.keyword, resource: l.resource,
   }));
 
   return { slideBuffers: buffers, copy: l, format: "LESSON", sub_type: "problem_solution", pillar: l.pillar };

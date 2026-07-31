@@ -30,10 +30,10 @@ const PALETTE_COLD = "Cold blue-grey with a weak surviving amber core on his fac
 
 const el = () => `<<<${WICK_ELEMENT}>>>`;
 
-// ─── POSE + CAMERA VARIETY ───────────────────────────────────────────────────
-// Without this every frame is the same front-on standing pose with one arm up,
-// which reads as a sticker pack rather than a character living in scenes.
-// A deterministic index keeps a single carousel varied while staying repeatable.
+// ─── CAMERA VARIETY ──────────────────────────────────────────────────────────
+// Without this every frame is the same front-on eye-level shot, which reads as a
+// sticker pack rather than a character living in scenes. A deterministic index
+// keeps a single carousel varied while staying repeatable across re-runs.
 
 const CAMERAS = [
   "Wide establishing shot, camera at his eye level.",
@@ -46,27 +46,16 @@ const CAMERAS = [
   "Slight dutch tilt, camera angled a few degrees off level for unease.",
 ];
 
-const POSES = [
-  "He is mid stride, one leg forward, body leaning into the movement, arms swinging naturally.",
-  "He is crouched low, weight on his heels, one mitten hand braced on the ground.",
-  "He is seated, shoulders relaxed forward, elbows resting on his knees.",
-  "He is turned three quarters away, glancing back over one shoulder.",
-  "He is reaching forward with one arm extended, torso twisted with the effort.",
-  "He is standing with arms folded across his wax body, weight on one leg.",
-  "He is leaning against something in the scene, one shoulder taking his weight.",
-  "He is kneeling on one knee, head bowed toward what he is doing.",
-  "He is stretched upward on tiptoe, both arms raised toward something above him.",
-  "He is slumped, shoulders collapsed, arms hanging loose at his sides.",
-  "He is walking away from camera into the depth of the scene.",
-  "He is bent forward at the waist, absorbed in something close in front of him.",
-];
-
-// Deterministic per-slide pick so a carousel varies but re-runs are stable.
+// There used to be a POSES list injected here at random by seed. It gave the
+// carousel physical variety and destroyed its meaning: a slide reading "he kept
+// the old rent when income went up" rendered him squatting at a kitchen counter,
+// because the pose was picked by arithmetic and knew nothing about the label.
+//
+// Pose is MEANING, so it comes from the copy, which knows what the slide is
+// arguing. Only the camera is varied here, because the angle can change freely
+// without contradicting the sentence.
 function variety(seed = 0) {
-  return {
-    camera: CAMERAS[seed % CAMERAS.length],
-    pose: POSES[(seed * 5 + 3) % POSES.length],
-  };
+  return { camera: CAMERAS[seed % CAMERAS.length] };
 }
 
 // ─── HIGGSFIELD ──────────────────────────────────────────────────────────────
@@ -170,12 +159,12 @@ export function scenePrompt({ scene, lighting, palette, extra = "" }) {
 // `owned` = the panel where he is holding the controls. Both panels are present
 // day; the split is warm self-lit versus cold screen-lit, never old versus new.
 export function versusPanelPrompt(sceneText, { owned, expression, seed = 0 }) {
-  const { camera, pose } = variety(seed);
+  const { camera } = variety(seed);
   const lighting = owned
     ? "His own golden flame head is the only light source, throwing warm amber light across the objects nearest him, everything else falling into deep soft shadow."
     : "Cold blue-white light from a phone or laptop screen washes across him, flattening his warm glow to a weak surviving amber core on his face, the rest of the room in cold dim shadow.";
   return scenePrompt({
-    scene: `${sceneText} ${pose} His expression is ${expression || (owned ? "focused and unhurried" : "hollow and vacant")}.`,
+    scene: `${sceneText} His expression is ${expression || (owned ? "focused and unhurried" : "hollow and vacant")}.`,
     lighting,
     palette: owned ? PALETTE_WARM : PALETTE_COLD,
     extra: `${camera} Character clearly visible, room for a text label across the lower third. Absolutely no text anywhere in the image.`,
@@ -193,9 +182,9 @@ export function costumePrompt(a, seed = 0) {
 }
 
 export function lessonScenePrompt(sceneText, expression, seed = 0) {
-  const { camera, pose } = variety(seed + 2);
+  const { camera } = variety(seed + 2);
   return scenePrompt({
-    scene: `${sceneText} ${pose}${expression ? ` His expression is ${expression}.` : ""}`,
+    scene: `${sceneText}${expression ? ` His expression is ${expression}.` : ""}`,
     lighting: "His golden flame head is the only light source, throwing warm amber light across the nearest objects, long soft shadows behind.",
     palette: PALETTE_WARM,
     extra: `${camera} Composed so the character and objects sit in the UPPER portion of the frame with clear space below. Absolutely no text anywhere in the image.`,
@@ -369,7 +358,12 @@ ${BASE_CSS}
 }
 
 // CTA / recap slide — scene, closing line, keyword in amber.
-export async function compositeCta({ scenePath, closingLine, keyword, resource }) {
+// The CTA goal is a SHARE, not lead capture. This used to render "Comment
+// LEDGER and I'll send you <resource>" for resources that were never written
+// and had no delivery path, so every post made a promise the account could not
+// keep. `sendTo` names who to forward it to; keyword/resource are still accepted
+// so rows queued under the old shape still render.
+export async function compositeCta({ scenePath, closingLine, sendTo, keyword, resource }) {
   scenePath = fitJpeg(scenePath, W, 790, 0.25);
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
@@ -387,7 +381,9 @@ ${BASE_CSS}
   <div class="top"><img src="${dataUri(scenePath)}"><div class="topfade"></div></div>
   <div class="body">
     <div class="l1">${esc(closingLine)}</div>
-    <div class="l2">Comment <span class="kw">${esc(keyword)}</span> and I'll send you ${esc(resource)}.</div>
+    <div class="l2">${sendTo
+      ? `Send this to <span class="kw">${esc(sendTo)}</span>.`
+      : `Comment <span class="kw">${esc(keyword)}</span> and I'll send you ${esc(resource)}.`}</div>
   </div>
   <div class="wm">${esc(WATERMARK)}</div>
 </div></body></html>`;

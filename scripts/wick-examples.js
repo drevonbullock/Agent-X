@@ -123,7 +123,7 @@ for (let i = 0; i < v.pairs.length; i++) {
   save(await compositeTwoPanel({ topPath: t, bottomPath: b, topLabel: p.top_label, bottomLabel: p.bottom_label }), file);
 }
 if (done("01_versus_5_cta.jpg")) console.log("  skip 01_versus_5_cta.jpg");
-else save(await compositeCta({ scenePath: await gen(lessonScenePrompt(v.cta_scene, v.cta_expression), "vcta", "3:4"), closingLine: v.closing_line, keyword: v.keyword, resource: v.resource }), "01_versus_5_cta.jpg");
+else save(await compositeCta({ scenePath: await gen(lessonScenePrompt(v.cta_scene, v.cta_expression), "vcta", "3:4"), closingLine: v.closing_line, sendTo: v.send_to, keyword: v.keyword, resource: v.resource }), "01_versus_5_cta.jpg");
 
 // 2. ORDER
 console.log("\n=== ORDER art ===");
@@ -136,7 +136,7 @@ for (let i = 0; i < o.pairs.length; i++) {
   save(await compositeTwoPanel({ topPath: t, bottomPath: b, topLabel: p.top_label, bottomLabel: p.bottom_label }), file);
 }
 if (done("02_order_5_cta.jpg")) console.log("  skip 02_order_5_cta.jpg");
-else save(await compositeCta({ scenePath: await gen(lessonScenePrompt(o.cta_scene, o.cta_expression), "octa", "3:4"), closingLine: o.closing_line, keyword: o.keyword, resource: o.resource }), "02_order_5_cta.jpg");
+else save(await compositeCta({ scenePath: await gen(lessonScenePrompt(o.cta_scene, o.cta_expression), "octa", "3:4"), closingLine: o.closing_line, sendTo: o.send_to, keyword: o.keyword, resource: o.resource }), "02_order_5_cta.jpg");
 
 // 3. COSTUME
 console.log("\n=== COSTUME art ===");
@@ -148,7 +148,7 @@ for (let i = 0; i < c.roles.length; i++) {
   save(await compositeCostume({ scenePath: await gen(costumePrompt(r, i), `c${i}`, "3:4"), label: r.label, boldWord: r.bold }), file);
 }
 if (done("03_costume_7_cta.jpg")) console.log("  skip 03_costume_7_cta.jpg");
-else save(await compositeCta({ scenePath: await gen(lessonScenePrompt(c.cta_scene, c.cta_expression), "ccta", "3:4"), closingLine: c.closing_line, keyword: c.keyword, resource: c.resource }), "03_costume_7_cta.jpg");
+else save(await compositeCta({ scenePath: await gen(lessonScenePrompt(c.cta_scene, c.cta_expression), "ccta", "3:4"), closingLine: c.closing_line, sendTo: c.send_to, keyword: c.keyword, resource: c.resource }), "03_costume_7_cta.jpg");
 
 // 4. LESSON
 console.log("\n=== LESSON art ===");
@@ -168,7 +168,7 @@ else {
   const recap = await gen(lessonScenePrompt(
     `stands on a city sidewalk at dusk at a five way junction, ${l.items.length} illuminated overhead direction signs crowded above the left hand street all pointing the same way, one clear open street to the right leading toward lit towers, a bus shelter and parked cars framing the junction`,
     "resolved and clear eyed"), "lrecap", "3:4");
-  save(await compositeCta({ scenePath: recap, closingLine: l.closing_line, keyword: l.keyword, resource: l.resource }), "04_lesson_7_cta.jpg");
+  save(await compositeCta({ scenePath: recap, closingLine: l.closing_line, sendTo: l.send_to, keyword: l.keyword, resource: l.resource }), "04_lesson_7_cta.jpg");
 }
 
 console.log("\nALL FOUR CAROUSELS COMPLETE");

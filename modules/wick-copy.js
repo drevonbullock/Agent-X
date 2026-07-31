@@ -17,9 +17,6 @@ const client = new Anthropic();
 
 export const PILLARS = ["Money", "Systems", "Mind", "Behaviour"];
 
-// Free-resource keywords people DM. Kept plain and modern on purpose.
-export const KEYWORDS = ["SYSTEM", "RESET", "LEDGER", "BLUEPRINT"];
-
 const BRAND_RULES = `
 WICK'S WISDOM — non-negotiable content rules.
 
@@ -77,7 +74,31 @@ HARD NEVERS:
 - NEVER use the sage register. No "dear seeker", no faux scripture, no fortune
   cookie lines. Wick sounds like a sharp friend who has run the numbers.
 - NEVER use em dashes or en dashes. Write separate sentences instead.
-- No hashtags in body copy.`;
+- No hashtags in body copy.
+
+THE CTA GOAL IS A SHARE. Never promise a resource, a guide, a download, a DM, a
+link or a keyword reply. Nothing exists to deliver and an unkept promise costs
+more than a missed follow. The final slide asks one person to send the post to
+one other person, named by a situation they will instantly recognize. That is
+the only call to action this brand makes.
+
+SCENES MUST ILLUSTRATE THEIR LABEL. This is the rule that gets broken most after
+the philosophy one. The image is generated from your scene text alone, so if the
+scene does not SHOW the claim, the slide is nonsense to a reader.
+
+For every scene you write:
+- Name the ONE physical action that proves the label. If the label is about
+  keeping the old rent, he is signing an unchanged lease renewal, not standing in
+  a kitchen. If it is about forgetting a trial, he is looking at a charge on a
+  statement, not holding a phone in general.
+- Name his BODY POSITION as part of the action, because that is the only pose
+  information the image gets: seated at the table, crouched over the open box,
+  turned away from the screen, halfway out the door, slumped against the counter.
+- Name the ONE object that makes the claim legible. A reader who cannot read the
+  label should still guess it from that object.
+- Vary the body position and setting across the four slides. Four seated desk
+  shots in a row is a dead carousel.
+`;
 
 function stripDashes(s) {
   return String(s ?? "").replace(/\s*[—–]\s*/g, ", ").trim();
@@ -157,15 +178,14 @@ Return JSON object:
     {
       "top_label": "the owner line, max 9 words",
       "bottom_label": "the reader's default, max 9 words",
-      "top_scene": "One dense sentence: what Wick is doing in a concrete PRESENT DAY scene, 3-4 named modern physical objects, the setting. No character description, he is supplied separately.",
+      "top_scene": "One dense sentence that SHOWS the top label. Name his body position, the single action that proves the claim, 3-4 named modern objects, and the setting. Present day. No character description, he is supplied separately.",
       "top_expression": "His facial expression in the owner panel. Be specific and emotionally precise: focused, quietly certain, unhurried, deliberate, clear eyed. Match the feeling of the scene.",
-      "bottom_scene": "One dense sentence: the mirror scene in the same modern world, what Wick is doing, 3-4 named modern objects, the setting.",
+      "bottom_scene": "One dense sentence that SHOWS the bottom label. Name his body position, the action that proves it, 3-4 named modern objects, the setting. Must visually rhyme with the top scene while showing the opposite outcome.",
       "bottom_expression": "His facial expression in the second panel. Usually the emotional cost: hollow and vacant, anxious, defeated, numb, quietly ashamed, exhausted. Match the feeling of the scene."
     }
   ],
   "closing_line": "One sentence that reframes all four at once and lands the pillar handoff.",
-  "keyword": "SYSTEM|RESET|LEDGER|BLUEPRINT",
-  "resource": "name of the free text resource the keyword delivers",
+  "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait. 'the friend who got a raise and still feels broke' is right. 'someone who needs this' is wrong.",
   "cta_scene": "One dense sentence: a closing PRESENT DAY scene for Wick that visually gathers the theme, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene. Usually warm, resolved, quietly hopeful, or knowing."
 }
@@ -224,15 +244,14 @@ Return JSON object:
     {
       "top_label": "the command, max 8 words",
       "bottom_label": "the turn or the arithmetic, max 10 words",
-      "top_scene": "One dense sentence: Wick performing the command in a PRESENT DAY setting, 3-4 named modern objects.",
+      "top_scene": "One dense sentence SHOWING him performing the command. Name his body position and the action, 3-4 named modern objects, present day setting.",
       "top_expression": "His expression performing the command. Specific: determined, focused, quietly disciplined, resolute.",
-      "bottom_scene": "One dense sentence: the payoff scene in the same modern world, 3-4 named modern objects showing accumulation or consequence.",
+      "bottom_scene": "One dense sentence SHOWING the payoff. Name his body position and what he is looking at or holding that makes the accumulation or consequence visible, 3-4 named modern objects.",
       "bottom_expression": "His expression at the payoff. Specific: quietly satisfied, awed, proud, steady."
     }
   ],
   "closing_line": "One sentence that reframes all four.",
-  "keyword": "SYSTEM|RESET|LEDGER|BLUEPRINT",
-  "resource": "name of the free text resource",
+  "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait. 'the friend who got a raise and still feels broke' is right. 'someone who needs this' is wrong.",
   "cta_scene": "One dense sentence: closing PRESENT DAY scene for Wick, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene."
 }
@@ -301,8 +320,7 @@ Return JSON object:
     }
   ],
   "closing_line": "One sentence that lands the whole cast at once.",
-  "keyword": "SYSTEM|RESET|LEDGER|BLUEPRINT",
-  "resource": "name of the free text resource",
+  "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait. 'the friend who got a raise and still feels broke' is right. 'someone who needs this' is wrong.",
   "cta_scene": "One dense sentence: closing PRESENT DAY scene, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene."
 }
@@ -360,7 +378,7 @@ Return JSON object:
       "title": "Short item title, max 6 words",
       "problem": "2 to 3 sentences naming the trap, in second person.",
       "solution": "2 to 3 sentences naming the practice and the cost of skipping it. NEVER a method.",
-      "scene": "One dense sentence: PRESENT DAY scene for Wick illustrating this item, 3-4 named modern objects.",
+      "scene": "One dense sentence SHOWING this item's problem. Name his body position, the action that proves it, 3-4 named modern objects. Present day.",
       "expression": "His facial expression in this scene, emotionally matched to the problem being shown. Specific: troubled, weary, uneasy, resigned, alert.",
       "signpost": "2 to 3 word label for the recap slide signpost"
     }
@@ -425,6 +443,7 @@ from the account's own best performing caption, so the rhythm is proven.
    arithmetic here if the topic has a number. Never a made up person or study.
 7. THE IMPERATIVE: a two to four word command on its own line.
 8. THE QUESTION: one engagement question in second person, aimed at a reply.
+   Never ask for a keyword, a DM or a download. The ask is a reply or a share.
 9. SIGNOFF: the literal line "Light one. Pass it on. 🕯️" exactly as written.
 
 FORMATTING IS PART OF THE FORMULA. Single blank line between every beat. Most

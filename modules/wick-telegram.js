@@ -83,14 +83,14 @@ export async function sendBatchToTelegram(posts) {
         text: `*${p.format}*\n\n${p.caption ?? ""}`,
         parse_mode: "Markdown",
         reply_markup: {
-          // In auto mode the post is already queued to publish, so the only
-          // action needed is a kill switch. In gated mode both buttons show.
-          inline_keyboard: [auto
-            ? [{ text: "🚫 Pull this one", callback_data: `wick:reject:${p.id}` }]
-            : [
-                { text: "✅ Approve", callback_data: `wick:approve:${p.id}` },
-                { text: "❌ Reject",  callback_data: `wick:reject:${p.id}` },
-              ]],
+          // Both buttons always show. In auto mode the post is already queued,
+          // so Approve is a confirmation rather than a gate, but Dre asked for
+          // it: tapping it is how he marks a post as reviewed and good, instead
+          // of the only available action being a rejection.
+          inline_keyboard: [[
+            { text: "✅ Approve", callback_data: `wick:approve:${p.id}` },
+            { text: auto ? "🚫 Pull this one" : "❌ Reject", callback_data: `wick:reject:${p.id}` },
+          ]],
         },
       });
     } catch (err) {
