@@ -124,12 +124,28 @@ export function generateScene(prompt, aspect = "3:4") {
   return { url, jobId: job.id ?? null, model: usedModel };
 }
 
-export async function download(url, destPath) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Download failed ${res.status}`);
-  fs.mkdirSync(path.dirname(destPath), { recursive: true });
-  fs.writeFileSync(destPath, Buffer.from(await res.arrayBuffer()));
-  return destPath;
+// Retries here rather than letting the caller retry, because the caller's retry
+// re-runs generateScene and spends the credits again. The image already exists
+// on Higgsfield at this point; a fetch blip should never cost another 7 credits.
+export async function download(url, destPath, attempts = 4) {
+  let lastErr;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Download failed ${res.status}`);
+      fs.mkdirSync(path.dirname(destPath), { recursive: true });
+      fs.writeFileSync(destPath, Buffer.from(await res.arrayBuffer()));
+      return destPath;
+    } catch (err) {
+      lastErr = err;
+      if (i < attempts) {
+        const backoff = 2000 * i;
+        console.warn(`[Wick] download attempt ${i}/${attempts} failed (${err.message}), retrying in ${backoff / 1000}s`);
+        await new Promise((r) => setTimeout(r, backoff));
+      }
+    }
+  }
+  throw lastErr;
 }
 
 // ─── PROMPT BUILDERS ─────────────────────────────────────────────────────────
