@@ -111,8 +111,9 @@ async function buildReusedVersus(p, dir, jobIds) {
     slots.push({ role: "owner (warm)", shows: scene(t).shows });
     slots.push({ role: "the reader's default (cold)", shows: scene(b).shows });
   }
-  const c = await writeToScenes(topic, "VERSUS", slots,
-    "- Labels alternate: odd numbers are the owner line (third person), even numbers are the reader's default (second person).");
+  const c = await writeToScenes(topic, "VERSUS", slots, {
+    rules: "- Labels alternate: frames 1,3,5,7 are the owner line (third person); frames 2,4,6,8 are the reader's default (second person).",
+  });
   const buffers = [];
   for (let i = 0; i < p.pairs.length; i++) {
     const [t, b] = p.pairs[i];
@@ -132,13 +133,18 @@ async function buildReusedVersus(p, dir, jobIds) {
 async function buildHalfVersus(p, dir, jobIds) {
   const topic = byId(p.topic);
   const slots = p.warm.map((f) => ({ role: "owner (warm, art exists)", shows: scene(f).shows }));
-  const c = await writeToScenes(topic, "VERSUS", slots,
-    `- These four are the OWNER panels only. For each one also write the reader's
-  default that answers it, in "counters", plus a scene for it in "counter_scenes".
-- Add to the JSON: "counters": ["max 7 words each"], "counter_scenes": ["one dense
-  sentence staging it, present day, name his body position, the action and 3-4
-  modern objects"], "counter_expressions": ["emotionally precise"].`);
+  const c = await writeToScenes(topic, "VERSUS", slots, {
+    rules: `- These four frames are the OWNER panels only, written in third person.
+- For each, also write the reader's default that answers it, in second person,
+  and a scene staging that default so it can be generated.`,
+    fields: `  "counters": ["the reader's default answering each frame, max 7 words, 4 entries"],
+  "counter_scenes": ["one dense sentence staging each counter: his body position, the action that proves it, 3-4 named modern objects, present day, 4 entries"],
+  "counter_expressions": ["emotionally precise expression for each counter, 4 entries"],`,
+  });
 
+  if (!c.counters?.length || !c.counter_scenes?.length) {
+    throw new Error("copy engine omitted counters/counter_scenes");
+  }
   const buffers = [];
   for (let i = 0; i < p.warm.length; i++) {
     console.log(`   ${i + 1}. "${c.labels[i]}" / "${c.counters[i]}"`);
@@ -176,13 +182,16 @@ async function buildReusedLesson(p) {
     ...p.items.map((f) => ({ role: "numbered item", shows: scene(f).shows })),
     { role: "recap", shows: scene(p.recap).shows },
   ];
-  const c = await writeToScenes(topic, "LESSON", slots,
-    `- Label 1 is the COVER HEADLINE, ALL CAPS, promising a count, max 8 words.
+  const c = await writeToScenes(topic, "LESSON", slots, {
+    rules: `- Label 1 is the COVER HEADLINE: ALL CAPS, promises a count, max 8 words.
 - Labels 2 to 6 are item TITLES, max 6 words each.
-- Label 7 is ignored.
-- Also add "problems" and "solutions": arrays of 5, each 2 to 3 sentences, second
-  person, matching items 2 to 6 in order. A solution names the practice and the
-  cost of skipping it, never a step by step method.`);
+- Label 7 is the recap frame and is ignored.`,
+    fields: `  "problems": ["2 to 3 sentences naming the trap, second person, one per item, 5 entries"],
+  "solutions": ["2 to 3 sentences naming the practice and the cost of skipping it, never a step by step method, 5 entries"],`,
+  });
+  if (!c.problems?.length || !c.solutions?.length) {
+    throw new Error("copy engine omitted problems/solutions");
+  }
   const buffers = [];
   console.log(`   cover: ${c.labels[0]}`);
   buffers.push(await compositeLessonCover({ scenePath: scene(p.cover).file, headline: c.labels[0] }));
@@ -202,10 +211,11 @@ async function buildReusedLesson(p) {
 async function buildReusedCostume(p, dir, jobIds) {
   const topic = byId(p.topic);
   const slots = p.roles.map((f) => ({ role: "one actor in the chain", shows: scene(f).shows }));
-  const c = await writeToScenes(topic, "COSTUME", slots,
-    `- Each label names that actor's ROLE in the mechanic, max 5 words, plain and
-  modern, e.g. "The one who sets the price".
-- Also add "bolds": one array entry per label, the single most important word in it.`);
+  const c = await writeToScenes(topic, "COSTUME", slots, {
+    rules: `- Each label names that actor's ROLE in the mechanic, max 5 words, plain and
+  modern, in the shape "The one who sets the price".`,
+    fields: `  "bolds": ["the single most important word from each label, ${p.roles.length} entries"],`,
+  });
   const buffers = [];
   for (let i = 0; i < p.roles.length; i++) {
     console.log(`   ${i + 1}. ${c.labels[i]}`);

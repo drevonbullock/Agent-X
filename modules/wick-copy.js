@@ -600,11 +600,11 @@ Write only the caption.`,
 // art gets used instead of re-bought.
 //
 // `slots` is [{ role, shows }]. Returns labels in the same order.
-export async function writeToScenes(topic, format, slots, extra = "") {
+export async function writeToScenes(topic, format, slots, { rules = "", fields = "" } = {}) {
   const list = slots.map((s, i) => `${i + 1}. [${s.role}] ${s.shows}`).join("\n");
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 2400,
+    max_tokens: 3000,
     messages: [{
       role: "user",
       content: `${BRAND_RULES}
@@ -624,19 +624,16 @@ RULES:
 - Together the labels must still build ONE argument about the assigned topic, and
   still wire the two pillars.
 - Keep the brand's punch. Max 7 words per label unless told otherwise.
-- If a frame genuinely cannot serve the topic, say so in "unusable" by index
-  rather than forcing a line onto it.
-${extra}
+${rules}
 
-Return JSON:
+Return JSON with EVERY key below present. Do not omit any of them:
 {
   "theme": "short internal name",
   "pillar": "Money|Systems|Mind|Behaviour",
   "pillar_link": "the two pillars wired",
   "hidden_rule": "one sentence naming the handoff",
-  "labels": ["one per frame, in the same order"],
-  "unusable": [],
-  "closing_line": "one sentence that reframes the set",
+  "labels": ["one per frame, in the same order, ${slots.length} entries"],
+${fields ? fields + "\n" : ""}  "closing_line": "one sentence that reframes the set",
   "send_to": "who to send it to, max 12 words, a recognizable situation"
 }`,
     }],
