@@ -295,6 +295,130 @@ async function renderHtml(html) {
 }
 
 // VERSUS / ORDER — stack two panels, thin dark seam, labels added here.
+// ─── PARABLE — speech-bubble story ──────────────────────────────────────────
+// Dre's fifth format, supplied as reference: a three beat story told in speech
+// bubbles. Something in the world asks a question, Wick gives the naive answer,
+// then the turn lands. Beat four states the application over full-bleed art.
+//
+// Locked to the MIND_BEHAVIOUR lane. A parable earns its ending by being about
+// how a person thinks and acts; the same shape applied to interchange fees or
+// credit scoring would be a lecture wearing a story's clothes.
+//
+// The bubble is cream with near-black text, the inverse of every other slide, so
+// spoken words never read as a caption.
+export async function compositeParable({ scenePath, bubbleText, side = "left" }) {
+  scenePath = fitJpeg(scenePath, W, H, 0.30);
+  const len = String(bubbleText).length;
+  const size = len <= 22 ? 62 : len <= 40 ? 54 : 46;
+  const pos = side === "right" ? "right:64px;left:auto;" : "left:64px;right:auto;";
+  const tail = side === "right"
+    ? "right:88px;border-width:44px 30px 0 0;border-color:#f4ead4 transparent transparent transparent;"
+    : "left:88px;border-width:44px 0 0 30px;border-color:#f4ead4 transparent transparent transparent;";
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
+${BASE_CSS}
+.bg{position:absolute;inset:0;} .bg img{width:100%;height:100%;object-fit:cover;display:block;}
+.bwrap{position:absolute;top:96px;${pos}max-width:640px;z-index:25;}
+.bubble{background:#f4ead4;border-radius:44px;padding:34px 44px;
+  box-shadow:0 14px 44px rgba(0,0,0,0.55);}
+.bubble p{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${size}px;line-height:1.14;
+  color:#17130d;text-align:center;}
+.tail{position:absolute;bottom:-42px;width:0;height:0;border-style:solid;${tail}}
+</style></head><body>
+<div class="slide">
+  <div class="bg"><img src="${dataUri(scenePath)}"></div>
+  <div class="bwrap"><div class="bubble"><p>${esc(bubbleText)}</p></div><div class="tail"></div></div>
+  <div class="wm">${esc(WATERMARK)}</div>
+</div></body></html>`;
+  return renderHtml(html);
+}
+
+// ─── VERSUS variant B — SIDE BY SIDE ────────────────────────────────────────
+// The second VERSUS layout Dre supplied: a vertical split rather than a stack.
+// Left is the consequence, right is the cause that produced it ("Diabetes at 70"
+// / "Started at 20"). Reading left to right lands the causation in one beat,
+// which the stacked version cannot do.
+export async function compositeSplitPanel({ leftPath, rightPath, leftLabel, rightLabel }) {
+  const PW = Math.floor((W - 4) / 2);
+  leftPath = fitJpeg(leftPath, PW, H);
+  rightPath = fitJpeg(rightPath, PW, H);
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
+${BASE_CSS}
+.half{position:absolute;top:0;width:${PW}px;height:${H}px;overflow:hidden;}
+.half.l{left:0;} .half.r{right:0;}
+.half img{width:100%;height:100%;object-fit:cover;display:block;}
+.vseam{position:absolute;top:0;left:${PW}px;width:4px;height:${H}px;background:#0d0b09;z-index:30;}
+.hlabel{position:absolute;left:22px;right:22px;bottom:${Math.round(H * 0.30)}px;z-index:20;
+  text-align:center;font-family:'DM Sans',sans-serif;font-weight:700;font-size:42px;
+  line-height:1.16;color:#fff;
+  text-shadow:0 2px 4px rgba(0,0,0,0.98),0 4px 18px rgba(0,0,0,0.92),0 0 46px rgba(0,0,0,0.85);}
+.hshade{position:absolute;left:0;right:0;bottom:0;height:52%;
+  background:linear-gradient(180deg,transparent 0%,rgba(8,6,4,0.28) 50%,rgba(8,6,4,0.50) 100%);}
+</style></head><body>
+<div class="slide">
+  <div class="half l"><img src="${dataUri(leftPath)}"><div class="hshade"></div>
+    <div class="hlabel">${esc(leftLabel)}</div></div>
+  <div class="half r"><img src="${dataUri(rightPath)}"><div class="hshade"></div>
+    <div class="hlabel">${esc(rightLabel)}</div></div>
+  <div class="vseam"></div>
+  <div class="wm">${esc(WATERMARK)}</div>
+</div></body></html>`;
+  return renderHtml(html);
+}
+
+// ─── ORDER — one full-bleed scene, one line ─────────────────────────────────
+// ORDER is NOT a comparison. It is the same sentence said four times about four
+// different things, one scene per slide, and the repetition is the whole effect.
+// It was previously rendered with the two-panel comparison renderer, which is
+// why Dre said the orders looked exactly like the versus.
+export async function compositeSinglePanel({ scenePath, label }) {
+  scenePath = fitJpeg(scenePath, W, H, 0.30);
+  const size = String(label).length > 42 ? 50 : 56;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
+${BASE_CSS}
+.bg{position:absolute;inset:0;} .bg img{width:100%;height:100%;object-fit:cover;display:block;}
+.oshade{position:absolute;left:0;right:0;bottom:0;height:60%;z-index:10;
+  background:linear-gradient(180deg,transparent 0%,rgba(8,6,4,0.26) 46%,rgba(8,6,4,0.55) 100%);}
+.oline{position:absolute;left:78px;right:78px;bottom:${Math.round(H * 0.30)}px;z-index:20;
+  text-align:center;font-family:'DM Sans',sans-serif;font-weight:700;font-size:${size}px;
+  line-height:1.2;color:#fff;
+  text-shadow:0 2px 4px rgba(0,0,0,0.98),0 4px 18px rgba(0,0,0,0.92),0 0 46px rgba(0,0,0,0.85);}
+</style></head><body>
+<div class="slide">
+  <div class="bg"><img src="${dataUri(scenePath)}"></div><div class="oshade"></div>
+  <div class="oline">${esc(label)}</div>
+  <div class="wm">${esc(WATERMARK)}</div>
+</div></body></html>`;
+  return renderHtml(html);
+}
+
+// ORDER's final slide: breaks the drumbeat and names the rule, then the share ask.
+export async function compositeReveal({ scenePath, revealLine, closingLine, sendTo }) {
+  scenePath = fitJpeg(scenePath, W, H, 0.22);
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
+${BASE_CSS}
+.bg{position:absolute;inset:0;} .bg img{width:100%;height:100%;object-fit:cover;display:block;}
+.rshade{position:absolute;inset:0;z-index:10;
+  background:linear-gradient(180deg,transparent 0%,rgba(8,6,4,0.30) 34%,rgba(8,6,4,0.90) 58%,rgba(8,6,4,0.97) 100%);}
+.rbody{position:absolute;left:70px;right:70px;bottom:118px;z-index:20;text-align:center;}
+.r1{font-family:'DM Sans',sans-serif;font-weight:700;font-size:50px;line-height:1.2;color:#fff;
+  margin-bottom:28px;text-shadow:0 3px 14px rgba(0,0,0,0.9);}
+.r2{font-family:'DM Sans',sans-serif;font-weight:400;font-size:33px;line-height:1.42;
+  color:#ece5dd;margin-bottom:32px;}
+.r3{font-family:'DM Sans',sans-serif;font-weight:700;font-size:36px;line-height:1.3;color:#fff;}
+.r3 b{color:#F5A524;}
+</style></head><body>
+<div class="slide">
+  <div class="bg"><img src="${dataUri(scenePath)}"></div><div class="rshade"></div>
+  <div class="rbody">
+    <div class="r1">${esc(revealLine)}</div>
+    ${closingLine ? `<div class="r2">${esc(closingLine)}</div>` : ""}
+    <div class="r3">Send this to <b>${esc(sendTo)}</b>.</div>
+  </div>
+  <div class="wm">${esc(WATERMARK)}</div>
+</div></body></html>`;
+  return renderHtml(html);
+}
+
 export async function compositeTwoPanel({ topPath, bottomPath, topLabel, bottomLabel }) {
   const PH = Math.floor((H - 4) / 2);
   topPath = fitJpeg(topPath, W, PH);

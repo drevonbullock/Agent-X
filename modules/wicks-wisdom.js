@@ -3,13 +3,13 @@ import fs from "fs";
 import path from "path";
 import supabase from "../supabase/client.js";
 import { postCarouselToInstagram, postImageToInstagram } from "../distributors/instagram.js";
-import { writeVersusCarousel, writeOrderCarousel, writeCostume, writeLesson, writeCaption } from "./wick-copy.js";
+import { writeVersusCarousel, writeOrderCarousel, writeCostume, writeLesson, writeParable, writeCaption } from "./wick-copy.js";
 import { pickTopics } from "./wick-topics.js";
 import {
   hfAvailable, generateScene, download, tmpDir,
   versusPanelPrompt, costumePrompt, lessonScenePrompt,
-  compositeTwoPanel, compositeCostume, compositeLessonCover,
-  compositeLessonItem, compositeCta,
+  compositeTwoPanel, compositeSplitPanel, compositeSinglePanel, compositeReveal, compositeParable,
+  compositeCostume, compositeLessonCover, compositeLessonItem, compositeCta,
 } from "./wick-render.js";
 
 // ─── WICK'S WISDOM — ORCHESTRATOR ────────────────────────────────────────────
@@ -52,19 +52,32 @@ async function scene(prompt, dir, name, aspect, jobIds) {
 // VERSUS / ORDER — a 5 slide carousel: 4 two-panel comparisons on one theme,
 // then a CTA slide. Each comparison slide is 2 generated panels stacked, so a
 // full carousel is 9 generations (8 panels + 1 CTA scene).
-async function buildComparisonCarousel(c, format, dir, jobIds) {
-  console.log(`[Wick] ${format} carousel: "${c.theme}" (${c.pairs.length} comparisons + CTA)`);
+// VERSUS has two layouts and alternates between them, both supplied by Dre:
+//   stacked — two wide panels one above the other
+//   split   — a vertical split, consequence on the left, cause on the right
+// Alternating stops a profile grid of VERSUS posts reading as one repeated
+// template. Panel aspect follows the layout: 3:2 for stacked, 9:16 for split.
+async function buildComparisonCarousel(c, format, dir, jobIds, layout = "stacked") {
+  const split = layout === "split";
+  console.log(`[Wick] ${format} carousel (${layout}): "${c.theme}" (${c.pairs.length} comparisons + CTA)`);
   const buffers = [];
 
   for (let i = 0; i < c.pairs.length; i++) {
     const pair = c.pairs[i];
     console.log(`[Wick]   ${i + 1}/${c.pairs.length}: "${pair.top_label}" / "${pair.bottom_label}"`);
-    const topPath = await scene(versusPanelPrompt(pair.top_scene, { owned: true,  expression: pair.top_expression,  seed: i * 2 }),     dir, `p${i}-top`, "3:2", jobIds);
-    const botPath = await scene(versusPanelPrompt(pair.bottom_scene, { owned: false, expression: pair.bottom_expression, seed: i * 2 + 1 }), dir, `p${i}-bot`, "3:2", jobIds);
-    buffers.push(await compositeTwoPanel({
-      topPath, bottomPath: botPath,
-      topLabel: pair.top_label, bottomLabel: pair.bottom_label,
-    }));
+    const aspect = split ? "9:16" : "3:2";
+    const topPath = await scene(versusPanelPrompt(pair.top_scene, { owned: true,  expression: pair.top_expression,  seed: i * 2 }),     dir, `p${i}-top`, aspect, jobIds);
+    const botPath = await scene(versusPanelPrompt(pair.bottom_scene, { owned: false, expression: pair.bottom_expression, seed: i * 2 + 1 }), dir, `p${i}-bot`, aspect, jobIds);
+    buffers.push(split
+      // Left is the consequence, so the reader meets the outcome before the cause.
+      ? await compositeSplitPanel({
+          leftPath: botPath, rightPath: topPath,
+          leftLabel: pair.bottom_label, rightLabel: pair.top_label,
+        })
+      : await compositeTwoPanel({
+          topPath, bottomPath: botPath,
+          topLabel: pair.top_label, bottomLabel: pair.bottom_label,
+        }));
   }
 
   const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression), dir, "cta", "4:5", jobIds);
@@ -75,6 +88,48 @@ async function buildComparisonCarousel(c, format, dir, jobIds) {
   }));
 
   return { slideBuffers: buffers, copy: c, format, sub_type: c.sub_type, pillar: c.pillar };
+}
+
+// ORDER — one full-bleed scene per line, then the reveal. Not a comparison.
+async function buildOrderCarousel(c, dir, jobIds) {
+  console.log(`[Wick] ORDER carousel: "${c.theme}" (${c.lines.length} lines + reveal)`);
+  const buffers = [];
+  for (let i = 0; i < c.lines.length; i++) {
+    const line = c.lines[i];
+    console.log(`[Wick]   ${i + 1}/${c.lines.length}: "${line.label}"`);
+    const p = await scene(lessonScenePrompt(line.scene, line.expression, i), dir, `line-${i}`, "4:5", jobIds);
+    buffers.push(await compositeSinglePanel({ scenePath: p, label: line.label }));
+  }
+  const revealPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9), dir, "reveal", "4:5", jobIds);
+  buffers.push(await compositeReveal({
+    scenePath: revealPath,
+    revealLine: c.reveal_line,
+    closingLine: c.closing_line,
+    sendTo: c.send_to,
+  }));
+  return { slideBuffers: buffers, copy: c, format: "ORDER", sub_type: c.sub_type ?? "repeating_formula", pillar: c.pillar };
+}
+
+// PARABLE — three speech-bubble beats, the application, then the ask.
+async function buildParable(topic, dir, jobIds) {
+  const c = await writeParable(topic);
+  console.log(`[Wick] PARABLE: "${c.theme}" (speaker: ${c.speaker})`);
+  const buffers = [];
+  for (let i = 0; i < c.beats.length; i++) {
+    const b = c.beats[i];
+    console.log(`[Wick]   ${i + 1}/3: "${b.bubble}"`);
+    const p = await scene(lessonScenePrompt(b.scene, b.expression, i), dir, `beat-${i}`, "4:5", jobIds);
+    buffers.push(await compositeParable({ scenePath: p, bubbleText: b.bubble, side: b.side }));
+  }
+  const appPath = await scene(lessonScenePrompt(c.application_scene, c.application_expression, 5), dir, "apply", "4:5", jobIds);
+  buffers.push(await compositeSinglePanel({ scenePath: appPath, label: c.application }));
+
+  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9), dir, "cta", "4:5", jobIds);
+  buffers.push(await compositeReveal({
+    scenePath: ctaPath, revealLine: c.application,
+    closingLine: c.closing_line, sendTo: c.send_to,
+  }));
+  return { slideBuffers: buffers, copy: c, format: "PARABLE", sub_type: "parable", pillar: c.pillar };
 }
 
 async function buildCostume(topic, dir, jobIds) {
@@ -224,11 +279,14 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
   for (let i = 0; i < kinds.length; i++) {
     const topic = topics[i % topics.length];
     if (!topic) break;
-    const kind = kinds[i];
+    // MIND_BEHAVIOUR topics are always parables. Dre scoped the format to that
+    // lane specifically, and the lane is already 10% of the registry, so this
+    // lands the mix without a second counter to keep in sync.
+    const kind = topic.lane === "MIND_BEHAVIOUR" ? "PARABLE" : kinds[i];
     console.log(`[Wick] copy ${i + 1}/${kinds.length} ${kind} <- #${topic.id} ${topic.title}`);
     const spec = kind === "VERSUS" ? await writeVersusCarousel(topic)
                : kind === "ORDER"  ? await writeOrderCarousel(topic)
-               : null; // COSTUME/LESSON write their copy inside their builder
+               : null; // COSTUME/LESSON/PARABLE write their copy inside their builder
     jobs.push({ kind, spec, topic });
   }
   console.log(`[Wick] Plan: ${kinds.join(", ")} = ${jobs.length} posts`);
@@ -240,8 +298,15 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
     const jobIds = [];
     try {
       let built;
-      if (job.kind === "VERSUS" || job.kind === "ORDER") {
-        built = await buildComparisonCarousel(job.spec, job.kind, dir, jobIds);
+      if (job.kind === "VERSUS") {
+        const { count } = await supabase.from("wick_posts")
+          .select("*", { count: "exact", head: true }).eq("format", "VERSUS");
+        built = await buildComparisonCarousel(job.spec, "VERSUS", dir, jobIds,
+          (count ?? 0) % 2 === 0 ? "stacked" : "split");
+      } else if (job.kind === "ORDER") {
+        built = await buildOrderCarousel(job.spec, dir, jobIds);
+      } else if (job.kind === "PARABLE") {
+        built = await buildParable(job.topic, dir, jobIds);
       } else if (job.kind === "COSTUME") {
         built = await buildCostume(job.topic, dir, jobIds);
       } else {

@@ -206,7 +206,15 @@ Exactly 4 pairs.`,
   return c;
 }
 
-// ─── ORDER — imperative two-panel (command, then turn or arithmetic) ─────────
+// ─── ORDER — one scene per slide, one repeating sentence ────────────────────
+// Dre supplied the reference: a SINGLE full-bleed image per slide with one line
+// over it, and all four lines run the SAME grammatical shape with one word
+// swapped. "Call a rich man broke, he'll laugh." then "Call a genius stupid,
+// he'll laugh." The repetition IS the format. Slide 5 breaks the pattern and
+// names the rule.
+//
+// This was previously built as a stacked two-panel comparison, which is
+// structurally VERSUS, which is exactly why the two formats looked identical.
 
 export async function writeOrderCarousel(topic) {
   if (!topic) throw new Error("writeOrderCarousel requires a topic from wick-topics.js");
@@ -219,55 +227,137 @@ export async function writeOrderCarousel(topic) {
 
 ${topicBrief(topic)}
 
-FORMAT: ORDER CAROUSEL. Five slides. Slides 1 to 4 are two-panel imperatives that
-all serve the assigned topic. Slide 5 is a call to action. Every scene is present day.
+FORMAT: ORDER CAROUSEL. Five slides. Slides 1 to 4 are ONE scene each with ONE
+line of copy over the art. Slide 5 breaks the pattern and names the rule.
 
-Panel one gives a command. Panel two either inverts it (the turn) or does the
-arithmetic on it. The ARITHMETIC variant is strongest because the number persuades
-so the copy does not have to. Use arithmetic on at least two of the four.
+THE FORMAT IS REPETITION. All four lines share the SAME grammatical shape with a
+single element swapped. Read together they become a drumbeat, and the swap is
+what makes the fourth one land. This is not four different sentences about a
+theme; it is one sentence said four times about four things.
 
-Reference rhythm only, never copy the content:
-"Check the balance every Friday." / "That's fifty two chances to catch it early."
-"Name the feeling before you open the app." / "The cart empties itself."
-"Add the annual number to the label." / "Nothing costs ten dollars."
+Reference rhythm ONLY, never reuse this content:
+"Call a rich man broke, he'll laugh."
+"Call a genius stupid, he'll laugh."
+"Call a strong man weak, he'll laugh."
+Same shape every time. Only the pair of opposites changes.
 
-All arithmetic MUST be correct. Check every multiplication.
+Build your own shape for the assigned topic and hold it exactly across all four.
+Escalate: line 1 is the most recognizable, line 4 is the one that stings.
+
+If your shape carries a number, every number must actually multiply out. Check it.
 
 Return JSON object:
 {
   "theme": "short internal name",
   "pillar": "Money|Systems|Mind|Behaviour",
-  "pillar_link": "the two pillars this set wires together, e.g. Behaviour to Money",
-  "sub_type": "imperative",
+  "pillar_link": "the two pillars this set wires together",
+  "sub_type": "repeating_formula",
+  "formula": "the sentence shape you are holding, with the swapped part marked, for internal reference only",
   "hidden_rule": "one sentence naming the handoff between the two pillars",
-  "pairs": [
+  "lines": [
     {
-      "top_label": "the command, max 8 words",
-      "bottom_label": "the turn or the arithmetic, max 10 words",
-      "top_scene": "One dense sentence SHOWING him performing the command. Name his body position and the action, 3-4 named modern objects, present day setting.",
-      "top_expression": "His expression performing the command. Specific: determined, focused, quietly disciplined, resolute.",
-      "bottom_scene": "One dense sentence SHOWING the payoff. Name his body position and what he is looking at or holding that makes the accumulation or consequence visible, 3-4 named modern objects.",
-      "bottom_expression": "His expression at the payoff. Specific: quietly satisfied, awed, proud, steady."
+      "label": "the full line, max 9 words, following the shape exactly. This is the only text on the slide.",
+      "scene": "One dense sentence SHOWING this line. Name his body position, the single action that proves it, 3-4 named modern objects, the setting. Present day. He is supplied separately, never describe him.",
+      "expression": "His facial expression, emotionally precise and matched to the line."
     }
   ],
-  "closing_line": "One sentence that reframes all four.",
-  "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait. 'the friend who got a raise and still feels broke' is right. 'someone who needs this' is wrong.",
-  "cta_scene": "One dense sentence: closing PRESENT DAY scene for Wick, 3-4 named modern objects.",
+  "reveal_line": "Slide 5. The rule the four lines were building to, one sentence, max 16 words.",
+  "closing_line": "One short sentence under the reveal that lands the money consequence.",
+  "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait.",
+  "cta_scene": "One dense sentence: closing PRESENT DAY scene, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene."
 }
 
-EXPRESSION MATTERS. Wick's face must carry the emotion of every scene. Never
-default to smiling.
+EXPRESSION MATTERS. Wick's face carries the line. Never default to smiling.
 
-Exactly 4 pairs.`,
+Exactly 4 lines.`,
     }],
   });
   const c = parseJson(msg.content[0].text);
-  c.pairs = (c.pairs ?? []).slice(0, 4).map((p) => ({
-    ...p,
-    top_label: stripDashes(p.top_label),
-    bottom_label: stripDashes(p.bottom_label),
+  c.lines = (c.lines ?? []).slice(0, 4).map((l) => ({ ...l, label: stripDashes(l.label) }));
+  c.reveal_line = stripDashes(c.reveal_line);
+  c.closing_line = stripDashes(c.closing_line);
+  return c;
+}
+
+// ─── PARABLE — a three beat story in speech bubbles ─────────────────────────
+// MIND_BEHAVIOUR ONLY. Dre: "the parable part should only be for mind and
+// behavior, it should not be about money and systems." A parable earns its
+// ending by being about how a person thinks and acts. The same shape aimed at
+// interchange fees would be a lecture wearing a story's clothes.
+
+export async function writeParable(topic) {
+  if (!topic) throw new Error("writeParable requires a topic from wick-topics.js");
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 2200,
+    messages: [{
+      role: "user",
+      content: `${BRAND_RULES}
+
+${topicBrief(topic)}
+
+FORMAT: PARABLE. Five slides. A tiny story told in SPEECH BUBBLES, then the
+application, then the ask. Everything present day.
+
+Slide 1: something in the world asks Wick a simple question. A bubble.
+Slide 2: Wick gives the obvious, slightly wrong answer. A bubble. Make it human
+         and a little sheepish, the answer anyone would give.
+Slide 3: the thing corrects him in one line that reframes everything. A bubble.
+         This is the whole post. It must be short enough to remember and true
+         enough to repeat.
+Slide 4: the application, stated flat over the art. No bubble. Second person.
+Slide 5: the ask.
+
+Reference rhythm ONLY, never reuse this content:
+  "Which way does a tree fall?" / "Uhh... down?" / "The tree falls the way it
+  leans." / "Be careful which way you lean."
+
+THE RULES OF THIS FORMAT:
+- The speaker is an ORDINARY PRESENT DAY THING that could plausibly know the
+  answer: a worn pair of running shoes, a kettle, a door, a bus, a stack of
+  unopened mail, a gym bench. Give it a face and let it talk. It is never a
+  historical figure, never a sage, never an animal that lectures.
+- Bubbles are SHORT. Slide 1 under 8 words, slide 2 under 5, slide 3 under 11.
+  If it needs a comma to work it is too long.
+- The turn must be a genuine reframe, not a restatement of the question.
+- No moral at the end. Slide 4 states what to do and stops.
+
+Return JSON object:
+{
+  "theme": "short internal name",
+  "pillar": "Mind|Behaviour",
+  "pillar_link": "Mind to Behaviour, or Behaviour to Mind",
+  "sub_type": "parable",
+  "speaker": "the ordinary present day thing that speaks, 2-4 words",
+  "hidden_rule": "one sentence, the rule the story reveals",
+  "beats": [
+    {
+      "bubble": "the line spoken on this slide",
+      "side": "left or right, alternate across the three beats",
+      "scene": "One dense sentence SHOWING this beat. Name Wick's body position, the speaker object clearly visible with a face, 3-4 named modern objects, the setting. He is supplied separately, never describe him.",
+      "expression": "Wick's facial expression on this beat."
+    }
+  ],
+  "application": "Slide 4. What to do, second person, max 9 words.",
+  "application_scene": "One dense sentence: the scene under the application line.",
+  "application_expression": "His expression on slide 4.",
+  "closing_line": "One short sentence under the ask on slide 5.",
+  "send_to": "Who to send this to. Max 12 words, a recognizable situation.",
+  "cta_scene": "One dense sentence: closing PRESENT DAY scene, 3-4 named modern objects.",
+  "cta_expression": "His expression in the closing scene."
+}
+
+Exactly 3 beats.`,
+    }],
+  });
+  const c = parseJson(msg.content[0].text);
+  c.beats = (c.beats ?? []).slice(0, 3).map((b, i) => ({
+    ...b,
+    bubble: stripDashes(b.bubble),
+    side: b.side === "right" || i === 1 ? "right" : "left",
   }));
+  c.application = stripDashes(c.application);
   c.closing_line = stripDashes(c.closing_line);
   return c;
 }
