@@ -227,6 +227,35 @@ export async function checkAnthropicCredit() {
   }
 }
 
+// Telegram is how Dre finds out a Wick post published and how he pulls one he
+// does not want. If it is misconfigured the posts still go out, so the failure
+// is invisible: it looks like a quiet bot rather than a broken one. Check it at
+// boot the same as every other credential.
+export async function checkTelegram() {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) {
+    console.warn(
+      `[Health] ⚠️ Telegram not configured (${!token ? "TELEGRAM_BOT_TOKEN" : "TELEGRAM_CHAT_ID"} missing) ` +
+      `— Wick posts will still publish, but with no notification and no pull switch.`
+    );
+    return false;
+  }
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+    const body = await res.json();
+    if (!body.ok) {
+      console.error(`[Health] ❌ Telegram bot token rejected: ${body.description} — no publish alerts, no pull switch.`);
+      return false;
+    }
+    console.log(`[Health] ✅ Telegram OK (@${body.result.username} → chat ${chatId})`);
+    return true;
+  } catch (err) {
+    console.warn(`[Health] Telegram check network error (${err.message}) — will not block startup`);
+    return false;
+  }
+}
+
 // CLI: node modules/token-manager.js [--refresh]
 if (process.argv[1]?.endsWith("token-manager.js")) {
   const run = process.argv.includes("--refresh") ? refreshTokens : initTokens;
