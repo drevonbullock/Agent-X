@@ -71,11 +71,72 @@ async function usedTopicIds() {
   return new Set((data ?? []).map((r) => r.topic_id));
 }
 
+// Extend the registry rather than repeat it. Dre: "you're never going to
+// recycle, you're always going to be generating more." The 30 seed episodes are
+// four weeks of posting at 2/day, so once a lane runs dry new episodes are
+// written in the same shape and stored, keeping the 80/10/10 mix intact.
+//
+// Generated ids start at 1000 so a seed episode is always distinguishable.
+async function extendLane(lane, need, existing) {
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  const client = new Anthropic();
+  const sample = TOPICS.filter((t) => t.lane === lane).slice(0, 6)
+    .map((t) => `${t.title} | ${t.hook} | ${t.payoff}`).join("\n");
+  const taken = existing.map((t) => t.title).join("; ");
+
+  const brief = {
+    HYBRID: "A behavioural mechanic people feel every week, whose cost shows up in money. Voice reference: Rohn and Nightingale on the behaviour, Hormozi and Buffett on the number.",
+    MIND_BEHAVIOUR: "How a thought pattern produces an action. Voice reference: Jim Rohn, Earl Nightingale, Tony Robbins, Florence Scovel Shinn.",
+    MONEY_SYSTEMS: "How a money machine is built and who it pays. Voice reference: Hormozi, Dalio, Buffett, Kiyosaki. Mechanism only, never advice.",
+  }[lane];
+
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1600,
+    messages: [{ role: "user", content: `Write ${need} new episode ideas for a behavioural-money Instagram page.
+
+LANE: ${lane}. ${brief}
+
+Existing episodes in this lane, for shape only:
+${sample}
+
+Already covered on the page, do NOT duplicate or restate any of these:
+${taken}
+
+Rules: present day only. No philosophy, no philosophers, no history. Name a real
+behavioural or structural mechanic, not a vibe. The payoff must be something a
+person can check. Never name a real company or living person.
+
+Return ONLY a JSON array:
+[{"title":"Why ...","hook":"the mechanic, 2-6 words","payoff":"where it lands, 3-8 words"}]` }],
+  });
+  const raw = msg.content[0].text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  const items = JSON.parse(raw.slice(raw.search(/[[{]/)));
+  const base = 1000 + Math.max(0, ...existing.filter((t) => t.id >= 1000).map((t) => t.id - 1000));
+  const fresh = items.map((it, i) => ({ ...it, id: base + i + 1, lane, generated: true }));
+
+  const { error } = await supabase.from("wick_generated_topics")
+    .insert(fresh.map((t) => ({ topic_id: t.id, lane: t.lane, title: t.title, hook: t.hook, payoff: t.payoff })));
+  if (error) console.warn(`[WickTopics] could not persist generated topics: ${error.message}`);
+  console.log(`[WickTopics] Generated ${fresh.length} new ${lane} episode(s).`);
+  return fresh;
+}
+
+// Everything available: the 30 seeds plus anything generated previously.
+async function allTopics() {
+  const { data } = await supabase.from("wick_generated_topics").select("*");
+  const gen = (data ?? []).map((r) => ({
+    id: r.topic_id, lane: r.lane, title: r.title, hook: r.hook, payoff: r.payoff, generated: true,
+  }));
+  return [...TOPICS, ...gen];
+}
+
 // Pick `count` topics honouring the 80/10/10 mix, preferring unused ones.
 // Episode 1 is excluded by default because it is already published.
 export async function pickTopics(count, { allowPublished = false } = {}) {
   const used = await usedTopicIds();
-  const eligible = TOPICS.filter((t) => allowPublished || !t.published);
+  const pool = await allTopics();
+  const eligible = pool.filter((t) => allowPublished || !t.published);
 
   const quota = {
     HYBRID: Math.round(count * LANES.HYBRID.weight),
@@ -88,10 +149,19 @@ export async function pickTopics(count, { allowPublished = false } = {}) {
   const picked = [];
   for (const [lane, n] of Object.entries(quota)) {
     if (n <= 0) continue;
-    const pool = eligible.filter((t) => t.lane === lane);
-    // Unused first, then least recently reused, so the cycle repeats evenly.
-    const fresh = pool.filter((t) => !used.has(t.id));
-    const ordered = [...fresh, ...pool.filter((t) => used.has(t.id))];
+    const lanePool = eligible.filter((t) => t.lane === lane);
+    let unused = lanePool.filter((t) => !used.has(t.id));
+
+    // Out of fresh material in this lane: write more rather than repeat.
+    if (unused.length < n) {
+      try {
+        const made = await extendLane(lane, n - unused.length, lanePool);
+        unused = [...unused, ...made];
+      } catch (err) {
+        console.warn(`[WickTopics] ${lane} generation failed (${err.message}) — reusing oldest instead`);
+      }
+    }
+    const ordered = [...unused, ...lanePool.filter((t) => used.has(t.id))];
     picked.push(...ordered.slice(0, n));
   }
   return picked;

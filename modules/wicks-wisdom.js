@@ -9,6 +9,7 @@ import {
   hfAvailable, generateScene, download, tmpDir,
   versusPanelPrompt, costumePrompt, lessonScenePrompt,
   compositeTwoPanel, compositeSplitPanel, compositeSinglePanel, compositeReveal, compositeParable,
+  parableScenePrompt,
   compositeCostume, compositeLessonCover, compositeLessonItem, compositeCta,
 } from "./wick-render.js";
 
@@ -118,7 +119,7 @@ async function buildParable(topic, dir, jobIds) {
   for (let i = 0; i < c.beats.length; i++) {
     const b = c.beats[i];
     console.log(`[Wick]   ${i + 1}/3: "${b.bubble}"`);
-    const p = await scene(lessonScenePrompt(b.scene, b.expression, i), dir, `beat-${i}`, "4:5", jobIds);
+    const p = await scene(parableScenePrompt(b.scene, b.expression, b.side, i), dir, `beat-${i}`, "4:5", jobIds);
     buffers.push(await compositeParable({ scenePath: p, bubbleText: b.bubble, side: b.side }));
   }
   const appPath = await scene(lessonScenePrompt(c.application_scene, c.application_expression, 5), dir, "apply", "4:5", jobIds);
@@ -194,7 +195,9 @@ async function buildLesson(topic, dir, jobIds) {
 // nano_banana_pro is 2 credits and cuts that to ~230. Switch via WICK_IMAGE_MODEL.
 // Dial WICK_POSTS_PER_WEEK down if that outruns the credit budget.
 
-const FORMATS = ["VERSUS", "ORDER", "COSTUME", "LESSON"];
+// Formats that rotate freely across the HYBRID lane. COSTUME and PARABLE are
+// excluded on purpose: they are pinned to MONEY_SYSTEMS and MIND_BEHAVIOUR.
+const FORMATS = ["VERSUS", "ORDER", "LESSON"];
 const MIN_SAMPLES = 3;
 
 // Which formats to build, and how many of each.
@@ -279,10 +282,14 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
   for (let i = 0; i < kinds.length; i++) {
     const topic = topics[i % topics.length];
     if (!topic) break;
-    // MIND_BEHAVIOUR topics are always parables. Dre scoped the format to that
-    // lane specifically, and the lane is already 10% of the registry, so this
-    // lands the mix without a second counter to keep in sync.
-    const kind = topic.lane === "MIND_BEHAVIOUR" ? "PARABLE" : kinds[i];
+    // Two formats are scoped to a lane rather than dealt by rotation, because
+    // Dre scoped them by subject: parables are for how a person thinks and acts,
+    // costumes are for showing every actor inside a money mechanism. Those lanes
+    // are 10% each of the registry, so the mix lands with no extra counter to
+    // drift out of sync. Everything else (the 80% HYBRID lane) rotates.
+    const kind = topic.lane === "MIND_BEHAVIOUR" ? "PARABLE"
+               : topic.lane === "MONEY_SYSTEMS"  ? "COSTUME"
+               : kinds[i];
     console.log(`[Wick] copy ${i + 1}/${kinds.length} ${kind} <- #${topic.id} ${topic.title}`);
     const spec = kind === "VERSUS" ? await writeVersusCarousel(topic)
                : kind === "ORDER"  ? await writeOrderCarousel(topic)

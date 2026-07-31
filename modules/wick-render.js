@@ -306,6 +306,23 @@ async function renderHtml(html) {
 //
 // The bubble is cream with near-black text, the inverse of every other slide, so
 // spoken words never read as a caption.
+// A parable frame has to LEAVE ROOM for the bubble. The composite cannot know
+// where the character ended up, so the prompt reserves the corner: Wick and the
+// speaker sit low and to one side, and the opposite upper third is deliberately
+// empty. Without this the bubble lands across his face, which is exactly what
+// happened on the first parable render.
+export function parableScenePrompt(sceneText, expression, side = "left", seed = 0) {
+  const { camera } = variety(seed);
+  const clear = side === "left" ? "upper LEFT" : "upper RIGHT";
+  const stand = side === "left" ? "lower right" : "lower left";
+  return scenePrompt({
+    scene: `${sceneText}${expression ? ` His expression is ${expression}.` : ""}`,
+    lighting: "His golden flame head is the only light source, throwing warm amber light across the nearest objects, long soft shadows behind.",
+    palette: PALETTE_WARM,
+    extra: `${camera} COMPOSITION IS CRITICAL: place the character and the speaking object in the ${stand} portion of the frame, both fully visible and unobstructed. Leave the entire ${clear} third of the frame as EMPTY UNCLUTTERED BACKGROUND with no character, no face and no important detail, because a speech bubble is placed there afterwards. Absolutely no text anywhere in the image.`,
+  });
+}
+
 export async function compositeParable({ scenePath, bubbleText, side = "left" }) {
   scenePath = fitJpeg(scenePath, W, H, 0.30);
   const len = String(bubbleText).length;
@@ -372,7 +389,7 @@ ${BASE_CSS}
 // why Dre said the orders looked exactly like the versus.
 export async function compositeSinglePanel({ scenePath, label }) {
   scenePath = fitJpeg(scenePath, W, H, 0.30);
-  const size = String(label).length > 42 ? 50 : 56;
+  const size = 54;
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
 .bg{position:absolute;inset:0;} .bg img{width:100%;height:100%;object-fit:cover;display:block;}

@@ -82,22 +82,44 @@ more than a missed follow. The final slide asks one person to send the post to
 one other person, named by a situation they will instantly recognize. That is
 the only call to action this brand makes.
 
-SCENES MUST ILLUSTRATE THEIR LABEL. This is the rule that gets broken most after
-the philosophy one. The image is generated from your scene text alone, so if the
-scene does not SHOW the claim, the slide is nonsense to a reader.
+STAGE THE SENTENCE. This is the most important rule in this document after the
+philosophy ban, and it is the one that has been failing.
 
-For every scene you write:
-- Name the ONE physical action that proves the label. If the label is about
-  keeping the old rent, he is signing an unchanged lease renewal, not standing in
-  a kitchen. If it is about forgetting a trial, he is looking at a charge on a
-  statement, not holding a phone in general.
-- Name his BODY POSITION as part of the action, because that is the only pose
-  information the image gets: seated at the table, crouched over the open box,
-  turned away from the screen, halfway out the door, slumped against the counter.
-- Name the ONE object that makes the claim legible. A reader who cannot read the
-  label should still guess it from that object.
-- Vary the body position and setting across the four slides. Four seated desk
-  shots in a row is a dead carousel.
+The image is generated from your scene text and nothing else. The label is added
+on top afterwards. So the scene must STAGE THE WHOLE SENTENCE as a picture, the
+way a film still stages a line of dialogue. A reader with the text covered should
+be able to guess the line.
+
+Work through the label word by word and put every part of it on screen:
+
+1. WHO ELSE IS IN IT. If the line implies someone doing something to him, they
+   are IN THE FRAME doing it. "Call a rich man broke and he'll laugh" is not a
+   man alone; it is people jabbing a finger at him holding up a sign while he
+   laughs. If someone doubts him, they are visibly doubting. If nobody else is
+   implied, he is alone on purpose.
+2. THE ACTION IN THE LINE. The literal verb, happening. Not a related mood.
+3. THE REACTION. If the line names how he responds, his face and body do exactly
+   that. "He'll laugh" means he is laughing. Not smiling, not content. Laughing.
+4. THE PROOF OBJECT. The one thing in frame that makes the claim checkable: the
+   unchanged lease, the oxygen mask, the untouched savings jar, the barbell.
+5. HIS BODY POSITION, stated plainly, because it is the only pose information the
+   image gets. Seated, crouched, mid-stride, turned away, slumped, braced.
+
+Two panels that pair must be a MATCHED PAIR: same framing logic, opposite
+outcome, so the eye reads the difference instantly. If the top is a wide shot of
+him at a table, the bottom is a wide shot of him at a table.
+
+Vary the setting and body position across the four slides. Four seated desk shots
+in a row is a dead carousel.
+
+Worked example of the standard, do not reuse the content:
+  LABEL: "Call a saver cheap, he'll laugh."
+  WEAK SCENE: "he stands in a shop looking at a price tag" (generic, no accuser,
+  no reaction, nothing to read)
+  RIGHT SCENE: "two friends jab their fingers at him laughing and holding up a
+  worn coupon like a trophy while he leans back on the bench genuinely laughing
+  with them, a full glass savings jar on the table beside him, a supermarket car
+  park at dusk"
 `;
 
 function stripDashes(s) {
@@ -107,10 +129,20 @@ function stripDashes(s) {
 // The topic is handed to the model as a fixed assignment. It writes the carousel
 // FOR this subject and never chooses its own, which is what caused drift.
 function topicBrief(topic) {
+  // Voice references Dre set per lane. These shape CADENCE and STANCE, never
+  // content: never name them, never quote them, never imitate a catchphrase.
   const lane = {
-    HYBRID: `This is a HYBRID post, the page's main lane. The behavioural mechanic is the hook and the money consequence is the payoff. Both halves must be present and the handoff between them must be explicit.`,
-    MIND_BEHAVIOUR: `This is a MIND into BEHAVIOUR post. Show how the thought pattern produces the action. Money may appear at the edge but is not the subject.`,
-    MONEY_SYSTEMS: `This is a MONEY into SYSTEMS post. Show how the machine is built, who designed it that way, and who it pays. Explain the mechanism, never give advice.`,
+    HYBRID: `This is a HYBRID post, the page's main lane. The behavioural mechanic is the hook and the money consequence is the payoff. Both halves must be present and the handoff between them must be explicit.
+
+VOICE: the behaviour half carries the plain-spoken certainty of Jim Rohn and Earl Nightingale; the money half carries the unsentimental arithmetic of Hormozi and Buffett. Warm about the person, cold about the number.`,
+
+    MIND_BEHAVIOUR: `This is a MIND into BEHAVIOUR post. Show how the thought pattern produces the action. Money may appear at the edge but is not the subject.
+
+VOICE: Jim Rohn, Earl Nightingale, Tony Robbins, Florence Scovel Shinn. Short declaratives. Concrete images over abstraction. Speak to one person, not an audience. Certainty without pressure, and no self-help cheerleading.`,
+
+    MONEY_SYSTEMS: `This is a MONEY into SYSTEMS post. Show how the machine is built, who designed it that way, and who it pays. Explain the mechanism, never give advice.
+
+VOICE: Alex Hormozi, Ray Dalio, Warren Buffett, Robert Kiyosaki. Plain nouns, real arithmetic, zero hype. Explain the incentive, name who profits, and let the reader draw the conclusion. Never tell anyone what to buy.`,
   }[topic.lane];
 
   return `YOUR ASSIGNED TOPIC. Write about this and nothing else.
