@@ -5,7 +5,13 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "schedule": "node scheduler.js"
+    "schedule": "node scheduler.js",
+    "wick:report": "node modules/wick-analytics.js --report",
+    "wick:sync": "node modules/wick-analytics.js",
+    "wick:queue": "node scripts/wick-preview.js",
+    "wick:recaption": "node scripts/wick-recaption.js",
+    "wick:fixcta": "node scripts/wick-fix-cta.js",
+    "wick:batch": "node -e \"import('./modules/wicks-wisdom.js').then(m=>m.runWeeklyBatch()).then(()=>process.exit(0))\""
   },
   "type": "module",
   "keywords": [],
