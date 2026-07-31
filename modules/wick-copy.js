@@ -592,3 +592,57 @@ Write only the caption.`,
   });
   return stripDashes(msg.content[0].text.trim()).slice(0, 2200);
 }
+
+// ─── COPY WRITTEN TO EXISTING ART ───────────────────────────────────────────
+// Normally copy is written first and art is generated to match. When the art
+// already exists the pipeline inverts: the label is chosen to describe what is
+// genuinely in the frame. Same rule from the other direction, and it means paid
+// art gets used instead of re-bought.
+//
+// `slots` is [{ role, shows }]. Returns labels in the same order.
+export async function writeToScenes(topic, format, slots, extra = "") {
+  const list = slots.map((s, i) => `${i + 1}. [${s.role}] ${s.shows}`).join("\n");
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 2400,
+    messages: [{
+      role: "user",
+      content: `${BRAND_RULES}
+
+${topicBrief(topic)}
+
+You are writing a ${format} carousel for art that ALREADY EXISTS. You cannot
+change the pictures. Write the line that each picture is already telling.
+
+THE FRAMES, in order:
+${list}
+
+RULES:
+- Each label must describe what is ACTUALLY IN ITS FRAME. If the frame shows him
+  in bed with a phone, the line is about being in bed with a phone. Never write a
+  line the picture does not support.
+- Together the labels must still build ONE argument about the assigned topic, and
+  still wire the two pillars.
+- Keep the brand's punch. Max 7 words per label unless told otherwise.
+- If a frame genuinely cannot serve the topic, say so in "unusable" by index
+  rather than forcing a line onto it.
+${extra}
+
+Return JSON:
+{
+  "theme": "short internal name",
+  "pillar": "Money|Systems|Mind|Behaviour",
+  "pillar_link": "the two pillars wired",
+  "hidden_rule": "one sentence naming the handoff",
+  "labels": ["one per frame, in the same order"],
+  "unusable": [],
+  "closing_line": "one sentence that reframes the set",
+  "send_to": "who to send it to, max 12 words, a recognizable situation"
+}`,
+    }],
+  });
+  const c = parseJson(msg.content[0].text);
+  c.labels = (c.labels ?? []).map(stripDashes);
+  c.closing_line = stripDashes(c.closing_line);
+  return c;
+}
