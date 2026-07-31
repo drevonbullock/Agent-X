@@ -1,7 +1,7 @@
 import "dotenv/config";
 import Anthropic from "@anthropic-ai/sdk";
 import { execSync } from "child_process";
-import puppeteer from "puppeteer";
+import { launchBrowser } from "../images/browser.js";
 import fs from "fs";
 import os from "os";
 import path from "path";
@@ -287,7 +287,7 @@ ${hookBody}
 })();</script></body></html>`;
 
   // 1. Capture frames by seeking the GSAP timeline
-  const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+  const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1080, height: 1350, deviceScaleFactor: 1 });
@@ -399,10 +399,7 @@ Rules:
 // ─── PUPPETEER RENDER ─────────────────────────────────────────────────────────
 
 async function renderSlide(pageHtml, outPath) {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1080, height: 1350, deviceScaleFactor: 2 });

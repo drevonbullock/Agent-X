@@ -3,7 +3,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { execFileSync } from "child_process";
-import puppeteer from "puppeteer";
+import { launchBrowser } from "../images/browser.js";
 
 // ─── WICK'S WISDOM — GENERATION + COMPOSITING ────────────────────────────────
 // Higgsfield generates the ART only. Every word of label copy is added here at
@@ -185,7 +185,30 @@ function esc(s) {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
     .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-const dataUri = (p) => `data:image/png;base64,${fs.readFileSync(p).toString("base64")}`;
+const FFMPEG = fs.existsSync("/opt/homebrew/bin/ffmpeg") ? "/opt/homebrew/bin/ffmpeg" : "/usr/bin/ffmpeg";
+
+// A 2k PNG base64-encoded into HTML is tens of megabytes, and two of them on one
+// page reliably times out Puppeteer's screenshot. Downscale to the size the slot
+// actually needs and convert to JPEG first — this is a ~50x size reduction.
+function fitJpeg(srcPath, targetW, targetH) {
+  const out = srcPath.replace(/\.(png|jpg|jpeg|webp)$/i, "") + `_fit_${targetW}x${targetH}.jpg`;
+  try {
+    execFileSync(FFMPEG, [
+      "-y", "-i", srcPath,
+      "-vf", `scale=${targetW}:${targetH}:force_original_aspect_ratio=increase,crop=${targetW}:${targetH}`,
+      "-q:v", "3", out,
+    ], { stdio: "pipe", timeout: 60_000 });
+    return out;
+  } catch {
+    return srcPath; // ffmpeg missing or failed — fall back to the original
+  }
+}
+
+const dataUri = (p) => {
+  const ext = path.extname(p).toLowerCase();
+  const mime = ext === ".png" ? "image/png" : "image/jpeg";
+  return `data:${mime};base64,${fs.readFileSync(p).toString("base64")}`;
+};
 
 const FONTS = `<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">`;
 
@@ -201,7 +224,7 @@ html,body{width:${W}px;height:${H}px;overflow:hidden;background:#0d0b09;font-fam
 `;
 
 async function renderHtml(html) {
-  const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+  const browser = await launchBrowser({ protocolTimeout: 180_000 });
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: W, height: H, deviceScaleFactor: 1 });
@@ -212,6 +235,9 @@ async function renderHtml(html) {
 
 // VERSUS / ORDER — stack two panels, thin dark seam, labels added here.
 export async function compositeTwoPanel({ topPath, bottomPath, topLabel, bottomLabel }) {
+  const PH = Math.floor((H - 4) / 2);
+  topPath = fitJpeg(topPath, W, PH);
+  bottomPath = fitJpeg(bottomPath, W, PH);
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
 .panel{position:absolute;left:0;width:${W}px;height:${(H - 4) / 2}px;overflow:hidden;}
@@ -237,6 +263,7 @@ ${BASE_CSS}
 
 // COSTUME — full-bleed scene, "Verb like a Noun" label across the middle.
 export async function compositeCostume({ scenePath, label, boldWord }) {
+  scenePath = fitJpeg(scenePath, W, H);
   const parts = String(label).split(new RegExp(`(${boldWord})`, "i"));
   const labelHtml = parts.map((p) =>
     p.toLowerCase() === String(boldWord).toLowerCase()
@@ -259,6 +286,7 @@ ${BASE_CSS}
 
 // LESSON cover — scene with a huge condensed headline low in the frame.
 export async function compositeLessonCover({ scenePath, headline }) {
+  scenePath = fitJpeg(scenePath, W, H);
   const len = String(headline).length;
   const size = len <= 26 ? 104 : len <= 38 ? 88 : len <= 52 ? 74 : 62;
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
@@ -279,6 +307,7 @@ ${BASE_CSS}
 
 // LESSON interior — scene top, numbered headline, PROBLEM / SOLUTION on black.
 export async function compositeLessonItem({ scenePath, number, title, problem, solution }) {
+  scenePath = fitJpeg(scenePath, W, 560);
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
 .slide{display:flex;flex-direction:column;background:#0a0806;}
@@ -307,6 +336,7 @@ ${BASE_CSS}
 
 // CTA / recap slide — scene, closing line, keyword in amber.
 export async function compositeCta({ scenePath, closingLine, keyword, resource }) {
+  scenePath = fitJpeg(scenePath, W, 790);
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
 .slide{display:flex;flex-direction:column;background:#0a0806;}

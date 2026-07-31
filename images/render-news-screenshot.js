@@ -1,4 +1,4 @@
-import puppeteer from "puppeteer";
+import { launchBrowser } from "./browser.js";
 
 const BRAND_HANDLE = process.env.BRAND_HANDLE ?? "@DrevonBullock";
 const BRAND_AUTHOR = process.env.BRAND_AUTHOR ?? "Drevon Bullock";
@@ -187,10 +187,7 @@ export async function renderNewsScreenshot(url) {
 
   const html = buildCardHtml({ title, dek, imageBase64, domain, dateStr });
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: CARD_W, height: CARD_H, deviceScaleFactor: 2 });

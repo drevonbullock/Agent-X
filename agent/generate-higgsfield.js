@@ -1,7 +1,7 @@
 import { execFileSync, execSync } from "child_process";
 import fs from "fs";
 import path from "path";
-import puppeteer from "puppeteer";
+import { launchBrowser } from "../images/browser.js";
 import { generateAllVoiceovers } from "./elevenlabs.js";
 
 const HF_BIN = process.env.HF_BIN || "higgsfield";
@@ -152,7 +152,7 @@ export async function generateHiggsfieldVideo(postText, videoScript, { model = n
   }
 
   // 4. Title overlays
-  const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+  const browser = await launchBrowser();
   const overlayPaths = [];
   try {
     for (let i = 0; i < videoScript.length; i++) {

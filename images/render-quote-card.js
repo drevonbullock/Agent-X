@@ -1,4 +1,4 @@
-import puppeteer from "puppeteer";
+import { launchBrowser } from "./browser.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -256,10 +256,7 @@ export async function renderSquareCard(postText, {
 </body>
 </html>`;
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: SQ, height: SQ, deviceScaleFactor: 2 });
@@ -278,10 +275,7 @@ export async function renderQuoteCard(postText, {
   const quote = extractHeroQuote(postText);
   const html  = buildHtml(quote, author, title, handle);
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const browser = await launchBrowser();
 
   try {
     const page = await browser.newPage();
@@ -394,10 +388,7 @@ export async function renderVerticalCard(postText, {
 </body>
 </html>`;
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: W, height: H, deviceScaleFactor: 2 });
