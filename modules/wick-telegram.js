@@ -113,7 +113,7 @@ export async function pollTelegramApprovals() {
     updates = await tg("getUpdates", {
       offset: offset ? offset + 1 : undefined,
       timeout: 0,
-      allowed_updates: ["callback_query"],
+      allowed_updates: ["callback_query", "message"],
     });
   } catch (err) {
     console.warn(`[WickTG] getUpdates failed: ${err.message}`);
@@ -121,9 +121,31 @@ export async function pollTelegramApprovals() {
   }
   if (!updates?.length) return;
 
+  const owner = String(creds().chatId);
   let maxId = 0;
   for (const u of updates) {
     maxId = Math.max(maxId, u.update_id);
+
+    // ── Slash commands, so the whole system is runnable from a phone ───────
+    // The bot username is public. Only the configured chat may drive it,
+    // otherwise a stranger could pause publishing or burn image credits.
+    if (u.message?.text) {
+      const from = String(u.message.chat.id);
+      if (from !== owner) {
+        console.warn(`[WickTG] ignoring command from unauthorised chat ${from}`);
+        continue;
+      }
+      try {
+        const { runCommand } = await import("./wick-commands.js");
+        const reply = await runCommand(u.message.text);
+        if (reply) await tg("sendMessage", { chat_id: from, text: reply, parse_mode: "Markdown" });
+      } catch (err) {
+        console.warn(`[WickTG] command failed: ${err.message}`);
+        await tg("sendMessage", { chat_id: from, text: `Failed: ${err.message}` }).catch(() => {});
+      }
+      continue;
+    }
+
     const cq = u.callback_query;
     if (!cq?.data?.startsWith("wick:")) continue;
 
