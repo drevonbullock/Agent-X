@@ -10,6 +10,7 @@ import { launchBrowser } from "../images/browser.js";
 // composite time, so copy can be fixed without re-rolling art (SKILL.md Step 5).
 
 const HF_BIN = process.env.HF_BIN || "higgsfield";
+const FFPROBE = process.platform === "darwin" ? "/opt/homebrew/bin/ffprobe" : "/usr/bin/ffprobe";
 const WICK_ELEMENT = process.env.WICK_ELEMENT_ID || "5e934732-6de4-438a-b3a6-024144603518";
 const MODEL = process.env.WICK_IMAGE_MODEL || "gpt_image_2";
 // Backup model. nano_banana_pro is 2 credits vs gpt_image_2's 7 and handles pure
@@ -356,6 +357,16 @@ ${BASE_CSS}
 // which the stacked version cannot do.
 export async function compositeSplitPanel({ leftPath, rightPath, leftLabel, rightLabel }) {
   const PW = Math.floor((W - 4) / 2);
+  // Guard: a landscape source cropped to this half loses most of its width and
+  // routinely crops the character out. Split panels must be generated at 9:16.
+  for (const [side, f] of [["left", leftPath], ["right", rightPath]]) {
+    try {
+      const out = execFileSync(FFPROBE, ["-v", "error", "-select_streams", "v:0",
+        "-show_entries", "stream=width,height", "-of", "csv=p=0", f], { timeout: 15_000 }).toString().trim();
+      const [w, h] = out.split(",").map(Number);
+      if (w > h) console.warn(`[Wick] split ${side} panel is landscape (${w}x${h}); it will crop hard. Generate 9:16 for split layouts.`);
+    } catch { /* probe is advisory only */ }
+  }
   leftPath = fitJpeg(leftPath, PW, H);
   rightPath = fitJpeg(rightPath, PW, H);
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
