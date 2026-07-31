@@ -65,8 +65,7 @@ export async function sendPostToTelegram(p) {
     }
     await tg("sendMessage", {
       chat_id: chatId,
-      text: `*${p.format}*\n\n${p.caption ?? ""}`,
-      parse_mode: "Markdown",
+      text: `${p.format}\n\n${p.caption ?? ""}`,
       reply_markup: {
         inline_keyboard: [[
           { text: "✅ Approve", callback_data: `wick:approve:${p.id}` },
