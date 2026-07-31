@@ -35,15 +35,28 @@ so copy can be corrected without paying to re-roll art.
 ### Caption
 
 ```
-It's not about being organised. It's about understanding what a free trial actually is.
+Most people think they just forgot to cancel.
 
-A trial is not a gift. It's a bet the company makes against your attention. They win the moment the start date leaves your working memory. The friction of cancelling never increases. Your awareness of the charge just quietly disappears.
+It isn't.
 
-Twelve dollars a month sounds like nothing. Twelve dollars times six forgotten subscriptions is eight hundred and sixty four dollars a year leaving your account on autopilot, touching nothing in your life.
+The trial is designed to convert your inaction into a billing relationship.
 
-The guy in the carousel didn't win because he's disciplined. He won because he treated the trial start date as the moment a timer began, not the moment free stuff arrived.
+Default settings stay on.
+Monthly numbers hide annual costs.
+Memory is the weakest audit system you own.
+One place to track trials never gets built.
 
-Your billing page is probably not something you've looked at this month. Is it?
+The hidden rule is this:
+
+The moment you accept a trial, a default behaviour is already running inside you, and that behaviour moves money out of your account every month without ever needing your attention again.
+
+Twelve dollars feels like nothing. Twelve dollars across six forgotten trials is eight hundred and sixty four dollars a year, all of it leaving quietly.
+
+Pay attention before the clock does.
+
+Which subscription in your life right now would you cancel if someone put the annual number in front of you?
+
+Light one. Pass it on. 🕯️
 ```
 
 ---
@@ -69,13 +82,27 @@ Your billing page is probably not something you've looked at this month. Is it?
 ### Caption
 
 ```
-Ten dollars feels like nothing. That is the mechanism working exactly as designed.
+Most people think ten dollars a month is basically nothing.
 
-Your brain sorts recurring charges by the billing interval. Monthly feels small. Annual feels real. The number that finally stops you is the one you never see on the checkout screen.
+It adds up.
 
-Six subscriptions at ten dollars is seven hundred and twenty dollars a year. Not dramatic. Not invisible either, once you run it.
+Your brain files small recurring charges as negligible because the number never changes. The annual number does the damage you never see.
 
-What else are you reading at the monthly price and calling it fine?
+Six charges at ten dollars is seven hundred and twenty a year.
+Twelve charges is fourteen forty.
+One forgotten trial is one twenty.
+None of it felt expensive at the time.
+
+The hidden rule is this:
+The brain treats monthly as permanent and small, so the behaviour of ignoring each charge compounds silently until the annual total finally makes the leak visible.
+
+Seven hundred and twenty dollars does not feel like ten dollars. It never did. You just never ran the number.
+
+See it clearly.
+
+When did you last multiply every subscription by twelve and look at the real total?
+
+Light one. Pass it on. 🕯️
 ```
 
 ---
@@ -103,15 +130,28 @@ What else are you reading at the monthly price and calling it fine?
 ### Caption
 
 ```
-You didn't pay the store. You paid a queue.
+Most people think the price they see is what the transaction costs.
 
-The merchant sees your money last. Before it reaches them, a chain of intermediaries has already extracted their share, locked in by contracts signed years before you walked in. The terminal on the counter is just the visible end of an invisible waterfall.
+It isn't.
 
-Run it plain: a ten dollar coffee, processed through a standard card, can shed somewhere between fifteen and thirty cents before the cafe touches a dollar. Multiply that by three hundred transactions a day and you're looking at the rent on a second employee, gone before the register closes.
+That number cleared four separate tollbooths before it reached your screen.
 
-The store raised prices to survive it. You funded the raise. The system stayed invisible.
+One party built the network the signal travels on.
+One party issued the card and owns the relationship with you.
+One party processed the transaction in the background.
+One party took a cut at the terminal itself.
 
-Who do you think set the table before you sat down?
+The hidden rule is this: your spending behaviour generates value for multiple systems simultaneously, and your awareness of that fact is exactly what those systems are not designed to create.
+
+Twelve dollars a month feels like twelve dollars. Twelve dollars moving through four margin-sharing parties, across every cardholder, every day, is a different kind of machine entirely.
+
+Run the numbers on your own monthly card spend. Then ask how much of that you have ever thought about.
+
+Pay attention.
+
+What is one recurring charge you are still not entirely sure what it does?
+
+Light one. Pass it on. 🕯️
 ```
 
 ---
@@ -137,13 +177,26 @@ Who do you think set the table before you sat down?
 ### Caption
 
 ```
-The budget did not fail because you lost discipline in week three. It failed on day one, when you built it around a month that has never actually existed.
+Most people think the budget broke because week three got sloppy.
 
-A perfect budget assumes income lands on time, every charge is expected, and your energy to resist small spending stays flat across thirty days. None of those things are true. Friction is not an exception. It is the default.
+It didn't.
 
-Run the math: four streaming charges, two forgotten subscriptions, one renewal you missed. That is six charges averaging twelve dollars. Seventy two dollars gone before you touched a grocery store. Multiplied by twelve months, that is eight hundred and sixty four dollars your budget never saw coming.
+The budget broke before the month even started.
 
-Week three is just when the gap between the plan and the actual month becomes too wide to ignore.
+Your income landed on the 1st. Your rent left on the 3rd.
+Your variable weeks have different friction than your plan assumed.
+Your subscriptions scattered across dates you stopped tracking.
+Your willpower was doing a job the system should have been doing.
 
-So the question is not how do you get more disciplined in week three. It is why did you build a budget that only works when nothing goes wrong?
+The hidden rule is this:
+A fixed budget running on mental discipline is a behaviour strategy, and behaviour strategies always lose to a calendar designed to drain you at irregular intervals.
+
+Miss this once and you rebuild the same broken blueprint next month.
+Twelve months of that is twelve restarts, and restarts are not progress.
+
+Fix the design.
+
+What day does your budget actually start falling apart, and do you know why?
+
+Light one. Pass it on. 🕯️
 ```

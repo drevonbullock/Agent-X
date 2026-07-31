@@ -408,18 +408,33 @@ Write the Instagram caption for this post.
 ${context}
 The hidden rule it reveals: ${post.copy.hidden_rule ?? post.copy.closing_line ?? ""}
 
-THE FOUR BEAT FORMULA, in order:
-1. Contradict the obvious read. Open by dismissing the conclusion the viewer just
-   reached. NEVER describe the image.
-2. Give the real mechanism. Two or three sentences, concrete, no hedging.
-3. One specific example. A number, a name, a scene. This is what separates a
-   caption from a fortune cookie.
-4. Soft close. A question, or nothing. Never a hard pitch.
+THE CAPTION SHAPE. Follow this structure exactly, in this order. It is taken
+from the account's own best performing caption, so the rhythm is proven.
+
+1. OPENER: "Most people think" plus the wrong conclusion the viewer just reached.
+   One line. NEVER describe the image.
+2. THE REVERSAL: two or three words on their own line. "It doesn't." "It isn't."
+   "That is the trap." Hard stop.
+3. THE PIVOT: one line naming what is actually going on.
+4. THE LIST: three to five short parallel lines, one per line, same grammatical
+   shape each time. This is the spine of the caption and the part people screenshot.
+5. THE CALLOUT: the literal line "The hidden rule is this:" on its own, then the
+   rule in one sentence underneath. The rule must name the handoff between the two
+   pillars this post wires together.
+6. THE COST: one or two lines on what it costs to keep missing it. Use checkable
+   arithmetic here if the topic has a number. Never a made up person or study.
+7. THE IMPERATIVE: a two to four word command on its own line.
+8. THE QUESTION: one engagement question in second person, aimed at a reply.
+9. SIGNOFF: the literal line "Light one. Pass it on. 🕯️" exactly as written.
+
+FORMATTING IS PART OF THE FORMULA. Single blank line between every beat. Most
+lines stand alone. Never write a dense paragraph. This is read on a phone at
+arm's length, and white space is what makes it legible.
 
 Voice: conversational, like texting a smart friend. Confident, occasionally
 unfiltered. Never the sage register.
 
-Under 900 characters. Plain text only, no markdown, no hashtags, no em dashes.
+Under 1100 characters. Plain text only, no markdown, no hashtags, no em dashes.
 Write only the caption.`,
     }],
   });

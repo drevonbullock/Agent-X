@@ -324,6 +324,31 @@ async function main() {
         return;
       }
 
+      // Wick's Wisdom queue. The imports for this existed but the route was
+      // never wired, so there was no way to see what was queued short of opening
+      // Supabase. Posts publish automatically (WICK_AUTO_PUBLISH), so this is a
+      // preview plus a per-post pull switch, not an approval gate.
+      if (req.method === "GET" && (url.pathname === "/wick" || url.pathname === "/wick/decide")) {
+        const expected = REVIEW_TOKEN();
+        if (!expected) { res.writeHead(503); res.end("Set REVIEW_TOKEN to enable the Wick queue."); return; }
+        if (url.searchParams.get("token") !== expected) { res.writeHead(403); res.end("Forbidden"); return; }
+
+        if (url.pathname === "/wick") {
+          const queued = await listPendingWick();
+          res.writeHead(200, { "Content-Type": "text/html" });
+          res.end(renderWickPageHtml(queued));
+          return;
+        }
+
+        const id = url.searchParams.get("id");
+        const action = url.searchParams.get("action");
+        if (!id || !["approve", "reject"].includes(action)) { res.writeHead(400); res.end("Bad request"); return; }
+        await decideWick(id, action);
+        res.writeHead(200, { "Content-Type": "text/html" });
+        res.end(`<p style="font-family:system-ui">${action === "approve" ? "Approved — will publish on its next slot." : "Pulled — will not publish."} <a href="/wick?token=${encodeURIComponent(expected)}">Back to queue</a></p>`);
+        return;
+      }
+
       res.writeHead(200);
       res.end("Agent X");
     });

@@ -257,9 +257,14 @@ export async function runWeeklyBatch({ versus, order, rotating = "auto" } = {}) 
 
 // ─── APPROVAL ────────────────────────────────────────────────────────────────
 
+// Everything still waiting to go out, oldest first — the publish order.
+// This filtered on status='pending' only, which showed an empty queue in AUTO
+// mode where rows are inserted already 'approved'. Both states are "not yet
+// published", so both belong here.
 export async function listPendingWick() {
   const { data } = await supabase.from("wick_posts")
-    .select("*").eq("status", "pending").order("created_at", { ascending: true });
+    .select("*").in("status", ["approved", "pending"])
+    .order("created_at", { ascending: true });
   return data ?? [];
 }
 
