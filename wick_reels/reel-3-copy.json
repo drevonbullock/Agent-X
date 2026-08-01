@@ -1,0 +1,38 @@
+{
+  "topic": {
+    "id": 27,
+    "lane": "MONEY_SYSTEMS",
+    "title": "Why Rent Keeps Going Up",
+    "hook": "Supply, zoning, who sets the price",
+    "payoff": "Supply, zoning, who sets the price"
+  },
+  "copy": {
+    "title": "WHY YOUR RENT NEVER STOPS CLIMBING",
+    "pillar": "Systems",
+    "steps": [
+      {
+        "rule": "Find who controls the land supply",
+        "why": "local governments cap how much housing can be built, which artificially tightens inventory before a single unit is priced."
+      },
+      {
+        "rule": "Count what zoning actually blocks",
+        "why": "rules that forbid dense building on most urban land guarantee that demand always outruns what developers are legally allowed to construct."
+      },
+      {
+        "rule": "Track who votes on those rules",
+        "why": "existing property owners benefit directly when scarcity keeps values high, so the people who set the limits are the people who profit from them."
+      },
+      {
+        "rule": "Run the vacancy arithmetic yourself",
+        "why": "a city of one million renters needing two percent vacancy relief is twenty thousand units that current zoning may never permit to exist."
+      },
+      {
+        "rule": "Name the feedback loop out loud",
+        "why": "higher rents lift assessed values, larger tax bases fund the councils that protect the zoning, and the machine resets at a higher floor every cycle."
+      }
+    ],
+    "kicker": "The price is a policy. Policies have authors.",
+    "thumb_scene": "Wick stands upright on a plain white studio background, holding a single folded lease agreement in one hand and a red marker in the other, a small architectural zoning grid map resting against his leg on the floor, his expression sharp and direct, facing slightly toward camera.",
+    "send_to": "the friend renewing a lease and wondering why it jumped again"
+  }
+}

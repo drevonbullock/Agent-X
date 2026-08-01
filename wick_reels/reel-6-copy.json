@@ -1,0 +1,57 @@
+{
+  "topic": {
+    "id": 28,
+    "lane": "MONEY_SYSTEMS",
+    "title": "What Inflation Really Does to Your Savings",
+    "hook": "Sitting still is a decision with a cost",
+    "payoff": "Sitting still is a decision with a cost"
+  },
+  "copy": {
+    "title_lines": [
+      "Sitting Still Costs",
+      "More Than You Think"
+    ],
+    "pillar": "Money",
+    "tiers": [
+      {
+        "label": "ASLEEP",
+        "stat": "1 month untracked"
+      },
+      {
+        "label": "DRIFTING",
+        "stat": "3 months untracked"
+      },
+      {
+        "label": "LEAKING",
+        "stat": "6 months untracked"
+      },
+      {
+        "label": "ERODING",
+        "stat": "12 months untracked"
+      },
+      {
+        "label": "SHRINKING",
+        "stat": "2 years untracked"
+      },
+      {
+        "label": "GUTTED",
+        "stat": "4 years untracked"
+      },
+      {
+        "label": "HOLLOWED",
+        "stat": "7 years untracked"
+      },
+      {
+        "label": "STRIPPED",
+        "stat": "12 years untracked"
+      },
+      {
+        "label": "TAXED OUT",
+        "stat": "20 years untracked"
+      }
+    ],
+    "kicker": "Stillness is not neutral. It has a price.",
+    "thumb_scene": "Wick stands upright on a plain white studio background, arms loose at his sides, eyes fixed straight ahead with a flat calm expression, holding a clear glass jar of coins in one hand while a single paper receipt curls at his feet, the jar visibly less than half full.",
+    "send_to": "the friend who thinks saving in a bank account is enough"
+  }
+}

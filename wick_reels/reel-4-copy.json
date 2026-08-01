@@ -1,0 +1,38 @@
+{
+  "topic": {
+    "id": 30,
+    "lane": "MONEY_SYSTEMS",
+    "title": "Where Your Money Goes When You Swipe",
+    "hook": "The invisible chain taking a cut",
+    "payoff": "The invisible chain taking a cut"
+  },
+  "copy": {
+    "title": "EVERY SWIPE HAS A SILENT PARTNER",
+    "pillar": "Money",
+    "steps": [
+      {
+        "rule": "Clock the moment the card leaves your hand",
+        "why": "the transaction starts a chain before the merchant sees a cent."
+      },
+      {
+        "rule": "Count every hand between you and the seller",
+        "why": "each layer in the chain is a toll booth with a fixed percentage."
+      },
+      {
+        "rule": "Multiply that percentage by your annual spend",
+        "why": "two percent on twelve thousand dollars is two hundred and forty dollars redirected, invisibly, every year."
+      },
+      {
+        "rule": "Trace who built each layer and why",
+        "why": "every cut was engineered by a party that profits more when you spend more."
+      },
+      {
+        "rule": "Name the system running your spending before you swipe again",
+        "why": "a mechanism you can see cannot exploit the part of you that never looked."
+      }
+    ],
+    "kicker": "The chain runs whether you watch it or not",
+    "thumb_scene": "Wick stands upright on a plain white studio background, one arm extended forward holding a single payment card at eye level, a long paper receipt unrolling from his other hand down to the floor, his eyes fixed on the card with calm focus.",
+    "send_to": "the friend who tracks income but never tracks where it exits"
+  }
+}

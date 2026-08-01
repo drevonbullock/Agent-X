@@ -1,0 +1,57 @@
+{
+  "topic": {
+    "id": 24,
+    "lane": "MIND_BEHAVIOUR",
+    "title": "Why Criticism Sticks and Praise Doesn't",
+    "hook": "Negativity bias",
+    "payoff": "Negativity bias"
+  },
+  "copy": {
+    "title_lines": [
+      "Criticism Lands Hard.",
+      "Praise Slides Off."
+    ],
+    "pillar": "Mind",
+    "tiers": [
+      {
+        "label": "POROUS",
+        "stat": "1 comment"
+      },
+      {
+        "label": "RATTLED",
+        "stat": "3 comments"
+      },
+      {
+        "label": "LOOPING",
+        "stat": "7 comments"
+      },
+      {
+        "label": "FILTERING",
+        "stat": "12 comments"
+      },
+      {
+        "label": "SORTING",
+        "stat": "20 comments"
+      },
+      {
+        "label": "STEADY",
+        "stat": "5 weeks held"
+      },
+      {
+        "label": "ROOTED",
+        "stat": "11 weeks held"
+      },
+      {
+        "label": "GROUNDED",
+        "stat": "6 months held"
+      },
+      {
+        "label": "FIXED",
+        "stat": "1 year held"
+      }
+    ],
+    "kicker": "The wound writes louder than the win.",
+    "thumb_scene": "Wick stands upright on a plain white studio background, one hand pressed flat against his chest over his heart, the other hand loosely open at his side letting something invisible slip through his fingers, a crumpled note in his chest-hand and a clean gold ribbon on the floor near his feet already fallen.",
+    "send_to": "the friend who replays one bad review and forgets ten good ones"
+  }
+}

@@ -649,3 +649,100 @@ ${fields ? fields + "\n" : ""}  "closing_line": "one sentence that reframes the 
   c.closing_line = stripDashes(c.closing_line);
   return c;
 }
+
+// ─── REEL COPY ──────────────────────────────────────────────────────────────
+// Reels are locked to the 10% lanes. Dre: "the reels should never be the 80."
+
+export async function writeStepsReel(topic) {
+  if (!topic) throw new Error("writeStepsReel requires a topic");
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1600,
+    messages: [{ role: "user", content: `${BRAND_RULES}
+
+${topicBrief(topic)}
+
+FORMAT: STEPS REEL. A single 9:16 cover: a hard title, then FIVE numbered steps,
+then a closing line.
+
+Each step is a short imperative followed by the reason it works. The reason is
+the part people screenshot, so it must be a mechanism, not a platitude.
+
+These are STEPS, an order of operations someone could actually follow, not a list
+of maxims. Step 1 must be the thing you do first and step 5 the thing you do last.
+If the order could be shuffled without loss, it is a list of rules and it is wrong.
+
+Reference rhythm ONLY, never reuse this content:
+  "Name the feeling first, a labelled urge loses most of its pull."
+  "Write the annual number down, twelve dollars a month hides eight hundred a year."
+
+The title must NOT reference antiquity, tradition or ancient rules. This page is
+present day.
+
+Return JSON:
+{
+  "title": "ALL CAPS, max 6 words, the promise of the sequence",
+  "pillar": "Mind|Behaviour|Money|Systems",
+  "steps": [
+    { "rule": "the imperative, max 6 words, no trailing punctuation",
+      "why": "the mechanism, max 12 words, starts lowercase, ends with a full stop" }
+  ],
+  "kicker": "One line under the list, max 8 words, the whole idea compressed",
+  "thumb_scene": "One dense sentence for a THUMBNAIL: Wick alone on a plain white studio background, doing the single action this reel is about, holding or beside 1-2 simple objects. No room, no set, no scenery.",
+  "send_to": "who to send it to, max 12 words, a recognizable situation"
+}
+
+Exactly 5 steps, in the order they must be done.` }],
+  });
+  const c = parseJson(msg.content[0].text);
+  c.title = stripDashes(c.title).toUpperCase();
+  c.steps = (c.steps ?? []).slice(0, 5).map((r) => ({ rule: stripDashes(r.rule), why: stripDashes(r.why) }));
+  c.kicker = stripDashes(c.kicker);
+  return c;
+}
+
+export async function writeTiersReel(topic) {
+  if (!topic) throw new Error("writeTiersReel requires a topic");
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1600,
+    messages: [{ role: "user", content: `${BRAND_RULES}
+
+${topicBrief(topic)}
+
+FORMAT: TIER REEL. A single 9:16 cover: a two line title, then NINE tiers laid
+out in a 3x3 grid, then a closing line.
+
+The nine tiers are a LADDER. Each has a one word rank and a number showing what
+it took to get there, and they escalate from the weakest to the strongest. The
+character's expression escalates with them, so tier 1 should read as soft and
+tier 9 as unshakeable.
+
+The numbers must be a believable progression a person could actually count
+(times done, weeks held, months tracked). They are a scale, not a claim about
+anyone's results, so never present them as research.
+
+Reference rhythm ONLY, never reuse this content:
+  SOFT 5 times / WIMPY 15 times / SHAKY 30 times ... ICEPROOF 320 times
+
+Return JSON:
+{
+  "title_lines": ["line one, max 5 words", "line two, max 5 words"],
+  "pillar": "Mind|Behaviour|Money|Systems",
+  "tiers": [
+    { "label": "ONE WORD, ALL CAPS", "stat": "the count, e.g. 5 times or 3 weeks" }
+  ],
+  "kicker": "One line under the grid, max 8 words",
+  "thumb_scene": "One dense sentence for a THUMBNAIL: Wick alone on a plain white studio background, doing the single action this reel is about, holding or beside 1-2 simple objects. No room, no set, no scenery.",
+  "send_to": "who to send it to, max 12 words, a recognizable situation"
+}
+
+Exactly 9 tiers, weakest first.` }],
+  });
+  const c = parseJson(msg.content[0].text);
+  c.tiers = (c.tiers ?? []).slice(0, 9).map((t) => ({
+    label: stripDashes(t.label).toUpperCase(), stat: stripDashes(t.stat),
+  }));
+  c.kicker = stripDashes(c.kicker);
+  return c;
+}

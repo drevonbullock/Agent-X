@@ -1,0 +1,38 @@
+{
+  "topic": {
+    "id": 25,
+    "lane": "MIND_BEHAVIOUR",
+    "title": "Why Time Feels Faster Every Year",
+    "hook": "Fewer new experiences to encode",
+    "payoff": "Fewer new experiences to encode"
+  },
+  "copy": {
+    "title": "WHY YOUR YEARS KEEP SHRINKING",
+    "pillar": "Mind",
+    "steps": [
+      {
+        "rule": "Notice when the week blurred past",
+        "why": "you cannot fix a leak you have not located yet."
+      },
+      {
+        "rule": "Count how many firsts you had",
+        "why": "the brain compresses repeated days into a single memory file."
+      },
+      {
+        "rule": "Name one thing that felt genuinely new",
+        "why": "a single novel moment anchors the whole week as distinct."
+      },
+      {
+        "rule": "Schedule one unfamiliar thing per week",
+        "why": "new encoding stretches perceived time the way sleep stretches a night."
+      },
+      {
+        "rule": "Review the month against your list",
+        "why": "density of distinct memories is the only way to slow the clock down."
+      }
+    ],
+    "kicker": "Same days, same blur, smaller life.",
+    "thumb_scene": "Wick stands on a plain white studio background facing the camera, holding a plain wall calendar with most days crossed out in identical red marks, one single day left uncrossed, his finger resting on that one open square, expression sharp and deliberate.",
+    "send_to": "the friend who just said the year went nowhere again"
+  }
+}

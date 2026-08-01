@@ -1,0 +1,38 @@
+{
+  "topic": {
+    "id": 23,
+    "lane": "MIND_BEHAVIOUR",
+    "title": "Why People Ghost You",
+    "hook": "Avoidance is cheaper than confrontation",
+    "payoff": "Avoidance is cheaper than confrontation"
+  },
+  "copy": {
+    "title": "WHY PEOPLE DISAPPEAR ON YOU",
+    "pillar": "Mind",
+    "steps": [
+      {
+        "rule": "Spot the cost calculation happening",
+        "why": "before anyone ghosts, the brain runs a split-second price check on honesty."
+      },
+      {
+        "rule": "Recognise discomfort as the trigger",
+        "why": "the exit is always chosen at the exact moment friction becomes visible."
+      },
+      {
+        "rule": "See silence as a decision, not an accident",
+        "why": "no reply is an active choice that felt cheaper than a hard sentence."
+      },
+      {
+        "rule": "Stop reading it as rejection of you",
+        "why": "they are avoiding a conversation, not a person, and that changes what it means."
+      },
+      {
+        "rule": "Respond to what they actually did",
+        "why": "treating avoidance as avoidance stops you chasing a problem that was never yours."
+      }
+    ],
+    "kicker": "Silence is cheaper than honesty for them",
+    "thumb_scene": "Wick stands facing camera on a plain white studio background, arms loose at his sides, holding a phone with a blank unanswered screen toward the lens, a single unopened message bubble visible on it, expression flat and clear-eyed.",
+    "send_to": "the friend still waiting on a reply they will never get"
+  }
+}
