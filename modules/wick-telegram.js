@@ -224,11 +224,18 @@ export async function pollTelegramApprovals() {
     }
 
     const cq = u.callback_query;
-    if (!cq?.data?.startsWith("wick:")) continue;
+    if (!cq?.data?.startsWith("wick:") && !cq?.data?.startsWith("reel:")) continue;
 
-    const [, action, id] = cq.data.split(":");
+    const [kind, action, id] = cq.data.split(":");
     try {
-      const status = await decideWick(id, action);
+      const status = kind === "reel"
+        ? await (async () => {
+            const s = action === "approve" ? "approved" : "rejected";
+            const { error } = await supabase.from("wick_reels").update({ status: s }).eq("id", id);
+            if (error) throw new Error(error.message);
+            return s;
+          })()
+        : await decideWick(id, action);
 
       // A callback query expires after about 60 seconds, and this poller runs on
       // an interval, so answering it usually fails. That is cosmetic and MUST NOT
@@ -297,4 +304,60 @@ export async function notifyBatchDone(posts) {
     text: `🕯️ *Batch complete*\n${posts.length} posts (${mix})\nThat is ~${days} day${days === 1 ? "" : "s"} at 2/day.\n\nSend /queue any time to see what is waiting.`,
     parse_mode: "Markdown",
   }).catch(() => {});
+}
+
+// A reel is a cover plus its thumbnail, sent as a pair so the thumbnail can be
+// judged against the cover it belongs to. Same dedup rule as posts: claimed
+// before delivery so several callers cannot double-send.
+export async function sendReelToTelegram(r, { force = false } = {}) {
+  const { chatId, ok } = creds();
+  if (!ok) {
+    console.warn("[WickTG] Telegram not configured — reel stays queued");
+    return false;
+  }
+  if (!force && r.telegram_sent_at) {
+    console.log(`[WickTG] reel ${r.id} already sent — skipping`);
+    return false;
+  }
+  if (!force) {
+    const { data: claimed } = await supabase.from("wick_reels")
+      .update({ telegram_sent_at: new Date().toISOString(), telegram_send_count: (r.telegram_send_count ?? 0) + 1 })
+      .eq("id", r.id).is("telegram_sent_at", null).select("id").maybeSingle();
+    if (!claimed) { console.log(`[WickTG] reel ${r.id} claimed elsewhere — skipping`); return false; }
+  } else {
+    await supabase.from("wick_reels").update({
+      telegram_sent_at: new Date().toISOString(),
+      telegram_send_count: (r.telegram_send_count ?? 0) + 1,
+    }).eq("id", r.id);
+  }
+
+  const media = [r.cover_url, r.thumb_url].filter(Boolean);
+  try {
+    if (media.length > 1) {
+      await tg("sendMediaGroup", {
+        chat_id: chatId,
+        media: media.map((u, i) => ({
+          type: "photo", media: u,
+          ...(i === 0 ? { caption: `REEL · ${r.layout.toUpperCase()}${r.suited ? " · suit" : ""} · cover + thumbnail` } : {}),
+        })),
+      });
+    } else if (media.length === 1) {
+      await tg("sendPhoto", { chat_id: chatId, photo: media[0], caption: `REEL · ${r.layout.toUpperCase()}` });
+    }
+    await tg("sendMessage", {
+      chat_id: chatId,
+      text: `REEL · ${r.layout.toUpperCase()}\n\n${r.caption ?? ""}`,
+      reply_markup: {
+        inline_keyboard: [[
+          { text: "✅ Approve", callback_data: `reel:approve:${r.id}` },
+          { text: "🚫 Pull this one", callback_data: `reel:reject:${r.id}` },
+        ]],
+      },
+    });
+    return true;
+  } catch (err) {
+    console.warn(`[WickTG] reel send failed for ${r.id}: ${err.message}`);
+    await supabase.from("wick_reels").update({ telegram_sent_at: null }).eq("id", r.id);
+    return false;
+  }
 }

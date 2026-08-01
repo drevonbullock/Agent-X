@@ -11,6 +11,7 @@ import { processReviewQueue } from "./modules/review-queue.js";
 import { mineCompetitors, loadDynamicThemes } from "./modules/competitor-research.js";
 import { checkRepeatEngagers } from "./modules/lead-capture.js";
 import { runWeeklyBatch, publishNextApproved } from "./modules/wicks-wisdom.js";
+import { runWeeklyReels } from "./modules/wick-reel-batch.js";
 import { pollTelegramApprovals } from "./modules/wick-telegram.js";
 import { syncWickMetrics } from "./modules/wick-analytics.js";
 import { initTokens, refreshTokens, checkAnthropicCredit, checkLinkedInToken, checkTelegram } from "./modules/token-manager.js";
@@ -82,6 +83,16 @@ export function startScheduler() {
     if (paused()) return;
     try { await runWeeklyBatch(); }
     catch (err) { console.error(`[Scheduler] Wick batch failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  // ── WICK REELS — 14 a week, built Sunday 5am ────────────────────────────
+  // Reels draw only from the two 10% lanes, so this runs before the carousel
+  // batch claims the week's topics out of the same registry.
+  cron.schedule("0 5 * * 0", async () => {
+    if (paused()) { console.log("[Scheduler] PAUSED — Wick reel batch skipped"); return; }
+    console.log(`[${new Date().toISOString()}] Wick: weekly reel batch`);
+    try { await runWeeklyReels(); }
+    catch (err) { console.error(`[Scheduler] Wick reel batch failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── WICK APPROVALS — poll Telegram for taps and commands ────────────────

@@ -7,32 +7,32 @@
     "payoff": "Fewer new experiences to encode"
   },
   "copy": {
-    "title": "WHY YOUR YEARS KEEP SHRINKING",
+    "title": "STOP LETTING THE YEARS BLUR",
     "pillar": "Mind",
     "steps": [
       {
-        "rule": "Notice when the week blurred past",
-        "why": "you cannot fix a leak you have not located yet."
+        "rule": "Notice when days feel identical",
+        "why": "sameness is the signal your brain has stopped recording new information."
       },
       {
-        "rule": "Count how many firsts you had",
-        "why": "the brain compresses repeated days into a single memory file."
+        "rule": "Name one thing that felt new today",
+        "why": "a labelled novelty gets stored as a distinct memory, not folded into the blur."
       },
       {
-        "rule": "Name one thing that felt genuinely new",
-        "why": "a single novel moment anchors the whole week as distinct."
+        "rule": "Schedule one unfamiliar thing this week",
+        "why": "a new route, a new task, a new conversation stretches the perceived length of that week."
       },
       {
-        "rule": "Schedule one unfamiliar thing per week",
-        "why": "new encoding stretches perceived time the way sleep stretches a night."
+        "rule": "Review what you did differently this month",
+        "why": "the review forces your brain to count distinct events instead of averaging them into one."
       },
       {
-        "rule": "Review the month against your list",
-        "why": "density of distinct memories is the only way to slow the clock down."
+        "rule": "Raise the unfamiliarity target each quarter",
+        "why": "without a rising threshold, the brain re-categorises last month's novelty as routine and compresses it."
       }
     ],
-    "kicker": "Same days, same blur, smaller life.",
-    "thumb_scene": "Wick stands on a plain white studio background facing the camera, holding a plain wall calendar with most days crossed out in identical red marks, one single day left uncrossed, his finger resting on that one open square, expression sharp and deliberate.",
-    "send_to": "the friend who just said the year went nowhere again"
+    "kicker": "New inputs make the clock slow down.",
+    "thumb_scene": "Wick stands upright on a plain white studio background, holding a blank wall calendar in one hand and a single bright sticky note in the other, looking directly into the camera with a still, unhurried expression, nothing else in frame.",
+    "send_to": "the friend who said this year went by in a blink"
   }
 }

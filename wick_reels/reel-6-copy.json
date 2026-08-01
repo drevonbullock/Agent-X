@@ -8,50 +8,50 @@
   },
   "copy": {
     "title_lines": [
-      "Sitting Still Costs",
-      "More Than You Think"
+      "Sitting Still",
+      "Has a Price Tag"
     ],
     "pillar": "Money",
     "tiers": [
       {
-        "label": "ASLEEP",
+        "label": "BLIND",
         "stat": "1 month untracked"
       },
       {
-        "label": "DRIFTING",
+        "label": "NUMB",
         "stat": "3 months untracked"
       },
       {
-        "label": "LEAKING",
+        "label": "DRIFTING",
         "stat": "6 months untracked"
       },
       {
-        "label": "ERODING",
-        "stat": "12 months untracked"
+        "label": "LEAKING",
+        "stat": "1 year untracked"
       },
       {
-        "label": "SHRINKING",
+        "label": "ERODED",
         "stat": "2 years untracked"
       },
       {
-        "label": "GUTTED",
-        "stat": "4 years untracked"
-      },
-      {
         "label": "HOLLOWED",
-        "stat": "7 years untracked"
+        "stat": "3 years untracked"
       },
       {
         "label": "STRIPPED",
-        "stat": "12 years untracked"
+        "stat": "5 years untracked"
       },
       {
-        "label": "TAXED OUT",
-        "stat": "20 years untracked"
+        "label": "GUTTED",
+        "stat": "8 years untracked"
+      },
+      {
+        "label": "AWAKE",
+        "stat": "1 year tracked"
       }
     ],
-    "kicker": "Stillness is not neutral. It has a price.",
-    "thumb_scene": "Wick stands upright on a plain white studio background, arms loose at his sides, eyes fixed straight ahead with a flat calm expression, holding a clear glass jar of coins in one hand while a single paper receipt curls at his feet, the jar visibly less than half full.",
-    "send_to": "the friend who thinks saving in a bank account is enough"
+    "kicker": "The machine runs whether you watch it or not.",
+    "thumb_scene": "Wick stands upright on a plain white studio background, arms loose at his sides, holding a clear glass jar of coins in one hand while a thick stack of paper currency fans out visibly thinner at the top, the two objects placed side by side in front of him as he stares directly into the camera with a flat, unblinking expression.",
+    "send_to": "the friend whose savings account hasn't moved in two years"
   }
 }

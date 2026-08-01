@@ -8,31 +8,31 @@
   },
   "copy": {
     "title": "WHY YOUR RENT NEVER STOPS CLIMBING",
-    "pillar": "Systems",
+    "pillar": "Money",
     "steps": [
       {
-        "rule": "Find who controls the land supply",
-        "why": "local governments cap how much housing can be built, which artificially tightens inventory before a single unit is priced."
+        "rule": "Count who controls the land supply",
+        "why": "zoning boards cap new units, so scarcity is a policy choice, not an accident."
       },
       {
-        "rule": "Count what zoning actually blocks",
-        "why": "rules that forbid dense building on most urban land guarantee that demand always outruns what developers are legally allowed to construct."
+        "rule": "Map who sits on that board",
+        "why": "existing property owners vote against new builds because more supply lowers their asset price."
       },
       {
-        "rule": "Track who votes on those rules",
-        "why": "existing property owners benefit directly when scarcity keeps values high, so the people who set the limits are the people who profit from them."
+        "rule": "Run the landlord's arithmetic",
+        "why": "twelve renters competing for ten units lets the landlord raise price without adding a single brick."
       },
       {
-        "rule": "Run the vacancy arithmetic yourself",
-        "why": "a city of one million renters needing two percent vacancy relief is twenty thousand units that current zoning may never permit to exist."
+        "rule": "Trace where the revenue lands",
+        "why": "higher rents lift assessed values, which lift the portfolio the board members already own."
       },
       {
-        "rule": "Name the feedback loop out loud",
-        "why": "higher rents lift assessed values, larger tax bases fund the councils that protect the zoning, and the machine resets at a higher floor every cycle."
+        "rule": "Name the feedback loop once",
+        "why": "when the people who profit from scarcity also vote on whether to end it, the scarcity compounds."
       }
     ],
-    "kicker": "The price is a policy. Policies have authors.",
-    "thumb_scene": "Wick stands upright on a plain white studio background, holding a single folded lease agreement in one hand and a red marker in the other, a small architectural zoning grid map resting against his leg on the floor, his expression sharp and direct, facing slightly toward camera.",
-    "send_to": "the friend renewing a lease and wondering why it jumped again"
+    "kicker": "The price is set before you ever apply",
+    "thumb_scene": "Wick stands on a plain white studio background, arms crossed, one hand holding a single red brick at chest height, a small laminated zoning map pinned to the brick with a thumbtack, his expression flat and certain, nothing else in frame.",
+    "send_to": "the friend who just got hit with a rent hike and has no idea why"
   }
 }

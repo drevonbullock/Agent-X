@@ -29,10 +29,15 @@ const W = 1080, H = 1920;
 // cropped and oversized on the phone.
 //
 // A feed carousel has none of this, which is why 4:5 posts read edge to edge.
+// Only the VERTICAL band is reserved. An earlier version also inset the right
+// edge for the action-button column, but that made every centred element centre
+// inside an off-centre box and everything drifted left. The reference centres on
+// the full frame and simply stays clear of the top and bottom, and the button
+// icons are semi-transparent, so centred text reads fine underneath them.
 const SAFE_TOP = 250;
 const SAFE_BOTTOM = 420;
-const SAFE_RIGHT = 190;
 const SAFE_H = H - SAFE_TOP - SAFE_BOTTOM;   // 1250px of usable height
+const PAD = 46;                              // symmetric, so centre is true centre
 const FFMPEG = process.platform === "darwin" ? "/opt/homebrew/bin/ffmpeg" : "/usr/bin/ffmpeg";
 const SHEET = path.join(process.cwd(), "wick_examples", "00_character_sheet.png");
 const WATERMARK = "@WICKSWISDOM";
@@ -91,15 +96,15 @@ html,body{width:${W}px;height:${H}px;overflow:hidden;background:#000;font-family
    deliberately empty because Instagram is going to draw on them. */
 .safe{position:absolute;left:0;right:0;top:${SAFE_TOP}px;height:${SAFE_H}px;
   display:flex;flex-direction:column;}
-.head{background:#fff;padding:26px ${SAFE_RIGHT}px 22px 34px;text-align:center;flex-shrink:0;}
+.head{background:#fff;padding:26px ${PAD}px 22px;text-align:center;flex-shrink:0;}
 .head h1{font-family:'Anton',sans-serif;font-size:68px;line-height:0.94;color:#000;
   text-transform:uppercase;letter-spacing:-0.5px;}
-.foot{flex-shrink:0;padding:14px ${SAFE_RIGHT}px 0 34px;text-align:center;}
+.foot{flex-shrink:0;padding:14px ${PAD}px 0;text-align:center;}
 .foot .kick{font-family:'Anton',sans-serif;font-size:38px;line-height:1.04;color:#fff;
   text-transform:uppercase;margin-bottom:10px;}
 .foot .cta{font-family:'DM Sans',sans-serif;font-weight:700;font-size:27px;color:#fff;line-height:1.25;}
 .foot .cta b{color:#F5A524;}
-.wm{position:absolute;top:${SAFE_TOP - 40}px;left:0;right:${SAFE_RIGHT}px;text-align:center;
+.wm{position:absolute;top:${SAFE_TOP - 40}px;left:0;right:0;text-align:center;
   font-family:'DM Sans',sans-serif;font-size:15px;letter-spacing:5px;font-weight:500;
   color:rgba(255,255,255,0.34);}
 `;
@@ -114,8 +119,8 @@ export async function compositeStepsReel({ title, steps, kicker, sendTo, figureP
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE}
-.body{flex:1;padding:22px ${SAFE_RIGHT}px 0 34px;display:flex;flex-direction:column;justify-content:flex-start;}
-ol{list-style:none;}
+.body{flex:1;padding:22px ${PAD}px 0;display:flex;flex-direction:column;justify-content:flex-start;}
+ol{list-style:none;max-width:900px;margin:0 auto;}
 li{display:flex;gap:14px;margin-bottom:16px;align-items:baseline;}
 li .n{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${size}px;color:#F5A524;min-width:44px;}
 li .t{font-family:'DM Sans',sans-serif;font-weight:400;font-size:${size}px;line-height:1.2;color:#e8e2d8;}
@@ -159,7 +164,7 @@ export async function compositeTiersReel({ titleLines, tiers, kicker, sendTo, ba
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE}
 .head h1{font-size:56px;}
-.grid{flex:1;padding:20px ${SAFE_RIGHT - 30}px 0 30px;display:grid;grid-template-columns:repeat(3,1fr);
+.grid{flex:1;padding:20px ${PAD - 12}px 0;display:grid;grid-template-columns:repeat(3,1fr);
   grid-template-rows:repeat(3,1fr);gap:8px 12px;align-content:start;}
 .cell{text-align:center;}
 .badge{width:228px;height:228px;margin:0 auto 6px;border-radius:50%;overflow:hidden;

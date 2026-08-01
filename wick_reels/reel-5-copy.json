@@ -8,50 +8,50 @@
   },
   "copy": {
     "title_lines": [
-      "Criticism Lands Hard.",
-      "Praise Slides Off."
+      "One insult echoes.",
+      "Ten compliments fade."
     ],
     "pillar": "Mind",
     "tiers": [
       {
-        "label": "POROUS",
-        "stat": "1 comment"
+        "label": "RAW",
+        "stat": "3 times"
+      },
+      {
+        "label": "STUNG",
+        "stat": "8 times"
       },
       {
         "label": "RATTLED",
-        "stat": "3 comments"
+        "stat": "18 times"
       },
       {
-        "label": "LOOPING",
-        "stat": "7 comments"
-      },
-      {
-        "label": "FILTERING",
-        "stat": "12 comments"
-      },
-      {
-        "label": "SORTING",
-        "stat": "20 comments"
+        "label": "AWARE",
+        "stat": "32 times"
       },
       {
         "label": "STEADY",
-        "stat": "5 weeks held"
-      },
-      {
-        "label": "ROOTED",
-        "stat": "11 weeks held"
+        "stat": "55 times"
       },
       {
         "label": "GROUNDED",
-        "stat": "6 months held"
+        "stat": "90 times"
       },
       {
-        "label": "FIXED",
-        "stat": "1 year held"
+        "label": "FILTERED",
+        "stat": "140 times"
+      },
+      {
+        "label": "ANCHORED",
+        "stat": "210 times"
+      },
+      {
+        "label": "UNSHAKEN",
+        "stat": "320 times"
       }
     ],
-    "kicker": "The wound writes louder than the win.",
-    "thumb_scene": "Wick stands upright on a plain white studio background, one hand pressed flat against his chest over his heart, the other hand loosely open at his side letting something invisible slip through his fingers, a crumpled note in his chest-hand and a clean gold ribbon on the floor near his feet already fallen.",
-    "send_to": "the friend who replays one bad review and forgets ten good ones"
+    "kicker": "The brain counts losses twice.",
+    "thumb_scene": "Wick stands upright on a plain white studio background, arms loose at his sides, holding a single crumpled note in one hand and a stack of clean white cards in the other, his eyes fixed forward with a calm, unreadable expression, the crumpled note visibly worn compared to the untouched stack.",
+    "send_to": "the friend who replays one bad comment for weeks"
   }
 }
