@@ -84,8 +84,12 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] Wick batch failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  // ── WICK APPROVALS — poll Telegram for Approve/Reject taps every 2 min ───
-  cron.schedule("*/2 * * * *", async () => {
+  // ── WICK APPROVALS — poll Telegram for taps and commands ────────────────
+  // Every 30s, not every 2 minutes. A Telegram callback query expires after
+  // about a minute, so a 2 minute poll answered every tap too late: the button
+  // never changed and a slash command sat unanswered long enough to look broken.
+  // node-cron has second granularity when the expression has six fields.
+  cron.schedule("*/30 * * * * *", async () => {
     try { await pollTelegramApprovals(); }
     catch (err) { console.error(`[Scheduler] Wick Telegram poll failed: ${err.message}`); }
   }, { timezone: "America/New_York" });

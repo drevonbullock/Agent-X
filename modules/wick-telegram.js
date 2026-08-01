@@ -198,11 +198,18 @@ export async function pollTelegramApprovals() {
     const [, action, id] = cq.data.split(":");
     try {
       const status = await decideWick(id, action);
+
+      // A callback query expires after about 60 seconds, and this poller runs on
+      // an interval, so answering it usually fails. That is cosmetic and MUST NOT
+      // abort the rest: previously the throw skipped the button update, so a tap
+      // silently changed the database while the UI never moved and the log
+      // claimed the decision had failed when it had actually succeeded.
       await tg("answerCallbackQuery", {
         callback_query_id: cq.id,
-        text: status === "approved" ? "Approved — will publish on its slot" : "Pulled — will not publish",
-      });
-      // Replace the buttons with the decision so it can't be double-tapped.
+        text: status === "approved" ? "Approved" : "Pulled",
+      }).catch(() => {});
+
+      // This is the feedback that actually matters, and it never expires.
       await tg("editMessageReplyMarkup", {
         chat_id: cq.message.chat.id,
         message_id: cq.message.message_id,
@@ -210,11 +217,11 @@ export async function pollTelegramApprovals() {
           text: status === "approved" ? "✅ Approved" : "🚫 Pulled",
           callback_data: "wick:done",
         }]] },
-      }).catch(() => {});
+      }).catch((e) => console.warn(`[WickTG] could not update buttons for ${id}: ${e.message}`));
+
       console.log(`[WickTG] ${id} → ${status}`);
     } catch (err) {
       console.warn(`[WickTG] decision failed for ${id}: ${err.message}`);
-      await tg("answerCallbackQuery", { callback_query_id: cq.id, text: "Failed, try again" }).catch(() => {});
     }
   }
   if (maxId) await setOffset(maxId);
