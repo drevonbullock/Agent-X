@@ -43,12 +43,39 @@ async function setOffset(v) {
 // One post, delivered the moment it exists. This is the unit that matters:
 // a batch runs for hours, so waiting for the whole run to finish meant finished
 // posts sat invisible in the database while Dre had nothing to look at.
-export async function sendPostToTelegram(p) {
+// `force` is for a deliberate resend, e.g. after a caption is rewritten or a
+// slide is rebuilt. Everything else is deduplicated: several callers can try to
+// deliver the same post (the build's own push, a watcher, a manual sweep) and
+// only the first one lands. Without this the chat filled with the same post
+// three times over.
+export async function sendPostToTelegram(p, { force = false } = {}) {
   const { chatId, ok } = creds();
   if (!ok) {
     console.warn("[WickTG] TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set — post stays at /wick");
     return false;
   }
+
+  if (!force && p.telegram_sent_at) {
+    console.log(`[WickTG] ${p.id} already sent ${new Date(p.telegram_sent_at).toISOString()} — skipping`);
+    return false;
+  }
+  // Claim the send BEFORE doing it. Two callers racing would otherwise both read
+  // a null timestamp and both deliver.
+  if (!force) {
+    const { data: claimed } = await supabase.from("wick_posts")
+      .update({ telegram_sent_at: new Date().toISOString(), telegram_send_count: (p.telegram_send_count ?? 0) + 1 })
+      .eq("id", p.id).is("telegram_sent_at", null).select("id").maybeSingle();
+    if (!claimed) {
+      console.log(`[WickTG] ${p.id} claimed by another sender — skipping`);
+      return false;
+    }
+  } else {
+    await supabase.from("wick_posts").update({
+      telegram_sent_at: new Date().toISOString(),
+      telegram_send_count: (p.telegram_send_count ?? 0) + 1,
+    }).eq("id", p.id);
+  }
+
   const auto = process.env.WICK_AUTO_PUBLISH !== "false";
   const urls = (p.slide_urls ?? []).slice(0, 10);
   try {
@@ -76,11 +103,14 @@ export async function sendPostToTelegram(p) {
     return true;
   } catch (err) {
     console.warn(`[WickTG] send failed for ${p.id}: ${err.message}`);
+    // Release the claim so a later attempt can retry rather than the post being
+    // marked delivered when nothing arrived.
+    await supabase.from("wick_posts").update({ telegram_sent_at: null }).eq("id", p.id);
     return false;
   }
 }
 
-export async function sendBatchToTelegram(posts) {
+export async function sendBatchToTelegram(posts, { force = false } = {}) {
   const { chatId, ok } = creds();
   if (!ok) {
     console.warn("[WickTG] TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set — batch stays pending at /wick");
@@ -97,8 +127,9 @@ export async function sendBatchToTelegram(posts) {
     parse_mode: "Markdown",
   });
 
-  for (const p of posts) await sendPostToTelegram(p);
-  console.log(`[WickTG] Sent ${posts.length} post(s) to Telegram`);
+  let sent = 0, skipped = 0;
+  for (const p of posts) (await sendPostToTelegram(p, { force })) ? sent++ : skipped++;
+  console.log(`[WickTG] Sent ${sent} post(s)${skipped ? `, skipped ${skipped} already delivered` : ""}`);
   return true;
 }
 
