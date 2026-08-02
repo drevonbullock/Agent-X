@@ -214,11 +214,17 @@ export async function runThreads() {
 
   // ── TEXT MODE ────────────────────────────────────────────────────────────────
   try {
-    const postText = await generateThreadsPost();
+    // A/B: alternates provoke vs invite and tags the row, because comment count
+    // alone cannot tell "people are building on this" from "people are
+    // correcting you", and only one of those grows the account.
+    const { text: postText, variant } = await generateThreadsPost(threadsCount);
     const { postId, postUrl } = await postTextToThreads(postText);
-    await logPost({ postId, postUrl, postText, format: "threads_native", postType: "text", platform: "threads" });
-    console.log(`[Threads] Text posted: ${postUrl}\n`);
-    return { postId, postUrl };
+    await logPost({
+      postId, postUrl, postText, format: "threads_native",
+      postType: "text", platform: "threads", variant,
+    });
+    console.log(`[Threads] Text posted [${variant}]: ${postUrl}\n`);
+    return { postId, postUrl, variant };
   } catch (err) {
     console.error(`[Threads] Text post failed: ${err.message}\n`);
   }

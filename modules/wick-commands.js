@@ -27,6 +27,7 @@ export const HELP = `🕯️ *Wick's Wisdom*
 /status — tokens, queue depth, credits
 /pause — stop all publishing
 /resume — start publishing again
+/threads — which Threads variant is winning
 /help — this list
 
 Generating a new batch needs the Higgsfield CLI, which only runs on Dre's Mac.`;
@@ -133,6 +134,21 @@ export async function cmdStatus() {
   return `🩺 *Status*\n\n${out.join("\n")}`;
 }
 
+// Threads A/B. Reported separately from the Wick scoreboard because it answers a
+// different question: not "which format gets engagement" but "which SHAPE gets
+// replies worth having". Likes per comment is the tell, a reply with a like
+// behind it is agreement, a reply without one is an argument.
+export async function cmdThreads() {
+  const { threadsVariantReport } = await import("../agent/generate-post.js");
+  const { rows, note } = await threadsVariantReport({ days: 14 });
+  if (note || !rows.length) return note ?? "No tagged Threads posts yet.";
+  const body = rows.map((r) =>
+    `*${r.variant}* (${r.n} posts)\n  ${r.avgComments} comments · ${r.avgLikes} likes · ${r.avgShares} shares\n  likes per comment: *${r.likesPerComment ?? "n/a"}*`).join("\n\n");
+  const thin = rows.some((r) => r.n < 5);
+  return `🧵 *Threads A/B, last 14 days*\n\n${body}\n\n_Higher likes per comment means people agree rather than argue._` +
+    (thin ? "\n_Under 5 posts in a variant. Too early to call it._" : "");
+}
+
 // ─── ACTIONS ─────────────────────────────────────────────────────────────────
 
 export async function cmdSync() {
@@ -190,6 +206,7 @@ export async function runCommand(text) {
     case "/preview":   return cmdPreview();
     case "/recaption": return cmdRecaption();
     case "/topics":    return cmdTopics();
+    case "/threads":   return cmdThreads();
     case "/status":    return cmdStatus();
     case "/pause":     return cmdPause(true);
     case "/resume":    return cmdPause(false);
@@ -211,6 +228,7 @@ export const BOT_COMMANDS = [
   { command: "preview",   description: "Re-send the queue to this chat" },
   { command: "recaption", description: "Rewrite every queued caption" },
   { command: "topics",    description: "Episode registry progress" },
+  { command: "threads",   description: "Which Threads variant is winning" },
   { command: "status",    description: "Tokens, queue depth, publishing state" },
   { command: "pause",     description: "Stop all publishing" },
   { command: "resume",    description: "Start publishing again" },

@@ -179,7 +179,7 @@ RULES:
 
 // Shared generator for all scheduled text posts. Seeds subject matter from the
 // controversy lanes (keeps the content pillars) but delivers it casually.
-export async function generateConversationStarter({ maxChars = 500, platform = "linkedin" } = {}) {
+export async function generateConversationStarter({ maxChars = 500, platform = "linkedin", variantHint = "" } = {}) {
   const t = pickControversyTopic();
   const brief = readBrief();
   const avoid = brief && (brief.avoid_patterns ?? []).length
@@ -189,7 +189,11 @@ export async function generateConversationStarter({ maxChars = 500, platform = "
   // Tune for the fastest possible reply: punchier, shorter, a take or question
   // people feel compelled to answer in one tap.
   const threadsTune = platform === "threads"
-    ? `\nTHREADS MODE: This is Threads, which ranks on how FAST people reply. Be punchier and shorter than usual (aim 1-2 sentences). Land a mild take or a pointed question that someone can answer in one tap without thinking hard. Slightly more opinionated than LinkedIn, still not mean. The goal is a fast reply, not a like.\n`
+    ? `\nTHREADS MODE: Threads ranks on how fast people reply, so be punchier and shorter than usual (aim 1-2 sentences).
+
+WHAT COUNTS AS A GOOD REPLY: someone ADDING to the idea, sharing what they have seen, or answering a real question. NOT someone correcting you. Measured by comment count those look identical; measured by whether the account grows they are opposites.
+
+So: land a take you can defend, or ask a question you genuinely do not know the answer to. If the only possible reply is "actually, no", rewrite it. The goal is a reply worth reading, and a bystander who reads the thread and follows.\n`
     : "";
 
   console.log(`[Agent X] Conversation starter | ${platform} | Lane: ${t.lane}`);
@@ -199,7 +203,7 @@ export async function generateConversationStarter({ maxChars = 500, platform = "
     messages: [{
       role: "user",
       content: `${CONVERSATION_VOICE}
-${threadsTune}${avoid}
+${threadsTune}${variantHint ? "\n" + variantHint + "\n" : ""}${avoid}
 Underlying idea to spin into a casual conversation starter (soften it, do NOT state it as harsh fact): "${t.claim}"
 An angle people naturally have feelings about: "${t.bait}"
 
@@ -242,7 +246,8 @@ export async function generateLinkedInPost(_copyStyleId = null) {
 const THREADS_VOICE = `You are Drevon Bullock — AI automation builder in New York. You post on Threads like you're texting a smart friend between meetings. Not a conference talk. Not a LinkedIn post.
 
 Rules (non-negotiable):
-- First line is everything. If it doesn't stop the scroll, the rest doesn't exist. Open with a specific number, a blunt statement, or something that sounds slightly wrong.
+- First line is everything. If it doesn't stop the scroll, the rest doesn't exist. Open with a specific number, a blunt statement, or a claim people have felt but not said out loud.
+- NEVER write something that "sounds slightly wrong" to bait a correction. That earns comments from people telling you you are wrong, which reads as volume and builds nothing: correctors do not follow, do not repost, and do not come back except to argue. Be DEBATABLE BUT DEFENSIBLE. Someone should be able to disagree with you and still think you are worth following.
 - Raw and direct. Short sentences. Fragments when they hit harder.
 - One real insight. No fluff. No setup that takes 2 lines to get to the point.
 - ALWAYS end with a question. One short question that invites a reply. This is the most important rule.
@@ -278,9 +283,73 @@ const THREADS_TOPICS = [
   "what business owners say they wish they automated first after 60 days of running a real system",
 ];
 
-export async function generateThreadsPost() {
-  // Reply-velocity-optimized conversation starter, Threads-length (2026-07-29).
-  return generateConversationStarter({ maxChars: 480, platform: "threads" });
+// ─── THREADS A/B TEST ────────────────────────────────────────────────────────
+// Dre's first five posts produced one 21-comment outlier that was roughly 70%
+// negative, and four posts at 3-5 comments that were genuine responses. Comment
+// COUNT cannot tell those apart, so the account was being steered by a number
+// that does not distinguish "people building on this" from "people correcting
+// you". Correctors do not follow, do not repost, and do not return.
+//
+// So: alternate two shapes and tag every post, rather than guessing from five
+// data points. Variant is written to posts.variant and read back by
+// threadsVariantReport().
+export const THREADS_VARIANTS = {
+  // A — the existing controversy voice. Stated as fact, does not care if you
+  // like it. This is what produced the outlier.
+  provoke: `VARIANT: state the take flatly and with conviction. Do not hedge it, do not soften it, do not ask permission. A confident claim someone will want to push back on.`,
+
+  // B — debatable but defensible, and it ends somewhere genuinely open.
+  invite: `VARIANT: make a claim you can defend, then hand the floor over. The post must end on a question you do not already know the answer to, so the natural reply is someone ADDING their own experience rather than correcting yours. If the only possible reply is "actually, no", rewrite it.`,
+};
+
+// Deterministic alternation so a week lands close to an even split rather than
+// whatever a coin flip decides.
+export async function generateThreadsPost(seq) {
+  const n = typeof seq === "number" ? seq : await threadsPostCount();
+  const variant = n % 2 === 0 ? "provoke" : "invite";
+  const text = await generateConversationStarter({
+    maxChars: 480, platform: "threads",
+    variantHint: THREADS_VARIANTS[variant],
+  });
+  return { text, variant };
+}
+
+async function threadsPostCount() {
+  try {
+    const { default: supabase } = await import("../supabase/client.js");
+    const { count } = await supabase.from("posts")
+      .select("*", { count: "exact", head: true }).eq("platform", "threads");
+    return count ?? 0;
+  } catch { return Math.floor(Date.now() / 3600000); }
+}
+
+// Which shape actually grows the account. Comments alone cannot answer that, so
+// this reports likes and shares alongside them: a post that earns replies but no
+// likes is being argued with, not agreed with.
+export async function threadsVariantReport({ days = 14 } = {}) {
+  const { default: supabase } = await import("../supabase/client.js");
+  const since = new Date(Date.now() - days * 86400000).toISOString();
+  const { data } = await supabase.from("posts")
+    .select("variant,likes,comments,shares,views")
+    .eq("platform", "threads").gte("created_at", since)
+    .in("variant", ["provoke", "invite"]);
+  if (!data?.length) return { rows: [], note: "No tagged Threads posts yet." };
+
+  const agg = {};
+  for (const p of data) {
+    const a = agg[p.variant] ??= { n: 0, likes: 0, comments: 0, shares: 0 };
+    a.n++; a.likes += p.likes ?? 0; a.comments += p.comments ?? 0; a.shares += p.shares ?? 0;
+  }
+  const rows = Object.entries(agg).map(([variant, a]) => ({
+    variant, n: a.n,
+    avgComments: +(a.comments / a.n).toFixed(1),
+    avgLikes: +(a.likes / a.n).toFixed(1),
+    avgShares: +(a.shares / a.n).toFixed(1),
+    // The number that separates the two: a reply with a like behind it is
+    // agreement, a reply without one is an argument.
+    likesPerComment: a.comments > 0 ? +(a.likes / a.comments).toFixed(2) : null,
+  }));
+  return { rows };
 }
 
 // ─── VIDEO MODE ──────────────────────────────────────────────────────────────
