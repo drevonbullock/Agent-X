@@ -542,7 +542,14 @@ Exactly 5 items.`,
 // ─── CAPTION — the four-beat formula ─────────────────────────────────────────
 
 export async function writeCaption(post) {
-  const context = post.format === "LESSON"
+  // Reels have their own shapes. Without these branches STEPS and TIERS fell
+  // through to the comparison branch, which reads fields reel copy does not
+  // have, and produced a caption written from nothing.
+  const context = post.format === "STEPS"
+    ? `A reel titled "${post.copy.title}" laying out ${post.copy.steps?.length ?? 5} steps in order: ${(post.copy.steps ?? []).map((s, i) => `${i + 1}. ${s.rule} (${s.why})`).join(" ")} It closes on: "${post.copy.kicker ?? ""}".`
+    : post.format === "TIERS"
+    ? `A reel titled "${(post.copy.title_lines ?? []).join(" ")}" showing a nine step ladder: ${(post.copy.tiers ?? []).map((t) => `${t.label} at ${t.stat}`).join(", ")}. It closes on: "${post.copy.kicker ?? ""}".`
+    : post.format === "LESSON"
     ? `A carousel titled "${post.copy.cover_headline}" covering: ${(post.copy.items?.map((i) => i.title) ?? post.copy.labels?.slice(1, 6) ?? []).join(", ")}.`
     : post.format === "COSTUME"
       ? `A cast carousel showing every role inside the mechanic: ${(post.copy.roles?.map((r) => r.label) ?? post.copy.labels ?? []).join(", ")}.`
@@ -588,6 +595,13 @@ from the account's own best performing caption, so the rhythm is proven.
 FORMATTING IS PART OF THE FORMULA. Single blank line between every beat. Most
 lines stand alone. Never write a dense paragraph. This is read on a phone at
 arm's length, and white space is what makes it legible.
+
+IF THIS IS A REEL (format STEPS or TIERS): the viewer has already watched the
+thing, so the caption must NOT restate the slides. Skip the parallel list beat
+entirely and go opener, reversal, the hidden rule, the cost, question, signoff.
+Keep it under 600 characters. A reel caption competes with the video for
+attention and loses, so it earns its place by adding the part the video could
+not fit.
 
 Voice: conversational, like texting a smart friend. Confident, occasionally
 unfiltered. Never the sage register.

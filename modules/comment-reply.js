@@ -8,7 +8,22 @@ const client = new Anthropic();
 const THREADS_API = "https://graph.threads.net/v1.0";
 const CTA_KEYWORDS = ["AUTOMATE", "CLAUDE", "MAKE", "AGENTS", "TOOLS"];
 
-const REPLY_SYSTEM = `You are Dre'von Bullock — AI automation builder in New York.
+// Strips em and en dashes from anything about to be posted in Dre's name.
+// REPLY_SYSTEM already asks for none, but a prompt rule is a preference and the
+// model still slips them in. An em dash is the single clearest tell that a reply
+// was machine written, so this is enforced on the way out rather than requested
+// on the way in. It also collapses the double-space a removed dash leaves behind.
+export function humanize(text) {
+  return String(text ?? "")
+    .replace(/\s*[\u2014\u2013]\s*/g, ", ")   // em / en dash -> comma
+    .replace(/\s+,/g, ",")                      // no space before the comma
+    .replace(/,\s*,/g, ",")                     // never double up
+    .replace(/,\s*([.!?])/g, "$1")              // drop a comma before a full stop
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
+const REPLY_SYSTEM = `You are Dre'von Bullock, AI automation builder in New York.
 Someone commented on your social post. Write a reply.
 
 Rules:
@@ -32,7 +47,7 @@ export async function generateReply(commentText, postContext = "") {
       content: `Post context: "${postContext.slice(0, 200)}"\nComment: "${commentText}"`,
     }],
   });
-  return msg.content[0].text.trim();
+  return humanize(msg.content[0].text);
 }
 
 // ─── DEDUP CHECK ──────────────────────────────────────────────────────────────
