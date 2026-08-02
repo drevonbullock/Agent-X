@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { runThreads, runLinkedIn, runVideo, runInstagram } from "./index.js";
-import { postLinkedInNewsImage, postInstagramNewsImage, postThreadsNewsImage } from "./modules/news-agent.js";
+import { postLinkedInNewsImage, postInstagramNewsImage } from "./modules/news-agent.js";
 import { checkPerf, processVariationQueue } from "./modules/variation-engine.js";
 import { runWeeklyAnalysis } from "./modules/feedback-loop.js";
 import { processYouTubeVideo } from "./modules/youtube-cutter.js";
@@ -120,25 +120,24 @@ export function startScheduler() {
     catch (err) { console.error(`[Scheduler] Daily video failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
-  // ── THREADS — 7x/day: 5 text (casual conversation starters) + 2 news ─────
+  // ── THREADS — 7x/day, all text ──────────────────────────────────────────
+  // News images were removed on 2026-08-01: Dre reported they were not
+  // performing while the casual text starters were gaining engagement, so the
+  // two news slots became text rather than being dropped. Threads rewards
+  // frequency, so cutting to 5 would have handed back reach on top of removing
+  // the format that was underperforming.
   const thText = (label) => async () => {
     if (paused()) { console.log(`[Scheduler] PAUSED — Threads ${label} skipped`); return; }
     console.log(`[${new Date().toISOString()}] Threads: ${label} (text)`);
     try { await runThreads(); }
     catch (err) { console.error(`[Scheduler] Threads ${label} failed: ${err.message}`); }
   };
-  const thNews = (label) => async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — Threads ${label} skipped`); return; }
-    console.log(`[${new Date().toISOString()}] Threads: ${label} (news image)`);
-    try { await postThreadsNewsImage(); }
-    catch (err) { console.error(`[Scheduler] Threads ${label} failed: ${err.message}`); }
-  };
   cron.schedule("30 8 * * *",  thText("8:30am"),   { timezone: "America/New_York" });
-  cron.schedule("30 9 * * *",  thNews("9:30am"),   { timezone: "America/New_York" });
+  cron.schedule("30 9 * * *",  thText("9:30am"),   { timezone: "America/New_York" });
   cron.schedule("30 11 * * *", thText("11:30am"),  { timezone: "America/New_York" });
   cron.schedule("30 13 * * *", thText("1:30pm"),   { timezone: "America/New_York" });
   cron.schedule("30 15 * * *", thText("3:30pm"),   { timezone: "America/New_York" });
-  cron.schedule("30 17 * * *", thNews("5:30pm"),   { timezone: "America/New_York" });
+  cron.schedule("30 17 * * *", thText("5:30pm"),   { timezone: "America/New_York" });
   cron.schedule("30 20 * * *", thText("8:30pm"),   { timezone: "America/New_York" });
 
   // ── VARIATION QUEUE — every 30 minutes (crash-safe, survives restarts) ───
