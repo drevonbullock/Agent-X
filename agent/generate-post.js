@@ -232,12 +232,32 @@ export async function generateSeedComment(postText) {
   return msg.content[0].text.trim().replace(/^["']|["']$/g, "").replace(/\s*[\u2014\u2013]\s*/g, ", ");
 }
 
-export async function generateLinkedInPost(_copyStyleId = null) {
+export async function generateLinkedInPost(_copyStyleId = null, seq = null) {
   // All scheduled LinkedIn text posts are casual conversation starters now
   // (Dre, 2026-07-24). News cards are handled separately by news-agent; the
   // harsh statement voice lives only on the videos.
-  const postText = await generateConversationStarter({ maxChars: 600 });
-  return { postText, format: "conversation" };
+  //
+  // Same provoke/invite A/B as Threads. LinkedIn only posts 1x/day, so this
+  // reads far slower (about 2.5 weeks to clear 5 of each), but the shape
+  // question is identical: does a defensible claim that invites people in beat a
+  // flat provocation, measured by whether the account grows rather than by raw
+  // comment volume.
+  const n = typeof seq === "number" ? seq : await linkedInPostCount();
+  const variant = n % 2 === 0 ? "provoke" : "invite";
+  const postText = await generateConversationStarter({
+    maxChars: 600, platform: "linkedin", variantHint: THREADS_VARIANTS[variant],
+  });
+  return { postText, format: "conversation", variant };
+}
+
+async function linkedInPostCount() {
+  try {
+    const { default: supabase } = await import("../supabase/client.js");
+    const { count } = await supabase.from("posts")
+      .select("*", { count: "exact", head: true })
+      .eq("platform", "linkedin").eq("post_type", "text");
+    return count ?? 0;
+  } catch { return Math.floor(Date.now() / 86400000); }
 }
 
 // ─── THREADS POST ────────────────────────────────────────────────────────────
@@ -325,15 +345,16 @@ async function threadsPostCount() {
 
 // Which shape actually grows the account. Comments alone cannot answer that, so
 // this reports likes and shares alongside them: a post that earns replies but no
-// likes is being argued with, not agreed with.
-export async function threadsVariantReport({ days = 14 } = {}) {
+// likes is being argued with, not agreed with. Works for any platform running
+// the provoke/invite A/B.
+export async function platformVariantReport(platform, { days = 30 } = {}) {
   const { default: supabase } = await import("../supabase/client.js");
   const since = new Date(Date.now() - days * 86400000).toISOString();
   const { data } = await supabase.from("posts")
     .select("variant,likes,comments,shares,views")
-    .eq("platform", "threads").gte("created_at", since)
+    .eq("platform", platform).gte("created_at", since)
     .in("variant", ["provoke", "invite"]);
-  if (!data?.length) return { rows: [], note: "No tagged Threads posts yet." };
+  if (!data?.length) return { rows: [], note: `No tagged ${platform} posts yet.` };
 
   const agg = {};
   for (const p of data) {
@@ -351,6 +372,11 @@ export async function threadsVariantReport({ days = 14 } = {}) {
   }));
   return { rows };
 }
+
+// Threads reads on a 14-day window (7 posts/day = plenty). LinkedIn is 1/day so
+// it needs a 30-day window to gather a readable sample.
+export const threadsVariantReport = (opts = {}) => platformVariantReport("threads", { days: 14, ...opts });
+export const linkedInVariantReport = (opts = {}) => platformVariantReport("linkedin", { days: 30, ...opts });
 
 // ─── VIDEO MODE ──────────────────────────────────────────────────────────────
 // Returns { caption, videoScript, videoStyle } for Hyperframes rendering.

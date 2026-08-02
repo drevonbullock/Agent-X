@@ -28,6 +28,7 @@ export const HELP = `🕯️ *Wick's Wisdom*
 /pause — stop all publishing
 /resume — start publishing again
 /threads — which Threads variant is winning
+/linkedin — which LinkedIn variant is winning
 /help — this list
 
 Generating a new batch needs the Higgsfield CLI, which only runs on Dre's Mac.`;
@@ -138,15 +139,25 @@ export async function cmdStatus() {
 // different question: not "which format gets engagement" but "which SHAPE gets
 // replies worth having". Likes per comment is the tell, a reply with a like
 // behind it is agreement, a reply without one is an argument.
-export async function cmdThreads() {
-  const { threadsVariantReport } = await import("../agent/generate-post.js");
-  const { rows, note } = await threadsVariantReport({ days: 14 });
-  if (note || !rows.length) return note ?? "No tagged Threads posts yet.";
+async function variantReportText(report, title, window) {
+  const { rows, note } = await report;
+  if (note || !rows.length) return note ?? "No tagged posts yet.";
   const body = rows.map((r) =>
     `*${r.variant}* (${r.n} posts)\n  ${r.avgComments} comments · ${r.avgLikes} likes · ${r.avgShares} shares\n  likes per comment: *${r.likesPerComment ?? "n/a"}*`).join("\n\n");
   const thin = rows.some((r) => r.n < 5);
-  return `🧵 *Threads A/B, last 14 days*\n\n${body}\n\n_Higher likes per comment means people agree rather than argue._` +
+  return `${title} (${window})\n\n${body}\n\n_Higher likes per comment means people agree rather than argue._` +
     (thin ? "\n_Under 5 posts in a variant. Too early to call it._" : "");
+}
+
+export async function cmdThreads() {
+  const { threadsVariantReport } = await import("../agent/generate-post.js");
+  return variantReportText(threadsVariantReport(), "🧵 *Threads A/B*", "last 14 days");
+}
+
+export async function cmdLinkedIn() {
+  const { linkedInVariantReport } = await import("../agent/generate-post.js");
+  // 30-day window: LinkedIn posts 1x/day so a shorter window never has a sample.
+  return variantReportText(linkedInVariantReport(), "💼 *LinkedIn A/B*", "last 30 days");
 }
 
 // ─── ACTIONS ─────────────────────────────────────────────────────────────────
@@ -207,6 +218,7 @@ export async function runCommand(text) {
     case "/recaption": return cmdRecaption();
     case "/topics":    return cmdTopics();
     case "/threads":   return cmdThreads();
+    case "/linkedin":  return cmdLinkedIn();
     case "/status":    return cmdStatus();
     case "/pause":     return cmdPause(true);
     case "/resume":    return cmdPause(false);
@@ -229,6 +241,7 @@ export const BOT_COMMANDS = [
   { command: "recaption", description: "Rewrite every queued caption" },
   { command: "topics",    description: "Episode registry progress" },
   { command: "threads",   description: "Which Threads variant is winning" },
+  { command: "linkedin",  description: "Which LinkedIn variant is winning" },
   { command: "status",    description: "Tokens, queue depth, publishing state" },
   { command: "pause",     description: "Stop all publishing" },
   { command: "resume",    description: "Start publishing again" },

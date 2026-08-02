@@ -85,8 +85,11 @@ export async function runLinkedIn(withImage = true) {
   if (withImage) imageVariantId = await pickVariant("linkedin", "image").catch(() => null);
   else           copyStyleId    = await pickVariant("linkedin", "text").catch(() => null);
 
-  const { postText, format } = await generateLinkedInPost(copyStyleId);
-  console.log(`[LinkedIn] Format: ${format} | "${postText.slice(0, 80)}..."`);
+  // Only the text slot runs the provoke/invite A/B. The image slots keep the
+  // optimizer's design_variant and are not part of the content-shape test.
+  // liCount (from the top of this function) seeds the deterministic alternation.
+  const { postText, format, variant } = await generateLinkedInPost(copyStyleId, withImage ? null : liCount);
+  console.log(`[LinkedIn] Format: ${format}${variant ? ` [${variant}]` : ""} | "${postText.slice(0, 80)}..."`);
 
   const short = isShortPost(postText);
   let imageBuffer = null;
@@ -110,7 +113,7 @@ export async function runLinkedIn(withImage = true) {
 
   const { postId, postUrl } = await postToLinkedIn(postText, imageBuffer, null);
   console.log(`[LinkedIn] Posted! ID: ${postId} | ${postUrl}`);
-  await logPost({ postId, postUrl, postText, format, postType, platform: "linkedin", designVariant });
+  await logPost({ postId, postUrl, postText, format, postType, platform: "linkedin", designVariant, variant: withImage ? null : variant });
 
   // First-comment seed — kickstarts the thread. Requires LinkedIn's gated
   // Community Management API (socialActions); off until LINKEDIN_COMMENT_API=true.
