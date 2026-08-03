@@ -1,25 +1,15 @@
 import "dotenv/config";
 import supabase from "../supabase/client.js";
+import { notifyOps } from "./notify.js";
 
 // ─── TELEGRAM ─────────────────────────────────────────────────────────────────
-
+// Warm leads and repeat engagers are Agent X business (Threads/LinkedIn/IG), NOT
+// Wick's Wisdom content. They go to the OPS channel via notifyOps, which never
+// falls back to the Wick chat — that leak is exactly what Dre reported. Set
+// AGENT_TELEGRAM_CHAT_ID to receive these; until then they log and stay in
+// Supabase + GHL, and the Wick chat stays clean.
 async function sendTelegram(text) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId) {
-    console.warn("[LeadCapture] TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set — skipping alert");
-    return;
-  }
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: "Markdown" }),
-    });
-    if (!res.ok) console.warn(`[LeadCapture] Telegram failed: ${res.status}`);
-  } catch (err) {
-    console.warn(`[LeadCapture] Telegram error: ${err.message}`);
-  }
+  await notifyOps(text);
 }
 
 // ─── GOHIGHLEVEL ──────────────────────────────────────────────────────────────
