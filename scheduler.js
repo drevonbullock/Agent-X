@@ -16,6 +16,7 @@ import { pollTelegramApprovals } from "./modules/wick-telegram.js";
 import { syncWickMetrics } from "./modules/wick-analytics.js";
 import { initTokens, refreshTokens, checkAnthropicCredit, checkLinkedInToken, checkTelegram } from "./modules/token-manager.js";
 import { isHiggsfieldCliAvailable } from "./agent/generate-higgsfield.js";
+import { checkRls } from "./modules/rls-guard.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
@@ -31,6 +32,12 @@ export function startScheduler() {
   // Anthropic key health — a dead/out-of-credits key kills ALL platforms at once.
   checkAnthropicCredit().catch((err) => console.warn(`[Scheduler] Anthropic health check failed: ${err.message}`));
   checkTelegram().catch((err) => console.warn(`[Scheduler] Telegram health check failed: ${err.message}`));
+
+  // Every public table must have RLS on. A table created without it is readable
+  // AND writable by anyone holding the anon key, which is public by design. This
+  // is checked at boot and daily because the last such hole was found by a
+  // vendor email weeks later, not by us.
+  checkRls().catch((err) => console.warn(`[Scheduler] RLS guard failed: ${err.message}`));
 
   // LinkedIn token health — expires ~60 days, can't auto-refresh; dead = text-only posts.
   checkLinkedInToken().catch((err) => console.warn(`[Scheduler] LinkedIn health check failed: ${err.message}`));
@@ -207,6 +214,14 @@ export function startScheduler() {
     } catch (err) {
       console.error(`[Scheduler] YouTubeCutter failed: ${err.message}`);
     }
+  }, { timezone: "America/New_York" });
+
+  // ── RLS GUARD — daily 4am: catch any table created without RLS ──────────────
+  // NOT gated on paused(): a kill switch on posting must never disable a
+  // security check. Auto-protects and alerts the ops channel.
+  cron.schedule("0 4 * * *", async () => {
+    try { await checkRls(); }
+    catch (err) { console.error(`[Scheduler] RLS guard failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── LEAD CAPTURE — every hour: detect repeat engagers → Telegram + GHL ──────

@@ -264,3 +264,35 @@ BEGIN
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
   END LOOP;
 END $$;
+
+-- ─── RLS GUARD FUNCTIONS ─────────────────────────────────────────────────────
+-- Backing the boot/daily check in modules/rls-guard.js. Both are SECURITY
+-- DEFINER (they read pg_class / run DDL) with execute revoked from anon, so an
+-- attacker can neither enumerate unprotected tables nor call them.
+CREATE OR REPLACE FUNCTION public.rls_audit()
+RETURNS TABLE(unprotected_table TEXT)
+LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  SELECT c.relname::text FROM pg_class c
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'public' AND c.relkind = 'r' AND NOT c.relrowsecurity
+  ORDER BY 1;
+$$;
+
+-- Can ONLY turn RLS on, never off, and never creates a policy, so the worst it
+-- can do is remove anon access.
+CREATE OR REPLACE FUNCTION public.rls_protect(target TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+DECLARE ok BOOLEAN;
+BEGIN
+  SELECT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+    WHERE n.nspname='public' AND c.relkind='r' AND c.relname=target) INTO ok;
+  IF NOT ok THEN RAISE EXCEPTION 'no such public table: %', target; END IF;
+  EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', target);
+  RETURN true;
+END $$;
+
+REVOKE ALL ON FUNCTION public.rls_audit()          FROM public, anon, authenticated;
+REVOKE ALL ON FUNCTION public.rls_protect(TEXT)    FROM public, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.rls_audit()       TO service_role;
+GRANT EXECUTE ON FUNCTION public.rls_protect(TEXT) TO service_role;
