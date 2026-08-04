@@ -205,3 +205,62 @@ CREATE TABLE IF NOT EXISTS platform_tokens (
   refreshed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   expires_at   TIMESTAMPTZ
 );
+
+-- ─── WICK'S WISDOM — REELS + GENERATED TOPICS ────────────────────────────────
+-- These two were originally created ad-hoc by migration and were missing from
+-- this file, which is why they shipped without RLS (Supabase flagged both as
+-- "RLS Disabled in Public" on 2026-08-03). Defined here so a rebuild is correct.
+
+CREATE TABLE IF NOT EXISTS wick_reels (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  batch_id            TEXT NOT NULL,
+  slot_index          INT  NOT NULL,
+  layout              TEXT NOT NULL,          -- 'STEPS' | 'TIERS'
+  topic_id            INT,
+  pillar              TEXT,
+  suited              BOOLEAN NOT NULL DEFAULT false,
+  copy                JSONB NOT NULL,
+  caption             TEXT,
+  cover_url           TEXT,
+  thumb_url           TEXT,
+  status              TEXT NOT NULL DEFAULT 'approved',
+  telegram_sent_at    TIMESTAMPTZ,
+  telegram_send_count INT NOT NULL DEFAULT 0,
+  ig_media_id         TEXT,
+  post_url            TEXT,
+  published_at        TIMESTAMPTZ,
+  likes    INT DEFAULT 0,  comments INT DEFAULT 0,
+  shares   INT DEFAULT 0,  saves    INT DEFAULT 0,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- New episodes minted when a lane in the fixed registry runs dry (never recycle).
+CREATE TABLE IF NOT EXISTS wick_generated_topics (
+  topic_id   INT  NOT NULL,
+  lane       TEXT NOT NULL,
+  title      TEXT NOT NULL,
+  hook       TEXT,
+  payoff     TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─── ROW LEVEL SECURITY ──────────────────────────────────────────────────────
+-- CREATE TABLE does NOT enable RLS, so every table here would be readable AND
+-- writable by anyone holding the anon key (which is public by design and ships
+-- in any client). Agent X connects with SUPABASE_SECRET_KEY, and the service
+-- role BYPASSES RLS entirely, so enabling it with ZERO policies is exactly what
+-- this system wants: the app keeps full access, anon gets nothing.
+--
+-- Deliberately no policies. Adding one would GRANT access, not restrict it.
+-- Only add policies if a browser client ever talks to Supabase directly.
+DO $$
+DECLARE t TEXT;
+BEGIN
+  FOR t IN
+    SELECT c.relname FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relkind = 'r'
+  LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
+  END LOOP;
+END $$;
