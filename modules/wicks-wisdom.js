@@ -409,15 +409,41 @@ export async function publishNextApproved() {
     .order("created_at", { ascending: true });
   if (!queue?.length) { console.log("[Wick] No approved posts queued — nothing to publish."); return null; }
 
-  // Alternate styles: prefer the oldest approved post whose format differs from
-  // the one published most recently. Falls back to plain FIFO when the queue is
-  // all one format, so a single-format queue still drains.
+  // DEDUP GUARD: never publish an episode whose topic already went out. A topic
+  // can end up queued twice (an old batch and a rebuild covering the same
+  // episode), and without this the same idea appears on the grid twice. Any such
+  // row is retired here rather than published.
+  const { data: posted } = await supabase.from("wick_posts")
+    .select("topic_id").eq("status", "posted").not("topic_id", "is", null);
+  const postedTopics = new Set((posted ?? []).map((r) => r.topic_id));
+  const fresh = [];
+  for (const p of queue) {
+    if (p.topic_id != null && postedTopics.has(p.topic_id)) {
+      await supabase.from("wick_posts").update({ status: "rejected" }).eq("id", p.id);
+      console.log(`[Wick] Skipping ep${p.topic_id} (${p.format}) — that episode already published; retiring the duplicate.`);
+    } else {
+      fresh.push(p);
+    }
+  }
+  if (!fresh.length) { console.log("[Wick] Nothing left to publish after dedup."); return null; }
+
+  // Alternate styles: prefer the oldest fresh post whose format differs from the
+  // one published most recently. Falls back to FIFO so a single-format queue
+  // still drains.
   const { data: last } = await supabase.from("wick_posts")
     .select("format").eq("status", "posted")
     .order("published_at", { ascending: false }).limit(1);
   const lastFormat = last?.[0]?.format ?? null;
 
-  const post = queue.find((p) => p.format !== lastFormat) ?? queue[0];
+  const post = fresh.find((p) => p.format !== lastFormat) ?? fresh[0];
+
+  // RACE GUARD: claim the row before publishing. A conditional update flips it
+  // out of "approved" so a concurrent run (cron retry, manual publish) cannot
+  // grab the same post and publish it twice.
+  const { data: claimed } = await supabase.from("wick_posts")
+    .update({ status: "posting" }).eq("id", post.id).eq("status", "approved")
+    .select("id").maybeSingle();
+  if (!claimed) { console.log(`[Wick] ${post.id} already claimed by another run — skipping.`); return null; }
   if (lastFormat) {
     console.log(`[Wick] Last posted: ${lastFormat} → now: ${post.format}${post.format === lastFormat ? " (no alternative in queue)" : ""}`);
   }
@@ -445,9 +471,10 @@ export async function publishNextApproved() {
     } catch { /* notification is best effort */ }
     return res;
   } catch (err) {
-    // Never restart the whole flow after a publish failure — it creates a
-    // duplicate parent container. Leave it approved and let the next slot retry.
-    console.error(`[Wick] Publish failed (stays approved for retry): ${err.message}`);
+    // Release the claim back to approved so the next slot retries. Without this
+    // a failed publish would strand the post in "posting" forever.
+    await supabase.from("wick_posts").update({ status: "approved" }).eq("id", post.id).eq("status", "posting");
+    console.error(`[Wick] Publish failed (released for retry): ${err.message}`);
     throw err;
   }
 }
