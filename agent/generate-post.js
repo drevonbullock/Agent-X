@@ -73,8 +73,9 @@ Final line: a short specific question the reader can actually answer. Not "what 
 Do NOT open with "Most people think" or "Everyone says" or "The common belief is." That opener is dead on LinkedIn.
 Open with the claim you are given, stated as settled fact in one short declarative sentence. Not a debate topic. A fact.
 Then argue it in 3-4 sentences via WHAT, WHY, and WHEN only — never the HOW. No hedging. Never "in my experience" or "in my opinion."
-Attack the group's identity behind the opposing view, not just the idea.
-Final line: leave the dangling counterargument you are given hanging, unanswered, phrased so the reader has to argue back.`,
+Attack the IDEA and the HABIT behind the opposing view, never the group's identity. Insulted groups reply to defend themselves; they do not reshare.
+Stay on ground the author actually works on (AI automation for small and service businesses). Never make authority claims about fields he does not work in.
+Final line: acknowledge the strongest counterargument you are given in half a sentence, then ask the reader which side matches what they have actually seen.`,
   },
 
   story: {
@@ -204,10 +205,14 @@ So: land a take you can defend, or ask a question you genuinely do not know the 
       role: "user",
       content: `${CONVERSATION_VOICE}
 ${threadsTune}${variantHint ? "\n" + variantHint + "\n" : ""}${avoid}
-Underlying idea to spin into a casual conversation starter (soften it, do NOT state it as harsh fact): "${t.claim}"
-An angle people naturally have feelings about: "${t.bait}"
+Underlying idea to spin into a casual, confident post: "${t.claim}"
 
-Write one casual, brief conversation starter under ${maxChars} characters. Make people want to reply.`,
+STRESS TEST (do NOT put this in the post): the strongest objection to that claim is "${t.bait}". Use it only to check your wording holds up. Do NOT quote it, do NOT argue with it, and above all do NOT fold it into the post as your own doubt. Writing "though maybe it's just <objection>" wrecks the claim: it reads as hedging, and nobody reposts a post whose author already talked themselves out of it. If the claim cannot survive that objection, narrow the claim until it can.
+
+NO HEDGING. Ban "probably", "maybe", "I wonder", "kind of", "I think", "in my opinion", "curious if". State it and stand behind it.
+Do not narrate the author's own experience ("most rollouts I have seen", "I have built"). The claim argues itself.
+
+Write one brief post under ${maxChars} characters that a reader would repost without adding a caption.`,
     }],
   });
   return message.content[0].text.trim()
@@ -237,13 +242,12 @@ export async function generateLinkedInPost(_copyStyleId = null, seq = null) {
   // (Dre, 2026-07-24). News cards are handled separately by news-agent; the
   // harsh statement voice lives only on the videos.
   //
-  // Same provoke/invite A/B as Threads. LinkedIn only posts 1x/day, so this
+  // Same useful/resonant A/B as Threads. LinkedIn only posts 1x/day, so this
   // reads far slower (about 2.5 weeks to clear 5 of each), but the shape
-  // question is identical: does a defensible claim that invites people in beat a
-  // flat provocation, measured by whether the account grows rather than by raw
-  // comment volume.
+  // question is identical: which shape earns reposts rather than arguments,
+  // measured by whether the account grows rather than by raw comment volume.
   const n = typeof seq === "number" ? seq : await linkedInPostCount();
-  const variant = n % 2 === 0 ? "provoke" : "invite";
+  const variant = n % 2 === 0 ? "useful" : "resonant";
   const postText = await generateConversationStarter({
     maxChars: 600, platform: "linkedin", variantHint: THREADS_VARIANTS[variant],
   });
@@ -270,7 +274,8 @@ Rules (non-negotiable):
 - NEVER write something that "sounds slightly wrong" to bait a correction. That earns comments from people telling you you are wrong, which reads as volume and builds nothing: correctors do not follow, do not repost, and do not come back except to argue. Be DEBATABLE BUT DEFENSIBLE. Someone should be able to disagree with you and still think you are worth following.
 - Raw and direct. Short sentences. Fragments when they hit harder.
 - One real insight. No fluff. No setup that takes 2 lines to get to the point.
-- ALWAYS end with a question. One short question that invites a reply. This is the most important rule.
+- A question at the end is OPTIONAL, not mandatory. A question earns a reply; a clean, complete, quotable line earns a repost, and reposts are what reach non-followers. Never bolt a question onto a post that already lands. Never use a generic one ("what do you think?" is banned).
+- The post must stand on its own. If someone reposts it with no caption, it should still make sense and still make them look sharp for sharing it.
 - Max 380 characters total
 - No hashtags
 - No em dashes, no hyphens as pauses
@@ -313,20 +318,32 @@ const THREADS_TOPICS = [
 // So: alternate two shapes and tag every post, rather than guessing from five
 // data points. Variant is written to posts.variant and read back by
 // threadsVariantReport().
+// ROUND 2 (2026-08-06). Round 1 ran provoke vs invite over 9 posts each and
+// answered its question, just not usefully:
+//
+//   provoke  1.8 comments/post   0.1 likes   likes-per-comment 0.06
+//   invite   0.2 comments/post   0   likes   likes-per-comment 0
+//
+// Provoke won comment volume 9x. Both produced ZERO reposts, and the account
+// gained 2 followers in 30 days. One like per ~17 replies is the signature of
+// an argument, not an audience, so the winner was winning the wrong game.
+//
+// Round 2 drops comment count entirely. Both variants are repost mechanics,
+// because reposts are what put a post in front of non-followers and follows
+// come from non-followers. The scoring metric is now REPOSTS PER POST.
 export const THREADS_VARIANTS = {
-  // A — the existing controversy voice. Stated as fact, does not care if you
-  // like it. This is what produced the outlier.
-  provoke: `VARIANT: state the take flatly and with conviction. Do not hedge it, do not soften it, do not ask permission. A confident claim someone will want to push back on.`,
+  // A — worth forwarding. Reposted because it is USEFUL.
+  useful: `VARIANT: make the post concretely useful on its own. One specific mechanism, number, or named workflow that a business owner could act on today without replying to you. The test: would someone forward this to their operations person? Do not end on a dare. If it teaches nothing, rewrite it.`,
 
-  // B — debatable but defensible, and it ends somewhere genuinely open.
-  invite: `VARIANT: make a claim you can defend, then hand the floor over. The post must end on a question you do not already know the answer to, so the natural reply is someone ADDING their own experience rather than correcting yours. If the only possible reply is "actually, no", rewrite it.`,
+  // B — worth co-signing. Reposted because it is TRUE and unsaid.
+  resonant: `VARIANT: name a thing your reader has felt but never put into words, in one clean line. The test: would someone repost this because it says what they already believed and makes them look sharp for sharing it? It must be a claim they want to CO-SIGN, not one they want to correct. If the natural reply is "actually, no", rewrite it.`,
 };
 
 // Deterministic alternation so a week lands close to an even split rather than
 // whatever a coin flip decides.
 export async function generateThreadsPost(seq) {
   const n = typeof seq === "number" ? seq : await threadsPostCount();
-  const variant = n % 2 === 0 ? "provoke" : "invite";
+  const variant = n % 2 === 0 ? "useful" : "resonant";
   const text = await generateConversationStarter({
     maxChars: 480, platform: "threads",
     variantHint: THREADS_VARIANTS[variant],
@@ -353,7 +370,7 @@ export async function platformVariantReport(platform, { days = 30 } = {}) {
   const { data } = await supabase.from("posts")
     .select("variant,likes,comments,shares,views")
     .eq("platform", platform).gte("created_at", since)
-    .in("variant", ["provoke", "invite"]);
+    .in("variant", ["useful", "resonant", "provoke", "invite"]);
   if (!data?.length) return { rows: [], note: `No tagged ${platform} posts yet.` };
 
   const agg = {};
@@ -365,11 +382,13 @@ export async function platformVariantReport(platform, { days = 30 } = {}) {
     variant, n: a.n,
     avgComments: +(a.comments / a.n).toFixed(1),
     avgLikes: +(a.likes / a.n).toFixed(1),
-    avgShares: +(a.shares / a.n).toFixed(1),
-    // The number that separates the two: a reply with a like behind it is
-    // agreement, a reply without one is an argument.
+    // THE metric as of round 2. Reposts (stored in shares, which is Threads
+    // reposts + quotes) are what put a post in front of non-followers, and
+    // follows come from non-followers. Comment count is reported but no longer
+    // ranks anything: round 1's winner led on comments and produced 0 reposts.
+    avgShares: +(a.shares / a.n).toFixed(2),
     likesPerComment: a.comments > 0 ? +(a.likes / a.comments).toFixed(2) : null,
-  }));
+  })).sort((x, y) => y.avgShares - x.avgShares);
   return { rows };
 }
 
@@ -417,7 +436,7 @@ Return ONLY valid JSON. No explanation, no markdown fences.`;
 
 export async function generateVideoPost() {
   // Videos run on the controversy engine: blunt binary claims, 2:1
-  // receipt:ragebait ratio, dangling counterargument left as comment bait.
+  // receipt:sharp ratio, objection used as an internal stress test only.
   const t = pickControversyTopic();
   console.log(`[Agent X] VIDEO MODE | Lane: ${t.lane} | [${t.tag}] ${t.claim}`);
 

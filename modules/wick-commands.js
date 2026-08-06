@@ -143,9 +143,9 @@ async function variantReportText(report, title, window) {
   const { rows, note } = await report;
   if (note || !rows.length) return note ?? "No tagged posts yet.";
   const body = rows.map((r) =>
-    `*${r.variant}* (${r.n} posts)\n  ${r.avgComments} comments · ${r.avgLikes} likes · ${r.avgShares} shares\n  likes per comment: *${r.likesPerComment ?? "n/a"}*`).join("\n\n");
+    `*${r.variant}* (${r.n} posts)\n  reposts/post: *${r.avgShares}*\n  ${r.avgComments} comments · ${r.avgLikes} likes`).join("\n\n");
   const thin = rows.some((r) => r.n < 5);
-  return `${title} (${window})\n\n${body}\n\n_Higher likes per comment means people agree rather than argue._` +
+  return `${title} (${window})\n\n${body}\n\n_Ranked by reposts per post. Reposts reach non-followers, which is where follows come from. Comment count is shown but does not decide the winner: round 1's comment leader produced zero reposts._` +
     (thin ? "\n_Under 5 posts in a variant. Too early to call it._" : "");
 }
 

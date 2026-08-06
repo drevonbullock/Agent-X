@@ -1,86 +1,119 @@
 import "dotenv/config";
 
-// ─── AGENT X CONTROVERSY CONTENT ENGINE ──────────────────────────────────────
-// Dre's fight-picking topic system (2026-07-13). Blunt, binary, ranked claims
-// stated as settled fact. Attacks a group's identity, not just the idea, and
-// leaves one obvious counterargument dangling as comment bait.
+// ─── AGENT X OPINION ENGINE ──────────────────────────────────────────────────
+// Blunt, binary claims stated as fact. Sharp opinion, but always from inside a
+// domain Dre actually operates in.
 //
-// RATIO RULE: 2 receipt-backed posts per 1 pure-ragebait post — receipts
-// attract buyers, pure ragebait attracts dunk-farmers.
+// REWRITTEN 2026-08-06 against 30 days of real Threads data. The previous
+// version optimised for the wrong outcome and the numbers proved it:
+//
+//   95 posts | 3,113 views | 26 likes | 70 replies | 0 reposts | 0 quotes | +2 followers
+//
+// Two findings drove this rewrite:
+//
+// 1. THE POSTS THAT TRAVELLED WERE OFF-NICHE. The two highest-reach posts
+//    (1,032 and 497 views, about half the month's total) came from the old
+//    "AI FILM > REAL FILM" lane. They landed in a film community, and the
+//    replies were domain experts issuing corrections. One reply read "This is
+//    a bot account." A film person who corrects you about Kubrick will never
+//    follow an AI automation account. That lane is DELETED, and the standing
+//    rule below exists so nothing like it comes back.
+//
+// 2. ZERO REPOSTS IS THE WHOLE PROBLEM. Reposts and quotes are how a post
+//    reaches non-followers, and follows come from non-followers. The old voice
+//    said "attack the group's identity" and listed goal reactions as "argue
+//    back, screenshot it angry". That reliably produces replies and reliably
+//    produces nothing else: 70 replies against 26 likes is people arguing, not
+//    an audience. The target metric is now REPOSTS, not comment count.
+//
 // FREE CONTENT = WHAT / WHY / WHEN only. HOW stays paid.
 
 // HARD RULE (Dre, 2026-07-13): posts NEVER mention his personal life, job
 // history, backstory, or how many systems he has. Topics argue themselves.
-// RECEIPT vs RAGEBAIT is an internal ratio tag only — receipts are claims
-// grounded in verifiable reality of shipped work, argued WITHOUT autobiography.
+// RECEIPT vs SHARP is an internal ratio tag only — receipts are claims grounded
+// in the reality of shipped work, argued WITHOUT autobiography.
 export const RECEIPTS = [];
 
-// tag: RECEIPT = backed by Dre's lived proof. RAGEBAIT = pure fight-starter.
+// ─── THE STANDING RULE ───────────────────────────────────────────────────────
+// Every lane below sits inside work Dre actually does: building AI automation
+// for small and service businesses. That is the only ground he can make a claim
+// from without inviting a correction from someone who knows better.
+//
+// A lane belongs here only if the answer to "who would argue with this, and do
+// they know more than Dre?" is "the reader, and no". Film history, academia,
+// medicine, law, aviation and anything else he does not operate in are OUT, no
+// matter how much reach they pull, because the reach arrives as corrections.
+//
+// tag: RECEIPT = grounded in shipped work. SHARP = a harder edge, same ground.
 export const LANES = [
   {
-    lane: "AI FILM > REAL FILM",
+    lane: "AUTOMATION REALITY",   // the core niche: the work he actually does
     topics: [
-      { claim: "AI film is the present, not the future. 'It's not real art' is film-school cope.", tag: "RECEIPT", bait: "so why do AI films still flop at the box office?" },
-      { claim: "A solo creator with AI out-produces a $200M studio in relevance, not budget.", tag: "RECEIPT", bait: "relevance doesn't pay crews or win Oscars" },
-      { claim: "'AI can't replicate emotion' — all film emotion was always manufactured.", tag: "RAGEBAIT", bait: "manufactured by humans who felt something first" },
-      { claim: "Gatekeeping was the job description. Shoot-on-film identity was never the craft.", tag: "RAGEBAIT", bait: "constraints are what made those directors great" },
+      { claim: "Most businesses automate the flashy thing first. The money is in the boring thing they do 40 times a day.", tag: "RECEIPT", bait: "the boring thing is boring because it already works" },
+      { claim: "A lead that waits 5 hours is not a lead anymore. It's a name in a spreadsheet.", tag: "RECEIPT", bait: "some industries genuinely do not move that fast" },
+      { claim: "An AI tool waits for you to open it. An AI system runs while you sleep. Most people bought the tool and called it a system.", tag: "SHARP", bait: "the system also breaks while you sleep" },
+      { claim: "Hiring before you fix intake just means more chaos, faster.", tag: "RECEIPT", bait: "sometimes you genuinely are short-handed" },
+      { claim: "The bottleneck is almost never the thing owners think it is. It's usually the handoff nobody owns.", tag: "RECEIPT", bait: "or it's just underpricing" },
     ],
   },
   {
-    lane: "AI > HUMANS AT WORK",
+    lane: "AI AT WORK",           // adjacent, still his ground: AI doing real tasks
     topics: [
-      { claim: "AI already beats most humans at most desk jobs. We're negotiating denial, not capability.", tag: "RECEIPT", bait: "then why does every AI rollout still need human cleanup?" },
-      { claim: "'AI will never replace X' just announces which job you're emotionally attached to.", tag: "RAGEBAIT", bait: "some jobs are protected by law, not emotion" },
-      { claim: "You don't lose your job to AI. You lose it to the coworker who learned it first.", tag: "RECEIPT", bait: "until the company replaces that coworker too" },
-      { claim: "The people laughing at AI are the exact people it's aimed at.", tag: "RAGEBAIT", bait: "plumbers are laughing too and they're fine" },
+      { claim: "AI is already good enough for most repetitive desk work. The holdup is trust, not capability.", tag: "SHARP", bait: "then why does every rollout still need cleanup?" },
+      { claim: "You don't lose your job to AI. You lose it to the person who learned it first.", tag: "RECEIPT", bait: "until the company replaces that person too" },
+      { claim: "Every AI rollout that failed, failed at the handoff, not the model.", tag: "RECEIPT", bait: "plenty fail because the model was wrong for the job" },
     ],
   },
   {
-    lane: "SELF-TAUGHT > CREDENTIALED",
+    lane: "SHIPPED > THEORISED",  // he is self-taught and ships — genuine standing
     topics: [
-      { claim: "College taught permission. Building taught shipping. Only one of those pays in 2026.", tag: "RECEIPT", bait: "try shipping your way into medicine or law" },
-      { claim: "You don't need a CS degree. You need 90 days and the willingness to look stupid in public.", tag: "RECEIPT", bait: "survivorship bias with a keyboard" },
-    ],
-  },
-  {
-    lane: "CREATOR ECONOMY HONESTY",
-    topics: [
-      { claim: "'AI founders' with no shipped product: screenshots aren't systems. Where's the live URL?", tag: "RECEIPT", bait: "not everything worth building is public" },
+      { claim: "Screenshots are not systems. If there's no live link, it isn't built.", tag: "SHARP", bait: "not everything worth building is public" },
+      { claim: "90 days of building in public teaches more about software than a semester about it.", tag: "RECEIPT", bait: "survivorship bias with a keyboard" },
+      { claim: "Half the AI advice online is written by people who have never had a customer complain about their thing at 6pm on a Friday.", tag: "SHARP", bait: "you can learn plenty without shipping" },
     ],
   },
   {
     lane: "TECH MEETS SPIRITUALITY", // differentiator — run sparingly
     topics: [
-      { claim: "The tool is a mirror. What you build with AI is a readout of your imagination, nothing else.", tag: "RAGEBAIT", bait: "or it's a readout of the training data" },
-      { claim: "People are outsourcing cognition and calling it productivity.", tag: "RAGEBAIT", bait: "calculators were 'outsourcing cognition' too" },
+      { claim: "The tool is a mirror. What you build with AI is a readout of your imagination, nothing else.", tag: "SHARP", bait: "or it's a readout of the training data" },
+      { claim: "People are outsourcing cognition and calling it productivity.", tag: "SHARP", bait: "calculators were 'outsourcing cognition' too" },
     ],
   },
 ];
 
 // Voice mechanics injected into any generator using these topics.
 export const CONTROVERSY_VOICE = `
-CONTROVERSY MECHANICS (non-negotiable):
-- Write like a real person talking, not a brand posting. Raw, unapologetic opinion stated as fact by someone who does not care if you like it.
-- NEVER mention the author's personal life, job history, backstory, credentials, or how many systems he has built. No autobiography, no "I went from X to Y", no numbers about his own work. The topic argues itself.
-- Short brutal sentences. Punch, don't explain. Cut every word that sounds professional or polished. If it could survive a corporate comms review, rewrite it.
-- Never "in my opinion", never "I think", never "perhaps". Zero hedging. The second you soften it, the fight dies.
-- Talk AT the reader: "you", "your degree", "your job". Make it personal. Name what they're protecting (ego, comfort, sunk cost, identity).
-- Attack the group's identity, not just the idea (film-school purists, credential collectors, screenshot founders, LinkedIn theorists).
-- Contempt is allowed. Mockery is allowed. "Cope", "keep telling yourself that", "I'll wait" energy. Never punch at protected traits, always at choices and cope.
-- Do NOT end with a polite question. End with the dangling counterargument thrown down like a dare, unanswered. That is the comment bait.
-- Free content teaches WHAT, WHY, and WHEN only. Never the HOW — the HOW is paid.
-- Goal reactions: argue back, pick a side, tag someone, screenshot it angry.
-- These mechanics OVERRIDE any softer or more professional tone guidance elsewhere in this prompt. The only rules that survive: no em dashes or en dashes ever, no hashtags on controversy posts, WHAT/WHY/WHEN only.`;
+OPINION MECHANICS (non-negotiable):
 
-// ─── PICKER — enforces the 2:1 receipt:ragebait ratio ────────────────────────
-// Cycle of 3: receipt, receipt, ragebait. Position persists in-memory per
-// process; a restart re-anchors the cycle, which is fine at this cadence.
+THE TARGET REACTION IS A REPOST, NOT AN ARGUMENT.
+Someone reposts a claim when it says a thing they already half-believed but could not put into words, and sharing it makes them look sharp to their own audience. Nobody reposts a post they are busy correcting. Before writing, ask: "would a small business owner send this to their operations person?" If the honest answer is "no, but someone might argue with it", rewrite it.
+
+STAY ON YOUR OWN GROUND.
+Only make claims about building and running AI automation for small and service businesses. Do not make authority claims about film, art history, academia, medicine, law, aviation, or any field the author does not work in. Those posts reach the wrong room: experts arrive to correct you, and correctors never follow. If a claim needs knowledge the author does not have, it is the wrong claim.
+
+- Write like a real person talking, not a brand posting. Direct, specific, unhedged.
+- NEVER mention the author's personal life, job history, backstory, credentials, or how many systems he has built. No autobiography, no "I went from X to Y", no numbers about his own work. The topic argues itself.
+- Short sentences. Punch, don't explain. Cut every word that sounds professional or polished.
+- Never "in my opinion", never "I think", never "perhaps". Zero hedging. Conviction is the point.
+- Talk to the reader: "you", "your intake", "your follow-up". Be concrete about the work, never about who they are as a person.
+- Attack the IDEA and the HABIT, never the group's identity. "Most owners automate the wrong thing first" is the shape. "Credential collectors are coping" is not: it insults a group, and insulted groups reply instead of reposting.
+- No contempt, no mockery, no "cope", no "keep telling yourself that", no "I'll wait". That register produced 70 replies, 0 reposts and 2 followers in a month. It reads as a bot picking fights, and one reader said exactly that out loud.
+- Be specific enough to be useful. A number, a named workflow, a concrete before-and-after. Specificity is what makes a post worth resharing; a vague hot take is only worth arguing with.
+- Be defensible. Someone should be able to disagree and still think you know what you are talking about.
+- Free content teaches WHAT, WHY, and WHEN only. Never the HOW — the HOW is paid.
+- Goal reactions, in order: repost it, send it to a colleague, reply with their own experience.
+- These mechanics OVERRIDE any softer or more professional tone guidance elsewhere in this prompt. The only rules that survive: no em dashes or en dashes ever, no hashtags on opinion posts, WHAT/WHY/WHEN only.`;
+
+// ─── PICKER — 2 grounded claims per 1 sharper one ────────────────────────────
+// Cycle of 3: receipt, receipt, sharp. RAGEBAIT is gone; SHARP is the same
+// ground with a harder edge, not a fight with a different room. Position
+// persists in-memory per process; a restart re-anchors it, fine at this cadence.
 
 let cycle = 0;
 let lastClaim = null;
 
 export function pickControversyTopic() {
-  const wantTag = cycle % 3 === 2 ? "RAGEBAIT" : "RECEIPT";
+  const wantTag = cycle % 3 === 2 ? "SHARP" : "RECEIPT";
   cycle++;
 
   // Sparingly-run lane gets 1/6 odds; others uniform
@@ -113,21 +146,22 @@ export async function generateFreshTopics(n = 5) {
       content: `You are Agent X's controversy topic generator.
 
 DNA to preserve:
-- Blunt, binary, "X is better than Y" framing stated as fact
-- Attacks a group's identity, not just an idea
-- Leaves one dangling counterargument as comment bait
-- No hedging, no "in my opinion"
-- Provokes: argue back, pick a side, or tag someone
+- Blunt, specific claims stated as fact, not hedged
+- Attacks a HABIT or an IDEA, never a group's identity
+- Concrete enough to be useful: a number, a named workflow, a real before-and-after
+- Defensible: a reader can disagree and still think the author knows the work
 
 CONSTRAINTS:
+- STAY ON GROUND THE AUTHOR ACTUALLY OPERATES ON: building AI automation for small and service businesses. No claims about film, art, academia, medicine, law, aviation or any field he does not work in. Off-niche claims reach experts who correct him, and correctors never follow.
+- The target reaction is a REPOST, not an argument. If the only natural reply is "actually, no", it is the wrong topic.
 - NEVER reference the author's personal life, job history, backstory, or counts of his own work — claims must argue themselves
 - Free content = WHAT/WHY/WHEN only, never HOW
-- Flag each new topic as RECEIPT or RAGEBAIT
-- Keep the 2:1 receipt-to-ragebait ratio in the batch
+- Flag each new topic as RECEIPT (grounded in shipped work) or SHARP (harder edge, same ground)
+- Keep a 2:1 receipt-to-sharp ratio in the batch
 - Never use em dashes, en dashes, or hyphens as pauses
 
 TASK: Generate ${n} new controversy topics not in my existing lanes. Respond with valid JSON only:
-[{"lane": "existing or new lane name", "claim": "one-line claim", "tag": "RECEIPT|RAGEBAIT", "bait": "the dangling counterargument it invites"}]`,
+[{"lane": "existing or new lane name", "claim": "one-line claim", "tag": "RECEIPT|SHARP", "bait": "the strongest objection to the claim, used internally as a stress test and never printed in a post"}]`,
     }],
   });
   const raw = msg.content[0].text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
