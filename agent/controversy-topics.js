@@ -35,14 +35,23 @@ import "dotenv/config";
 export const RECEIPTS = [];
 
 // ─── THE STANDING RULE ───────────────────────────────────────────────────────
-// Every lane below sits inside work Dre actually does: building AI automation
-// for small and service businesses. That is the only ground he can make a claim
-// from without inviting a correction from someone who knows better.
+// The territory is AI: agents, automation, AI ethics, and where this is all
+// heading. Dre builds these systems, so the whole space is his ground, including
+// the big-picture and ethical questions. Being visionary is on-brand; being
+// vague is not.
 //
-// A lane belongs here only if the answer to "who would argue with this, and do
-// they know more than Dre?" is "the reader, and no". Film history, academia,
-// medicine, law, aviation and anything else he does not operate in are OUT, no
-// matter how much reach they pull, because the reach arrives as corrections.
+// What is OUT is making authority claims about SOMEONE ELSE'S CRAFT. The test is
+// not "is this topic big" but "if an expert replies, am I the one who knows the
+// subject?". Two examples of the line:
+//
+//   IN   "Nobody has answered who is liable when an agent acts on a bad call."
+//        Dre builds agents. He is the expert in the room. Replies ADD.
+//   OUT  "Shooting on film did not make Kubrick great."
+//        Film history is not his craft. Replies CORRECT. This exact lane
+//        produced half of one month's reach and zero followers.
+//
+// So: argue about AI as hard as you like. Do not argue with a cinematographer
+// about cinematography, a doctor about medicine, or a lawyer about law.
 //
 // tag: RECEIPT = grounded in shipped work. SHARP = a harder edge, same ground.
 export const LANES = [
@@ -73,6 +82,44 @@ export const LANES = [
     ],
   },
   {
+    // Dre builds agents, so the agent shift is the most defensible ground he
+    // has AND the most argued-about topic in the space. High engagement, and
+    // every reply is from someone with less hands-on time than him, not more.
+    lane: "AGENTS",
+    topics: [
+      { claim: "A chatbot answers. An agent decides and acts. Most companies shipped a chatbot and put 'agent' on the invoice.", tag: "SHARP", bait: "the line between the two is blurrier than that" },
+      { claim: "The hard part of an agent was never the model. It's what happens on the third step when something unexpected comes back.", tag: "RECEIPT", bait: "better models make that failure rarer every year" },
+      { claim: "Agents that need a human to check every output are just a slower version of doing it yourself.", tag: "SHARP", bait: "review is what makes them safe to run at all" },
+      { claim: "Most agent demos work because the demo picked the input. Production does not let you pick.", tag: "RECEIPT", bait: "that's true of every piece of software ever demoed" },
+      { claim: "Giving an agent more tools is the easy part. Deciding what it is not allowed to touch is the actual design work.", tag: "RECEIPT", bait: "over-restricting it makes it useless" },
+    ],
+  },
+  {
+    // AI ethics: genuinely high-engagement because people have real stakes, and
+    // Dre has standing because he BUILDS the systems being argued about. The
+    // rule is to argue the practical accountability question, not to lecture.
+    lane: "AI ETHICS",
+    topics: [
+      { claim: "Nobody has answered the simple version of the question: when an agent makes a bad call, who is accountable? The vendor, the operator, or the person who deployed it?", tag: "SHARP", bait: "the same answer as any other software: whoever shipped it" },
+      { claim: "'Human in the loop' is doing a lot of work in a lot of pitch decks. Ask which human, at which step, with the authority to say no.", tag: "SHARP", bait: "a vague safeguard still beats none" },
+      { claim: "An AI that quietly does 80% of a job does more to a role than one that replaces it outright, and nobody is tracking the 80% version.", tag: "RECEIPT", bait: "that's just every tool in history" },
+      { claim: "Consent is the part of AI nobody wants to slow down for. Most people whose work trained these systems still do not know they contributed.", tag: "SHARP", bait: "public data was always fair game" },
+      { claim: "If you cannot explain why your system made a decision, you do not get to call the outcome objective.", tag: "RECEIPT", bait: "humans can't explain their decisions either" },
+    ],
+  },
+  {
+    // The visionary register Dre wants: where this goes next. Kept concrete so
+    // it reads as a builder seeing further, not a guru making predictions.
+    lane: "WHERE THIS GOES",
+    topics: [
+      { claim: "In two years the question stops being which model you use and becomes how many agents you are running and what they are allowed to do.", tag: "SHARP", bait: "most businesses will still be on spreadsheets" },
+      { claim: "Software is turning from something you operate into something you delegate to. The interface for that barely exists yet.", tag: "RECEIPT", bait: "people said the same about voice assistants" },
+      { claim: "The winners of this era will not be the companies with the best model. They will be the ones with the cleanest processes to hand a model.", tag: "SHARP", bait: "the best model just eats the messy processes too" },
+      { claim: "Every company is about to find out how much of its process only existed in one person's head.", tag: "RECEIPT", bait: "that's what documentation was always for" },
+      { claim: "The gap is not going to be between people who use AI and people who don't. It's going to be between people who can describe what they want and people who can't.", tag: "SHARP", bait: "the tools will get better at guessing" },
+    ],
+  },
+  {
     lane: "TECH MEETS SPIRITUALITY", // differentiator — run sparingly
     topics: [
       { claim: "The tool is a mirror. What you build with AI is a readout of your imagination, nothing else.", tag: "SHARP", bait: "or it's a readout of the training data" },
@@ -89,7 +136,12 @@ THE TARGET REACTION IS A REPOST, NOT AN ARGUMENT.
 Someone reposts a claim when it says a thing they already half-believed but could not put into words, and sharing it makes them look sharp to their own audience. Nobody reposts a post they are busy correcting. Before writing, ask: "would a small business owner send this to their operations person?" If the honest answer is "no, but someone might argue with it", rewrite it.
 
 STAY ON YOUR OWN GROUND.
-Only make claims about building and running AI automation for small and service businesses. Do not make authority claims about film, art history, academia, medicine, law, aviation, or any field the author does not work in. Those posts reach the wrong room: experts arrive to correct you, and correctors never follow. If a claim needs knowledge the author does not have, it is the wrong claim.
+The territory is AI: agents, automation, AI ethics, and where all of this is heading. The author builds these systems, so go as hard as you like on any of it, including the big-picture and ethical questions. Being visionary is on-brand.
+What is off-limits is claiming authority over SOMEONE ELSE'S CRAFT. Never make authority claims about film, art history, academia, medicine, law, or aviation. The test is not "is this topic big" but "if an expert replies, am I the one who knows the subject?". Arguing about who is accountable when an agent misfires is your ground and the replies ADD. Arguing about whether shooting on film made Kubrick great is not, and the replies CORRECT. Correctors never follow.
+
+ENGAGEMENT COMES FROM STAKES, NOT FROM INSULTS.
+The way to earn more of it is to pick the question people actually argue about at work and answer it with conviction: who is accountable, what breaks in production, what is coming next, what everyone is pretending is solved. Take a real side. Say the thing people are circling but not stating. That earns replies from people ADDING their own experience, which is the engagement that compounds, and it earns reposts from people who wanted to say it first.
+Never manufacture engagement by being wrong on purpose or by insulting a group. That produces replies too, and it produced 70 of them last month against 0 reposts and 2 followers.
 
 - Write like a real person talking, not a brand posting. Direct, specific, unhedged.
 - NEVER mention the author's personal life, job history, backstory, credentials, or how many systems he has built. No autobiography, no "I went from X to Y", no numbers about his own work. The topic argues itself.
@@ -152,7 +204,8 @@ DNA to preserve:
 - Defensible: a reader can disagree and still think the author knows the work
 
 CONSTRAINTS:
-- STAY ON GROUND THE AUTHOR ACTUALLY OPERATES ON: building AI automation for small and service businesses. No claims about film, art, academia, medicine, law, aviation or any field he does not work in. Off-niche claims reach experts who correct him, and correctors never follow.
+- TERRITORY: AI. Agents, automation, AI ethics, and where this is heading. The author builds these systems so all of it is fair ground, including visionary and ethical angles. What is off-limits is claiming authority over someone else's craft (film, art, academia, medicine, law, aviation). Test: "if an expert replies, am I the one who knows the subject?"
+- Prefer topics with real STAKES that people argue about at work: accountability, what breaks in production, what is coming, what everyone pretends is solved. Stakes drive engagement; insults drive replies that go nowhere.
 - The target reaction is a REPOST, not an argument. If the only natural reply is "actually, no", it is the wrong topic.
 - NEVER reference the author's personal life, job history, backstory, or counts of his own work — claims must argue themselves
 - Free content = WHAT/WHY/WHEN only, never HOW
