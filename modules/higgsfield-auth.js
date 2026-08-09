@@ -123,9 +123,30 @@ export async function hydrate() {
 // ─── VERIFY + REFRESH ────────────────────────────────────────────────────────
 // `auth token` makes the CLI refresh if the access token is stale. Whatever it
 // writes back gets persisted, so a rotating refresh_token cannot strand us.
-export async function ensureHiggsfieldAuth() {
+// REFRESH ROTATES THE TOKEN. Learned the hard way on 2026-08-09: running
+// `higgsfield auth token` while a batch was generating invalidated the token
+// the batch was using, and 13 generations failed with "Not authenticated" while
+// the CLI reported healthy auth from a separate shell.
+//
+// In production the same collision is real: the reel batch runs 5am and the
+// carousel batch 6am, so an overrunning reel batch would be rotated out from
+// under itself by the carousel batch's auth call.
+//
+// So NEVER refresh a token that is still comfortably valid. Hydrating from the
+// DB is always safe (it only writes a file); it is the `auth token` call that
+// rotates, and it is now skipped unless the token is genuinely close to death.
+const REFRESH_WHEN_UNDER_MS = 2 * 60 * 60 * 1000;   // 2 hours
+
+export async function ensureHiggsfieldAuth({ force = false } = {}) {
   const ok = await hydrate();
   if (!ok) return false;
+
+  const creds = readFileCreds();
+  const msLeft = expiryMs(creds) - Date.now();
+  if (!force && msLeft > REFRESH_WHEN_UNDER_MS) {
+    console.log(`[HF] token valid for ${(msLeft / 3600000).toFixed(1)}h — not refreshing (refresh rotates and would break an in-flight batch)`);
+    return true;
+  }
 
   try {
     execFileSync(HF_BIN, ["auth", "token"], { timeout: 30_000, stdio: "pipe" });
