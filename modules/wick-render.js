@@ -9,7 +9,17 @@ import { launchBrowser } from "../images/browser.js";
 // Higgsfield generates the ART only. Every word of label copy is added here at
 // composite time, so copy can be fixed without re-rolling art (SKILL.md Step 5).
 
-const HF_BIN = process.env.HF_BIN || "higgsfield";
+// Resolve the CLI without relying on PATH. On the Mac it is a global Homebrew
+// symlink; on Railway it is a project dependency at node_modules/.bin, which is
+// NOT on PATH for a binary spawned directly by `node index.js` (only npm
+// scripts get that). Checking the local path first is what lets Railway build.
+function resolveHfBin() {
+  if (process.env.HF_BIN) return process.env.HF_BIN;
+  const local = path.join(process.cwd(), "node_modules", ".bin", "higgsfield");
+  if (fs.existsSync(local)) return local;
+  return "higgsfield";                      // global install / on PATH
+}
+const HF_BIN = resolveHfBin();
 const FFPROBE = process.platform === "darwin" ? "/opt/homebrew/bin/ffprobe" : "/usr/bin/ffprobe";
 const WICK_ELEMENT = process.env.WICK_ELEMENT_ID || "5e934732-6de4-438a-b3a6-024144603518";
 const MODEL = process.env.WICK_IMAGE_MODEL || "gpt_image_2";

@@ -251,6 +251,16 @@ async function planFormats(perWeek) {
 // the automatic plan under-served, without re-running a whole batch.
 export async function runWeeklyBatch({ versus, order, formats, rotating = "auto" } = {}) {
   const perWeek = formats?.length ?? parseInt(process.env.WICK_POSTS_PER_WEEK ?? "14", 10);
+  // Refresh credentials before the gate. The access token lives ~24h, so a
+  // long-running Railway container would otherwise reach Sunday with a dead
+  // token and skip the batch for a reason that was entirely fixable.
+  try {
+    const { ensureHiggsfieldAuth } = await import("./higgsfield-auth.js");
+    await ensureHiggsfieldAuth();
+  } catch (err) {
+    console.warn(`[Wick] higgsfield auth refresh failed: ${err.message}`);
+  }
+
   if (!hfAvailable()) {
     // LOUD, not silent. This branch is ALWAYS taken on Railway (no Higgsfield
     // CLI there), so a quiet return here meant the weekly carousel batch no-opped

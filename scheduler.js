@@ -17,6 +17,7 @@ import { syncWickMetrics } from "./modules/wick-analytics.js";
 import { initTokens, refreshTokens, checkAnthropicCredit, checkLinkedInToken, checkTelegram } from "./modules/token-manager.js";
 import { isHiggsfieldCliAvailable } from "./agent/generate-higgsfield.js";
 import { checkRls } from "./modules/rls-guard.js";
+import { ensureHiggsfieldAuth } from "./modules/higgsfield-auth.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
@@ -38,6 +39,11 @@ export function startScheduler() {
   // is checked at boot and daily because the last such hole was found by a
   // vendor email weeks later, not by us.
   checkRls().catch((err) => console.warn(`[Scheduler] RLS guard failed: ${err.message}`));
+
+  // Hydrate the Higgsfield credentials file from Supabase. Railway containers
+  // start with no ~/.config/higgsfield, which is why every weekly batch used to
+  // no-op there. Without this the batches cannot generate art.
+  ensureHiggsfieldAuth().catch((err) => console.warn(`[Scheduler] Higgsfield auth failed: ${err.message}`));
 
   // LinkedIn token health — expires ~60 days, can't auto-refresh; dead = text-only posts.
   checkLinkedInToken().catch((err) => console.warn(`[Scheduler] LinkedIn health check failed: ${err.message}`));

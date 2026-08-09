@@ -91,6 +91,16 @@ async function reelTopics(need) {
 
 export async function runWeeklyReels({ count } = {}) {
   const perWeek = count ?? parseInt(process.env.WICK_REELS_PER_WEEK ?? "14", 10);
+  // Refresh credentials before the gate. The access token lives ~24h, so a
+  // long-running Railway container would otherwise reach Sunday with a dead
+  // token and skip the batch for a reason that was entirely fixable.
+  try {
+    const { ensureHiggsfieldAuth } = await import("./higgsfield-auth.js");
+    await ensureHiggsfieldAuth();
+  } catch (err) {
+    console.warn(`[WickReels] higgsfield auth refresh failed: ${err.message}`);
+  }
+
   if (!hfAvailable()) {
     // LOUD, not silent. This branch is ALWAYS taken on Railway (no Higgsfield
     // CLI there), so a quiet return here meant the weekly reel batch no-opped
