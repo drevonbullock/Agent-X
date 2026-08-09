@@ -361,3 +361,45 @@ export async function sendReelToTelegram(r, { force = false } = {}) {
     return false;
   }
 }
+
+// ─── ALERTS — the system must say when it did NOT do something ───────────────
+// 2026-08-09: Dre found the queue empty and had to come ask why. Both weekly
+// batches guard on hfAvailable() and return {skipped:true} after a single
+// console.log. The Higgsfield CLI does not exist on Railway, so on the host
+// that actually runs the cron that guard is ALWAYS true: every Sunday both
+// batches no-opped, nothing was queued, the queue drained, and nobody was told.
+//
+// A silent skip on the one job that feeds the whole account is the bug. Content
+// generation still needs Dre's Mac, but never again without him being told.
+export async function alertWick(text) {
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) {
+    console.warn(`[WickAlert] Telegram not configured. Message:\n${text}`);
+    return false;
+  }
+  // No parse_mode: Telegram's Markdown parser drops the whole message on a
+  // stray apostrophe, which is exactly how a caption once vanished silently.
+  try {
+    await tg("sendMessage", { chat_id: chatId, text });
+    return true;
+  } catch (err) {
+    console.warn(`[WickAlert] send failed: ${err.message}`);
+    return false;
+  }
+}
+
+// Runs daily. Tells Dre BEFORE the queue is empty, not after.
+export async function checkWickQueueDepth() {
+  const { count } = await supabase.from("wick_posts")
+    .select("*", { count: "exact", head: true }).in("status", ["approved", "pending"]);
+  const queued = count ?? 0;
+  const days = Math.floor(queued / 2);          // 2 posts/day
+
+  if (queued === 0) {
+    await alertWick("🚨 WICK QUEUE IS EMPTY\n\nNothing will publish today. A batch has to be built on your Mac:\n\nnode -e \"import('./modules/wicks-wisdom.js').then(m=>m.runWeeklyBatch())\"\n\nRailway cannot build batches: the Higgsfield CLI only runs on your machine.");
+  } else if (days <= 2) {
+    await alertWick(`⚠️ WICK QUEUE LOW\n\n${queued} post(s) left, about ${days} day(s) at 2/day.\nBuild the next batch on your Mac before it runs out.`);
+  }
+  console.log(`[Wick] queue depth: ${queued} post(s), ~${days} day(s)`);
+  return { queued, days };
+}

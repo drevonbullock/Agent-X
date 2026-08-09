@@ -92,8 +92,16 @@ async function reelTopics(need) {
 export async function runWeeklyReels({ count } = {}) {
   const perWeek = count ?? parseInt(process.env.WICK_REELS_PER_WEEK ?? "14", 10);
   if (!hfAvailable()) {
-    console.log("[WickReels] Skipped — higgsfield CLI not authenticated on this host.");
-    return { skipped: true };
+    // LOUD, not silent. This branch is ALWAYS taken on Railway (no Higgsfield
+    // CLI there), so a quiet return here meant the weekly reel batch no-opped
+    // every Sunday and the queue drained with nobody told. See alertWick.
+    const msg = "[WickReels] SKIPPED: higgsfield CLI not available on this host. No reel batch was built.";
+    console.error(msg);
+    try {
+      const { alertWick } = await import("./wick-telegram.js");
+      await alertWick("🚨 WICK REEL BATCH DID NOT RUN\n\nThe Higgsfield CLI is not available on this host, so no art could be generated. Railway cannot build batches.\n\nRun it on your Mac to refill the queue.");
+    } catch { /* alerting must never mask the skip */ }
+    return { skipped: true, reason: "higgsfield-cli-unavailable" };
   }
   if (!fs.existsSync(path.join(process.cwd(), SUIT))) {
     console.warn("[WickReels] suit character sheet missing — Money & Systems reels will use the plain sheet");

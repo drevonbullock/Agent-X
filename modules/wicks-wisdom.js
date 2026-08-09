@@ -252,8 +252,16 @@ async function planFormats(perWeek) {
 export async function runWeeklyBatch({ versus, order, formats, rotating = "auto" } = {}) {
   const perWeek = formats?.length ?? parseInt(process.env.WICK_POSTS_PER_WEEK ?? "14", 10);
   if (!hfAvailable()) {
-    console.log("[Wick] Skipped — higgsfield CLI not authenticated on this host.");
-    return { skipped: true };
+    // LOUD, not silent. This branch is ALWAYS taken on Railway (no Higgsfield
+    // CLI there), so a quiet return here meant the weekly carousel batch no-opped
+    // every Sunday and the queue drained with nobody told. See alertWick.
+    const msg = "[Wick] SKIPPED: higgsfield CLI not available on this host. No carousel batch was built.";
+    console.error(msg);
+    try {
+      const { alertWick } = await import("./wick-telegram.js");
+      await alertWick("🚨 WICK CAROUSEL BATCH DID NOT RUN\n\nThe Higgsfield CLI is not available on this host, so no art could be generated. Railway cannot build batches.\n\nRun it on your Mac to refill the queue.");
+    } catch { /* alerting must never mask the skip */ }
+    return { skipped: true, reason: "higgsfield-cli-unavailable" };
   }
   const batchId = `wick-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
   console.log(`\n[Wick] Batch ${batchId} starting`);

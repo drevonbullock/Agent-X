@@ -12,7 +12,7 @@ import { mineCompetitors, loadDynamicThemes } from "./modules/competitor-researc
 import { checkRepeatEngagers } from "./modules/lead-capture.js";
 import { runWeeklyBatch, publishNextApproved } from "./modules/wicks-wisdom.js";
 import { runWeeklyReels } from "./modules/wick-reel-batch.js";
-import { pollTelegramApprovals } from "./modules/wick-telegram.js";
+import { pollTelegramApprovals, checkWickQueueDepth } from "./modules/wick-telegram.js";
 import { syncWickMetrics } from "./modules/wick-analytics.js";
 import { initTokens, refreshTokens, checkAnthropicCredit, checkLinkedInToken, checkTelegram } from "./modules/token-manager.js";
 import { isHiggsfieldCliAvailable } from "./agent/generate-higgsfield.js";
@@ -90,6 +90,17 @@ export function startScheduler() {
     if (paused()) return;
     try { await runWeeklyBatch(); }
     catch (err) { console.error(`[Scheduler] Wick batch failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  // ── WICK QUEUE WATCHDOG — daily 8am, before the 9am publish slot ─────────
+  // Dre had to come and ask why nothing posted. The weekly batch had skipped
+  // silently for two Sundays and the queue drained to zero unnoticed. This
+  // warns while there is still runway, and shouts once there is none.
+  // NOT gated on paused(): knowing the queue is empty matters most when
+  // publishing is off, since nothing else would reveal it.
+  cron.schedule("0 8 * * *", async () => {
+    try { await checkWickQueueDepth(); }
+    catch (err) { console.error(`[Scheduler] Wick queue check failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── WICK REELS — 14 a week, built Sunday 5am ────────────────────────────
