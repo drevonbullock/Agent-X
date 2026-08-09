@@ -35,6 +35,38 @@ sounds, and it outranks any rule below about register.
 WRITE LIKE YOU TALK. Everyday words only. If a person would not say it out loud
 to a friend at a kitchen table, cut it. Short sentences. One idea each.
 
+USE THE SMALLEST WORD THAT WORKS (Dre, 2026-08-09: "words like invoice is too
+big, make it as simple as if the viewers were 3 yr olds"). This is the FIRST
+test every line must pass.
+
+Write at the level of a children's book. One and two syllable words. If a
+ten year old would stop and wonder what a word means, it is the wrong word.
+Read every line out loud: if it sounds like something written rather than
+something said, rewrite it.
+
+SWAP THE BIG WORD FOR THE SMALL ONE, always:
+  invoice -> bill          purchase -> buy         acquire / obtain -> get
+  expense / expenditure -> what you spend          remainder -> what is left
+  accumulate -> add up / pile up                   diminish -> shrink / get smaller
+  obligation -> a promise you made                 compensation -> pay
+  sufficient -> enough     additional -> more      approximately -> about
+  require -> need          receive -> get          provide -> give
+  maintain -> keep         demonstrate / indicate -> show
+  assist -> help           attempt -> try          commence / initiate -> start
+  terminate -> end         subsequent -> next      prior -> before
+  reside -> live           consume -> use up       allocate -> put aside
+  sustain -> keep going    substantial -> big      minimal -> small
+  utilise -> use           portion -> part         quantity -> how much
+  transaction -> what you paid                     accumulated -> built up
+
+Concrete everyday nouns beat abstract ones every time: money, bill, rent, phone,
+car, job, food, card, cash, hours. A reader should SEE the thing.
+
+Good: "You paid for the whole night and nobody noticed."
+Bad:  "Your bank account got the invoice." (invoice)
+Good: "The money leaves before you feel it."
+Bad:  "The outflow occurs prior to the sensation." (outflow, prior, sensation)
+
 NEVER NAME THE PSYCHOLOGY. This page is about behaviour, so the textbook term is
 always the nearest word and it is always the wrong one. It makes a reader feel
 lectured instead of seen, and a named bias sounds like something happening to
@@ -220,7 +252,7 @@ lesson about life, and do not reach for any other subject.`;
 // registry to actually hold), so this checks the OUTPUT rather than trusting the
 // instruction. Warn-only: a loud log beats silently shipping "status quo bias"
 // onto a slide, and beats throwing away a paid generation.
-const JARGON = /\b(status quo bias|loss aversion|sunk cost(?: fallacy)?|anchoring(?: effect)?|cognitive (?:dissonance|load)|confirmation bias|present bias|hyperbolic discounting|endowment effect|social proof|scarcity principle|recency bias|survivorship bias|availability heuristic|framing effect|opportunity cost|diminishing returns|marginal utility|behavioou?ral economics|heuristics?|dopamine (?:loop|hit)|reward pathway|leverage|optimi[sz]e|streamline|seamless|holistic|empower|synerg|paradigm|arbitrage|systemati[sz]e)\b/i;
+const JARGON = /\b(status quo bias|loss aversion|sunk cost(?: fallacy)?|anchoring(?: effect)?|cognitive (?:dissonance|load)|confirmation bias|present bias|hyperbolic discounting|endowment effect|social proof|scarcity principle|recency bias|survivorship bias|availability heuristic|framing effect|opportunity cost|diminishing returns|marginal utility|behavioou?ral economics|heuristics?|dopamine (?:loop|hit)|reward pathway|leverage|optimi[sz]e|streamline|seamless|holistic|empower|synerg|paradigm|arbitrage|systemati[sz]e|invoice|expenditure|obligation|compensation|remainder|sufficient|additional|approximately|subsequent|terminate|commence|initiate|reside|allocate|substantial|utilis|transaction|accumulate|diminish|acquire|obtain|demonstrate|outflow|inflow|monetary|fiscal|liquidity|attain|procure)\b/i;
 
 export function findJargon(obj) {
   const hits = new Set();
