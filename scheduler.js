@@ -12,7 +12,7 @@ import { mineCompetitors, loadDynamicThemes } from "./modules/competitor-researc
 import { checkRepeatEngagers } from "./modules/lead-capture.js";
 import { runWeeklyBatch, publishNextApproved } from "./modules/wicks-wisdom.js";
 import { runWeeklyReels } from "./modules/wick-reel-batch.js";
-import { pollTelegramApprovals, checkWickQueueDepth } from "./modules/wick-telegram.js";
+import { pollTelegramApprovals, checkWickQueueDepth, deliverPendingPosts, deliverPendingReels } from "./modules/wick-telegram.js";
 import { syncWickMetrics } from "./modules/wick-analytics.js";
 import { initTokens, refreshTokens, checkAnthropicCredit, checkLinkedInToken, checkTelegram } from "./modules/token-manager.js";
 import { isHiggsfieldCliAvailable } from "./agent/generate-higgsfield.js";
@@ -96,6 +96,18 @@ export function startScheduler() {
     if (paused()) return;
     try { await runWeeklyBatch(); }
     catch (err) { console.error(`[Scheduler] Wick batch failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  // ── WICK DELIVERY SWEEP — every 5 min, catch anything never delivered ────
+  // The batch pushes each post as it is built, but a transient Telegram failure
+  // (or the batch being killed mid-run) leaves a finished post invisible. This
+  // retries anything with no telegram_sent_at. NOT gated on paused(): pausing
+  // publishing should not stop Dre seeing what was built.
+  cron.schedule("*/5 * * * *", async () => {
+    try {
+      await deliverPendingPosts();
+      await deliverPendingReels();
+    } catch (err) { console.error(`[Scheduler] Wick delivery sweep failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── WICK QUEUE WATCHDOG — daily 8am, before the 9am publish slot ─────────

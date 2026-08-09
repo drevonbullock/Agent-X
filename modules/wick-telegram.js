@@ -403,3 +403,54 @@ export async function checkWickQueueDepth() {
   console.log(`[Wick] queue depth: ${queued} post(s), ~${days} day(s)`);
   return { queued, days };
 }
+
+// ─── DELIVERY SWEEP — nothing that got built stays invisible ─────────────────
+// Dre, 2026-08-09: "make sure theyre coming through to telegram once they
+// finished 1 by 1."
+//
+// The batch already pushes each post the moment it is inserted, which is the
+// 1-by-1 part and works. What it cannot survive is a transient failure: a
+// Telegram connect timeout (seen live today, IPv6 stalling for 10s) makes the
+// push throw, the batch logs a warning and moves on, and that post is built,
+// paid for, and never seen. sendPostToTelegram releases its claim on failure,
+// so the row stays eligible, but nothing was retrying it.
+//
+// This sweep is that retry. It also covers the batch being killed mid-run,
+// which happened twice today when the session died.
+export async function deliverPendingPosts({ limit = 20 } = {}) {
+  const { data } = await supabase.from("wick_posts")
+    .select("*")
+    .in("status", ["approved", "pending"])
+    .is("telegram_sent_at", null)
+    .order("created_at", { ascending: true })
+    .limit(limit);
+  if (!data?.length) return { sent: 0 };
+
+  let sent = 0;
+  for (const p of data) {
+    // sendPostToTelegram claims before sending, so a concurrent batch push and
+    // this sweep cannot both deliver the same post.
+    try { if (await sendPostToTelegram(p)) sent++; }
+    catch (err) { console.warn(`[WickTG] sweep failed for ${p.id}: ${err.message}`); }
+  }
+  if (sent) console.log(`[WickTG] delivery sweep sent ${sent} undelivered post(s)`);
+  return { sent };
+}
+
+// Same for reels.
+export async function deliverPendingReels({ limit = 20 } = {}) {
+  const { data } = await supabase.from("wick_reels")
+    .select("*")
+    .is("telegram_sent_at", null)
+    .order("created_at", { ascending: true })
+    .limit(limit);
+  if (!data?.length) return { sent: 0 };
+
+  let sent = 0;
+  for (const r of data) {
+    try { if (await sendReelToTelegram(r)) sent++; }
+    catch (err) { console.warn(`[WickTG] reel sweep failed for ${r.id}: ${err.message}`); }
+  }
+  if (sent) console.log(`[WickTG] delivery sweep sent ${sent} undelivered reel(s)`);
+  return { sent };
+}
