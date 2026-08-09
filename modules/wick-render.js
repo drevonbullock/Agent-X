@@ -575,10 +575,20 @@ ${BASE_CSS}
 // room is doing the work here, not the labels.
 export async function compositeLessonItem({ scenePath, number, title, problem, solution }) {
   scenePath = fitJpeg(scenePath, W, 700, 0.10);
-  // Long copy shrinks a step so the block always clears the watermark.
+  // Dre, 2026-08-09: "subtext needs to be a lot shorter, it won't keep their
+  // attention span, plus needs to be bigger for the lessons."
+  //
+  // The copy engine now caps problem and solution at ONE sentence of 12 words,
+  // which frees a huge amount of vertical space, so the type scales UP hard.
+  // Old sizes (27-31px body, 42-48px head) were sized to fit 2-3 sentence
+  // paragraphs and were unreadable at feed-grid scale.
+  //
+  // The ladder still steps down if the model overruns its word cap, because a
+  // slide that overflows past the watermark is worse than one set slightly
+  // smaller. But the TOP of the ladder is now the normal case, not the rare one.
   const chars = String(problem).length + String(solution).length;
-  const body = chars > 300 ? 27 : chars > 230 ? 29 : 31;
-  const head = String(title).length > 34 ? 42 : 48;
+  const body = chars > 220 ? 36 : chars > 160 ? 42 : 48;
+  const head = String(title).length > 34 ? 54 : 62;
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
@@ -589,18 +599,23 @@ ${BASE_CSS}
   background:linear-gradient(180deg,transparent,#0a0806);}
 .body{flex:1;padding:0 66px 96px;display:flex;flex-direction:column;
   align-items:center;justify-content:center;text-align:center;}
-.h{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${head}px;line-height:1.16;
-  color:#fff;margin-bottom:30px;}
+.h{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${head}px;line-height:1.12;
+  color:#fff;margin-bottom:34px;}
 .h .n{color:#F5A524;}
-.txt{font-family:'DM Sans',sans-serif;font-weight:400;font-size:${body}px;line-height:1.46;
-  color:#ece5dd;margin-bottom:26px;max-width:900px;}
+/* Tighter leading than before: at 48px a 1.46 line-height opens gaps that read
+   as separate thoughts. The two blocks are separated by margin, not by air
+   inside them. The solution line is brightened so the pair reads as
+   problem then answer at a glance rather than one undifferentiated wall. */
+.txt{font-family:'DM Sans',sans-serif;font-weight:400;font-size:${body}px;line-height:1.3;
+  color:#d8cfc4;margin-bottom:30px;max-width:940px;}
+.txt.sol{color:#fff;font-weight:500;margin-bottom:0;}
 </style></head><body>
 <div class="slide">
   <div class="top"><img src="${dataUri(scenePath)}"><div class="topfade"></div></div>
   <div class="body">
     <div class="h"><span class="n">${esc(number)}.</span> ${esc(title)}</div>
     <div class="txt">${esc(problem)}</div>
-    <div class="txt">${esc(solution)}</div>
+    <div class="txt sol">${esc(solution)}</div>
   </div>
   <div class="wm">${esc(WATERMARK)}</div>
 </div></body></html>`;

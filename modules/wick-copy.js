@@ -489,6 +489,11 @@ headline promises a count. Slides 2 to 6 are one numbered item each with a PROBL
 block and a SOLUTION block. Slide 7 recaps every item visually and asks for a
 keyword.
 
+LENGTH IS THE POINT. Every problem and solution is ONE sentence, 12 words or
+fewer. Two short lines set big beat six small ones nobody finishes: a reader
+decides whether to swipe in about two seconds, and a paragraph loses them.
+If a sentence needs a comma to survive, it is too long. Cut it, do not shrink it.
+
 The SOLUTION blocks must obey the HOW rule: name the practice and the cost of
 skipping it, never the step by step method. "Rehearse the loss before it arrives"
 is allowed. A protocol for doing it is not.
@@ -509,8 +514,8 @@ Return JSON object:
     {
       "number": 1,
       "title": "Short item title, max 6 words",
-      "problem": "2 to 3 sentences naming the trap, in second person.",
-      "solution": "2 to 3 sentences naming the practice and the cost of skipping it. NEVER a method.",
+      "problem": "ONE short sentence naming the trap, second person. MAX 12 WORDS. This is read in under two seconds on a phone, so cut every clause that is not the trap itself.",
+      "solution": "ONE short sentence naming the practice and what skipping it costs. MAX 12 WORDS. NEVER a method.",
       "scene": "One dense sentence SHOWING this item's problem. Name his body position, the action that proves it, 3-4 named modern objects. Present day.",
       "expression": "His facial expression in this scene, emotionally matched to the problem being shown. Specific: troubled, weary, uneasy, resigned, alert.",
       "signpost": "2 to 3 word label for the recap slide signpost"
