@@ -23,12 +23,29 @@ import {
 
 const BUCKET = "agent-x-images";
 
-async function uploadSlide(buffer, storagePath) {
-  const { error } = await supabase.storage
-    .from(BUCKET)
-    .upload(storagePath, buffer, { contentType: "image/jpeg", upsert: true });
-  if (error) throw new Error(`Upload failed: ${error.message}`);
-  return supabase.storage.from(BUCKET).getPublicUrl(storagePath).data.publicUrl;
+// Retries, for the same reason download() does: by the time we upload, the art
+// has already been GENERATED AND PAID FOR. Losing a finished ORDER carousel to a
+// transient "fetch failed" throws away five generations, and it happened live on
+// 2026-08-09. A network blip must never cost credits.
+async function uploadSlide(buffer, storagePath, attempts = 4) {
+  let lastErr;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      const { error } = await supabase.storage
+        .from(BUCKET)
+        .upload(storagePath, buffer, { contentType: "image/jpeg", upsert: true });
+      if (error) throw new Error(error.message);
+      return supabase.storage.from(BUCKET).getPublicUrl(storagePath).data.publicUrl;
+    } catch (err) {
+      lastErr = err;
+      if (i < attempts) {
+        const backoff = 2000 * i;
+        console.warn(`[Wick] upload attempt ${i}/${attempts} failed (${err.message}), retrying in ${backoff / 1000}s`);
+        await new Promise((r) => setTimeout(r, backoff));
+      }
+    }
+  }
+  throw new Error(`Upload failed after ${attempts} attempts: ${lastErr?.message}`);
 }
 
 // Generate a scene and return its local path. Retries individual panels only
