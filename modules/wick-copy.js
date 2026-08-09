@@ -35,6 +35,24 @@ sounds, and it outranks any rule below about register.
 WRITE LIKE YOU TALK. Everyday words only. If a person would not say it out loud
 to a friend at a kitchen table, cut it. Short sentences. One idea each.
 
+STOP WHEN THE POINT LANDS (Dre, 2026-08-09, on "You did not choose to spend it.
+The room chose for you." -> "shorter, that is good enough").
+
+TWO SHORT SENTENCES IS THE CEILING for any reveal line, closing line or label.
+One is often better. Once the point has landed, STOP. Do not add a sentence that
+restates it, extends it, or explains why it matters. That third beat is the
+writer reassuring himself, and it is where the reader leaves.
+
+  ENOUGH: "You did not choose to spend it. The room chose for you."
+  TOO MUCH: the same two lines plus "And the room does not pay your bills."
+            The point already landed. The extra line is a lecture.
+
+Test every line: delete the last sentence. If the meaning survives, it was
+padding. Ship the shorter one.
+
+No sentence over about 10 words. No commas holding two ideas together, use a
+full stop or cut one idea. No "and" joining two thoughts at the end.
+
 USE THE SMALLEST WORD THAT WORKS (Dre, 2026-08-09: "words like invoice is too
 big, make it as simple as if the viewers were 3 yr olds"). This is the FIRST
 test every line must pass.
@@ -328,7 +346,7 @@ Return JSON object:
       "bottom_expression": "His facial expression in the second panel. Usually the emotional cost: hollow and vacant, anxious, defeated, numb, quietly ashamed, exhausted. Match the feeling of the scene."
     }
   ],
-  "closing_line": "One sentence that reframes all four at once and lands the pillar handoff.",
+  "closing_line": "ONE short sentence, max 10 words, landing all four at once. Stop when it lands.",
   "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait. 'the friend who got a raise and still feels broke' is right. 'someone who needs this' is wrong.",
   "cta_scene": "One dense sentence: a closing PRESENT DAY scene for Wick that visually gathers the theme, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene. Usually warm, resolved, quietly hopeful, or knowing."
@@ -405,8 +423,8 @@ Return JSON object:
       "expression": "His facial expression, emotionally precise and matched to the line."
     }
   ],
-  "reveal_line": "Slide 5. The rule the four lines were building to, one sentence, max 16 words.",
-  "closing_line": "One short sentence under the reveal that lands the money consequence.",
+  "reveal_line": "Slide 5. The rule the four lines were building to. ONE sentence, max 10 words.",
+  "closing_line": "ONE short sentence under the reveal, max 8 words. It renders directly beneath the reveal line, so the two together must read as the whole point and nothing more. Never a third idea.",
   "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait.",
   "cta_scene": "One dense sentence: closing PRESENT DAY scene, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene."
@@ -486,7 +504,7 @@ Return JSON object:
   "application": "Slide 4. What to do, second person, max 9 words.",
   "application_scene": "One dense sentence: the scene under the application line.",
   "application_expression": "His expression on slide 4.",
-  "closing_line": "One short sentence under the ask on slide 5.",
+  "closing_line": "ONE short sentence under the ask, max 8 words.",
   "send_to": "Who to send this to. Max 12 words, a recognizable situation.",
   "cta_scene": "One dense sentence: closing PRESENT DAY scene, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene."
@@ -553,7 +571,7 @@ Return JSON object:
       "beat": "The one small action he is caught mid performing."
     }
   ],
-  "closing_line": "One sentence that lands the whole cast at once.",
+  "closing_line": "ONE short sentence, max 10 words, landing the whole cast at once.",
   "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait. 'the friend who got a raise and still feels broke' is right. 'someone who needs this' is wrong.",
   "cta_scene": "One dense sentence: closing PRESENT DAY scene, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene."
@@ -622,7 +640,7 @@ Return JSON object:
       "signpost": "2 to 3 word label for the recap slide signpost"
     }
   ],
-  "closing_line": "One sentence that reframes the whole list and leaves the reader able to act.",
+  "closing_line": "ONE short sentence, max 10 words, that lands the point and stops. No second thought bolted on.",
   "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait. 'the friend who splits every bill and never says anything' is right. 'someone who needs this' is wrong."
 }
 
@@ -758,7 +776,7 @@ Return JSON with EVERY key below present. Do not omit any of them:
   "pillar_link": "the two pillars wired",
   "hidden_rule": "one sentence naming the handoff",
   "labels": ["one per frame, in the same order, ${slots.length} entries"],
-${fields ? fields + "\n" : ""}  "closing_line": "one sentence that reframes the set",
+${fields ? fields + "\n" : ""}  "closing_line": "ONE short sentence, max 10 words. Land it and stop.",
   "send_to": "who to send it to, max 12 words, a recognizable situation"
 }`,
     }],
