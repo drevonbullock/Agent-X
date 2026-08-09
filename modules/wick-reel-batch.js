@@ -90,7 +90,9 @@ async function reelTopics(need) {
 }
 
 export async function runWeeklyReels({ count } = {}) {
-  const perWeek = count ?? parseInt(process.env.WICK_REELS_PER_WEEK ?? "14", 10);
+  // Dre, 2026-08-09: "two posts a day and 1 reel image per day". So a week is
+  // 14 carousels + 7 reels, not the 14 reels this originally shipped with.
+  const perWeek = count ?? parseInt(process.env.WICK_REELS_PER_WEEK ?? "7", 10);
   // Refresh credentials before the gate. The access token lives ~24h, so a
   // long-running Railway container would otherwise reach Sunday with a dead
   // token and skip the batch for a reason that was entirely fixable.
