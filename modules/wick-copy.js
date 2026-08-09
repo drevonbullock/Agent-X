@@ -35,6 +35,20 @@ sounds, and it outranks any rule below about register.
 WRITE LIKE YOU TALK. Everyday words only. If a person would not say it out loud
 to a friend at a kitchen table, cut it. Short sentences. One idea each.
 
+NEVER NAME THE PSYCHOLOGY. This page is about behaviour, so the textbook term is
+always the nearest word and it is always the wrong one. It makes a reader feel
+lectured instead of seen, and a named bias sounds like something happening to
+other people. BANNED: status quo bias, loss aversion, sunk cost, sunk cost
+fallacy, anchoring, anchoring effect, cognitive dissonance, confirmation bias,
+present bias, hyperbolic discounting, endowment effect, social proof, scarcity
+principle, recency bias, survivorship bias, availability heuristic, framing
+effect, opportunity cost, diminishing returns, marginal utility, behavioural
+economics, heuristic, cognitive load, dopamine loop, reward pathway.
+Describe what it FEELS LIKE from the inside instead. Not "status quo bias sells
+you comfort" but "staying put feels free until the bill shows up". Not "loss
+aversion" but "losing a hundred stings more than winning a hundred feels good".
+The reader should recognise themselves, not learn a term.
+
 BANNED WORDS, use the plain version: leverage, optimize, streamline, robust,
 seamless, holistic, facilitate, elevate, empower, compounding (as a noun),
 incentive structure, mechanism (in the copy itself, it stays a thinking tool
@@ -201,10 +215,33 @@ verbatim. Every slide must serve this one topic. Do not widen it into a general
 lesson about life, and do not reach for any other subject.`;
 }
 
+// Jargon the model reaches for because it is the nearest word. A prompt rule
+// alone has failed on this page before (the philosophy ban needed the topic
+// registry to actually hold), so this checks the OUTPUT rather than trusting the
+// instruction. Warn-only: a loud log beats silently shipping "status quo bias"
+// onto a slide, and beats throwing away a paid generation.
+const JARGON = /\b(status quo bias|loss aversion|sunk cost(?: fallacy)?|anchoring(?: effect)?|cognitive (?:dissonance|load)|confirmation bias|present bias|hyperbolic discounting|endowment effect|social proof|scarcity principle|recency bias|survivorship bias|availability heuristic|framing effect|opportunity cost|diminishing returns|marginal utility|behavioou?ral economics|heuristics?|dopamine (?:loop|hit)|reward pathway|leverage|optimi[sz]e|streamline|seamless|holistic|empower|synerg|paradigm|arbitrage|systemati[sz]e)\b/i;
+
+export function findJargon(obj) {
+  const hits = new Set();
+  const walk = (v) => {
+    if (typeof v === "string") { const m = v.match(JARGON); if (m) hits.add(m[0].toLowerCase()); }
+    else if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === "object") Object.values(v).forEach(walk);
+  };
+  walk(obj);
+  return [...hits];
+}
+
 function parseJson(raw) {
   const t = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
   const start = t.search(/[[{]/);
-  return JSON.parse(t.slice(start));
+  const parsed = JSON.parse(t.slice(start));
+  const jargon = findJargon(parsed);
+  if (jargon.length) {
+    console.warn(`[WickCopy] ⚠️ JARGON in generated copy: ${jargon.join(", ")} — the tone rule was ignored. Post still ships; tighten BRAND_RULES if this repeats.`);
+  }
+  return parsed;
 }
 
 // ─── VERSUS — two-panel comparison (the engine format) ───────────────────────
