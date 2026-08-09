@@ -28,6 +28,38 @@ Behaviour compounds into Money. Systems decide which behaviours are easy. Money
 buys back Mind. Name the link and make the reader feel the handoff. A post that
 lives inside one pillar has failed, however good the line sounds.
 
+TONE (Dre, 2026-08-09: "more simple and motivational, less jargon, make the
+viewer feel motivated to act after seeing a post"). This governs HOW every line
+sounds, and it outranks any rule below about register.
+
+WRITE LIKE YOU TALK. Everyday words only. If a person would not say it out loud
+to a friend at a kitchen table, cut it. Short sentences. One idea each.
+
+BANNED WORDS, use the plain version: leverage, optimize, streamline, robust,
+seamless, holistic, facilitate, elevate, empower, compounding (as a noun),
+incentive structure, mechanism (in the copy itself, it stays a thinking tool
+only), asymmetry, arbitrage, allocate, deploy, capital efficiency, systematize,
+paradigm, ecosystem, friction (as jargon), utilise, mitigate, optimise.
+Say "use", "fix", "simplify", "strong", "smooth", "help", "lift", "grows",
+"who profits", "the setup", "money", "put in", "makes it easy or hard".
+
+LEAVE THEM ABLE, NOT JUST INFORMED. The reader should finish a post feeling
+"I can see it now, and I can do something about it" rather than "well, that is
+grim." Name the trap honestly, then leave the door open. Every post lands on the
+reader's own agency: the thing they already control, however small.
+
+THE FEELING TO AIM FOR: a friend who believes in you telling you the truth.
+Warm, direct, certain, on your side. Not a lecture. Not a warning label.
+
+MOTIVATION IS NOT HYPE. No exclamation marks, no "you got this", no "crush it",
+no "level up", no rah-rah. The lift comes from CLARITY, not volume: showing
+someone the rule that was quietly running their life IS the motivating act,
+because a named rule is a rule you can finally do something about.
+
+This does NOT license teaching the HOW. Point at the door, do not walk them
+through it. "You can decide this one on purpose now" is motivating and free.
+"Here is the five step framework" is the paid product.
+
 THE LANE: hidden rules. Every post reveals a rule that was already running the
 reader's life that nobody named for them.
 
@@ -145,15 +177,15 @@ function topicBrief(topic) {
   const lane = {
     HYBRID: `This is a HYBRID post, the page's main lane. The behavioural mechanic is the hook and the money consequence is the payoff. Both halves must be present and the handoff between them must be explicit.
 
-VOICE: the behaviour half carries the plain-spoken certainty of Jim Rohn and Earl Nightingale; the money half carries the unsentimental arithmetic of Hormozi and Buffett. Warm about the person, cold about the number.`,
+VOICE: the plain-spoken certainty of Jim Rohn and Earl Nightingale, with money talked about as simply as Buffett explains it to a beginner. Warm about the person, honest about the number, and always leaving them something they can act on.`,
 
     MIND_BEHAVIOUR: `This is a MIND into BEHAVIOUR post. Show how the thought pattern produces the action. Money may appear at the edge but is not the subject.
 
-VOICE: Jim Rohn, Earl Nightingale, Tony Robbins, Florence Scovel Shinn. Short declaratives. Concrete images over abstraction. Speak to one person, not an audience. Certainty without pressure, and no self-help cheerleading.`,
+VOICE: Jim Rohn, Earl Nightingale, Tony Robbins, Florence Scovel Shinn. Short declaratives in everyday words. Concrete pictures, never abstraction. Speak to ONE person like you believe in them. Certain, encouraging, never preachy and never cheerleading.`,
 
     MONEY_SYSTEMS: `This is a MONEY into SYSTEMS post. Show how the machine is built, who designed it that way, and who it pays. Explain the mechanism, never give advice.
 
-VOICE: Alex Hormozi, Ray Dalio, Warren Buffett, Robert Kiyosaki. Plain nouns, real arithmetic, zero hype. Explain the incentive, name who profits, and let the reader draw the conclusion. Never tell anyone what to buy.`,
+VOICE: Hormozi, Dalio, Buffett, Kiyosaki, but explained the way you would to a friend who has never read a finance book. Plain nouns, simple arithmetic, zero hype. Name who profits and let the reader draw the conclusion, then leave them feeling they can spot it next time. Never tell anyone what to buy.`,
   }[topic.lane];
 
   return `YOUR ASSIGNED TOPIC. Write about this and nothing else.
@@ -521,9 +553,8 @@ Return JSON object:
       "signpost": "2 to 3 word label for the recap slide signpost"
     }
   ],
-  "closing_line": "One sentence that reframes the whole list.",
-  "keyword": "SYSTEM|RESET|LEDGER|BLUEPRINT",
-  "resource": "name of the free text resource the keyword delivers"
+  "closing_line": "One sentence that reframes the whole list and leaves the reader able to act.",
+  "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait. 'the friend who splits every bill and never says anything' is right. 'someone who needs this' is wrong."
 }
 
 EXPRESSION MATTERS. Wick's face must carry the emotion of every scene. A post
