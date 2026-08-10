@@ -83,7 +83,10 @@ export async function checkRls({ autoFix = process.env.RLS_AUTOFIX !== "false" }
 // pathToFileURL, not `file://${argv[1]}` — this repo lives under "C.C. Agent X"
 // and the space percent-encodes in import.meta.url but not in argv, so the
 // naive comparison silently never matches and the CLI does nothing.
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// argv[1] is undefined under `node -e`, and pathToFileURL(undefined) throws, so
+// merely importing this module would crash in that context.
+const entry = process.argv[1] ? pathToFileURL(process.argv[1]).href : null;
+if (entry && import.meta.url === entry) {
   const fix = process.argv.includes("--fix");
   checkRls({ autoFix: fix }).then((r) => {
     if (!r.checked) process.exit(2);

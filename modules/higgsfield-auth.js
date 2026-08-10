@@ -174,7 +174,14 @@ export async function ensureHiggsfieldAuth({ force = false } = {}) {
 // On the Mac, after `higgsfield auth login`:
 //   node modules/higgsfield-auth.js --push     upload local credentials to Supabase
 //   node modules/higgsfield-auth.js            hydrate + verify (what Railway does)
-if (import.meta.url === (await import("url")).pathToFileURL(process.argv[1]).href) {
+// process.argv[1] is UNDEFINED when node runs an inline script (`node -e ...`),
+// and pathToFileURL(undefined) throws, which made merely IMPORTING this module
+// blow up in that context. The batch caught it and warned, so credentials were
+// silently never hydrated by the pre-batch refresh. Guard the argv first.
+const entry = process.argv[1]
+  ? (await import("url")).pathToFileURL(process.argv[1]).href
+  : null;
+if (entry && import.meta.url === entry) {
   const run = async () => {
     if (process.argv.includes("--push")) {
       const local = readFileCreds();
