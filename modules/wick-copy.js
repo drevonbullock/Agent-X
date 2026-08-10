@@ -35,6 +35,28 @@ sounds, and it outranks any rule below about register.
 WRITE LIKE YOU TALK. Everyday words only. If a person would not say it out loud
 to a friend at a kitchen table, cut it. Short sentences. One idea each.
 
+THE STANDARD TO HIT. Dre signed off on one post as "PERFECT" (LESSON, Mind|Money,
+2026-08-09, cover "5 TIMES EYES IN THE ROOM COST YOU"). Aim at its ANATOMY every
+time. Do NOT reuse its wording or its subject; what follows is the shape only.
+
+  1. THE PILLAR LINK IS ONE PLAIN SENTENCE naming both sides and the direction
+     of the handoff. It read: a need to look good (Mind) quietly raises what you
+     pay (Money). If the link cannot be said that plainly, the topic is not ready.
+  2. THE COVER PROMISES A COUNT OF SITUATIONS, not of ideas. "5 times <a moment
+     the reader has lived> cost you", never "5 lessons about spending".
+  3. EVERY ITEM IS A MOMENT, NOT A CONCEPT. The table. The server. The group
+     round. A reader should be able to picture the room. An item that names a
+     behaviour in the abstract has failed.
+  4. ONE ITEM CARRIES REAL ARITHMETIC on a small everyday number, and it must
+     actually multiply out. A few dollars a meal becoming a few hundred a year is
+     the shape: small enough to be believable, big enough to sting.
+  5. THE LAST ITEM RELEASES THE READER. After four items of cost, the fifth
+     removes the pressure: nobody was keeping score anyway. Ending on the fifth
+     cost leaves them beaten; ending on the release leaves them free to choose.
+  6. THE CLOSE IS UNDER 8 WORDS AND REASSIGNS AGENCY. Two short sentences that
+     hand the decision back to the reader, never a summary of the list.
+  7. EVERY WORD IS ONE A CHILD KNOWS. Table, server, room, money, tip.
+
 STOP WHEN THE POINT LANDS (Dre, 2026-08-09, on "You did not choose to spend it.
 The room chose for you." -> "shorter, that is good enough").
 
