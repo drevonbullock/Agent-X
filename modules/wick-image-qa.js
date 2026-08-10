@@ -48,10 +48,24 @@ Return ONLY this JSON:
 {"pass": true|false, "severity": "clean"|"minor"|"bad", "codes": ["A".."G"], "reason": "one plain sentence naming what is wrong, or 'clean'"}
 "minor" = shippable but not great. "bad" = must not publish.`;
 
+// Format-specific allowances. Without these the grader marks correct work as
+// broken, which is worse than missing a fault: it trains the learning loop on
+// false positives and would auto-pull good posts.
+const FORMAT_NOTES = {
+  PARABLE:
+    "\nFORMAT NOTE: this is a PARABLE. An inanimate OBJECT in the scene is deliberately given a " +
+    "simple cartoon face because it speaks to Wick. That is correct and must NOT be failed under C. " +
+    "Only fail C if WICK himself is off-model or a human-like figure appears.",
+  COSTUME:
+    "\nFORMAT NOTE: this is a COSTUME slide. Wick wears ONE small accessory denoting a role (hard hat, " +
+    "lanyard, visor, apron). That is correct. Still fail B if the accessory gives him a human torso, " +
+    "shoulders or legs.",
+};
+
 const mediaType = (p) => (p.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg");
 
 // Grade one image file.
-export async function gradeImage(filePath) {
+export async function gradeImage(filePath, format = null) {
   const b64 = fs.readFileSync(filePath).toString("base64");
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
@@ -60,7 +74,7 @@ export async function gradeImage(filePath) {
       role: "user",
       content: [
         { type: "image", source: { type: "base64", media_type: mediaType(filePath), data: b64 } },
-        { type: "text", text: RUBRIC },
+        { type: "text", text: RUBRIC + (FORMAT_NOTES[format] ?? "") },
       ],
     }],
   });
@@ -89,7 +103,7 @@ export async function gradePost(post, { tmpDir = "/tmp/wick-qa" } = {}) {
       slides.push({ slide: i + 1, pass: false, severity: "minor", reason: `could not fetch: ${err.message}` });
       continue;
     }
-    const g = await gradeImage(f);
+    const g = await gradeImage(f, post.format);
     slides.push({ slide: i + 1, ...g });
     fs.rmSync(f, { force: true });
   }
