@@ -115,7 +115,7 @@ async function buildOrderCarousel(c, dir, jobIds) {
   for (let i = 0; i < c.lines.length; i++) {
     const line = c.lines[i];
     console.log(`[Wick]   ${i + 1}/${c.lines.length}: "${line.label}"`);
-    const p = await scene(lessonScenePrompt(line.scene, line.expression, i), dir, `line-${i}`, "4:5", jobIds);
+    const p = await scene(lessonScenePrompt(line.scene, line.expression, i, "upper"), dir, `line-${i}`, "4:5", jobIds);
     buffers.push(await compositeSinglePanel({ scenePath: p, label: line.label }));
   }
   const revealPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "upper"), dir, "reveal", "4:5", jobIds);
@@ -139,7 +139,7 @@ async function buildParable(topic, dir, jobIds) {
     const p = await scene(parableScenePrompt(b.scene, b.expression, b.side, i), dir, `beat-${i}`, "4:5", jobIds);
     buffers.push(await compositeParable({ scenePath: p, bubbleText: b.bubble, side: b.side }));
   }
-  const appPath = await scene(lessonScenePrompt(c.application_scene, c.application_expression, 5), dir, "apply", "4:5", jobIds);
+  const appPath = await scene(lessonScenePrompt(c.application_scene, c.application_expression, 5, "upper"), dir, "apply", "4:5", jobIds);
   buffers.push(await compositeSinglePanel({ scenePath: appPath, label: c.application }));
 
   const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "upper"), dir, "cta", "4:5", jobIds);
@@ -178,7 +178,7 @@ async function buildLesson(topic, dir, jobIds) {
   console.log(`[Wick] LESSON: "${l.cover_headline}" (${l.items.length} items)`);
   const buffers = [];
 
-  const coverPath = await scene(lessonScenePrompt(l.cover_scene, l.cover_expression), dir, "cover", "4:5", jobIds);
+  const coverPath = await scene(lessonScenePrompt(l.cover_scene, l.cover_expression, 0, "upper"), dir, "cover", "4:5", jobIds);
   buffers.push(await compositeLessonCover({ scenePath: coverPath, headline: l.cover_headline }));
 
   for (const item of l.items) {

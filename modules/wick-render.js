@@ -195,6 +195,14 @@ const FRAMING = {
     "HALF of the frame, standing well back so he reads small and whole. The BOTTOM HALF must be " +
     "empty floor, wall or table with nothing important in it, because large text is placed there " +
     "afterwards. Never let his wax body, arms or legs fall into the bottom half.",
+  // PARABLE puts its speech bubble at the TOP of the frame, so the character has
+  // to live low or the bubble lands on his face. This was fixed once already for
+  // parables specifically; it is now a named mode so any top-text layout can ask.
+  lower:
+    " FRAMING: his COMPLETE body, flame head down to his feet, must sit in the LOWER TWO THIRDS " +
+    "of the frame. Leave the TOP THIRD as empty ceiling, sky or wall with nothing important in " +
+    "it, because a speech bubble is placed there afterwards. Never crop his body at the bottom " +
+    "edge.",
 };
 const FRAMING_HARD = FRAMING.full;   // default for callers that do not say
 
@@ -383,7 +391,11 @@ export function parableScenePrompt(sceneText, expression, side = "left", seed = 
     scene: `${sceneText}${expression ? ` His expression is ${expression}.` : ""}`,
     lighting: "His golden flame head is the only light source, throwing warm amber light across the nearest objects, long soft shadows behind.",
     palette: PALETTE_WARM,
+    // framing "lower" reinforces this rather than fighting it: the default "full"
+    // mode asks for clear margin above AND below, which would pull him back into
+    // the bubble's third.
     extra: `${camera} COMPOSITION IS CRITICAL: place the character and the speaking object in the ${stand} portion of the frame, both fully visible and unobstructed. Leave the entire ${clear} third of the frame as EMPTY UNCLUTTERED BACKGROUND with no character, no face and no important detail, because a speech bubble is placed there afterwards. Absolutely no text anywhere in the image.`,
+    framing: "lower",
   });
 }
 
