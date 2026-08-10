@@ -431,28 +431,36 @@ ${BASE_CSS}
 
 // ORDER's final slide: breaks the drumbeat and names the rule, then the share ask.
 export async function compositeReveal({ scenePath, revealLine, closingLine, sendTo }) {
+  // Same brief as compositeCta: the closing frame is where the share is asked
+  // for, so it must be the most readable slide in the carousel, not the least.
+  // Copy is capped at two short sentences now, so these scale well up.
   scenePath = fitJpeg(scenePath, W, H, 0.22);
+  const len = String(revealLine ?? "").length + String(closingLine ?? "").length + String(sendTo ?? "").length;
+  const v1 = len > 190 ? 58 : len > 130 ? 66 : 74;   // reveal line
+  const v2 = len > 190 ? 42 : 50;                    // closing line: the payoff, never smaller than the send instruction
+  const v3 = len > 190 ? 42 : 50;                    // send this to
+  const v4 = len > 190 ? 34 : 40;                    // repost ask
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
 .bg{position:absolute;inset:0;} .bg img{width:100%;height:100%;object-fit:cover;display:block;}
 .rshade{position:absolute;inset:0;z-index:10;
-  background:linear-gradient(180deg,transparent 0%,rgba(8,6,4,0.30) 34%,rgba(8,6,4,0.90) 58%,rgba(8,6,4,0.97) 100%);}
-.rbody{position:absolute;left:70px;right:70px;bottom:118px;z-index:20;text-align:center;}
-.r1{font-family:'DM Sans',sans-serif;font-weight:700;font-size:50px;line-height:1.2;color:#fff;
-  margin-bottom:28px;text-shadow:0 3px 14px rgba(0,0,0,0.9);}
-.r2{font-family:'DM Sans',sans-serif;font-weight:400;font-size:33px;line-height:1.42;
-  color:#ece5dd;margin-bottom:32px;}
-.r3{font-family:'DM Sans',sans-serif;font-weight:700;font-size:36px;line-height:1.3;color:#fff;}
+  background:linear-gradient(180deg,transparent 0%,rgba(8,6,4,0.34) 28%,rgba(8,6,4,0.92) 52%,rgba(8,6,4,0.98) 100%);}
+.rbody{position:absolute;left:56px;right:56px;bottom:104px;z-index:20;text-align:center;}
+.r1{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${v1}px;line-height:1.1;color:#fff;
+  margin-bottom:26px;text-shadow:0 3px 14px rgba(0,0,0,0.9);}
+.r2{font-family:'DM Sans',sans-serif;font-weight:400;font-size:${v2}px;line-height:1.26;
+  color:#ece5dd;margin-bottom:30px;}
+.r3{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${v3}px;line-height:1.2;color:#fff;}
 .r3 b{color:#F5A524;}
-.r4{font-family:'DM Sans',sans-serif;font-weight:700;font-size:30px;line-height:1.3;
-  color:#F5A524;margin-top:20px;}
+.r4{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${v4}px;line-height:1.2;
+  color:#F5A524;margin-top:18px;}
 </style></head><body>
 <div class="slide">
   <div class="bg"><img src="${dataUri(scenePath)}"></div><div class="rshade"></div>
   <div class="rbody">
     <div class="r1">${esc(revealLine)}</div>
     ${closingLine ? `<div class="r2">${esc(closingLine)}</div>` : ""}
-    <div class="r3">Send this to <b>${esc(sendTo)}</b>.</div>
+    <div class="r3">Send this to <b>${esc(inlineSendTo(sendTo))}</b>.</div>
     <div class="r4">Repost it if it landed.</div>
   </div>
   <div class="wm">${esc(WATERMARK)}</div>
@@ -628,20 +636,38 @@ ${BASE_CSS}
 // and had no delivery path, so every post made a promise the account could not
 // keep. `sendTo` names who to forward it to; keyword/resource are still accepted
 // so rows queued under the old shape still render.
+// send_to is authored as a standalone phrase ("The friend who...") but renders
+// inside "Send this to ___.", where a leading capital reads as a typo. Lowercase
+// only the safe leading articles/determiners so a proper noun keeps its capital.
+const inlineSendTo = (t) => String(t ?? "")
+  .replace(/^(The|A|An|Your|My|Anyone|Someone|Every|Whoever|That|Those|Any)\b/,
+           (m) => m.toLowerCase())
+  .replace(/\.\s*$/, "");
+
 export async function compositeCta({ scenePath, closingLine, sendTo, keyword, resource }) {
-  scenePath = fitJpeg(scenePath, W, 790, 0.25);
+  // Dre, 2026-08-09: "make the cta slide words wayy bigger to see."
+  // The old sizes (42/38/32px) were set when closing lines ran long. Copy is now
+  // capped at two short sentences, so the type scales up hard AND the image
+  // gives back 70px of height to hold it. A ladder still steps down when a
+  // send_to runs long, because overflowing past the watermark is worse than
+  // slightly smaller type.
+  scenePath = fitJpeg(scenePath, W, 720, 0.25);
+  const len = String(closingLine ?? "").length + String(sendTo ?? "").length;
+  const s1 = len > 150 ? 52 : len > 100 ? 60 : 68;   // closing line
+  const s2 = len > 150 ? 44 : len > 100 ? 50 : 56;   // send this to
+  const s3 = len > 150 ? 36 : 44;                    // repost ask
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
 .slide{display:flex;flex-direction:column;background:#0a0806;}
-.top{position:relative;width:${W}px;height:790px;flex-shrink:0;overflow:hidden;}
+.top{position:relative;width:${W}px;height:720px;flex-shrink:0;overflow:hidden;}
 .top img{width:100%;height:100%;object-fit:cover;display:block;}
-.topfade{position:absolute;left:0;right:0;bottom:0;height:34%;
+.topfade{position:absolute;left:0;right:0;bottom:0;height:36%;
   background:linear-gradient(180deg,transparent,#0a0806);}
-.body{flex:1;padding:14px 62px 0;display:flex;flex-direction:column;justify-content:center;text-align:center;}
-.l1{font-family:'DM Sans',sans-serif;font-weight:700;font-size:42px;line-height:1.24;color:#fff;margin-bottom:26px;}
-.l2{font-family:'DM Sans',sans-serif;font-weight:700;font-size:38px;line-height:1.3;color:#fff;}
-.l3{font-family:'DM Sans',sans-serif;font-weight:700;font-size:32px;line-height:1.3;
-  color:#F5A524;margin-top:22px;}
+.body{flex:1;padding:10px 54px 0;display:flex;flex-direction:column;justify-content:center;text-align:center;}
+.l1{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${s1}px;line-height:1.14;color:#fff;margin-bottom:24px;}
+.l2{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${s2}px;line-height:1.2;color:#fff;}
+.l3{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${s3}px;line-height:1.2;
+  color:#F5A524;margin-top:20px;}
 .kw{color:#F5A524;}
 </style></head><body>
 <div class="slide">
@@ -649,7 +675,7 @@ ${BASE_CSS}
   <div class="body">
     <div class="l1">${esc(closingLine)}</div>
     <div class="l2">${sendTo
-      ? `Send this to <span class="kw">${esc(sendTo)}</span>.`
+      ? `Send this to <span class="kw">${esc(inlineSendTo(sendTo))}</span>.`
       : `Comment <span class="kw">${esc(keyword)}</span> and I'll send you ${esc(resource)}.`}</div>
     <div class="l3">Repost it if it landed.</div>
   </div>
