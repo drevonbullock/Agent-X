@@ -174,9 +174,13 @@ const ANATOMY_HARD =
   "cartoon face, roughly as tall as his body. His body is a short cream wax cylinder with soft " +
   "drips and nothing else. His arms and legs are thin black rubber hose limbs ending in rounded " +
   "mitten hands and rounded feet. He has NO human torso, shoulders, chest, hips, neck, skin, hair " +
-  "or fingers, and never wears clothing that implies any of them. If any other character appears " +
-  "they must ALSO be candles built exactly this way, in the same style. Never a human, never a " +
-  "generic mascot, never a loaf, blob or animal.";
+  "or fingers, and never wears clothing that implies any of them. " +
+  "OTHER CHARACTERS: prefer Wick ALONE. Only include another character when the sentence genuinely " +
+  "needs someone doing something to him, and then it must be another candle built exactly this " +
+  "way, fully lit and clearly readable, never a dark silhouette, never a vague shape in the " +
+  "background, never a simplified or half-drawn figure. Never a human, never a generic mascot, " +
+  "never a loaf, blob or animal. NEVER show disembodied human hands or arms reaching in from " +
+  "off screen.";
 
 // The most common failure was the body not being visible, but the CAUSE differs
 // per layout, so a single global rule is wrong. Two distinct cases:
