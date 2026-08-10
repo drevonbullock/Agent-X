@@ -110,6 +110,19 @@ export function startScheduler() {
     } catch (err) { console.error(`[Scheduler] Wick delivery sweep failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
+  // ── WICK IMAGE QA — daily 7am, before the queue watchdog and publish slot ─
+  // Dre, 2026-08-09: "always run an analysis where you can see where the image
+  // is high quality and good" + "no ai slop". A vision audit that day found 6 of
+  // 9 queued posts unpublishable (bodies cut off, a slice of toast with human
+  // hands, Wick absent entirely). None of it was detectable without looking.
+  // Auto-pulls anything BAD and teaches the image prompts from the failure.
+  cron.schedule("0 7 * * *", async () => {
+    try {
+      const { auditQueue } = await import("./modules/wick-image-qa.js");
+      await auditQueue({ autoPull: true });
+    } catch (err) { console.error(`[Scheduler] Wick image QA failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
   // ── WICK QUEUE WATCHDOG — daily 8am, before the 9am publish slot ─────────
   // Dre had to come and ask why nothing posted. The weekly batch had skipped
   // silently for two Sundays and the queue drained to zero unnoticed. This

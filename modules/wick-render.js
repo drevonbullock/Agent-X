@@ -162,9 +162,48 @@ export async function download(url, destPath, attempts = 4) {
 // ─── PROMPT BUILDERS ─────────────────────────────────────────────────────────
 // Never re-describe Wick in prose. Always the element placeholder.
 
+// Anatomy + framing, on EVERY scene. Both were previously only on costume
+// prompts, and a vision audit of the queue on 2026-08-09 found the cost: 6 of 9
+// posts unpublishable. Failures included a slice of toast with human hands
+// holding a phone, a suited humanoid with articulated fingers, Wick as a
+// disembodied flame on a table, and repeated "floating head" frames where the
+// wax body was simply absent. The generator will invent a person unless told
+// plainly and every single time what this character is.
+const ANATOMY_HARD =
+  " CHARACTER: he is a CANDLE, not a person. His head is a golden teardrop flame with a simple " +
+  "cartoon face, roughly as tall as his body. His body is a short cream wax cylinder with soft " +
+  "drips and nothing else. His arms and legs are thin black rubber hose limbs ending in rounded " +
+  "mitten hands and rounded feet. He has NO human torso, shoulders, chest, hips, neck, skin, hair " +
+  "or fingers, and never wears clothing that implies any of them. If any other character appears " +
+  "they must ALSO be candles built exactly this way, in the same style. Never a human, never a " +
+  "generic mascot, never a loaf, blob or animal.";
+
+// The single most common failure was the body being cut off, so the framing is
+// stated as a hard requirement rather than a compositional preference.
+const FRAMING_HARD =
+  " FRAMING: show his COMPLETE body in frame, flame head down to his feet, with clear margin " +
+  "above and below him. Never crop, cut or hide his wax body, arms or legs behind furniture or " +
+  "at the frame edge. He must never read as a floating head or a head and torso only.";
+
+// Learned artwork rules, loaded once per batch by loadImageLessons(). Kept in a
+// module-level cache because scenePrompt is synchronous and runs per frame.
+let IMAGE_LESSONS = "";
+export async function loadImageLessons() {
+  try {
+    const { activeLessons } = await import("./wick-lessons.js");
+    const rules = await activeLessons("image", 8);
+    IMAGE_LESSONS = rules.length
+      ? " MISTAKES ALREADY MADE, DO NOT REPEAT: " + rules.join(" ")
+      : "";
+    if (rules.length) console.log(`[Wick] ${rules.length} learned image rule(s) applied`);
+  } catch { IMAGE_LESSONS = ""; }   // learning must never block generation
+  return IMAGE_LESSONS;
+}
+
 export function scenePrompt({ scene, lighting, palette, extra = "" }) {
   return `A polished cinematic 3D cartoon scene, vertical. ${el()} ${scene} ` +
-    `${lighting} ${STYLE_STACK} ${palette} ${extra}`.replace(/\s+/g, " ").trim();
+    `${lighting} ${STYLE_STACK} ${palette} ${extra}${ANATOMY_HARD}${FRAMING_HARD}${IMAGE_LESSONS}`
+      .replace(/\s+/g, " ").trim();
 }
 
 // `owned` = the panel where he is holding the controls. Both panels are present
@@ -217,7 +256,7 @@ export function lessonScenePrompt(sceneText, expression, seed = 0) {
     scene: `${sceneText}${expression ? ` His expression is ${expression}.` : ""}`,
     lighting: "His golden flame head is the only light source, throwing warm amber light across the nearest objects, long soft shadows behind.",
     palette: PALETTE_WARM,
-    extra: `${camera} Composed so the character and objects sit in the UPPER portion of the frame with clear space below. Absolutely no text anywhere in the image.`,
+    extra: `${camera} Compose so his whole body sits comfortably inside the frame. Absolutely no text anywhere in the image.`,
   });
 }
 

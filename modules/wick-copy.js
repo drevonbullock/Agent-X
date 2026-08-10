@@ -17,6 +17,13 @@ const client = new Anthropic();
 
 export const PILLARS = ["Money", "Systems", "Mind", "Behaviour"];
 
+// Learned rules from pulled work, fetched fresh each call so a lesson applies to
+// the very next post rather than the next deploy. See modules/wick-lessons.js.
+export async function brandRules() {
+  const { lessonsBlock } = await import("./wick-lessons.js");
+  return BRAND_RULES + (await lessonsBlock("copy"));
+}
+
 const BRAND_RULES = `
 WICK'S WISDOM — non-negotiable content rules.
 
@@ -325,7 +332,7 @@ export async function writeVersusCarousel(topic) {
     max_tokens: 3000,
     messages: [{
       role: "user",
-      content: `${BRAND_RULES}
+      content: `${await brandRules()}
 
 ${topicBrief(topic)}
 
@@ -407,7 +414,7 @@ export async function writeOrderCarousel(topic) {
     max_tokens: 2600,
     messages: [{
       role: "user",
-      content: `${BRAND_RULES}
+      content: `${await brandRules()}
 
 ${topicBrief(topic)}
 
@@ -477,7 +484,7 @@ export async function writeParable(topic) {
     max_tokens: 2200,
     messages: [{
       role: "user",
-      content: `${BRAND_RULES}
+      content: `${await brandRules()}
 
 ${topicBrief(topic)}
 
@@ -562,7 +569,7 @@ export async function writeCostume(topic) {
     max_tokens: 3000,
     messages: [{
       role: "user",
-      content: `${BRAND_RULES}
+      content: `${await brandRules()}
 
 ${topicBrief(topic)}
 
@@ -621,7 +628,7 @@ export async function writeLesson(topic) {
     max_tokens: 2600,
     messages: [{
       role: "user",
-      content: `${BRAND_RULES}
+      content: `${await brandRules()}
 
 ${topicBrief(topic)}
 
@@ -711,7 +718,7 @@ export async function writeCaption(post) {
     max_tokens: 500,
     messages: [{
       role: "user",
-      content: `${BRAND_RULES}
+      content: `${await brandRules()}
 
 Write the Instagram caption for this post.
 ${context}
@@ -772,7 +779,7 @@ export async function writeToScenes(topic, format, slots, { rules = "", fields =
     max_tokens: 3000,
     messages: [{
       role: "user",
-      content: `${BRAND_RULES}
+      content: `${await brandRules()}
 
 ${topicBrief(topic)}
 
@@ -817,7 +824,7 @@ export async function writeStepsReel(topic) {
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 1600,
-    messages: [{ role: "user", content: `${BRAND_RULES}
+    messages: [{ role: "user", content: `${await brandRules()}
 
 ${topicBrief(topic)}
 
@@ -865,7 +872,7 @@ export async function writeTiersReel(topic) {
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 1600,
-    messages: [{ role: "user", content: `${BRAND_RULES}
+    messages: [{ role: "user", content: `${await brandRules()}
 
 ${topicBrief(topic)}
 

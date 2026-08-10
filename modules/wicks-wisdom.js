@@ -182,7 +182,11 @@ async function buildLesson(topic, dir, jobIds) {
   buffers.push(await compositeLessonCover({ scenePath: coverPath, headline: l.cover_headline }));
 
   for (const item of l.items) {
-    const p = await scene(lessonScenePrompt(item.scene, item.expression, item.number), dir, `item-${item.number}`, "4:5", jobIds);
+    // 3:2, NOT 4:5. The item slot is 1080x700 landscape; generating portrait and
+    // cropping to it kept only rows ~65-765 of a 1350-tall frame and sliced off
+    // the wax body, arms and legs, so Wick read as a floating head. Matching the
+    // slot's aspect removes the destructive crop entirely.
+    const p = await scene(lessonScenePrompt(item.scene, item.expression, item.number), dir, `item-${item.number}`, "3:2", jobIds);
     buffers.push(await compositeLessonItem({
       scenePath: p, number: item.number, title: item.title,
       problem: item.problem, solution: item.solution,
@@ -290,6 +294,13 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
     } catch { /* alerting must never mask the skip */ }
     return { skipped: true, reason: "higgsfield-cli-unavailable" };
   }
+  // Pull in everything learned from previous pulls and failed image QA before a
+  // single frame is generated.
+  try {
+    const { loadImageLessons } = await import("./wick-render.js");
+    await loadImageLessons();
+  } catch { /* never block a batch on the learning layer */ }
+
   const batchId = `wick-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
   console.log(`\n[Wick] Batch ${batchId} starting`);
 

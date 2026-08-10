@@ -120,6 +120,17 @@ export async function diagnosePulled(id) {
     .eq("id", id);
 
   console.log(`[WickDiag] ${post.format} ep${post.topic_id} pulled:\n  - ${all.join("\n  - ")}`);
+
+  // SELF LEARNING. A pull that only deletes teaches nothing, so the faults become
+  // durable rules injected into the next generation. Never allowed to throw:
+  // failing to learn must not also fail the pull.
+  try {
+    const { learnFrom } = await import("./wick-lessons.js");
+    await learnFrom(all, { scope: "copy", source: "pull" });
+  } catch (err) {
+    console.warn(`[WickDiag] could not learn from this pull: ${err.message}`);
+  }
+
   return { faults: all, post };
 }
 
