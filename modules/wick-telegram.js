@@ -247,6 +247,25 @@ export async function pollTelegramApprovals() {
         text: status === "approved" ? "Approved" : "Pulled",
       }).catch(() => {});
 
+      // A PULL is not a delete. Dre: "whenever i say pull it i want you to redo
+      // it and see what went wrong." So diagnose the post against the rules,
+      // report plainly what failed, and rebuild the topic so the slot survives.
+      // Done after the button update so a slow critique never delays the UI.
+      if (kind === "wick" && status === "rejected") {
+        (async () => {
+          try {
+            const { handlePull } = await import("./wick-diagnose.js");
+            await tg("sendMessage", { chat_id: cq.message.chat.id, text: await handlePull(id) });
+          } catch (err) {
+            console.warn(`[WickTG] pull diagnosis failed: ${err.message}`);
+            await tg("sendMessage", {
+              chat_id: cq.message.chat.id,
+              text: `Pulled, but the diagnosis failed: ${err.message}`,
+            }).catch(() => {});
+          }
+        })();
+      }
+
       // This is the feedback that actually matters, and it never expires.
       await tg("editMessageReplyMarkup", {
         chat_id: cq.message.chat.id,
