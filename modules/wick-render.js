@@ -242,7 +242,11 @@ export function versusPanelPrompt(sceneText, { owned, expression, seed = 0 }) {
     scene: `${sceneText} His expression is ${expression || (owned ? "focused and unhurried" : "hollow and vacant")}.`,
     lighting,
     palette: owned ? PALETTE_WARM : PALETTE_COLD,
-    extra: `${camera} Character clearly visible, room for a text label across the lower third. Absolutely no text anywhere in the image.`,
+    // The label sits across the lower third of every VERSUS panel, so "full"
+    // framing (clear margin above AND below) put him centre and let the label
+    // and the frame edge take his legs. Same fault as the closers.
+    extra: `${camera} Absolutely no text anywhere in the image.`,
+    framing: "upper",
   });
 }
 
