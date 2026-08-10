@@ -178,12 +178,25 @@ const ANATOMY_HARD =
   "they must ALSO be candles built exactly this way, in the same style. Never a human, never a " +
   "generic mascot, never a loaf, blob or animal.";
 
-// The single most common failure was the body being cut off, so the framing is
-// stated as a hard requirement rather than a compositional preference.
-const FRAMING_HARD =
-  " FRAMING: show his COMPLETE body in frame, flame head down to his feet, with clear margin " +
-  "above and below him. Never crop, cut or hide his wax body, arms or legs behind furniture or " +
-  "at the frame edge. He must never read as a floating head or a head and torso only.";
+// The most common failure was the body not being visible, but the CAUSE differs
+// per layout, so a single global rule is wrong. Two distinct cases:
+//   full   — the whole frame is his (LESSON item strip, VERSUS panel). Fill it.
+//   upper  — large composited text sits OVER the lower part of the frame (the
+//            reveal and CTA closers). Verified 2026-08-09: his wax body WAS
+//            generated and then buried under the enlarged CTA text, which the
+//            grader correctly read as "floating flame head".
+const FRAMING = {
+  full:
+    " FRAMING: show his COMPLETE body, flame head down to his feet, with clear margin above and " +
+    "below him. Never crop, cut or hide his wax body, arms or legs behind furniture or at the " +
+    "frame edge. He must never read as a floating head or a head and torso only.",
+  upper:
+    " FRAMING: his COMPLETE body, flame head down to his feet, must sit entirely within the TOP " +
+    "HALF of the frame, standing well back so he reads small and whole. The BOTTOM HALF must be " +
+    "empty floor, wall or table with nothing important in it, because large text is placed there " +
+    "afterwards. Never let his wax body, arms or legs fall into the bottom half.",
+};
+const FRAMING_HARD = FRAMING.full;   // default for callers that do not say
 
 // Learned artwork rules, loaded once per batch by loadImageLessons(). Kept in a
 // module-level cache because scenePrompt is synchronous and runs per frame.
@@ -200,9 +213,9 @@ export async function loadImageLessons() {
   return IMAGE_LESSONS;
 }
 
-export function scenePrompt({ scene, lighting, palette, extra = "" }) {
+export function scenePrompt({ scene, lighting, palette, extra = "", framing = "full" }) {
   return `A polished cinematic 3D cartoon scene, vertical. ${el()} ${scene} ` +
-    `${lighting} ${STYLE_STACK} ${palette} ${extra}${ANATOMY_HARD}${FRAMING_HARD}${IMAGE_LESSONS}`
+    `${lighting} ${STYLE_STACK} ${palette} ${extra}${ANATOMY_HARD}${FRAMING[framing] ?? FRAMING.full}${IMAGE_LESSONS}`
       .replace(/\s+/g, " ").trim();
 }
 
@@ -250,13 +263,14 @@ export function costumePrompt(a, seed = 0) {
   });
 }
 
-export function lessonScenePrompt(sceneText, expression, seed = 0) {
+export function lessonScenePrompt(sceneText, expression, seed = 0, framing = "full") {
   const { camera } = variety(seed + 2);
   return scenePrompt({
     scene: `${sceneText}${expression ? ` His expression is ${expression}.` : ""}`,
     lighting: "His golden flame head is the only light source, throwing warm amber light across the nearest objects, long soft shadows behind.",
     palette: PALETTE_WARM,
-    extra: `${camera} Compose so his whole body sits comfortably inside the frame. Absolutely no text anywhere in the image.`,
+    extra: `${camera} Absolutely no text anywhere in the image.`,
+    framing,
   });
 }
 

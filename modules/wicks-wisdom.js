@@ -98,7 +98,7 @@ async function buildComparisonCarousel(c, format, dir, jobIds, layout = "stacked
         }));
   }
 
-  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression), dir, "cta", "4:5", jobIds);
+  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "upper"), dir, "cta", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: ctaPath,
     closingLine: c.closing_line,
@@ -118,7 +118,7 @@ async function buildOrderCarousel(c, dir, jobIds) {
     const p = await scene(lessonScenePrompt(line.scene, line.expression, i), dir, `line-${i}`, "4:5", jobIds);
     buffers.push(await compositeSinglePanel({ scenePath: p, label: line.label }));
   }
-  const revealPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9), dir, "reveal", "4:5", jobIds);
+  const revealPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "upper"), dir, "reveal", "4:5", jobIds);
   buffers.push(await compositeReveal({
     scenePath: revealPath,
     revealLine: c.reveal_line,
@@ -142,7 +142,7 @@ async function buildParable(topic, dir, jobIds) {
   const appPath = await scene(lessonScenePrompt(c.application_scene, c.application_expression, 5), dir, "apply", "4:5", jobIds);
   buffers.push(await compositeSinglePanel({ scenePath: appPath, label: c.application }));
 
-  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9), dir, "cta", "4:5", jobIds);
+  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "upper"), dir, "cta", "4:5", jobIds);
   buffers.push(await compositeReveal({
     scenePath: ctaPath, revealLine: c.application,
     closingLine: c.closing_line, sendTo: c.send_to,
@@ -161,7 +161,7 @@ async function buildCostume(topic, dir, jobIds) {
     const p = await scene(costumePrompt(r, i), dir, `role-${i}`, "4:5", jobIds);
     buffers.push(await compositeCostume({ scenePath: p, label: r.label, boldWord: r.bold }));
   }
-  const ctaScene = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression), dir, "cta", "4:5", jobIds);
+  const ctaScene = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "upper"), dir, "cta", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: ctaScene,
     closingLine: c.closing_line,
@@ -197,7 +197,7 @@ async function buildLesson(topic, dir, jobIds) {
   const signposts = l.items.map((i) => i.signpost).filter(Boolean);
   const recapPath = await scene(lessonScenePrompt(
     `stands on a city sidewalk at dusk at a five way junction, ${signposts.length} illuminated overhead direction signs crowded above the left hand street all pointing the same way, one clear open street to the right leading toward lit towers, a bus shelter and parked cars framing the junction`
-  ), dir, "recap", "4:5", jobIds);
+  , undefined, 0, "upper"), dir, "recap", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: recapPath, closingLine: l.closing_line,
     sendTo: l.send_to, keyword: l.keyword, resource: l.resource,
