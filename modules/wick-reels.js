@@ -97,12 +97,12 @@ html,body{width:${W}px;height:${H}px;overflow:hidden;background:#000;font-family
 .safe{position:absolute;left:0;right:0;top:${SAFE_TOP}px;height:${SAFE_H}px;
   display:flex;flex-direction:column;}
 .head{background:#fff;padding:26px ${PAD}px 22px;text-align:center;flex-shrink:0;}
-.head h1{font-family:'Anton',sans-serif;font-size:68px;line-height:0.94;color:#000;
+.head h1{font-family:'Anton',sans-serif;font-size:76px;line-height:0.94;color:#000;
   text-transform:uppercase;letter-spacing:-0.5px;}
 .foot{flex-shrink:0;padding:14px ${PAD}px 0;text-align:center;}
-.foot .kick{font-family:'Anton',sans-serif;font-size:38px;line-height:1.04;color:#fff;
+.foot .kick{font-family:'Anton',sans-serif;font-size:46px;line-height:1.04;color:#fff;
   text-transform:uppercase;margin-bottom:10px;}
-.foot .cta{font-family:'DM Sans',sans-serif;font-weight:700;font-size:27px;color:#fff;line-height:1.25;}
+.foot .cta{font-family:'DM Sans',sans-serif;font-weight:700;font-size:32px;color:#fff;line-height:1.25;}
 .foot .cta b{color:#F5A524;}
 .wm{position:absolute;top:${SAFE_TOP - 40}px;left:0;right:0;text-align:center;
   font-family:'DM Sans',sans-serif;font-size:15px;letter-spacing:5px;font-weight:500;
@@ -113,24 +113,26 @@ html,body{width:${W}px;height:${H}px;overflow:hidden;background:#000;font-family
 export async function compositeStepsReel({ title, steps, kicker, sendTo, figurePath }) {
   const rules = steps;
   const n = rules.length;
-  const size = n <= 5 ? 34 : n === 6 ? 31 : 28;
+  const size = n <= 5 ? 46 : n === 6 ? 42 : 38;
   const items = rules.map((r, i) => `
     <li><span class="n">${i + 1}.</span><span class="t"><b>${esc(r.rule)}</b> ${esc(r.why)}</span></li>`).join("");
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE}
-.body{flex:1;padding:22px ${PAD}px 0;display:flex;flex-direction:column;justify-content:flex-start;}
-ol{list-style:none;max-width:900px;margin:0 auto;}
-li{display:flex;gap:14px;margin-bottom:16px;align-items:baseline;}
-li .n{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${size}px;color:#F5A524;min-width:44px;}
-li .t{font-family:'DM Sans',sans-serif;font-weight:400;font-size:${size}px;line-height:1.2;color:#e8e2d8;}
+/* space-between, not flex-start: the list and the badge share the band instead
+   of collapsing to its two ends and leaving a hole between them. */
+.body{flex:1;padding:26px ${PAD}px 0;display:flex;flex-direction:column;justify-content:space-between;}
+ol{list-style:none;max-width:980px;margin:0 auto;}
+li{display:flex;gap:16px;margin-bottom:${n <= 5 ? 22 : 16}px;align-items:baseline;}
+li .n{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${size}px;color:#F5A524;min-width:52px;}
+li .t{font-family:'DM Sans',sans-serif;font-weight:400;font-size:${size}px;line-height:1.24;color:#e8e2d8;}
 li .t b{font-weight:700;color:#fff;}
 /* The figure is small and inline at the base of the list, not a hero image:
    at reel size the list is the content and a large figure just pushed the CTA
    into the caption overlay. The sheet cell is cropped round so its cream
    backing reads as a deliberate badge rather than a pasted rectangle. */
-.figwrap{text-align:center;margin-top:auto;padding-bottom:8px;}
-.figwrap img{width:210px;height:210px;border-radius:50%;object-fit:cover;
+.figwrap{text-align:center;padding-bottom:6px;}
+.figwrap img{width:250px;height:250px;border-radius:50%;object-fit:cover;
   border:5px solid #F5A524;box-shadow:0 0 30px rgba(245,165,36,0.32);}
 </style></head><body>
 <div class="slide">
