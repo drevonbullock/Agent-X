@@ -2,6 +2,7 @@ import "dotenv/config";
 import fs from "fs";
 import path from "path";
 import { execFileSync } from "child_process";
+import { createRequire } from "module";
 import { launchBrowser } from "../images/browser.js";
 
 // ─── WICK'S WISDOM — REEL COVERS ─────────────────────────────────────────────
@@ -46,17 +47,103 @@ const WATERMARK = "@WICKSWISDOM";
 // reading order. Expressions run roughly: content, serene, surprised / stern,
 // determined, pleased / sad, weary, anxious.
 export const SHEET_CELLS = 9;
+const SHEET_BG = "0xF2E3C3";
+
+// ─── CONTENT-AWARE CELL CROP ────────────────────────────────────────────────
+// Dre, 2026-08-10: "the images for the reels are terrible and off centered."
+//
+// The old crop assumed each character sat centred inside its 581x778 grid cell
+// and took a SQUARE 581x581 window out of it. Both assumptions were wrong.
+// Extracting a raw cell shows the figure sitting well RIGHT of centre with a
+// wide band of empty cream on the left, and its feet running into the bottom
+// edge. So the square window cut the legs off AND framed what was left off
+// centre. That is exactly what shipped on the reels.
+//
+// Now the character is FOUND rather than assumed. Calibrated against real
+// pixels from the sheet:
+//   black rubber limbs  max 31-51, saturation 6-15   -> neutral and very dark
+//   vignetted corners   max 112,   saturation 76     -> dark but BROWN
+//   flame gold          max 254,   saturation 213    -> very saturated
+//   cream background    max 239+,  saturation 74-82
+// so "neutral dark" catches the limbs without catching the vignette, and "very
+// saturated" catches the flame. Between them they bound the whole figure: flame
+// at the top, feet at the bottom, hands at the sides.
+const bboxCache = new Map();
+
+function cellBBox(sheetPath, i) {
+  const key = `${sheetPath}#${i}`;
+  if (bboxCache.has(key)) return bboxCache.get(key);
+
+  // canvas is already a dependency (chartjs-node-canvas), so no new install.
+  const { createCanvas, loadImageSync } = requireCanvas();
+  const img = loadImageSync(sheetPath);
+  const cw = Math.floor(img.width / 3), ch = Math.floor(img.height / 3);
+  const cx = (i % 3) * cw, cy = Math.floor(i / 3) * ch;
+
+  const cv = createCanvas(img.width, img.height);
+  const ctx = cv.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+  const d = ctx.getImageData(cx, cy, cw, ch).data;
+
+  let minX = cw, maxX = 0, minY = ch, maxY = 0, hits = 0;
+  for (let y = 0; y < ch; y++) {
+    for (let x = 0; x < cw; x++) {
+      const o = (y * cw + x) * 4;
+      const r = d[o], g = d[o + 1], b = d[o + 2];
+      const mx = Math.max(r, g, b), sat = mx - Math.min(r, g, b);
+      const isLimb  = mx < 90 && sat < 40;    // neutral black, not brown vignette
+      const isFlame = sat > 150;              // saturated gold
+      if (isLimb || isFlame) {
+        hits++;
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  // Too few hits means the detector missed; fall back to the whole cell rather
+  // than crop to noise.
+  const box = hits < 500
+    ? { x: cx, y: cy, w: cw, h: ch }
+    : (() => {
+        const pad = Math.floor(cw * 0.06);        // breathing room, not a tight cut
+        const x0 = Math.max(0, minX - pad), y0 = Math.max(0, minY - pad);
+        const x1 = Math.min(cw - 1, maxX + pad), y1 = Math.min(ch - 1, maxY + pad);
+        return { x: cx + x0, y: cy + y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+      })();
+  bboxCache.set(key, box);
+  return box;
+}
+
+// Lazy require so a missing canvas never breaks a text-only render path.
+function requireCanvas() {
+  // eslint-disable-next-line
+  const mod = createRequire(import.meta.url)("canvas");
+  return { createCanvas: mod.createCanvas, loadImageSync: (p) => {
+    const img = new mod.Image();
+    img.src = fs.readFileSync(p);
+    return img;
+  } };
+}
+
 export function cropCell(i, outPath, { square = true, sheet = SHEET } = {}) {
   const src = path.isAbsolute(sheet) ? sheet : path.join(process.cwd(), sheet);
-  const cw = Math.floor(1744 / 3), ch = Math.floor(2336 / 3);
-  const x = (i % 3) * cw, y = Math.floor(i / 3) * ch;
-  // A square crop centred on the character reads better in a circular badge.
-  const side = Math.min(cw, ch);
-  const sx = x + Math.floor((cw - side) / 2);
-  const sy = y + Math.floor((ch - side) * 0.12); // bias up: the head matters most
-  const filter = square
-    ? `crop=${side}:${side}:${sx}:${sy},scale=420:420`
-    : `crop=${cw}:${ch}:${x}:${y},scale=560:750`;
+  let box;
+  try {
+    box = cellBBox(src, i);
+  } catch (err) {
+    console.warn(`[WickReels] bbox detect failed (${err.message}), using whole cell`);
+    const cw = Math.floor(1744 / 3), ch = Math.floor(2336 / 3);
+    box = { x: (i % 3) * cw, y: Math.floor(i / 3) * ch, w: cw, h: ch };
+  }
+
+  // Letterbox into the target so the WHOLE figure survives, dead centre, and the
+  // pad matches the sheet so the fill is invisible.
+  const [tw, th] = square ? [460, 460] : [560, 750];
+  const filter = `crop=${box.w}:${box.h}:${box.x}:${box.y},` +
+    `scale=${tw}:${th}:force_original_aspect_ratio=decrease,` +
+    `pad=${tw}:${th}:(ow-iw)/2:(oh-ih)/2:${SHEET_BG}`;
+
   execFileSync(FFMPEG, ["-y", "-i", src, "-vf", filter, "-q:v", "2", outPath],
     { stdio: "pipe", timeout: 60_000 });
   return outPath;
