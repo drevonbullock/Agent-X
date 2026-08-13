@@ -4,8 +4,8 @@ import path from "path";
 import os from "os";
 import supabase from "../supabase/client.js";
 import { pickTopics } from "./wick-topics.js";
-import { writeStepsReel, writeTiersReel, writeCaption } from "./wick-copy.js";
-import { compositeStepsReel, compositeTiersReel, cropCell, makeThumbnail } from "./wick-reels.js";
+import { writeStepsReel, writeReceiptReel, writeCaption } from "./wick-copy.js";
+import { compositeStepsReel, compositeReceiptReel, cropCell, makeThumbnail } from "./wick-reels.js";
 import { hfAvailable, generateScene, download, STYLE_STACK } from "./wick-render.js";
 
 // ─── WICK'S WISDOM — WEEKLY REEL BATCH ──────────────────────────────────────
@@ -143,7 +143,7 @@ export async function runWeeklyReels({ count } = {}) {
   for (let i = 0; i < topics.length; i++) {
     const t = topics[i];
     // Alternate the two layouts so a reels tab never shows a run of one shape.
-    const layout = i % 2 === 0 ? "steps" : "tiers";
+    const layout = i % 2 === 0 ? "steps" : "receipt";
     const suited = t.lane === "MONEY_SYSTEMS";
     const sheet = suited && fs.existsSync(path.join(process.cwd(), SUIT)) ? SUIT : PLAIN;
 
@@ -157,11 +157,12 @@ export async function runWeeklyReels({ count } = {}) {
           sendTo: copy.send_to, figurePath: figure(sheet, suited ? 4 : 3),
         });
       } else {
-        copy = await writeTiersReel(t);
-        buf = await compositeTiersReel({
-          titleLines: copy.title_lines, tiers: copy.tiers, kicker: copy.kicker,
-          sendTo: copy.send_to,
-          badgePaths: (sheet === SUIT ? LADDER_SUIT : LADDER_PLAIN).map((c) => badge(sheet, c)),
+        copy = await writeReceiptReel(t);
+        buf = await compositeReceiptReel({
+          title: copy.title, subtitle: copy.subtitle, items: copy.items,
+          totalLabel: copy.total_label, total: copy.total, punch: copy.punch,
+          kicker: copy.kicker, sendTo: copy.send_to,
+          figurePath: figure(sheet, suited ? 4 : 1),
         });
       }
 

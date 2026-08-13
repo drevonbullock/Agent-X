@@ -287,3 +287,65 @@ export function makeThumbnail(srcPath, outPath) {
     "-q:v", "3", outPath], { stdio: "pipe", timeout: 60_000 });
   return outPath;
 }
+
+// ─── LAYOUT 2 — THE RECEIPT (replaced TIERS) ────────────────────────────────
+// TIERS was nine 228px badges with 29px labels, which read as texture rather
+// than information at thumb size. A receipt is the opposite: one high-contrast
+// white shape on black, monospaced numbers, and a total big enough to read
+// across a room. It is instantly recognisable, so the eye stops before it reads.
+export async function compositeReceiptReel({ title, subtitle, items, totalLabel, total, punch, kicker, sendTo, figurePath }) {
+  const rows = (items ?? []).map((it) => `
+    <div class="row">
+      <div class="what"><span class="lbl">${esc(it.label)}</span><span class="det">${esc(it.detail)}</span></div>
+      <div class="dots"></div>
+      <div class="amt">${esc(it.amount)}</div>
+    </div>`).join("");
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
+${BASE}
+.safe{justify-content:flex-start;}
+/* The paper. A hard white slab on near-black is what makes this stop a scroll. */
+.paper{background:#FBF7EE;color:#141210;margin:0 ${PAD - 18}px;padding:30px 34px 26px;
+  box-shadow:0 18px 60px rgba(0,0,0,0.55);}
+.rhead{text-align:center;border-bottom:3px dashed #141210;padding-bottom:16px;margin-bottom:18px;}
+.rhead h1{font-family:'Anton',sans-serif;font-size:62px;line-height:0.95;text-transform:uppercase;}
+.rhead .sub{font-family:'DM Sans',sans-serif;font-weight:500;font-size:24px;letter-spacing:3px;
+  text-transform:uppercase;margin-top:8px;color:#5c554b;}
+.row{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;}
+.what{display:flex;flex-direction:column;flex-shrink:0;max-width:600px;}
+.lbl{font-family:'DM Sans',sans-serif;font-weight:700;font-size:36px;line-height:1.1;}
+.det{font-family:'DM Sans',sans-serif;font-weight:400;font-size:23px;color:#6b6357;margin-top:2px;}
+.dots{flex:1;border-bottom:3px dotted #b9b0a1;transform:translateY(-8px);}
+.amt{font-family:'DM Sans',sans-serif;font-weight:700;font-size:38px;flex-shrink:0;}
+/* The total is the payoff, so it gets the brand colour and the most weight. */
+.tot{border-top:3px dashed #141210;margin-top:20px;padding-top:18px;
+  display:flex;justify-content:space-between;align-items:center;}
+.tot .tl{font-family:'Anton',sans-serif;font-size:44px;text-transform:uppercase;}
+.tot .tv{font-family:'Anton',sans-serif;font-size:96px;line-height:0.9;color:#B8410E;}
+.punch{font-family:'DM Sans',sans-serif;font-weight:700;font-size:30px;line-height:1.24;
+  text-align:center;margin-top:16px;color:#141210;}
+.figwrap{text-align:center;margin-top:18px;}
+.figwrap img{width:200px;height:200px;border-radius:50%;object-fit:cover;
+  border:5px solid #F5A524;box-shadow:0 0 30px rgba(245,165,36,0.32);}
+</style></head><body>
+<div class="slide">
+  <div class="safe">
+    <div class="paper">
+      <div class="rhead">
+        <h1>${esc(title)}</h1>
+        <div class="sub">${esc(subtitle)}</div>
+      </div>
+      ${rows}
+      <div class="tot"><div class="tl">${esc(totalLabel)}</div><div class="tv">${esc(total)}</div></div>
+      <div class="punch">${esc(punch)}</div>
+    </div>
+    ${figurePath ? `<div class="figwrap"><img src="${dataUri(figurePath)}"></div>` : ""}
+    <div class="foot">
+      <div class="kick">${esc(kicker)}</div>
+      <div class="cta">Send this to <b>${esc(sendTo)}</b><br>Repost it if it landed.</div>
+    </div>
+  </div>
+  <div class="wm">${esc(WATERMARK)}</div>
+</div></body></html>`;
+  return render(html);
+}

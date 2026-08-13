@@ -912,3 +912,59 @@ Exactly 9 tiers, weakest first.` }],
   c.kicker = stripDashes(c.kicker);
   return c;
 }
+
+// ─── RECEIPT REEL ────────────────────────────────────────────────────────────
+// Dre, 2026-08-13: "the tiers has to go and be replaced with something more eye
+// popping visually and more valuable."
+//
+// TIERS was nine small circular badges with 29px labels: visually quiet and it
+// carried almost no information. THE RECEIPT is the opposite. It itemises what a
+// habit actually costs across a year on something shaped like a till receipt,
+// which reads instantly at thumb size and is the kind of thing people screenshot.
+//
+// It is also the format closest to the post Dre called PERFECT, whose strongest
+// beat was arithmetic on a small everyday number that anyone can check.
+export async function writeReceiptReel(topic) {
+  if (!topic) throw new Error("writeReceiptReel requires a topic");
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1600,
+    messages: [{ role: "user", content: `${await brandRules()}
+
+FORMAT: RECEIPT REEL. A single 9:16 frame built like a till receipt that prices a
+habit honestly over one year.
+
+THE ARITHMETIC IS THE WHOLE POINT AND IT MUST BE CORRECT.
+Pick ONE small everyday amount and multiply it out over a year. Every number must
+actually multiply: if a line says 4.50 and the frequency says 3 a week, the year
+figure is 4.50 x 3 x 52 = 702. Do the multiplication and check it. A number that
+does not add up destroys the whole post, so keep the sums easy.
+Amounts are believable and ordinary. Never invent a statistic, a study or a
+company. This is the reader's own spending, not research.
+
+TOPIC: ${topic.title}
+LANE: ${topic.lane}   HIDDEN RULE: ${topic.hook ?? ""}
+
+Respond with valid JSON only:
+{
+  "pillar": "Mind|Money style pillar pair",
+  "pillar_link": "ONE plain sentence naming both pillars and the direction of the handoff.",
+  "title": "The receipt header. ALL CAPS, max 5 words, naming what is being priced. 'THE REAL PRICE OF BEING NICE' is the shape.",
+  "subtitle": "3 to 5 words under the header, like a shop name. Plain and dry.",
+  "items": [
+    { "label": "what the line is, max 4 words, everyday words", "detail": "the frequency, like '3 x week' or 'every payday'", "amount": "the single-occurrence amount as a plain number with 2 decimals, no currency symbol" }
+  ],
+  "total_label": "ALL CAPS label for the total line, max 3 words. 'ONE YEAR' is the shape.",
+  "total": "the year total as a plain number, no symbol, no decimals. It MUST equal the items multiplied out.",
+  "punch": "ONE short sentence under the total, max 10 words, that reframes the number. Never a scolding.",
+  "kicker": "ALL CAPS closing line, max 8 words, handing the reader back the decision.",
+  "send_to": "who to send it to, max 12 words, a recognisable situation",
+  "thumb_scene": "One dense sentence staging Wick holding or reading a long paper receipt, present day, 3-4 named modern objects."
+}
+
+Exactly 5 items. Every amount small and ordinary. The total must be the honest sum.` }],
+  });
+  const c = parseJson(msg.content[0].text);
+  c.items = (c.items ?? []).slice(0, 5);
+  return c;
+}
