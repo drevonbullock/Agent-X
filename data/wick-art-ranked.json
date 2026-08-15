@@ -1,0 +1,309 @@
+[
+ {
+  "n": 0,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/00.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "A plain kitchen table, a phone showing a banking app, a rent notice face up beside it, a single overhead light"
+ },
+ {
+  "n": 1,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/01.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He holds a phone up at arm's length with the post on screen, sitting on a bench outside a gym, a gym bag on th"
+ },
+ {
+  "n": 2,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/02.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He sits on the edge of a desk in a small home office at night, a laptop open showing a nearly finished project"
+ },
+ {
+  "n": 4,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/04.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "Close on him standing just before the finish line tape with the cartoon face, shoulders slightly dropped, one "
+ },
+ {
+  "n": 6,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/06.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He sits at a kitchen table in the evening, a receipt unfolded flat beside a calculator, a pen in hand with a n"
+ },
+ {
+  "n": 7,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/07.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He sits forward in the same chair, shoulders dropped, the same bank statement in hand but unmarked, eyes scann"
+ },
+ {
+  "n": 10,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/10.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He sits at the same desk, the same laptop open, but the cell shows 11.99 and the annual column is empty, a cre"
+ },
+ {
+  "n": 11,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/11.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He sits at a work desk, a spreadsheet open on a laptop, the monthly coffee shop spend typed in as twelve dolla"
+ },
+ {
+  "n": 13,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/13.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He stands at a checkout counter, card already in hand, a small notepad open beside the till where he has writt"
+ },
+ {
+  "n": 14,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/14.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He slouches on a couch, thumb mid-scroll on a shopping app, a item priced at 9.99 filling the screen, a half-e"
+ },
+ {
+  "n": 15,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/15.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He sits upright at a kitchen table, finger tracing a printed receipt line by line, a pen circling the total in"
+ },
+ {
+  "n": 17,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/17.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "Wick sits at the same kitchen table, laptop open now showing a flat steady line on a chart, the pay stub still"
+ },
+ {
+  "n": 20,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/20.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "Wick stands at an open apartment door looking in at a bigger empty room, his phone in one hand showing the lea"
+ },
+ {
+  "n": 21,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/21.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "Wick leans back in a desk chair, eyes on a phone screen showing a high figure, a stack of unopened bills on th"
+ },
+ {
+  "n": 23,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/23.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He sits upright at a desk, phone in hand with a new recurring transfer set to his own savings account, the gla"
+ },
+ {
+  "n": 24,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/24.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He stands at a kitchen bench, one hand resting on a closed laptop beside an empty glass savings jar with a han"
+ },
+ {
+  "n": 26,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/26.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He stands at a building-entry mailbox, dropping a sealed envelope with a check inside into the slot, a crumple"
+ },
+ {
+  "n": 27,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/27.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He sits at a small kitchen table, phone face-up showing a payment app with a fifty-dollar amount typed and rea"
+ },
+ {
+  "n": 30,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/30.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He stands in a bright open kitchen holding a mug, a whiteboard behind him with a simple column of numbers addi"
+ },
+ {
+  "n": 31,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/31.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He sits at a desk with a phone showing a banking app, the balance visible, a delivery bag beside the keyboard "
+ },
+ {
+  "n": 32,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/32.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "She sits cross-legged on a sofa with a notebook open to a page of numbers, a laptop showing a salary compariso"
+ },
+ {
+  "n": 35,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/35.jpg",
+  "severity": "clean",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He sits slumped at the same kind of kitchen table, phone face-up showing a calendar invite labelled 'offer cal"
+ },
+ {
+  "n": 3,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/03.jpg",
+  "severity": "minor",
+  "codes": [
+   "C"
+  ],
+  "reason": "The checkered finish-line tape appears to have its own cartoon face, which introduces a second character that is not a c",
+  "scene": "The finish line tape with its cartoon face now turned toward him, its eyes steady and certain, a shadow from t"
+ },
+ {
+  "n": 5,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/05.jpg",
+  "severity": "minor",
+  "codes": [
+   "C"
+  ],
+  "reason": "The red velvet rope barrier has been given cartoon eyes making it a second non-candle character in a different style, an",
+  "scene": "A bright red finish line tape stretched across a running track at dusk, its two poles planted in cracked aspha"
+ },
+ {
+  "n": 8,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/08.jpg",
+  "severity": "minor",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He leans back in a chair, a printed bank statement on the desk in front of him, a red pen circling a row of 9."
+ },
+ {
+  "n": 9,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/09.jpg",
+  "severity": "minor",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He leans back in a chair, a printed bank statement on the desk in front of him, a red pen circling a row of 9."
+ },
+ {
+  "n": 12,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/12.jpg",
+  "severity": "minor",
+  "codes": [],
+  "reason": "clean",
+  "scene": "He stands at the same checkout counter, card tapping the reader, eyes already drifting toward the exit, the sc"
+ },
+ {
+  "n": 19,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/19.jpg",
+  "severity": "minor",
+  "codes": [
+   "C"
+  ],
+  "reason": "Two smaller candle characters visible in the background are slightly off-model and loosely rendered, but the main Wick f",
+  "scene": "Wick sits at a cafe table, coffee in hand, phone face down, a paper receipt curling off the edge of the table "
+ },
+ {
+  "n": 22,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/22.jpg",
+  "severity": "minor",
+  "codes": [],
+  "reason": "Wick's legs are not visible beneath the table which reads as slightly ambiguous, but the overall rendering is intentiona",
+  "scene": "Wick sits at a kitchen table at night, a laptop open showing a bank balance spike, a single pay stub under his"
+ },
+ {
+  "n": 25,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/25.jpg",
+  "severity": "minor",
+  "codes": [
+   "A"
+  ],
+  "reason": "Wick's legs and lower body are partially obscured by the bed and frame edge, making the rubber-hose limbs barely visible",
+  "scene": "He sits on the edge of a bed, laptop open on a bank login screen, a credit card balanced on the keyboard, a re"
+ },
+ {
+  "n": 28,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/28.jpg",
+  "severity": "minor",
+  "codes": [],
+  "reason": "Wick's anatomy is mostly on-model — flame head, wax cylinder body, rubber hose limbs — and no hard fail criteria are tri",
+  "scene": "He sits at a kitchen table at night, a single notebook open to a fresh page with one number written at the top"
+ },
+ {
+  "n": 29,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/29.jpg",
+  "severity": "minor",
+  "codes": [
+   "C"
+  ],
+  "reason": "The shadowy humanoid figure visible through the frosted glass door reads as a human silhouette rather than a candle-styl",
+  "scene": "He stands in a corridor outside a closed office door, phone in both hands, shoulders pulled in, the door's fro"
+ },
+ {
+  "n": 16,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/16.jpg",
+  "severity": "bad",
+  "codes": [
+   "F"
+  ],
+  "reason": "The directional sign post contains multiple glowing blank arrow panels that are clearly generated signage within the art",
+  "scene": "stands on a city sidewalk at dusk at a five way junction, 5 illuminated overhead direction signs crowded above"
+ },
+ {
+  "n": 18,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/18.jpg",
+  "severity": "bad",
+  "codes": [
+   "C",
+   "E"
+  ],
+  "reason": "Multiple background candle characters appear that are off-model clones of Wick, and the cashier candle behind the counte",
+  "scene": "Wick stands at a checkout counter, tap card in hand, a shopping bag already packed, a savings jar visible in h"
+ },
+ {
+  "n": 33,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/33.jpg",
+  "severity": "bad",
+  "codes": [
+   "C"
+  ],
+  "reason": "The character in the foreground is a second candle figure shown from behind, and it is not clearly Wick in the same styl",
+  "scene": "He sits in a glass-walled office across a desk from a manager who slides a single sheet toward him, his own ha"
+ },
+ {
+  "n": 34,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/34.jpg",
+  "severity": "bad",
+  "codes": [
+   "C"
+  ],
+  "reason": "A second candle character appears on the right that lacks a face and is clearly off-model, violating the rule that any s",
+  "scene": "He stands in a car lot leaning over the hood, one finger pressed on a printed price sheet beside a set of car "
+ }
+]

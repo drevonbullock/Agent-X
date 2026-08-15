@@ -62,7 +62,20 @@ const FORMAT_NOTES = {
     "shoulders or legs.",
 };
 
-const mediaType = (p) => (p.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg");
+// Sniff the MAGIC BYTES, never the extension. Recovered library art is written
+// with a .jpg name but is actually PNG, and the API rejects the mismatch with
+// "specified using the image/jpeg media type, but the image appears to be png".
+// Trusting the filename made every one of those images ungradeable.
+const mediaType = (p) => {
+  try {
+    const b = fs.readFileSync(p).subarray(0, 4);
+    if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return "image/png";
+    if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";
+    if (b[0] === 0x52 && b[1] === 0x49) return "image/webp";
+    if (b[0] === 0x47 && b[1] === 0x49) return "image/gif";
+  } catch { /* fall through */ }
+  return p.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+};
 
 // Grade one image file.
 export async function gradeImage(filePath, format = null) {
