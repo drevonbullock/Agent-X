@@ -5,7 +5,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "A plain kitchen table, a phone showing a banking app, a rent notice face up beside it, a single overhead light"
+  "scene": "A plain kitchen table, a phone showing a banking app, a rent notice face up beside it, a single overhead light",
+  "strip": "clean"
  },
  {
   "n": 1,
@@ -13,7 +14,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He holds a phone up at arm's length with the post on screen, sitting on a bench outside a gym, a gym bag on th"
+  "scene": "He holds a phone up at arm's length with the post on screen, sitting on a bench outside a gym, a gym bag on th",
+  "strip": "minor"
  },
  {
   "n": 2,
@@ -21,7 +23,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He sits on the edge of a desk in a small home office at night, a laptop open showing a nearly finished project"
+  "scene": "He sits on the edge of a desk in a small home office at night, a laptop open showing a nearly finished project",
+  "strip": "clean"
  },
  {
   "n": 4,
@@ -29,7 +32,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "Close on him standing just before the finish line tape with the cartoon face, shoulders slightly dropped, one "
+  "scene": "Close on him standing just before the finish line tape with the cartoon face, shoulders slightly dropped, one ",
+  "strip": "bad"
  },
  {
   "n": 6,
@@ -37,7 +41,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He sits at a kitchen table in the evening, a receipt unfolded flat beside a calculator, a pen in hand with a n"
+  "scene": "He sits at a kitchen table in the evening, a receipt unfolded flat beside a calculator, a pen in hand with a n",
+  "strip": "clean"
  },
  {
   "n": 7,
@@ -45,7 +50,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He sits forward in the same chair, shoulders dropped, the same bank statement in hand but unmarked, eyes scann"
+  "scene": "He sits forward in the same chair, shoulders dropped, the same bank statement in hand but unmarked, eyes scann",
+  "strip": "clean"
  },
  {
   "n": 10,
@@ -53,7 +59,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He sits at the same desk, the same laptop open, but the cell shows 11.99 and the annual column is empty, a cre"
+  "scene": "He sits at the same desk, the same laptop open, but the cell shows 11.99 and the annual column is empty, a cre",
+  "strip": "clean"
  },
  {
   "n": 11,
@@ -61,7 +68,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He sits at a work desk, a spreadsheet open on a laptop, the monthly coffee shop spend typed in as twelve dolla"
+  "scene": "He sits at a work desk, a spreadsheet open on a laptop, the monthly coffee shop spend typed in as twelve dolla",
+  "strip": "clean"
  },
  {
   "n": 13,
@@ -69,7 +77,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He stands at a checkout counter, card already in hand, a small notepad open beside the till where he has writt"
+  "scene": "He stands at a checkout counter, card already in hand, a small notepad open beside the till where he has writt",
+  "strip": "clean"
  },
  {
   "n": 14,
@@ -77,7 +86,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He slouches on a couch, thumb mid-scroll on a shopping app, a item priced at 9.99 filling the screen, a half-e"
+  "scene": "He slouches on a couch, thumb mid-scroll on a shopping app, a item priced at 9.99 filling the screen, a half-e",
+  "strip": "clean"
  },
  {
   "n": 15,
@@ -85,7 +95,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He sits upright at a kitchen table, finger tracing a printed receipt line by line, a pen circling the total in"
+  "scene": "He sits upright at a kitchen table, finger tracing a printed receipt line by line, a pen circling the total in",
+  "strip": "clean"
  },
  {
   "n": 17,
@@ -93,7 +104,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "Wick sits at the same kitchen table, laptop open now showing a flat steady line on a chart, the pay stub still"
+  "scene": "Wick sits at the same kitchen table, laptop open now showing a flat steady line on a chart, the pay stub still",
+  "strip": "minor"
  },
  {
   "n": 20,
@@ -101,7 +113,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "Wick stands at an open apartment door looking in at a bigger empty room, his phone in one hand showing the lea"
+  "scene": "Wick stands at an open apartment door looking in at a bigger empty room, his phone in one hand showing the lea",
+  "strip": "clean"
  },
  {
   "n": 21,
@@ -109,7 +122,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "Wick leans back in a desk chair, eyes on a phone screen showing a high figure, a stack of unopened bills on th"
+  "scene": "Wick leans back in a desk chair, eyes on a phone screen showing a high figure, a stack of unopened bills on th",
+  "strip": "clean"
  },
  {
   "n": 23,
@@ -117,7 +131,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He sits upright at a desk, phone in hand with a new recurring transfer set to his own savings account, the gla"
+  "scene": "He sits upright at a desk, phone in hand with a new recurring transfer set to his own savings account, the gla",
+  "strip": "clean"
  },
  {
   "n": 24,
@@ -125,7 +140,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He stands at a kitchen bench, one hand resting on a closed laptop beside an empty glass savings jar with a han"
+  "scene": "He stands at a kitchen bench, one hand resting on a closed laptop beside an empty glass savings jar with a han",
+  "strip": "clean"
  },
  {
   "n": 26,
@@ -133,7 +149,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He stands at a building-entry mailbox, dropping a sealed envelope with a check inside into the slot, a crumple"
+  "scene": "He stands at a building-entry mailbox, dropping a sealed envelope with a check inside into the slot, a crumple",
+  "strip": "minor"
  },
  {
   "n": 27,
@@ -141,7 +158,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He sits at a small kitchen table, phone face-up showing a payment app with a fifty-dollar amount typed and rea"
+  "scene": "He sits at a small kitchen table, phone face-up showing a payment app with a fifty-dollar amount typed and rea",
+  "strip": "minor"
  },
  {
   "n": 30,
@@ -149,7 +167,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He stands in a bright open kitchen holding a mug, a whiteboard behind him with a simple column of numbers addi"
+  "scene": "He stands in a bright open kitchen holding a mug, a whiteboard behind him with a simple column of numbers addi",
+  "strip": "bad"
  },
  {
   "n": 31,
@@ -157,7 +176,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He sits at a desk with a phone showing a banking app, the balance visible, a delivery bag beside the keyboard "
+  "scene": "He sits at a desk with a phone showing a banking app, the balance visible, a delivery bag beside the keyboard ",
+  "strip": "bad"
  },
  {
   "n": 32,
@@ -165,7 +185,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "She sits cross-legged on a sofa with a notebook open to a page of numbers, a laptop showing a salary compariso"
+  "scene": "She sits cross-legged on a sofa with a notebook open to a page of numbers, a laptop showing a salary compariso",
+  "strip": "bad"
  },
  {
   "n": 35,
@@ -173,7 +194,8 @@
   "severity": "clean",
   "codes": [],
   "reason": "clean",
-  "scene": "He sits slumped at the same kind of kitchen table, phone face-up showing a calendar invite labelled 'offer cal"
+  "scene": "He sits slumped at the same kind of kitchen table, phone face-up showing a calendar invite labelled 'offer cal",
+  "strip": "bad"
  },
  {
   "n": 3,
@@ -183,7 +205,8 @@
    "C"
   ],
   "reason": "The checkered finish-line tape appears to have its own cartoon face, which introduces a second character that is not a c",
-  "scene": "The finish line tape with its cartoon face now turned toward him, its eyes steady and certain, a shadow from t"
+  "scene": "The finish line tape with its cartoon face now turned toward him, its eyes steady and certain, a shadow from t",
+  "strip": null
  },
  {
   "n": 5,
@@ -193,7 +216,8 @@
    "C"
   ],
   "reason": "The red velvet rope barrier has been given cartoon eyes making it a second non-candle character in a different style, an",
-  "scene": "A bright red finish line tape stretched across a running track at dusk, its two poles planted in cracked aspha"
+  "scene": "A bright red finish line tape stretched across a running track at dusk, its two poles planted in cracked aspha",
+  "strip": null
  },
  {
   "n": 8,
@@ -201,7 +225,8 @@
   "severity": "minor",
   "codes": [],
   "reason": "clean",
-  "scene": "He leans back in a chair, a printed bank statement on the desk in front of him, a red pen circling a row of 9."
+  "scene": "He leans back in a chair, a printed bank statement on the desk in front of him, a red pen circling a row of 9.",
+  "strip": null
  },
  {
   "n": 9,
@@ -209,7 +234,8 @@
   "severity": "minor",
   "codes": [],
   "reason": "clean",
-  "scene": "He leans back in a chair, a printed bank statement on the desk in front of him, a red pen circling a row of 9."
+  "scene": "He leans back in a chair, a printed bank statement on the desk in front of him, a red pen circling a row of 9.",
+  "strip": null
  },
  {
   "n": 12,
@@ -217,7 +243,8 @@
   "severity": "minor",
   "codes": [],
   "reason": "clean",
-  "scene": "He stands at the same checkout counter, card tapping the reader, eyes already drifting toward the exit, the sc"
+  "scene": "He stands at the same checkout counter, card tapping the reader, eyes already drifting toward the exit, the sc",
+  "strip": null
  },
  {
   "n": 19,
@@ -227,7 +254,8 @@
    "C"
   ],
   "reason": "Two smaller candle characters visible in the background are slightly off-model and loosely rendered, but the main Wick f",
-  "scene": "Wick sits at a cafe table, coffee in hand, phone face down, a paper receipt curling off the edge of the table "
+  "scene": "Wick sits at a cafe table, coffee in hand, phone face down, a paper receipt curling off the edge of the table ",
+  "strip": null
  },
  {
   "n": 22,
@@ -235,7 +263,8 @@
   "severity": "minor",
   "codes": [],
   "reason": "Wick's legs are not visible beneath the table which reads as slightly ambiguous, but the overall rendering is intentiona",
-  "scene": "Wick sits at a kitchen table at night, a laptop open showing a bank balance spike, a single pay stub under his"
+  "scene": "Wick sits at a kitchen table at night, a laptop open showing a bank balance spike, a single pay stub under his",
+  "strip": null
  },
  {
   "n": 25,
@@ -245,7 +274,8 @@
    "A"
   ],
   "reason": "Wick's legs and lower body are partially obscured by the bed and frame edge, making the rubber-hose limbs barely visible",
-  "scene": "He sits on the edge of a bed, laptop open on a bank login screen, a credit card balanced on the keyboard, a re"
+  "scene": "He sits on the edge of a bed, laptop open on a bank login screen, a credit card balanced on the keyboard, a re",
+  "strip": null
  },
  {
   "n": 28,
@@ -253,7 +283,8 @@
   "severity": "minor",
   "codes": [],
   "reason": "Wick's anatomy is mostly on-model — flame head, wax cylinder body, rubber hose limbs — and no hard fail criteria are tri",
-  "scene": "He sits at a kitchen table at night, a single notebook open to a fresh page with one number written at the top"
+  "scene": "He sits at a kitchen table at night, a single notebook open to a fresh page with one number written at the top",
+  "strip": null
  },
  {
   "n": 29,
@@ -263,7 +294,8 @@
    "C"
   ],
   "reason": "The shadowy humanoid figure visible through the frosted glass door reads as a human silhouette rather than a candle-styl",
-  "scene": "He stands in a corridor outside a closed office door, phone in both hands, shoulders pulled in, the door's fro"
+  "scene": "He stands in a corridor outside a closed office door, phone in both hands, shoulders pulled in, the door's fro",
+  "strip": null
  },
  {
   "n": 16,
@@ -273,7 +305,8 @@
    "F"
   ],
   "reason": "The directional sign post contains multiple glowing blank arrow panels that are clearly generated signage within the art",
-  "scene": "stands on a city sidewalk at dusk at a five way junction, 5 illuminated overhead direction signs crowded above"
+  "scene": "stands on a city sidewalk at dusk at a five way junction, 5 illuminated overhead direction signs crowded above",
+  "strip": null
  },
  {
   "n": 18,
@@ -284,7 +317,8 @@
    "E"
   ],
   "reason": "Multiple background candle characters appear that are off-model clones of Wick, and the cashier candle behind the counte",
-  "scene": "Wick stands at a checkout counter, tap card in hand, a shopping bag already packed, a savings jar visible in h"
+  "scene": "Wick stands at a checkout counter, tap card in hand, a shopping bag already packed, a savings jar visible in h",
+  "strip": null
  },
  {
   "n": 33,
@@ -294,7 +328,8 @@
    "C"
   ],
   "reason": "The character in the foreground is a second candle figure shown from behind, and it is not clearly Wick in the same styl",
-  "scene": "He sits in a glass-walled office across a desk from a manager who slides a single sheet toward him, his own ha"
+  "scene": "He sits in a glass-walled office across a desk from a manager who slides a single sheet toward him, his own ha",
+  "strip": null
  },
  {
   "n": 34,
@@ -304,6 +339,7 @@
    "C"
   ],
   "reason": "A second candle character appears on the right that lacks a face and is clearly off-model, violating the rule that any s",
-  "scene": "He stands in a car lot leaning over the hood, one finger pressed on a printed price sheet beside a set of car "
+  "scene": "He stands in a car lot leaning over the hood, one finger pressed on a printed price sheet beside a set of car ",
+  "strip": null
  }
 ]

@@ -34,9 +34,18 @@ function load() {
 // default: each minor has a real fault (a prop with a face, legs hidden, a
 // human-ish shape in a doorway), and shipping a known fault to save 7 credits is
 // a bad trade on a page whose whole asset is one consistent character.
-export function bestArt({ limit = 100, includeMinor = false } = {}) {
+// TWO gates, not one. An image can be perfectly clean as a full frame and still
+// fail once compositeLessonItem crops it to a 1080x700 top strip: the crop takes
+// the lower part of the picture, and on art where the character stands low that
+// removes his body. Graded both ways, only 13 of the 22 clean images survive the
+// crop, and a batch built on full-frame grades alone shipped a slide the QA then
+// failed as "a floating teardrop flame head".
+export function bestArt({ limit = 100, includeMinor = false, forStrip = true } = {}) {
   const ok = new Set(includeMinor ? ["clean", "minor"] : ["clean"]);
-  return load().filter((a) => ok.has(a.severity)).slice(0, limit);
+  return load()
+    .filter((a) => ok.has(a.severity))
+    .filter((a) => (forStrip ? a.strip === "clean" : true))
+    .slice(0, limit);
 }
 
 // Pick n images for one post, avoiding anything already used in this batch so a
