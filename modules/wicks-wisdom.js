@@ -325,7 +325,20 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
     : await planFormats(perWeek);
 
   const jobs = [];
+  const { canAfford } = await import("./credit-guard.js");
+
   for (let i = 0; i < kinds.length; i++) {
+    // Checked per post, not once at the start. A batch spends over many minutes
+    // and would otherwise sail past the reserve midway through.
+    const afford = canAfford(kinds[i]);
+    if (!afford.ok) {
+      console.log(`[Wick] STOPPING to protect the credit floor: ${afford.reason}`);
+      try {
+        const { alertWick } = await import("./wick-telegram.js");
+        await alertWick(`⛔ Batch stopped to protect your credit reserve.\n\n${afford.reason}\n\nBuilt ${created.length} post(s) before stopping.`);
+      } catch { /* alerting must not mask the stop */ }
+      break;
+    }
     const topic = topics[i % topics.length];
     if (!topic) break;
     // Two formats are scoped to a lane rather than dealt by rotation, because
