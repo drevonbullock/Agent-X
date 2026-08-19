@@ -312,10 +312,38 @@ export function findJargon(obj) {
   return [...hits];
 }
 
+// Extract the BALANCED JSON value, not "everything from the first brace to the
+// end of the string". The model sometimes appends a sentence after the JSON, and
+// slicing to the end then threw "Unexpected non-whitespace character after JSON
+// at position 4", which failed whole posts for a reason that had nothing to do
+// with the content. Walks the braces, ignoring any inside string literals.
+function extractJson(t) {
+  const start = t.search(/[[{]/);
+  if (start < 0) throw new Error("no JSON found in model output");
+  const open = t[start];
+  const close = open === "{" ? "}" : "]";
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < t.length; i++) {
+    const ch = t[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (ch === "\\") esc = true;
+      else if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') { inStr = true; continue; }
+    if (ch === open) depth++;
+    else if (ch === close) {
+      depth--;
+      if (depth === 0) return t.slice(start, i + 1);
+    }
+  }
+  return t.slice(start);   // unbalanced; let JSON.parse report it
+}
+
 function parseJson(raw) {
   const t = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
-  const start = t.search(/[[{]/);
-  const parsed = JSON.parse(t.slice(start));
+  const parsed = JSON.parse(extractJson(t));
   const jargon = findJargon(parsed);
   if (jargon.length) {
     console.warn(`[WickCopy] ⚠️ JARGON in generated copy: ${jargon.join(", ")} — the tone rule was ignored. Post still ships; tighten BRAND_RULES if this repeats.`);
