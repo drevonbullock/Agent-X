@@ -341,6 +341,26 @@ function extractJson(t) {
   return t.slice(start);   // unbalanced; let JSON.parse report it
 }
 
+// Retry a copy call when the model returns something that is not clean JSON.
+// BRAND_RULES has grown to ~3,400 tokens of competing instruction, and under
+// that load the model occasionally emits prose or an empty block. That is a
+// transient miss, not a content problem, and it should not cost a whole post:
+// two reuse batches died on "no JSON found in model output" for exactly this.
+export async function withJsonRetry(fn, { attempts = 3, label = "copy" } = {}) {
+  let last;
+  for (let i = 1; i <= attempts; i++) {
+    try { return await fn(); }
+    catch (err) {
+      last = err;
+      const isParse = /JSON|Unexpected|no JSON found/i.test(err.message);
+      if (!isParse) throw err;
+      console.warn(`[WickCopy] ${label} attempt ${i}/${attempts} returned unusable JSON (${err.message.slice(0, 60)}), retrying`);
+      await new Promise((r) => setTimeout(r, 1200 * i));
+    }
+  }
+  throw last;
+}
+
 function parseJson(raw) {
   const t = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
   const parsed = JSON.parse(extractJson(t));
@@ -804,7 +824,7 @@ export async function writeToScenes(topic, format, slots, { rules = "", fields =
   const list = slots.map((s, i) => `${i + 1}. [${s.role}] ${s.shows}`).join("\n");
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 3000,
+    max_tokens: 8000,
     messages: [{
       role: "user",
       content: `${await brandRules()}

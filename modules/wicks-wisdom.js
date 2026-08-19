@@ -399,7 +399,13 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
         pillar: built.pillar, slot_index: i, copy: built.copy, caption,
         topic_id: job.topic?.id ?? null,
         slide_urls: urls, hf_job_ids: jobIds,
-        status: autoPublish ? "approved" : "pending",
+        // NOT "approved". approved means publishable, and publishNextApproved
+        // runs at 9am and 12pm while the image QA runs once at 7am. A post built
+        // at 2pm therefore published at 4pm, ~17 hours before the check would
+        // ever see it: ep1024 went out 23 minutes after it was built and ep1029
+        // 100 minutes after, both ungraded. The gate existed and never ran.
+        // qa_pending is the holding state; only auditQueue promotes to approved.
+        status: autoPublish ? "qa_pending" : "pending",
       }).select().single();
       if (error) throw new Error(`DB insert failed: ${error.message}`);
 

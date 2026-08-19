@@ -137,8 +137,8 @@ export async function gradePost(post, { tmpDir = "/tmp/wick-qa" } = {}) {
 // Sweep everything currently queued. This is the "always run an analysis" part.
 export async function auditQueue({ autoPull = false } = {}) {
   const { data } = await supabase.from("wick_posts")
-    .select("id,format,topic_id,slide_urls")
-    .eq("status", "approved")
+    .select("id,format,topic_id,slide_urls,status")
+    .in("status", ["qa_pending", "approved"])
     .order("created_at");
   if (!data?.length) return { checked: 0, results: [] };
 
@@ -152,10 +152,18 @@ export async function auditQueue({ autoPull = false } = {}) {
       console.log(`     slide ${s.slide} [${(s.codes ?? []).join("")}] ${s.reason}`);
     }
 
-    // Store the grade so a pattern is visible later, same reasoning as pull_reasons.
+    // The QA is now the GATE. Posts land as qa_pending and only reach "approved"
+    // (the state publishNextApproved draws from) by passing here. Before this,
+    // a post built at 2pm was approved instantly and published at 4pm, while the
+    // QA only ran at 7am: ep1024 went out 23 minutes after being built and
+    // ep1029 100 minutes after, neither ever graded.
+    const promoted = r.verdict === "BAD" ? "rejected" : "approved";
     await supabase.from("wick_posts")
-      .update({ image_qa: r, image_qa_at: new Date().toISOString() })
+      .update({ image_qa: r, image_qa_at: new Date().toISOString(), status: promoted })
       .eq("id", p.id);
+    if (promoted === "approved" && p.status === "qa_pending") {
+      console.log(`     → passed QA, cleared to publish`);
+    }
 
     // Artwork faults teach the IMAGE prompts, the same way copy faults teach the
     // writing prompts.

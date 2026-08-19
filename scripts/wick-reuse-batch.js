@@ -5,7 +5,7 @@ import path from "path";
 import supabase from "../supabase/client.js";
 import { pickTopics } from "../modules/wick-topics.js";
 import { pickArt, libraryStats } from "../modules/wick-art-library.js";
-import { writeToScenes, writeCaption } from "../modules/wick-copy.js";
+import { writeToScenes, writeCaption, withJsonRetry } from "../modules/wick-copy.js";
 import { compositeLessonItem } from "../modules/wick-render.js";
 
 // ─── ZERO CREDIT BATCH ───────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ async function save(format, topic, copy, buffers, slot) {
   const { data, error } = await supabase.from("wick_posts").insert({
     batch_id: BATCH, format, sub_type: copy.sub_type ?? format.toLowerCase(),
     pillar: copy.pillar ?? null, slot_index: slot, topic_id: topic.id,
-    copy, caption, slide_urls: urls, status: "approved",
+    copy, caption, slide_urls: urls, status: "qa_pending",  // promoted only by the image QA
   }).select().single();
   if (error) throw new Error(`insert: ${error.message}`);
 
@@ -104,7 +104,7 @@ async function buildLesson(topic, art, dir, slot) {
     role: i === 0 ? "the opening frame" : i === 6 ? "the closing frame" : `item ${i}`,
     shows: a.scene,
   }));
-  const c = await writeToScenes(topic, "LESSON", slots, {
+  const c = await withJsonRetry(() => writeToScenes(topic, "LESSON", slots, {
     rules: `- Frame 1 OPENS the post: an ALL CAPS headline promising a count of 5, plus one
   short line under it naming the trap.
 - Frames 2 to 6 are numbered items. Each needs a short title, ONE problem
@@ -113,7 +113,7 @@ async function buildLesson(topic, art, dir, slot) {
     fields: `  "cover_headline": "ALL CAPS, promises a count of 5, max 8 words",
   "cover_line": "ONE short line under the headline, max 10 words",
   "items": [{ "number": 1, "title": "max 5 words", "problem": "ONE sentence, max 12 words", "solution": "ONE sentence, max 12 words" }],`,
-  });
+  }), { label: "LESSON copy" });
   if (!c.items?.length) throw new Error("copy engine returned no items");
 
   const buffers = [];
@@ -178,6 +178,16 @@ async function main() {
     } catch (err) {
       console.error(`[Reuse] ${format} failed: ${err.message}`);
     }
+  }
+  // Gate the new posts NOW. They are qa_pending and cannot publish until this
+  // passes them, so leaving it to the 7am sweep would stall the queue and, worse,
+  // is what let ungraded posts ship in the first place.
+  try {
+    const { auditQueue } = await import("../modules/wick-image-qa.js");
+    console.log("\n[Reuse] running image QA gate");
+    await auditQueue({ autoPull: true });
+  } catch (err) {
+    console.warn(`[Reuse] QA gate failed: ${err.message}`);
   }
   console.log("\n[Reuse] done. Higgsfield credits spent: 0");
 }
