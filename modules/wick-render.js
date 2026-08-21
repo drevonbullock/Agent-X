@@ -22,11 +22,22 @@ function resolveHfBin() {
 const HF_BIN = resolveHfBin();
 const FFPROBE = process.platform === "darwin" ? "/opt/homebrew/bin/ffprobe" : "/usr/bin/ffprobe";
 const WICK_ELEMENT = process.env.WICK_ELEMENT_ID || "5e934732-6de4-438a-b3a6-024144603518";
-const MODEL = process.env.WICK_IMAGE_MODEL || "gpt_image_2";
-// Backup model. nano_banana_pro is 2 credits vs gpt_image_2's 7 and handles pure
-// scenes well. Every Wick frame is a pure scene (all text is composited by us,
-// never generated), so the fallback loses nothing but cost.
-const FALLBACK_MODEL = process.env.WICK_FALLBACK_MODEL || "nano_banana_pro";
+// nano_banana_pro is the PRIMARY model (Dre, 2026-08-21: "use nano banana pro
+// not gpt2"). It is not the budget option, and I was wrong to call it the weaker
+// one: for this brand it is the better fit on the merits, cost aside.
+//   - It accepts 4:5 NATIVELY. gpt_image_2 rejects 4:5, so every frame had to be
+//     asked for at 3:4 and resampled to 1080x1350 — a quality loss on every
+//     single slide that nano_banana_pro simply does not incur.
+//   - Character consistency from a reference element is its strength, and one
+//     consistent character IS this page's entire asset.
+// Its one real weakness, inventing UI text in scenes, is already countered by
+// NO_TEXT_HARD below, and every label we ship is composited by us anyway.
+const MODEL = process.env.WICK_IMAGE_MODEL || "nano_banana_pro";
+// Exported so every post records WHICH model made its art. See the migration
+// add_image_model_to_wick_posts: without attribution, model comparisons are
+// opinion. With it, image_qa.verdict grouped by image_model is evidence.
+export const activeModel = () => MODEL;
+const FALLBACK_MODEL = process.env.WICK_FALLBACK_MODEL || "gpt_image_2";
 
 // The locked style stack. Appended to EVERY scene prompt, never varied.
 // This is what makes 200 posts look like one page.

@@ -10,8 +10,7 @@ import {
   versusPanelPrompt, costumePrompt, lessonScenePrompt,
   compositeTwoPanel, compositeSplitPanel, compositeSinglePanel, compositeReveal, compositeParable,
   parableScenePrompt,
-  compositeCostume, compositeLessonCover, compositeLessonItem, compositeCta,
-} from "./wick-render.js";
+  compositeCostume, compositeLessonCover, compositeLessonItem, compositeCta, activeModel } from "./wick-render.js";
 
 // ─── WICK'S WISDOM — ORCHESTRATOR ────────────────────────────────────────────
 // Weekly batch → Supabase queue → publish to the same Instagram account Agent X
@@ -398,7 +397,7 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
         batch_id: batchId, format: built.format, sub_type: built.sub_type,
         pillar: built.pillar, slot_index: i, copy: built.copy, caption,
         topic_id: job.topic?.id ?? null,
-        slide_urls: urls, hf_job_ids: jobIds,
+        slide_urls: urls, hf_job_ids: jobIds, image_model: activeModel(),
         // NOT "approved". approved means publishable, and publishNextApproved
         // runs at 9am and 12pm while the image QA runs once at 7am. A post built
         // at 2pm therefore published at 4pm, ~17 hours before the check would

@@ -23,15 +23,11 @@ MAX_WAIT_MIN=${MAX_WAIT_MIN:-1440}   # 24h
 INTERVAL=${INTERVAL:-180}
 waited=0
 
-# QUALITY OVER COST. Dre lifted the credit reserve on 2026-08-21 ("you can use
-# credits freely... prevent slop... quality"), so this is back on gpt_image_2.
-# nano_banana_pro at 2 credits an image was only ever a compromise to fit a 14
-# post week under a 1000 credit floor; it is the weaker model and this brand's
-# whole asset is one consistent, well-made character.
-#
-# 14 posts on gpt_image_2 is ~630 credits. The floor drops to 200 so the guard
-# still refuses to spend the account to zero, but no longer blocks a full week.
-export WICK_IMAGE_MODEL=${WICK_IMAGE_MODEL:-gpt_image_2}
+# nano_banana_pro is the primary model by Dre's call (2026-08-21). It accepts
+# 4:5 natively, so slides are never resampled from 3:4 the way gpt_image_2
+# forces, and its reference-element consistency is the thing this brand runs on.
+# 14 posts is ~156 credits. The floor stays at 200 as a spend-to-zero guard.
+export WICK_IMAGE_MODEL=${WICK_IMAGE_MODEL:-nano_banana_pro}
 export WICK_CREDIT_FLOOR=${WICK_CREDIT_FLOOR:-200}
 
 say() {
@@ -48,7 +44,7 @@ while [ $waited -lt $((MAX_WAIT_MIN * 60)) ]; do
   # token and would kill the batch this script is about to start.
   if ./node_modules/.bin/higgsfield account status 2>&1 | grep -qi credits; then
     echo "[Wait] auth is live. Building."
-    say "🟢 Higgsfield login restored. Building the week now on ${WICK_IMAGE_MODEL} (~630 credits for 14 posts, floor ${WICK_CREDIT_FLOOR})."
+    say "🟢 Higgsfield login restored. Building the week now on ${WICK_IMAGE_MODEL} (~156 credits for 14 posts, floor ${WICK_CREDIT_FLOOR})."
 
     # Push the freshly refreshed credential to Supabase so Railway gets it too.
     node modules/higgsfield-auth.js --push 2>&1 | tail -2 || true
