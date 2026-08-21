@@ -100,7 +100,8 @@ const ASPECT_MAP = { "4:5": "3:4", "5:4": "4:3" };
 const NO_TEXT_HARD =
   " CRITICAL: render absolutely no text, no letters, no numbers, no digits, no " +
   "currency amounts, no words, no UI labels, no menu items, no app interfaces, no " +
-  "signage, no logos and no writing of any kind anywhere in this image. Any screen, " +
+  "signage, no shop signs, no logos, no emblems, no icons, no symbols, no pictograms, no badges, " +
+  "no brand marks and no writing of any kind anywhere in this image. Any screen, " +
   "paper, notebook, sign or display must be completely blank, showing only abstract " +
   "shapes, blocks, lines or glowing colour with no readable characters whatsoever.";
 
@@ -228,12 +229,15 @@ const ANATOMY_HARD =
   "drips and nothing else. His arms and legs are thin black rubber hose limbs ending in rounded " +
   "mitten hands and rounded feet. He has NO human torso, shoulders, chest, hips, neck, skin, hair " +
   "or fingers, and never wears clothing that implies any of them. " +
-  "OTHER CHARACTERS: prefer Wick ALONE. Only include another character when the sentence genuinely " +
-  "needs someone doing something to him, and then it must be another candle built exactly this " +
-  "way, fully lit and clearly readable, never a dark silhouette, never a vague shape in the " +
-  "background, never a simplified or half-drawn figure. Never a human, never a generic mascot, " +
-  "never a loaf, blob or animal. NEVER show disembodied human hands or arms reaching in from " +
-  "off screen.";
+  "ONLY ONE CHARACTER. Exactly one candle appears in this frame and it is Wick. Do NOT add a " +
+  "second candle, a smaller candle, a background candle, a candle inside a box or on a shelf, a " +
+  "crowd, a bystander, a shopkeeper, a clerk or any other figure of any kind. If the sentence " +
+  "seems to need someone else, show the EVIDENCE of them instead: an empty chair, a closed door, " +
+  "a hand-less counter, an object they left behind. Never a human, never a generic mascot, never " +
+  "a loaf, blob or animal, never a silhouette or vague shape in the background. NEVER show " +
+  "disembodied human hands or arms reaching in from off screen. " +
+  "This rule is absolute: the QA gate rejected 2 of 3 posts on 2026-08-21 for a second off-model " +
+  "candle appearing beside him, so an added figure fails the post outright.";
 
 // The most common failure was the body not being visible, but the CAUSE differs
 // per layout, so a single global rule is wrong. Two distinct cases:
@@ -245,8 +249,14 @@ const ANATOMY_HARD =
 const FRAMING = {
   full:
     " FRAMING: show his COMPLETE body, flame head down to his feet, with clear margin above and " +
-    "below him. Never crop, cut or hide his wax body, arms or legs behind furniture or at the " +
-    "frame edge. He must never read as a floating head or a head and torso only.",
+    "below him. NOTHING MAY STAND IN FRONT OF HIM. Counters, tables, desks, boxes and railings " +
+    "must be BESIDE him or BEHIND him, never between him and the camera: place him clear of the " +
+    "furniture, standing beside a counter rather than behind it, next to a table rather than " +
+    "seated at it. His legs and feet must be visible against the floor with clear space around " +
+    "them. Never crop, cut, occlude or hide his wax body, arms, hands, legs or feet behind any " +
+    "object or at the frame edge. He must never read as a floating head or a head and torso " +
+    "only. If the scene needs a counter or table, show it from an angle where his whole body " +
+    "still reads.",
   upper:
     " FRAMING: his COMPLETE body, flame head down to his feet, must sit entirely within the TOP " +
     "HALF of the frame, standing well back so he reads small and whole. The BOTTOM HALF must be " +
@@ -296,7 +306,7 @@ let IMAGE_LESSONS = "";
 export async function loadImageLessons() {
   try {
     const { activeLessons } = await import("./wick-lessons.js");
-    const rules = await activeLessons("image", 8);
+    const rules = await activeLessons("image", 18);
     IMAGE_LESSONS = rules.length
       ? " MISTAKES ALREADY MADE, DO NOT REPEAT: " + rules.join(" ")
       : "";
