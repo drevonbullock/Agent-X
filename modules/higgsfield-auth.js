@@ -170,6 +170,81 @@ export async function ensureHiggsfieldAuth({ force = false } = {}) {
   return true;
 }
 
+// ─── KEEPALIVE ───────────────────────────────────────────────────────────────
+// THE BUG THAT COST A WEEK (2026-08-14 → 08-21).
+//
+// ensureHiggsfieldAuth() was called in exactly one place: scheduler boot. The
+// access token lives ~24 HOURS. So if Railway did not restart for a day, nothing
+// refreshed it and it died. Nothing refreshed it the day after either, and once
+// the refresh_token lapsed too the credential was permanently dead. Batches then
+// failed with "Session expired", which I misread as a Higgsfield outage.
+//
+// A token with a 24h life needs a refresh on a schedule, not on a boot that may
+// never come. This is that schedule. It is deliberately separate from
+// ensureHiggsfieldAuth (which is a pre-flight and refuses to rotate a healthy
+// token, because rotating mid-batch kills the batch):
+//
+//   ensureHiggsfieldAuth  "am I usable RIGHT NOW" — refuses to rotate above 2h
+//   keepAlive             "will I still be usable TOMORROW" — rotates below 12h
+//
+// Run it only at hours no batch runs. Rotation invalidates the token any
+// in-flight generation is holding.
+const KEEPALIVE_WHEN_UNDER_MS = 12 * 60 * 60 * 1000;
+
+export async function keepAlive() {
+  const hydrated = await hydrate();
+  if (!hydrated) {
+    await warnLoginDead("no credentials on disk, in Supabase, or in the environment");
+    return { ok: false, reason: "no credentials" };
+  }
+
+  const creds = readFileCreds();
+  const msLeft = expiryMs(creds) - Date.now();
+  const hLeft = msLeft / 3600000;
+
+  if (msLeft > KEEPALIVE_WHEN_UNDER_MS) {
+    console.log(`[HF] keepalive: ${hLeft.toFixed(1)}h left — no refresh needed`);
+    return { ok: true, hoursLeft: hLeft, refreshed: false };
+  }
+
+  console.log(`[HF] keepalive: ${hLeft.toFixed(1)}h left — refreshing now`);
+  try {
+    execFileSync(HF_BIN, ["auth", "token"], { timeout: 30_000, stdio: "pipe" });
+  } catch (err) {
+    // This is the moment the week-long failure became visible ONLY as an empty
+    // queue. Say it out loud instead, with the exact commands.
+    await warnLoginDead(String(err.message).slice(0, 140));
+    return { ok: false, reason: "refresh rejected", hoursLeft: hLeft };
+  }
+
+  const after = readFileCreds();
+  const stored = await loadStoredCreds();
+  if (after && expiryMs(after) > expiryMs(stored)) {
+    await persistCreds(after);
+    console.log(`[HF] keepalive refreshed + persisted (${describe(after)})`);
+  }
+  return { ok: true, hoursLeft: (expiryMs(after) - Date.now()) / 3600000, refreshed: true };
+}
+
+// One alert, one wording, everywhere. Never call this an outage: the CLI failing
+// while higgsfield.ai and the MCP connector both work means the LOGIN is dead,
+// not the service.
+async function warnLoginDead(detail) {
+  console.error(`[HF] LOGIN IS DEAD (${detail})`);
+  try {
+    const { alertWick } = await import("./wick-telegram.js");
+    await alertWick(
+      "🔑 HIGGSFIELD LOGIN EXPIRED\n\n" +
+      "This is NOT an outage. Higgsfield is fine, the saved login died.\n" +
+      "No art can be generated until you re-auth.\n\n" +
+      "On your Mac:\n" +
+      "  higgsfield auth login\n" +
+      "  node modules/higgsfield-auth.js --push\n\n" +
+      "The queue keeps draining until then."
+    );
+  } catch { /* alerting must never mask the failure */ }
+}
+
 // ─── CLI ─────────────────────────────────────────────────────────────────────
 // On the Mac, after `higgsfield auth login`:
 //   node modules/higgsfield-auth.js --push     upload local credentials to Supabase
@@ -183,6 +258,11 @@ const entry = process.argv[1]
   : null;
 if (entry && import.meta.url === entry) {
   const run = async () => {
+    if (process.argv.includes("--keepalive")) {
+      const r = await keepAlive();
+      console.log("[HF] keepalive ->", JSON.stringify(r));
+      process.exit(r.ok ? 0 : 1);
+    }
     if (process.argv.includes("--push")) {
       const local = readFileCreds();
       if (!local?.access_token) {

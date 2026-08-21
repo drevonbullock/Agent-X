@@ -410,12 +410,18 @@ export async function alertWick(text) {
 // Runs daily. Tells Dre BEFORE the queue is empty, not after.
 export async function checkWickQueueDepth() {
   const { count } = await supabase.from("wick_posts")
-    .select("*", { count: "exact", head: true }).in("status", ["approved", "pending"]);
+    // qa_pending counts. It is built, paid for, and one QA pass from
+    // publishable, so omitting it reports an empty queue that is not empty.
+    .select("*", { count: "exact", head: true }).in("status", ["approved", "pending", "qa_pending"]);
   const queued = count ?? 0;
   const days = Math.floor(queued / 2);          // 2 posts/day
 
   if (queued === 0) {
-    await alertWick("🚨 WICK QUEUE IS EMPTY\n\nNothing will publish today. A batch has to be built on your Mac:\n\nnode -e \"import('./modules/wicks-wisdom.js').then(m=>m.runWeeklyBatch())\"\n\nRailway cannot build batches: the Higgsfield CLI only runs on your machine.");
+    // Do NOT guess at the cause here. wick-doctor.js checks auth first and says
+    // which it is; this alert used to assert "Railway cannot build batches",
+    // which sent Dre to rebuild batches for a week when the real fix was a
+    // 30 second re-login.
+    await alertWick("🚨 WICK QUEUE IS EMPTY\n\nNothing will publish today.\n\nCheck WHY before rebuilding:\n  node modules/wick-doctor.js");
   } else if (days <= 2) {
     await alertWick(`⚠️ WICK QUEUE LOW\n\n${queued} post(s) left, about ${days} day(s) at 2/day.\nBuild the next batch on your Mac before it runs out.`);
   }

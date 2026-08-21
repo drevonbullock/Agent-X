@@ -17,7 +17,8 @@ import { syncWickMetrics } from "./modules/wick-analytics.js";
 import { initTokens, refreshTokens, checkAnthropicCredit, checkLinkedInToken, checkTelegram } from "./modules/token-manager.js";
 import { isHiggsfieldCliAvailable } from "./agent/generate-higgsfield.js";
 import { checkRls } from "./modules/rls-guard.js";
-import { ensureHiggsfieldAuth } from "./modules/higgsfield-auth.js";
+import { ensureHiggsfieldAuth, keepAlive } from "./modules/higgsfield-auth.js";
+import { runDoctor } from "./modules/wick-doctor.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
@@ -130,8 +131,30 @@ export function startScheduler() {
   // NOT gated on paused(): knowing the queue is empty matters most when
   // publishing is off, since nothing else would reveal it.
   cron.schedule("0 8 * * *", async () => {
-    try { await checkWickQueueDepth(); }
-    catch (err) { console.error(`[Scheduler] Wick queue check failed: ${err.message}`); }
+    // runDoctor supersedes the bare queue check. The queue going empty was a
+    // SYMPTOM: the cause was a dead Higgsfield login, and the old check never
+    // looked at auth, so it reported "queue empty, build a batch on your Mac"
+    // every day for a week while the real answer was "re-run auth login".
+    try { await runDoctor(); }
+    catch (err) { console.error(`[Scheduler] Wick doctor failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  // ── HIGGSFIELD KEEPALIVE — 2am and 8pm ──────────────────────────────────
+  // The access token lives ~24 HOURS and used to be refreshed in exactly one
+  // place: scheduler boot. A container that did not restart for a day lost it,
+  // and once the refresh_token lapsed too the credential was permanently dead.
+  // That is precisely how 2026-08-14 to 08-21 happened.
+  //
+  // Two runs a day means the longest gap is 18h, comfortably inside the 24h
+  // life, so the refresh chain can never lapse again. Both hours are chosen to
+  // miss every batch (reels 5am, carousels 6am) and both publish slots (9am,
+  // 12pm): refreshing ROTATES the token and would kill an in-flight batch.
+  // NOT gated on paused(): a paused system still needs a living credential.
+  cron.schedule("0 2,20 * * *", async () => {
+    try {
+      const r = await keepAlive();
+      if (!r.ok) console.error(`[Scheduler] Higgsfield keepalive FAILED: ${r.reason}`);
+    } catch (err) { console.error(`[Scheduler] Higgsfield keepalive threw: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── WICK REELS — 14 a week, built Sunday 5am ────────────────────────────
