@@ -122,11 +122,40 @@ function runModel(model, prompt, aspect) {
 // Generate one image. Returns { url, jobId, model }.
 // Tries the primary model, falls back to the cheaper backup on failure.
 export function generateScene(prompt, aspect = "3:4") {
-  let raw, usedModel = MODEL;
-  try {
-    raw = runModel(MODEL, prompt, aspect);
-  } catch (err) {
-    console.warn(`[Wick] ${MODEL} failed (${String(err.message).slice(0, 80)}) — falling back to ${FALLBACK_MODEL}`);
+  // RETRY THE SAME MODEL. DO NOT SWITCH MODELS MID-CAROUSEL.
+  //
+  // This used to fall straight to FALLBACK_MODEL on the first failure, which is
+  // wrong for this brand in three ways at once. A single carousel would ship
+  // slides drawn by two different models, so the character's look changes
+  // between slide 3 and slide 4 -- on a page whose entire asset is one
+  // consistent character, that is precisely the slop we are trying to prevent.
+  // It also silently overrides Dre's explicit model choice, and it makes
+  // wick_posts.image_model a lie, since the row records one model while some
+  // slides came from another.
+  //
+  // Generation failures are usually transient (a queue hiccup, a moderation
+  // false positive on one prompt), so the right response is to ask the SAME
+  // model again with a short backoff. Only if it fails repeatedly do we
+  // consider another model, and that now requires WICK_ALLOW_MODEL_FALLBACK
+  // to be set explicitly rather than happening behind Dre's back.
+  const ATTEMPTS = 3;
+  let raw, usedModel = MODEL, lastErr;
+  for (let a = 1; a <= ATTEMPTS; a++) {
+    try { raw = runModel(MODEL, prompt, aspect); lastErr = null; break; }
+    catch (err) {
+      lastErr = err;
+      console.warn(`[Wick] ${MODEL} attempt ${a}/${ATTEMPTS} failed (${String(err.message).slice(0, 80)})`);
+      if (a < ATTEMPTS) execFileSync("sleep", [String(4 * a)]);
+    }
+  }
+  if (lastErr) {
+    if (process.env.WICK_ALLOW_MODEL_FALLBACK !== "true") {
+      // Fail the SLIDE, not the look of the whole carousel. The batch catches
+      // this per post and moves on, so one bad prompt costs one post rather
+      // than quietly degrading every post after it.
+      throw new Error(`${MODEL} failed ${ATTEMPTS}x: ${String(lastErr.message).slice(0, 120)}`);
+    }
+    console.warn(`[Wick] ${MODEL} failed ${ATTEMPTS}x — WICK_ALLOW_MODEL_FALLBACK=true, using ${FALLBACK_MODEL}`);
     usedModel = FALLBACK_MODEL;
     raw = runModel(FALLBACK_MODEL, prompt, aspect);
   }
