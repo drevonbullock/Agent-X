@@ -473,6 +473,33 @@ export async function listPendingWick() {
 
 export async function decideWick(id, action) {
   const status = action === "approve" ? "approved" : "rejected";
+
+  // A PULL IS FINAL. Dre, on posts that went out after he pulled them: "you
+  // posted the ones i pulled for a reason." pulled_at means a human or the QA
+  // gate already judged this post unfit, and an Approve tap must never quietly
+  // undo that -- the buttons live in a chat scrollback forever, so an old
+  // message can be tapped long after the post was retired. That is exactly how
+  // a retired post came back on 2026-08-21: it was resent for a delivery test,
+  // the stale Approve button was tapped, and it went straight back to
+  // publishable with pulled_at still set on the row.
+  //
+  // Rebuilding a pulled post is what wick-diagnose.js is for. It creates a NEW
+  // row; it never resurrects this one.
+  if (action === "approve") {
+    const { data: p } = await supabase.from("wick_posts")
+      .select("pulled_at, pull_reasons").eq("id", id).maybeSingle();
+    if (p?.pulled_at) {
+      console.warn(`[Wick] REFUSING to approve ${id}: pulled ${p.pulled_at} (${(p.pull_reasons ?? []).join("; ") || "no reason recorded"})`);
+      try {
+        const { alertWick } = await import("./wick-telegram.js");
+        await alertWick("🚫 That post was already pulled, so Approve was ignored.\n\n" +
+          `Reason it was pulled: ${(p.pull_reasons ?? []).join("; ") || "not recorded"}\n\n` +
+          "Pulled posts get rebuilt as new posts, never un-pulled.");
+      } catch { /* refusing matters more than announcing it */ }
+      return "rejected";
+    }
+  }
+
   const { error } = await supabase.from("wick_posts").update({ status }).eq("id", id);
   if (error) throw new Error(error.message);
   console.log(`[Wick] ${id} → ${status}`);
@@ -483,8 +510,12 @@ export async function decideWick(id, action) {
 
 export async function publishNextApproved() {
   // Pull the approved queue oldest first.
+  // .is("pulled_at", null) is not redundant with decideWick's refusal: this is
+  // the LAST gate before something reaches the grid, and it must not depend on
+  // every upstream path having been careful. Anything ever pulled is excluded
+  // here no matter how its status got set.
   const { data: queue } = await supabase.from("wick_posts")
-    .select("*").eq("status", "approved")
+    .select("*").eq("status", "approved").is("pulled_at", null)
     .order("created_at", { ascending: true });
   if (!queue?.length) { console.log("[Wick] No approved posts queued — nothing to publish."); return null; }
 
