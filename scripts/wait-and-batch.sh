@@ -23,13 +23,16 @@ MAX_WAIT_MIN=${MAX_WAIT_MIN:-1440}   # 24h
 INTERVAL=${INTERVAL:-180}
 waited=0
 
-# nano_banana_pro is 2 credits an image against gpt_image_2's 7. A full 14 post
-# week costs ~156 credits instead of ~800, which is the only way "keep 1000
-# credits" and "a week of posts" are both true on a 1197 balance. Every Wick
-# frame is a pure scene (all text is composited by us), and the model's habit of
-# inventing UI text is countered by NO_TEXT_HARD in wick-render.js. The image QA
-# still grades every slide before any of it can publish.
-export WICK_IMAGE_MODEL=${WICK_IMAGE_MODEL:-nano_banana_pro}
+# QUALITY OVER COST. Dre lifted the credit reserve on 2026-08-21 ("you can use
+# credits freely... prevent slop... quality"), so this is back on gpt_image_2.
+# nano_banana_pro at 2 credits an image was only ever a compromise to fit a 14
+# post week under a 1000 credit floor; it is the weaker model and this brand's
+# whole asset is one consistent, well-made character.
+#
+# 14 posts on gpt_image_2 is ~630 credits. The floor drops to 200 so the guard
+# still refuses to spend the account to zero, but no longer blocks a full week.
+export WICK_IMAGE_MODEL=${WICK_IMAGE_MODEL:-gpt_image_2}
+export WICK_CREDIT_FLOOR=${WICK_CREDIT_FLOOR:-200}
 
 say() {
   node --input-type=module -e "
@@ -45,7 +48,7 @@ while [ $waited -lt $((MAX_WAIT_MIN * 60)) ]; do
   # token and would kill the batch this script is about to start.
   if ./node_modules/.bin/higgsfield account status 2>&1 | grep -qi credits; then
     echo "[Wait] auth is live. Building."
-    say "🟢 Higgsfield login restored. Building the week now on ${WICK_IMAGE_MODEL} (2 credits/image, ~156 for 14 posts). Your 1000 credit floor stays intact."
+    say "🟢 Higgsfield login restored. Building the week now on ${WICK_IMAGE_MODEL} (~630 credits for 14 posts, floor ${WICK_CREDIT_FLOOR})."
 
     # Push the freshly refreshed credential to Supabase so Railway gets it too.
     node modules/higgsfield-auth.js --push 2>&1 | tail -2 || true

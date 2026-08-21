@@ -169,8 +169,10 @@ export async function download(url, destPath, attempts = 4) {
 // disembodied flame on a table, and repeated "floating head" frames where the
 // wax body was simply absent. The generator will invent a person unless told
 // plainly and every single time what this character is.
+// No leading "CHARACTER:" label here — scenePrompt's CHARACTER section supplies
+// it, and carrying it in both places printed the word twice in every prompt.
 const ANATOMY_HARD =
-  " CHARACTER: he is a CANDLE, not a person. His head is a golden teardrop flame with a simple " +
+  " He is a CANDLE, not a person. His head is a golden teardrop flame with a simple " +
   "cartoon face, roughly as tall as his body. His body is a short cream wax cylinder with soft " +
   "drips and nothing else. His arms and legs are thin black rubber hose limbs ending in rounded " +
   "mitten hands and rounded feet. He has NO human torso, shoulders, chest, hips, neck, skin, hair " +
@@ -208,7 +210,34 @@ const FRAMING = {
     "it, because a speech bubble is placed there afterwards. Never crop his body at the bottom " +
     "edge.",
 };
-const FRAMING_HARD = FRAMING.full;   // default for callers that do not say
+
+// ─── CRAFT: THE ANTI-SLOP BLOCK ──────────────────────────────────────────────
+// Dre, 2026-08-21: "make sure when your creating images to prevent slop, use a
+// prompt template that's consistent and will allow you to make anything while
+// keeping character consistency and quality."
+//
+// ANATOMY_HARD says what Wick IS, FRAMING says where he SITS. Neither says
+// anything about whether the picture is any GOOD, and that gap is where slop
+// came from. "Polished cinematic 3D cartoon" in STYLE_STACK is an aspiration,
+// not a constraint: it does nothing to stop the specific tells that make an
+// image read as AI output rather than as art.
+//
+// Every item below is a tell that was actually observed in the queue or is a
+// known failure mode of this model family. Naming them explicitly is what stops
+// them, because a generator asked only for "premium quality" will still centre
+// the subject, blow out the highlights and fill the background with mush.
+const CRAFT_HARD =
+  " CRAFT: ONE clear subject with a readable silhouette. Compose deliberately and OFF CENTRE, " +
+  "using the frame's negative space. Keep the set SIMPLE: only include props the sentence " +
+  "actually needs, each one solid, correctly built and clearly recognisable. Backgrounds stay " +
+  "clean and softly out of focus, never busy. Surfaces read as real materials with weight and " +
+  "believable contact shadows where things touch. " +
+  "DO NOT PRODUCE: plastic or over-rendered surfaces, glassy skin-like sheen on anything that is " +
+  "not his wax, blown out highlights, heavy bloom, HDR glow, oversaturated colour, cluttered or " +
+  "random set dressing, duplicated or repeated objects, warped melted or half-formed geometry, " +
+  "extra limbs, extra flames, a second Wick, floating disconnected parts, objects that intersect " +
+  "wrongly, mushy indistinct background detail, lens flare, sparkles, confetti, floating particles, " +
+  "gradient mush, or a dead-centre symmetrical composition.";
 
 // Learned artwork rules, loaded once per batch by loadImageLessons(). Kept in a
 // module-level cache because scenePrompt is synchronous and runs per frame.
@@ -225,10 +254,40 @@ export async function loadImageLessons() {
   return IMAGE_LESSONS;
 }
 
-export function scenePrompt({ scene, lighting, palette, extra = "", framing = "full" }) {
-  return `A polished cinematic 3D cartoon scene, vertical. ${el()} ${scene} ` +
-    `${lighting} ${STYLE_STACK} ${palette} ${extra}${ANATOMY_HARD}${FRAMING[framing] ?? FRAMING.full}${IMAGE_LESSONS}`
-      .replace(/\s+/g, " ").trim();
+// ─── THE TEMPLATE ────────────────────────────────────────────────────────────
+// One assembly point for every frame this brand ever generates. It used to be a
+// single run-on sentence, which buried the CHARACTER definition in the middle
+// where it competed with scene description for attention. It is now LABELLED
+// SECTIONS in a fixed order, because that is what keeps 200 posts looking like
+// one page while still letting `scene` describe literally anything.
+//
+// The order is deliberate:
+//   MEDIUM     what kind of picture this is at all
+//   CHARACTER  the element placeholder FIRST, then what he is made of. Identity
+//              is the one thing that must never drift, so it leads.
+//   ACTION     the free slot. Any scene, any staging, any setting goes here.
+//   LIGHT      mood, then the locked palette
+//   LOOK       the style stack that never varies
+//   CRAFT      the quality bar and the anti-slop negatives
+//   FRAMING    where his body sits, which differs per layout
+//   LEARNED    mistakes already made on this account, appended last so the most
+//              recent hard-won corrections sit closest to the output
+//
+// Only `scene` is free. Everything else is locked, which is the whole point:
+// consistency comes from the fixed scaffold, range comes from the one slot.
+export function scenePrompt({ scene, lighting, palette, extra = "", framing = "full", camera = "" }) {
+  return [
+    "MEDIUM: a polished cinematic 3D cartoon frame, vertical.",
+    `CHARACTER: ${el()}${ANATOMY_HARD}`,
+    `ACTION: ${scene}`,
+    camera ? `CAMERA: ${camera}` : "",
+    `LIGHT: ${lighting} ${palette}`,
+    `LOOK: ${STYLE_STACK}`,
+    extra,
+    CRAFT_HARD,
+    FRAMING[framing] ?? FRAMING.full,
+    IMAGE_LESSONS,
+  ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
 }
 
 // `owned` = the panel where he is holding the controls. Both panels are present
