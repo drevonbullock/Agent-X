@@ -439,6 +439,21 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
     }
   }
 
+  // GATE THE BATCH IT JUST BUILT. Rows land as qa_pending and only auditQueue
+  // promotes them, so without this a batch finishing at 2pm leaves everything
+  // stuck until the 7am sweep and the 9am slot has nothing to publish. The gate
+  // belongs here rather than in each caller: the scheduler, the recovery watcher
+  // and a manual run all produce posts that must be graded before they can ship.
+  if (created.length) {
+    try {
+      const { auditQueue } = await import("./wick-image-qa.js");
+      console.log("[Wick] running the image QA gate on this batch");
+      await auditQueue({ autoPull: true });
+    } catch (err) {
+      console.warn(`[Wick] QA gate failed — posts stay qa_pending and cannot publish: ${err.message}`);
+    }
+  }
+
   const mode = process.env.WICK_AUTO_PUBLISH !== "false" ? "queued for auto-publish" : "awaiting approval";
   console.log(`[Wick] Batch ${batchId} done — ${created.length} post(s) ${mode}\n`);
   return { batchId, created };
