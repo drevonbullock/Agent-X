@@ -104,6 +104,17 @@ const NO_TEXT_HARD =
   "paper, notebook, sign or display must be completely blank, showing only abstract " +
   "shapes, blocks, lines or glowing colour with no readable characters whatsoever.";
 
+// execFileSync's err.message is "Command failed: <full binary path>" and nothing
+// else useful, so logging 80 characters of it prints a truncated file path and
+// no reason at all. That is what "Command failed: .../node_modules/.bin/higg"
+// was: a failure report containing zero information about the failure. The real
+// cause (moderation, a bad aspect, a queue error) is on stderr.
+function cliError(err) {
+  const stderr = String(err?.stderr ?? "").trim();
+  const stdout = String(err?.stdout ?? "").trim();
+  return (stderr || stdout || String(err?.message ?? "unknown")).replace(/\s+/g, " ").slice(0, 300);
+}
+
 function runModel(model, prompt, aspect) {
   // nano_banana_pro accepts 4:5 natively and takes no quality flag.
   const isNB = model.startsWith("nano_banana");
@@ -144,7 +155,7 @@ export function generateScene(prompt, aspect = "3:4") {
     try { raw = runModel(MODEL, prompt, aspect); lastErr = null; break; }
     catch (err) {
       lastErr = err;
-      console.warn(`[Wick] ${MODEL} attempt ${a}/${ATTEMPTS} failed (${String(err.message).slice(0, 80)})`);
+      console.warn(`[Wick] ${MODEL} attempt ${a}/${ATTEMPTS} failed: ${cliError(err)}`);
       if (a < ATTEMPTS) execFileSync("sleep", [String(4 * a)]);
     }
   }
@@ -153,7 +164,7 @@ export function generateScene(prompt, aspect = "3:4") {
       // Fail the SLIDE, not the look of the whole carousel. The batch catches
       // this per post and moves on, so one bad prompt costs one post rather
       // than quietly degrading every post after it.
-      throw new Error(`${MODEL} failed ${ATTEMPTS}x: ${String(lastErr.message).slice(0, 120)}`);
+      throw new Error(`${MODEL} failed ${ATTEMPTS}x: ${cliError(lastErr)}`);
     }
     console.warn(`[Wick] ${MODEL} failed ${ATTEMPTS}x — WICK_ALLOW_MODEL_FALLBACK=true, using ${FALLBACK_MODEL}`);
     usedModel = FALLBACK_MODEL;
