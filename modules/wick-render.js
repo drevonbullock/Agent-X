@@ -133,6 +133,30 @@ function runModel(model, prompt, aspect) {
 
 // Generate one image. Returns { url, jobId, model }.
 // Tries the primary model, falls back to the cheaper backup on failure.
+// ─── PACING ──────────────────────────────────────────────────────────────────
+// 2026-08-21: a batch produced 21 "Higgsfield API request failed" errors, 42
+// retries and 11 dead posts out of 14 -- while a SINGLE generation run 45
+// seconds later succeeded in 31s. The API was never unhealthy. The batch fires
+// generations back to back with no gap, and hits a rate limit.
+//
+// My own retry loop then made it worse: 3 fast attempts with 4s and 8s backoff
+// meant every rate-limited call became SIX rapid calls, so the thing added to
+// survive transient failures was manufacturing them. A retry that does not back
+// off properly is a denial of service against yourself.
+//
+// So: a floor on the gap between calls, and backoff measured in tens of seconds
+// rather than single digits.
+const MIN_GAP_MS = parseInt(process.env.WICK_GEN_GAP_MS ?? "6000", 10);
+let lastCallAt = 0;
+
+const sleepSync = (ms) => { if (ms > 0) execFileSync("sleep", [String(Math.ceil(ms / 1000))]); };
+
+function pace() {
+  const wait = MIN_GAP_MS - (Date.now() - lastCallAt);
+  if (wait > 0) sleepSync(wait);
+  lastCallAt = Date.now();
+}
+
 export function generateScene(prompt, aspect = "3:4") {
   // RETRY THE SAME MODEL. DO NOT SWITCH MODELS MID-CAROUSEL.
   //
@@ -153,11 +177,13 @@ export function generateScene(prompt, aspect = "3:4") {
   const ATTEMPTS = 3;
   let raw, usedModel = MODEL, lastErr;
   for (let a = 1; a <= ATTEMPTS; a++) {
-    try { raw = runModel(MODEL, prompt, aspect); lastErr = null; break; }
+    try { pace(); raw = runModel(MODEL, prompt, aspect); lastErr = null; break; }
     catch (err) {
       lastErr = err;
       console.warn(`[Wick] ${MODEL} attempt ${a}/${ATTEMPTS} failed: ${cliError(err)}`);
-      if (a < ATTEMPTS) execFileSync("sleep", [String(4 * a)]);
+      // 30s, then 60s. Rate limits do not clear in four seconds, and the old
+      // 4s/8s backoff is what turned one throttled call into a storm.
+      if (a < ATTEMPTS) sleepSync(30_000 * a);
     }
   }
   if (lastErr) {
