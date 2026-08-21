@@ -30,6 +30,73 @@ async function tg(method, body) {
   return json.result;
 }
 
+// ─── SENDING PHOTOS: URL FIRST, BYTES AS THE FALLBACK ────────────────────────
+// Telegram fetches a `media`/`photo` URL from its own servers, and that fetch
+// fails with WEBPAGE_CURL_FAILED often enough to matter: it has to reach
+// Supabase storage from Telegram's network, and any hiccup there means a post
+// that was fully built and paid for never reaches Dre.
+//
+// The claim-release on failure means the delivery sweep retries, but it retried
+// the SAME URL method, so a URL Telegram cannot fetch just fails forever.
+//
+// So: try the URL (cheap, no download), and if Telegram cannot fetch it, pull
+// the bytes ourselves and upload them directly as multipart. Direct upload has
+// no dependency on Telegram reaching our storage.
+async function tgMultipart(method, fields, files) {
+  const form = new FormData();
+  for (const [k, v] of Object.entries(fields)) {
+    form.append(k, typeof v === "string" ? v : JSON.stringify(v));
+  }
+  for (const [name, buf] of Object.entries(files)) {
+    form.append(name, new Blob([buf], { type: "image/jpeg" }), `${name}.jpg`);
+  }
+  const res = await fetch(API(method), { method: "POST", body: form });
+  const json = await res.json().catch(() => ({}));
+  if (!json.ok) throw new Error(`Telegram ${method} (multipart) failed: ${json.description ?? res.status}`);
+  return json.result;
+}
+
+async function fetchBytes(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`fetch slide ${r.status}`);
+  return Buffer.from(await r.arrayBuffer());
+}
+
+// Send slides, whatever it takes. Returns nothing; throws only if BOTH the URL
+// path and the byte-upload path fail, which is the only case that should mark
+// the post undelivered.
+async function sendSlides(chatId, urls, caption) {
+  if (!urls.length) return;
+  try {
+    if (urls.length > 1) {
+      await tg("sendMediaGroup", {
+        chat_id: chatId,
+        media: urls.map((u, i) => ({ type: "photo", media: u, ...(i === 0 ? { caption } : {}) })),
+      });
+    } else {
+      await tg("sendPhoto", { chat_id: chatId, photo: urls[0], caption });
+    }
+    return;
+  } catch (err) {
+    console.warn(`[WickTG] URL send failed (${err.message}) — retrying as a direct upload`);
+  }
+
+  // Telegram could not fetch our storage. Push the bytes ourselves.
+  const buffers = await Promise.all(urls.map(fetchBytes));
+  if (buffers.length > 1) {
+    const files = {};
+    const media = buffers.map((b, i) => {
+      const name = `slide${i}`;
+      files[name] = b;
+      return { type: "photo", media: `attach://${name}`, ...(i === 0 ? { caption } : {}) };
+    });
+    await tgMultipart("sendMediaGroup", { chat_id: chatId, media }, files);
+  } else {
+    await tgMultipart("sendPhoto", { chat_id: chatId, caption }, { photo: buffers[0] });
+  }
+  console.log(`[WickTG] delivered ${urls.length} slide(s) by direct upload`);
+}
+
 async function getOffset() {
   const { data } = await supabase.from("agent_kv").select("value").eq("key", OFFSET_KEY).maybeSingle();
   return data?.value ? parseInt(data.value, 10) : 0;
@@ -79,17 +146,8 @@ export async function sendPostToTelegram(p, { force = false } = {}) {
   const auto = process.env.WICK_AUTO_PUBLISH !== "false";
   const urls = (p.slide_urls ?? []).slice(0, 10);
   try {
-    if (urls.length > 1) {
-      await tg("sendMediaGroup", {
-        chat_id: chatId,
-        media: urls.map((u, i) => ({
-          type: "photo", media: u,
-          ...(i === 0 ? { caption: `${p.format} · ${p.pillar ?? ""} · ${urls.length} slides` } : {}),
-        })),
-      });
-    } else if (urls.length === 1) {
-      await tg("sendPhoto", { chat_id: chatId, photo: urls[0], caption: `${p.format} · ${p.pillar ?? ""}` });
-    }
+    await sendSlides(chatId, urls,
+      `${p.format} · ${p.pillar ?? ""}${urls.length > 1 ? ` · ${urls.length} slides` : ""}`);
     await tg("sendMessage", {
       chat_id: chatId,
       text: `${p.format}\n\n${p.caption ?? ""}`,
@@ -352,17 +410,11 @@ export async function sendReelToTelegram(r, { force = false } = {}) {
 
   const media = [r.cover_url, r.thumb_url].filter(Boolean);
   try {
-    if (media.length > 1) {
-      await tg("sendMediaGroup", {
-        chat_id: chatId,
-        media: media.map((u, i) => ({
-          type: "photo", media: u,
-          ...(i === 0 ? { caption: `REEL · ${r.layout.toUpperCase()}${r.suited ? " · suit" : ""} · cover + thumbnail` } : {}),
-        })),
-      });
-    } else if (media.length === 1) {
-      await tg("sendPhoto", { chat_id: chatId, photo: media[0], caption: `REEL · ${r.layout.toUpperCase()}` });
-    }
+    // Same URL-first, bytes-as-fallback path as posts: reels are just as easy
+    // for Telegram to fail to fetch, and a reel that silently never arrives is
+    // the same problem as a post that never arrives.
+    await sendSlides(chatId, media,
+      `REEL · ${r.layout.toUpperCase()}${r.suited ? " · suit" : ""}${media.length > 1 ? " · cover + thumbnail" : ""}`);
     await tg("sendMessage", {
       chat_id: chatId,
       text: `REEL · ${r.layout.toUpperCase()}\n\n${r.caption ?? ""}`,
