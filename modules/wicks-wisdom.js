@@ -97,7 +97,7 @@ async function buildComparisonCarousel(c, format, dir, jobIds, layout = "stacked
         }));
   }
 
-  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "upper"), dir, "cta", "4:5", jobIds);
+  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "coverTop"), dir, "cta", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: ctaPath,
     closingLine: c.closing_line,
@@ -117,7 +117,7 @@ async function buildOrderCarousel(c, dir, jobIds) {
     const p = await scene(lessonScenePrompt(line.scene, line.expression, i, "upper"), dir, `line-${i}`, "4:5", jobIds);
     buffers.push(await compositeSinglePanel({ scenePath: p, label: line.label }));
   }
-  const revealPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "upper"), dir, "reveal", "4:5", jobIds);
+  const revealPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "coverTop"), dir, "reveal", "4:5", jobIds);
   buffers.push(await compositeReveal({
     scenePath: revealPath,
     revealLine: c.reveal_line,
@@ -141,7 +141,7 @@ async function buildParable(topic, dir, jobIds) {
   const appPath = await scene(lessonScenePrompt(c.application_scene, c.application_expression, 5, "upper"), dir, "apply", "4:5", jobIds);
   buffers.push(await compositeSinglePanel({ scenePath: appPath, label: c.application }));
 
-  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "upper"), dir, "cta", "4:5", jobIds);
+  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "coverTop"), dir, "cta", "4:5", jobIds);
   buffers.push(await compositeReveal({
     scenePath: ctaPath, revealLine: c.application,
     closingLine: c.closing_line, sendTo: c.send_to,
@@ -160,7 +160,7 @@ async function buildCostume(topic, dir, jobIds) {
     const p = await scene(costumePrompt(r, i), dir, `role-${i}`, "4:5", jobIds);
     buffers.push(await compositeCostume({ scenePath: p, label: r.label, boldWord: r.bold }));
   }
-  const ctaScene = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "upper"), dir, "cta", "4:5", jobIds);
+  const ctaScene = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "coverTop"), dir, "cta", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: ctaScene,
     closingLine: c.closing_line,
@@ -177,7 +177,7 @@ async function buildLesson(topic, dir, jobIds) {
   console.log(`[Wick] LESSON: "${l.cover_headline}" (${l.items.length} items)`);
   const buffers = [];
 
-  const coverPath = await scene(lessonScenePrompt(l.cover_scene, l.cover_expression, 0, "upper"), dir, "cover", "4:5", jobIds);
+  const coverPath = await scene(lessonScenePrompt(l.cover_scene, l.cover_expression, 0, "coverTop"), dir, "cover", "4:5", jobIds);
   buffers.push(await compositeLessonCover({ scenePath: coverPath, headline: l.cover_headline }));
 
   for (const item of l.items) {

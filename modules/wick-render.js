@@ -288,6 +288,21 @@ const FRAMING = {
     "HALF of the frame, standing well back so he reads small and whole. The BOTTOM HALF must be " +
     "empty floor, wall or table with nothing important in it, because large text is placed there " +
     "afterwards. Never let his wax body, arms or legs fall into the bottom half.",
+  // COVER layouts (LESSON cover, CTA, reveal) carry the biggest type in the
+  // brand: up to 196px Anton, and a three line headline anchored at bottom:158
+  // reaches y=627 in a 1350 frame -- ABOVE the halfway line. So "upper" was a
+  // promise the layout could not keep: the model correctly placed his body in
+  // the top half and the headline was then drawn straight through his legs.
+  // Every slide-1 rejection on 2026-08-21 was code A/B, "cut off by the text
+  // panel", and this is why. The frame is not half text, it is nearly two
+  // thirds, so the body has to live in the top 40%.
+  coverTop:
+    " FRAMING: his COMPLETE body, flame head down to his feet, must sit entirely " +
+    "within the TOP 40% of the frame, standing well back so he reads small and whole " +
+    "with clear floor beneath his feet. The BOTTOM 60% must be completely empty " +
+    "floor, wall, sky or table with nothing important in it, because very large text " +
+    "is placed there afterwards. Never let his wax body, arms, hands, legs or feet " +
+    "fall below the top 40%.",
   // PARABLE puts its speech bubble at the TOP of the frame, so the character has
   // to live low or the bubble lands on his face. This was fixed once already for
   // parables specifically; it is now a named mode so any top-text layout can ask.
