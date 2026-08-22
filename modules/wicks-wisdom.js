@@ -50,12 +50,35 @@ async function uploadSlide(buffer, storagePath, attempts = 4) {
 // Generate a scene and return its local path. Retries individual panels only
 // (never whole pairs or carousels) per the skill's retry policy.
 async function scene(prompt, dir, name, aspect, jobIds) {
-  let lastErr;
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  // Every raw scene is identity-graded BEFORE it can be composited. Dre,
+  // 2026-08-22: "9/10 its an image quality issue so we need a system image
+  // quality checker before post gets edited and created." A wrong candle
+  // caught here costs one 2-credit regeneration; caught after compositing it
+  // costs the slide, and missed entirely it costs a manual reject of the whole
+  // post. The grader sees the canonical reference image, so "a different
+  // candlestick that is not Wick" — the exact fault behind his rejections —
+  // is now a named, checkable failure instead of a judgment call.
+  let lastErr, correction = "";
+  for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const { url, jobId } = generateScene(prompt, aspect);
+      const { url, jobId } = generateScene(prompt + correction, aspect);
       if (jobId) jobIds.push(jobId);
-      return await download(url, path.join(dir, `${name}.png`));
+      const p = await download(url, path.join(dir, `${name}.png`));
+
+      const { gradeScene } = await import("./wick-image-qa.js");
+      const g = await gradeScene(p);
+      if (g.severity !== "bad") return p;
+
+      console.warn(`[Wick] ${name} attempt ${attempt} REJECTED by the scene gate: ${String(g.reason).slice(0, 110)}`);
+      correction = ` CORRECTION: a previous attempt at this exact scene was rejected for the following fault, do not repeat it: ${g.reason}`;
+      if (attempt === 3) {
+        // Three straight identity failures on one prompt is systematic. Let it
+        // through with a loud flag rather than killing the whole post: the
+        // post-composite gate and the slide repair both still stand between
+        // this image and the feed.
+        console.warn(`[Wick] ${name}: 3 attempts all failed the scene gate — passing through to the post gate`);
+        return p;
+      }
     } catch (err) {
       lastErr = err;
       console.warn(`[Wick] ${name} attempt ${attempt} failed: ${String(err.message).slice(0, 120)}`);
@@ -369,6 +392,18 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
   // Topics come from the fixed 30 episode registry at the 80/10/10 lane mix.
   // The copy engine is never allowed to choose its own subject: that is what
   // produced philosophy posts instead of Mind/Behaviour/Money/Systems ones.
+  // Tell the copy engine every scenario the page has already run, so a new
+  // batch cannot re-dress an old idea. Includes rejected posts on purpose:
+  // Dre SAW those, so their scenarios are burned either way.
+  try {
+    const { setUsedIdeas } = await import("./wick-copy.js");
+    const { data: prior } = await supabase.from("wick_posts")
+      .select("copy").order("created_at", { ascending: false }).limit(150);
+    setUsedIdeas((prior ?? []).flatMap((r) => [
+      r.copy?.theme, r.copy?.cover_headline, r.copy?.reveal_line,
+    ]));
+  } catch (err) { console.warn(`[Wick] used-ideas list unavailable: ${err.message}`); }
+
   const topics = await pickTopics(perWeek);
   if (topics.length < perWeek) {
     console.warn(`[Wick] Only ${topics.length} unused topics for ${perWeek} slots — the registry is cycling.`);

@@ -19,9 +19,24 @@ export const PILLARS = ["Money", "Systems", "Mind", "Behaviour"];
 
 // Learned rules from pulled work, fetched fresh each call so a lesson applies to
 // the very next post rather than the next deploy. See modules/wick-lessons.js.
+// Scenarios already used on the page. Topic-level dedup exists in wick-topics,
+// but it bans TITLES while the copy engine invents its own scenarios under
+// them: a "group trip" post repeated under a different episode title because
+// nothing told the writer that trip had been done. Dre, 2026-08-22: "every
+// post needs to be a new idea... i think you did a post about a trip before."
+let USED_IDEAS = [];
+export function setUsedIdeas(list) {
+  USED_IDEAS = [...new Set((list ?? []).filter(Boolean).map((x) => String(x).slice(0, 90)))].slice(0, 150);
+}
+
 export async function brandRules() {
   const { lessonsBlock } = await import("./wick-lessons.js");
-  return BRAND_RULES + (await lessonsBlock("copy"));
+  const base = BRAND_RULES + (await lessonsBlock("copy"));
+  if (!USED_IDEAS.length) return base;
+  return base + "\n\nIDEAS ALREADY USED ON THIS PAGE. Every scenario below is BANNED. Do not " +
+    "write about the same situation, object, purchase or trap even with new wording. If the " +
+    "topic pushes you toward one of these, find a DIFFERENT everyday situation that shows the " +
+    "same mechanic:\n- " + USED_IDEAS.join("\n- ");
 }
 
 const BRAND_RULES = `

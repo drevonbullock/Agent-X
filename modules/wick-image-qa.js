@@ -54,6 +54,11 @@ Return ONLY this JSON:
 // broken, which is worse than missing a fault: it trains the learning loop on
 // false positives and would auto-pull good posts.
 const FORMAT_NOTES = {
+  SCENE:
+    " NOTE: this is a RAW generated scene, graded BEFORE any text or layout is added. There is " +
+    "no composited text yet, so do not fault missing headlines or captions; any readable text " +
+    "visible here was generated inside the artwork and IS a fault. Judge only the character, " +
+    "the scene and the craft.",
   PARABLE:
     "\nFORMAT NOTE: this is a PARABLE. An inanimate OBJECT in the scene is deliberately given a " +
     "simple cartoon face because it speaks to Wick. That is correct and must NOT be failed under C. " +
@@ -80,18 +85,43 @@ const mediaType = (p) => {
 };
 
 // Grade one image file.
+// Canonical Wick, cropped from the character sheet. The grader compares every
+// candidate against THIS, because 9 of 10 of Dre's manual rejections were a
+// DIFFERENT candle passing review: the rubric said "a candle with rubber-hose
+// limbs" and any candle satisfied it. Identity cannot be checked from a text
+// description; the grader has to see the real character.
+const REF_PATH = path.join(process.cwd(), "data", "wick-reference.jpg");
+let REF_B64 = null;
+function refImage() {
+  if (REF_B64 === null) {
+    try { REF_B64 = fs.readFileSync(REF_PATH).toString("base64"); }
+    catch { REF_B64 = ""; console.warn("[QA] data/wick-reference.jpg missing — grading WITHOUT identity reference"); }
+  }
+  return REF_B64;
+}
+
+const IDENTITY_RUBRIC =
+  "The FIRST image is the canonical reference of Wick, the only character this page is allowed " +
+  "to show. The SECOND image is the candidate being graded. Before anything else, check " +
+  "IDENTITY: every candle character in the candidate must be unmistakably THE SAME character " +
+  "as the reference — same golden teardrop flame head with the same simple face, same cream " +
+  "wax cylinder body with soft drips, same thin black rubber-hose limbs with rounded mitten " +
+  "hands. A candle with different proportions, a different face, a different body shape, " +
+  "holder or base, or a second candle that does not match the reference is fault code I, " +
+  "severity bad, no exceptions — being 'a nice candle character' is not enough, it must be " +
+  "HIM. ";
+
 export async function gradeImage(filePath, format = null) {
   const b64 = fs.readFileSync(filePath).toString("base64");
+  const ref = refImage();
+  const content = [];
+  if (ref) content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: ref } });
+  content.push({ type: "image", source: { type: "base64", media_type: mediaType(filePath), data: b64 } });
+  content.push({ type: "text", text: (ref ? IDENTITY_RUBRIC : "") + RUBRIC + (FORMAT_NOTES[format] ?? "") });
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 300,
-    messages: [{
-      role: "user",
-      content: [
-        { type: "image", source: { type: "base64", media_type: mediaType(filePath), data: b64 } },
-        { type: "text", text: RUBRIC + (FORMAT_NOTES[format] ?? "") },
-      ],
-    }],
+    messages: [{ role: "user", content }],
   });
   try {
     const t = msg.content[0].text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
@@ -100,6 +130,21 @@ export async function gradeImage(filePath, format = null) {
   } catch {
     // A grader that cannot parse must not silently pass a slide.
     return { pass: false, severity: "minor", codes: [], reason: "grader returned unparseable output" };
+  }
+}
+
+// Pre-composite gate for a RAW scene, before any text is burned in. This is
+// the "check the image before the post gets created" Dre asked for: a wrong
+// candle caught here costs 2 credits to regenerate; caught after compositing
+// it costs the slide, and missed entirely it costs a manual reject.
+export async function gradeScene(filePath) {
+  try {
+    return await gradeImage(filePath, "SCENE");
+  } catch (err) {
+    // The grader being down must never block generation — the post-composite
+    // gate still stands between this image and the feed.
+    console.warn(`[QA] scene grade unavailable (${String(err.message).slice(0, 80)}) — proceeding`);
+    return { pass: true, severity: "clean", codes: [], reason: "grader unavailable" };
   }
 }
 
