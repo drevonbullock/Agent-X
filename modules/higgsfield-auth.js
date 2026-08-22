@@ -111,9 +111,19 @@ export async function hydrate() {
     return false;
   }
 
-  fs.mkdirSync(CRED_DIR, { recursive: true });
-  fs.writeFileSync(CRED_FILE, JSON.stringify(best), { mode: 0o600 });
-  console.log(`[HF] credentials hydrated (${describe(best)})`);
+  // Write the file ONLY when it is missing or the DB copy is STRICTLY newer.
+  // The CLI rotates its token internally and writes the new one to this file;
+  // unconditionally rewriting it here (as every hydrate used to) can replace a
+  // just-rotated token with a stale copy mid-batch. Clerk treats a replayed old
+  // refresh token as theft and revokes the whole session -- which is how a
+  // healthy login died DURING the 2026-08-22 batch, killing 18 of 20 posts.
+  if (!onDisk?.access_token || expiryMs(best) > expiryMs(onDisk)) {
+    fs.mkdirSync(CRED_DIR, { recursive: true });
+    fs.writeFileSync(CRED_FILE, JSON.stringify(best), { mode: 0o600 });
+    console.log(`[HF] credentials hydrated (${describe(best)})`);
+  } else {
+    console.log(`[HF] on-disk credentials kept (${describe(onDisk)}) — never overwrite what the CLI may have just rotated`);
+  }
 
   // Seed the DB on first run so the env bootstrap is never needed again.
   if (!stored || expiryMs(best) > expiryMs(stored)) await persistCreds(best);
