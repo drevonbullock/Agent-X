@@ -174,7 +174,7 @@ export async function auditReels() {
 
 export async function auditQueue({ autoPull = false } = {}) {
   const { data } = await supabase.from("wick_posts")
-    .select("id,format,topic_id,slide_urls,status")
+    .select("id,format,topic_id,slide_urls,status,slide_specs")
     .in("status", ["qa_pending", "approved"])
     .order("created_at");
   if (!data?.length) return { checked: 0, results: [] };
@@ -194,6 +194,29 @@ export async function auditQueue({ autoPull = false } = {}) {
     // a post built at 2pm was approved instantly and published at 4pm, while the
     // QA only ran at 7am: ep1024 went out 23 minutes after being built and
     // ep1029 100 minutes after, neither ever graded.
+    // BAD posts get ONE shot at slide-level repair before rejection. Every
+    // image rejection in the 2026-08-22 batch was a single bad slide out of
+    // 5-7; rejecting the post threw away six good, paid-for slides each time.
+    // The repair regenerates just the failing slide from the recipe the builder
+    // recorded, and its replacement is re-graded before being trusted.
+    if (r.verdict === "BAD" && p.slide_specs?.length) {
+      try {
+        const { repairPost } = await import("./wick-repair.js");
+        const fixed = await repairPost(p, r, gradeImage);
+        if (fixed) {
+          r.slides = fixed.slides;
+          r.bad = fixed.slides.filter((s) => s.severity === "bad").length;
+          r.minor = fixed.slides.filter((s) => s.severity === "minor").length;
+          r.verdict = r.bad ? "BAD" : r.minor > 1 ? "WEAK" : "OK";
+          r.repaired = true;
+          await supabase.from("wick_posts").update({ slide_urls: fixed.urls }).eq("id", p.id);
+          console.log(`     → repaired in place, new verdict ${r.verdict}`);
+        }
+      } catch (err) {
+        console.warn(`     repair attempt failed (post stays as graded): ${err.message}`);
+      }
+    }
+
     const promoted = r.verdict === "BAD" ? "rejected" : "approved";
     await supabase.from("wick_posts")
       .update({ image_qa: r, image_qa_at: new Date().toISOString(), status: promoted })

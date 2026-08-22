@@ -78,13 +78,19 @@ async function buildComparisonCarousel(c, format, dir, jobIds, layout = "stacked
   const split = layout === "split";
   console.log(`[Wick] ${format} carousel (${layout}): "${c.theme}" (${c.pairs.length} comparisons + CTA)`);
   const buffers = [];
+  // Every slide records its rebuild recipe (compositor + scene prompts + text
+  // params) so the QA gate can regenerate ONE failing slide instead of binning
+  // the whole post. scenes[] is in the SAME ORDER as pathKeys[].
+  const specs = [];
 
   for (let i = 0; i < c.pairs.length; i++) {
     const pair = c.pairs[i];
     console.log(`[Wick]   ${i + 1}/${c.pairs.length}: "${pair.top_label}" / "${pair.bottom_label}"`);
     const aspect = split ? "9:16" : "3:2";
-    const topPath = await scene(versusPanelPrompt(pair.top_scene, { owned: true,  expression: pair.top_expression,  seed: i * 2 }),     dir, `p${i}-top`, aspect, jobIds);
-    const botPath = await scene(versusPanelPrompt(pair.bottom_scene, { owned: false, expression: pair.bottom_expression, seed: i * 2 + 1 }), dir, `p${i}-bot`, aspect, jobIds);
+    const topPrompt = versusPanelPrompt(pair.top_scene, { owned: true,  expression: pair.top_expression,  seed: i * 2 });
+    const botPrompt = versusPanelPrompt(pair.bottom_scene, { owned: false, expression: pair.bottom_expression, seed: i * 2 + 1 });
+    const topPath = await scene(topPrompt, dir, `p${i}-top`, aspect, jobIds);
+    const botPath = await scene(botPrompt, dir, `p${i}-bot`, aspect, jobIds);
     buffers.push(split
       // Left is the consequence, so the reader meets the outcome before the cause.
       ? await compositeSplitPanel({
@@ -95,36 +101,53 @@ async function buildComparisonCarousel(c, format, dir, jobIds, layout = "stacked
           topPath, bottomPath: botPath,
           topLabel: pair.top_label, bottomLabel: pair.bottom_label,
         }));
+    specs.push(split
+      ? { c: "compositeSplitPanel", pathKeys: ["leftPath", "rightPath"],
+          scenes: [{ prompt: botPrompt, aspect }, { prompt: topPrompt, aspect }],
+          params: { leftLabel: pair.bottom_label, rightLabel: pair.top_label } }
+      : { c: "compositeTwoPanel", pathKeys: ["topPath", "bottomPath"],
+          scenes: [{ prompt: topPrompt, aspect }, { prompt: botPrompt, aspect }],
+          params: { topLabel: pair.top_label, bottomLabel: pair.bottom_label } });
   }
 
-  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "coverTop"), dir, "cta", "4:5", jobIds);
+  const ctaPrompt = lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "coverTop");
+  const ctaPath = await scene(ctaPrompt, dir, "cta", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: ctaPath,
     closingLine: c.closing_line,
     sendTo: c.send_to, keyword: c.keyword, resource: c.resource,
   }));
+  specs.push({ c: "compositeCta", pathKeys: ["scenePath"], scenes: [{ prompt: ctaPrompt, aspect: "4:5" }],
+    params: { closingLine: c.closing_line, sendTo: c.send_to, keyword: c.keyword, resource: c.resource } });
 
-  return { slideBuffers: buffers, copy: c, format, sub_type: c.sub_type, pillar: c.pillar };
+  return { slideBuffers: buffers, slideSpecs: specs, copy: c, format, sub_type: c.sub_type, pillar: c.pillar };
 }
 
 // ORDER — one full-bleed scene per line, then the reveal. Not a comparison.
 async function buildOrderCarousel(c, dir, jobIds) {
   console.log(`[Wick] ORDER carousel: "${c.theme}" (${c.lines.length} lines + reveal)`);
   const buffers = [];
+  const specs = [];
   for (let i = 0; i < c.lines.length; i++) {
     const line = c.lines[i];
     console.log(`[Wick]   ${i + 1}/${c.lines.length}: "${line.label}"`);
-    const p = await scene(lessonScenePrompt(line.scene, line.expression, i, "upper"), dir, `line-${i}`, "4:5", jobIds);
+    const pr = lessonScenePrompt(line.scene, line.expression, i, "upper");
+    const p = await scene(pr, dir, `line-${i}`, "4:5", jobIds);
     buffers.push(await compositeSinglePanel({ scenePath: p, label: line.label }));
+    specs.push({ c: "compositeSinglePanel", pathKeys: ["scenePath"], scenes: [{ prompt: pr, aspect: "4:5" }],
+      params: { label: line.label } });
   }
-  const revealPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "coverTop"), dir, "reveal", "4:5", jobIds);
+  const revealPrompt = lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "coverTop");
+  const revealPath = await scene(revealPrompt, dir, "reveal", "4:5", jobIds);
   buffers.push(await compositeReveal({
     scenePath: revealPath,
     revealLine: c.reveal_line,
     closingLine: c.closing_line,
     sendTo: c.send_to,
   }));
-  return { slideBuffers: buffers, copy: c, format: "ORDER", sub_type: c.sub_type ?? "repeating_formula", pillar: c.pillar };
+  specs.push({ c: "compositeReveal", pathKeys: ["scenePath"], scenes: [{ prompt: revealPrompt, aspect: "4:5" }],
+    params: { revealLine: c.reveal_line, closingLine: c.closing_line, sendTo: c.send_to } });
+  return { slideBuffers: buffers, slideSpecs: specs, copy: c, format: "ORDER", sub_type: c.sub_type ?? "repeating_formula", pillar: c.pillar };
 }
 
 // PARABLE — three speech-bubble beats, the application, then the ask.
@@ -132,21 +155,31 @@ async function buildParable(topic, dir, jobIds) {
   const c = await writeParable(topic);
   console.log(`[Wick] PARABLE: "${c.theme}" (speaker: ${c.speaker})`);
   const buffers = [];
+  const specs = [];
   for (let i = 0; i < c.beats.length; i++) {
     const b = c.beats[i];
     console.log(`[Wick]   ${i + 1}/3: "${b.bubble}"`);
-    const p = await scene(parableScenePrompt(b.scene, b.expression, b.side, i), dir, `beat-${i}`, "4:5", jobIds);
+    const pr = parableScenePrompt(b.scene, b.expression, b.side, i);
+    const p = await scene(pr, dir, `beat-${i}`, "4:5", jobIds);
     buffers.push(await compositeParable({ scenePath: p, bubbleText: b.bubble, side: b.side }));
+    specs.push({ c: "compositeParable", pathKeys: ["scenePath"], scenes: [{ prompt: pr, aspect: "4:5" }],
+      params: { bubbleText: b.bubble, side: b.side } });
   }
-  const appPath = await scene(lessonScenePrompt(c.application_scene, c.application_expression, 5, "upper"), dir, "apply", "4:5", jobIds);
+  const appPrompt = lessonScenePrompt(c.application_scene, c.application_expression, 5, "upper");
+  const appPath = await scene(appPrompt, dir, "apply", "4:5", jobIds);
   buffers.push(await compositeSinglePanel({ scenePath: appPath, label: c.application }));
+  specs.push({ c: "compositeSinglePanel", pathKeys: ["scenePath"], scenes: [{ prompt: appPrompt, aspect: "4:5" }],
+    params: { label: c.application } });
 
-  const ctaPath = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "coverTop"), dir, "cta", "4:5", jobIds);
+  const ctaPrompt = lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "coverTop");
+  const ctaPath = await scene(ctaPrompt, dir, "cta", "4:5", jobIds);
   buffers.push(await compositeReveal({
     scenePath: ctaPath, revealLine: c.application,
     closingLine: c.closing_line, sendTo: c.send_to,
   }));
-  return { slideBuffers: buffers, copy: c, format: "PARABLE", sub_type: "parable", pillar: c.pillar };
+  specs.push({ c: "compositeReveal", pathKeys: ["scenePath"], scenes: [{ prompt: ctaPrompt, aspect: "4:5" }],
+    params: { revealLine: c.application, closingLine: c.closing_line, sendTo: c.send_to } });
+  return { slideBuffers: buffers, slideSpecs: specs, copy: c, format: "PARABLE", sub_type: "parable", pillar: c.pillar };
 }
 
 async function buildCostume(topic, dir, jobIds) {
@@ -154,20 +187,27 @@ async function buildCostume(topic, dir, jobIds) {
   const c = await writeCostume(topic);
   console.log(`[Wick] COSTUME: "${c.theme}" (${c.roles.length} roles + CTA)`);
   const buffers = [];
+  const specs = [];
   for (let i = 0; i < c.roles.length; i++) {
     const r = c.roles[i];
     console.log(`[Wick]   ${i + 1}/${c.roles.length}: ${r.label}`);
-    const p = await scene(costumePrompt(r, i), dir, `role-${i}`, "4:5", jobIds);
+    const pr = costumePrompt(r, i);
+    const p = await scene(pr, dir, `role-${i}`, "4:5", jobIds);
     buffers.push(await compositeCostume({ scenePath: p, label: r.label, boldWord: r.bold }));
+    specs.push({ c: "compositeCostume", pathKeys: ["scenePath"], scenes: [{ prompt: pr, aspect: "4:5" }],
+      params: { label: r.label, boldWord: r.bold } });
   }
-  const ctaScene = await scene(lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "coverTop"), dir, "cta", "4:5", jobIds);
+  const ctaPrompt = lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "coverTop");
+  const ctaScene = await scene(ctaPrompt, dir, "cta", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: ctaScene,
     closingLine: c.closing_line,
     sendTo: c.send_to, keyword: c.keyword, resource: c.resource,
   }));
+  specs.push({ c: "compositeCta", pathKeys: ["scenePath"], scenes: [{ prompt: ctaPrompt, aspect: "4:5" }],
+    params: { closingLine: c.closing_line, sendTo: c.send_to, keyword: c.keyword, resource: c.resource } });
   return {
-    slideBuffers: buffers, copy: c,
+    slideBuffers: buffers, slideSpecs: specs, copy: c,
     format: "COSTUME", sub_type: "cast", pillar: c.pillar,
   };
 }
@@ -176,33 +216,43 @@ async function buildLesson(topic, dir, jobIds) {
   const l = await writeLesson(topic);
   console.log(`[Wick] LESSON: "${l.cover_headline}" (${l.items.length} items)`);
   const buffers = [];
+  const specs = [];
 
-  const coverPath = await scene(lessonScenePrompt(l.cover_scene, l.cover_expression, 0, "coverTop"), dir, "cover", "4:5", jobIds);
+  const coverPrompt = lessonScenePrompt(l.cover_scene, l.cover_expression, 0, "coverTop");
+  const coverPath = await scene(coverPrompt, dir, "cover", "4:5", jobIds);
   buffers.push(await compositeLessonCover({ scenePath: coverPath, headline: l.cover_headline }));
+  specs.push({ c: "compositeLessonCover", pathKeys: ["scenePath"], scenes: [{ prompt: coverPrompt, aspect: "4:5" }],
+    params: { headline: l.cover_headline } });
 
   for (const item of l.items) {
     // 3:2, NOT 4:5. The item slot is 1080x700 landscape; generating portrait and
     // cropping to it kept only rows ~65-765 of a 1350-tall frame and sliced off
     // the wax body, arms and legs, so Wick read as a floating head. Matching the
     // slot's aspect removes the destructive crop entirely.
-    const p = await scene(lessonScenePrompt(item.scene, item.expression, item.number), dir, `item-${item.number}`, "3:2", jobIds);
+    const itemPrompt = lessonScenePrompt(item.scene, item.expression, item.number);
+    const p = await scene(itemPrompt, dir, `item-${item.number}`, "3:2", jobIds);
     buffers.push(await compositeLessonItem({
       scenePath: p, number: item.number, title: item.title,
       problem: item.problem, solution: item.solution,
     }));
+    specs.push({ c: "compositeLessonItem", pathKeys: ["scenePath"], scenes: [{ prompt: itemPrompt, aspect: "3:2" }],
+      params: { number: item.number, title: item.title, problem: item.problem, solution: item.solution } });
   }
 
   // Recap CTA — every item becomes a labelled signpost pointing down the wrong road.
   const signposts = l.items.map((i) => i.signpost).filter(Boolean);
-  const recapPath = await scene(lessonScenePrompt(
+  const recapPrompt = lessonScenePrompt(
     `stands on a city sidewalk at dusk at a five way junction, ${signposts.length} illuminated overhead direction signs crowded above the left hand street all pointing the same way, one clear open street to the right leading toward lit towers, a bus shelter and parked cars framing the junction`
-  , undefined, 0, "upper"), dir, "recap", "4:5", jobIds);
+  , undefined, 0, "upper");
+  const recapPath = await scene(recapPrompt, dir, "recap", "4:5", jobIds);
   buffers.push(await compositeCta({
     scenePath: recapPath, closingLine: l.closing_line,
     sendTo: l.send_to, keyword: l.keyword, resource: l.resource,
   }));
+  specs.push({ c: "compositeCta", pathKeys: ["scenePath"], scenes: [{ prompt: recapPrompt, aspect: "4:5" }],
+    params: { closingLine: l.closing_line, sendTo: l.send_to, keyword: l.keyword, resource: l.resource } });
 
-  return { slideBuffers: buffers, copy: l, format: "LESSON", sub_type: "problem_solution", pillar: l.pillar };
+  return { slideBuffers: buffers, slideSpecs: specs, copy: l, format: "LESSON", sub_type: "problem_solution", pillar: l.pillar };
 }
 
 // ─── BATCH ───────────────────────────────────────────────────────────────────
@@ -411,6 +461,7 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
         pillar: built.pillar, slot_index: i, copy: built.copy, caption,
         topic_id: job.topic?.id ?? null,
         slide_urls: urls, hf_job_ids: jobIds, image_model: activeModel(),
+        slide_specs: built.slideSpecs ?? null,
         // NOT "approved". approved means publishable, and publishNextApproved
         // runs at 9am and 12pm while the image QA runs once at 7am. A post built
         // at 2pm therefore published at 4pm, ~17 hours before the check would
