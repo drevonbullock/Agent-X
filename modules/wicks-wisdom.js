@@ -291,8 +291,18 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
       const { alertWick } = await import("./wick-telegram.js");
       // This text used to assert "Railway cannot build batches" -- but the alert
       // also fires on the MAC when the probe fails, and on 2026-08-22 a relaunch
-      // loop sent it 10+ times for a login that was fine. Say only what is known.
-      await alertWick("🚨 WICK BATCH COULD NOT GENERATE ART\n\nThe Higgsfield CLI probe failed on this host, so the batch stopped before spending anything.\n\nCheck the real cause with:\n  node modules/wick-doctor.js");
+      // loop sent it 10+ times for a login that was fine. Say only what is known,
+      // and only PAGE when supply is actually short: Railway hits this path every
+      // scheduled batch by design (its CLI cannot run), and a daily siren about
+      // expected behaviour trains Dre to ignore the siren.
+      const { count } = await supabase.from("wick_posts")
+        .select("*", { count: "exact", head: true })
+        .in("status", ["approved", "pending", "qa_pending"]).is("pulled_at", null);
+      if ((count ?? 0) < 4) {
+        await alertWick("🚨 WICK BATCH COULD NOT GENERATE ART\n\nThe Higgsfield CLI probe failed on this host and the queue is down to " + (count ?? 0) + " post(s).\n\nCheck the real cause with:\n  node modules/wick-doctor.js");
+      } else {
+        console.log(`[Wick] CLI unavailable on this host, but the queue holds ${count} post(s) — not paging.`);
+      }
     } catch { /* alerting must never mask the skip */ }
     return { skipped: true, reason: "higgsfield-cli-unavailable" };
   }

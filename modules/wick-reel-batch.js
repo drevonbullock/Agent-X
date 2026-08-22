@@ -178,7 +178,12 @@ export async function runWeeklyReels({ count } = {}) {
       const { data, error } = await supabase.from("wick_reels").insert({
         batch_id: batchId, slot_index: i, layout, topic_id: t.id,
         pillar: copy.pillar ?? null, suited, copy, caption,
-        cover_url: coverUrl, thumb_url: thumbUrl, status: "approved",
+        cover_url: coverUrl, thumb_url: thumbUrl,
+        // qa_pending, NOT approved. Reels used to skip grading entirely (no
+        // wick_reels reference existed in wick-image-qa.js), so ungraded covers
+        // went straight to Dre's Telegram. auditQueue now grades reels too and
+        // is the only promoter, same as posts.
+        status: "qa_pending",
       }).select().single();
       if (error) throw new Error(`insert: ${error.message}`);
 

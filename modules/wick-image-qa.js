@@ -1,5 +1,7 @@
 import "dotenv/config";
 import fs from "fs";
+import os from "os";
+import path from "path";
 import Anthropic from "@anthropic-ai/sdk";
 import supabase from "../supabase/client.js";
 
@@ -135,6 +137,41 @@ export async function gradePost(post, { tmpDir = "/tmp/wick-qa" } = {}) {
 }
 
 // Sweep everything currently queued. This is the "always run an analysis" part.
+// Reels get the same gate as posts. One image (the cover) instead of a
+// carousel, but the failure modes are identical -- and reels had NO grader at
+// all until 2026-08-22, landing directly as 'approved'.
+export async function auditReels() {
+  const { data } = await supabase.from("wick_reels")
+    .select("id,layout,topic_id,cover_url,status")
+    .in("status", ["qa_pending"])
+    .order("created_at");
+  if (!data?.length) return { checked: 0 };
+
+  let passed = 0;
+  for (const r of data) {
+    try {
+      const dir = path.join(os.tmpdir(), "wick-qa-reels");
+      fs.mkdirSync(dir, { recursive: true });
+      const file = path.join(dir, `${r.id}.img`);
+      const res = await fetch(r.cover_url);
+      if (!res.ok) throw new Error(`fetch cover: ${res.status}`);
+      fs.writeFileSync(file, Buffer.from(await res.arrayBuffer()));
+
+      const g = await gradeImage(file, "REEL");
+      const promoted = g.severity === "bad" ? "rejected" : "approved";
+      await supabase.from("wick_reels")
+        .update({ image_qa: g, image_qa_at: new Date().toISOString(), status: promoted })
+        .eq("id", r.id);
+      if (promoted === "approved") passed++;
+      console.log(`${promoted === "approved" ? "✅" : "❌"} REEL ${r.layout} ep${r.topic_id}: ${g.severity}${g.reason ? " — " + String(g.reason).slice(0, 100) : ""}`);
+    } catch (err) {
+      // An ungradeable reel stays qa_pending: never promote what was not seen.
+      console.warn(`[QA] reel ${r.id} ungradeable (stays qa_pending): ${err.message}`);
+    }
+  }
+  return { checked: data.length, passed };
+}
+
 export async function auditQueue({ autoPull = false } = {}) {
   const { data } = await supabase.from("wick_posts")
     .select("id,format,topic_id,slide_urls,status")
@@ -180,6 +217,8 @@ export async function auditQueue({ autoPull = false } = {}) {
       console.log(`     → pulled (would have published broken artwork)`);
     }
   }
+  // Reels ride the same sweep so every caller of the gate covers both tables.
+  try { await auditReels(); } catch (err) { console.warn(`[QA] reel audit failed: ${err.message}`); }
   return { checked: data.length, results };
 }
 

@@ -90,6 +90,12 @@ function checkAuth() {
     detail = out.trim().split("\n")[0] ?? "";
   } catch (err) {
     detail = String(err.stderr ?? err.message ?? "").trim().split("\n")[0].slice(0, 120);
+    // ENOENT / spawn failures mean the CLI cannot RUN on this host (Railway).
+    // That is not evidence about the login, and reporting it as "login is dead"
+    // paged Dre daily about a login that was healthy on the Mac.
+    if (err.code === "ENOENT" || /ENOENT|spawn|not found|cannot execute/i.test(detail)) {
+      return { live: false, unavailable: true, hoursLeft, credentialsFileExists: !!creds, detail };
+    }
   }
 
   return { live, hoursLeft, credentialsFileExists: !!creds, detail };
@@ -125,7 +131,16 @@ export async function diagnose() {
 
   const problems = [];
 
-  if (!auth.live) {
+  if (auth.unavailable) {
+    // Say what is true and no more. The Mac owns builds and refresh; this host
+    // simply cannot run the CLI, and the queue check below still guards supply.
+    problems.push({
+      severity: "warning",
+      title: "Higgsfield CLI cannot run on this host",
+      detail: auth.detail || "binary missing or not executable — expected on Railway; the Mac builds the queue",
+      fix: "Nothing, if the Mac's batches are running. Otherwise run the batch on the Mac.",
+    });
+  } else if (!auth.live) {
     const serviceDown = hosts.some((h) => !h.up);
     if (serviceDown) {
       problems.push({
