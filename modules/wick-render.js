@@ -83,8 +83,16 @@ function variety(seed = 0) {
 // ─── HIGGSFIELD ──────────────────────────────────────────────────────────────
 
 export function hfAvailable() {
-  try { execFileSync(HF_BIN, ["auth", "token"], { timeout: 10_000, stdio: "pipe" }); return true; }
-  catch { return false; }
+  // `account status` is READ ONLY. This used to probe with `auth token`, which
+  // ROTATES the refresh token -- so every batch entry point was rotating the
+  // credential just to ask "are you there?", and two runs close together race
+  // each other's rotation. OAuth refresh-token reuse detection treats a replayed
+  // rotation as theft and can revoke the whole session, which is a plausible
+  // path for how the login died in the first place. Never probe with a write.
+  try {
+    const out = execFileSync(HF_BIN, ["account", "status"], { timeout: 30_000, stdio: "pipe" }).toString();
+    return /credits/i.test(out);
+  } catch { return false; }
 }
 
 // gpt_image_2 accepts only 1:1, 4:3, 3:4, 16:9, 9:16, 3:2, 2:3 — it REJECTS 4:5.

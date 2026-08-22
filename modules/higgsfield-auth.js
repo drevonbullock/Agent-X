@@ -211,10 +211,18 @@ export async function keepAlive() {
   try {
     execFileSync(HF_BIN, ["auth", "token"], { timeout: 30_000, stdio: "pipe" });
   } catch (err) {
-    // This is the moment the week-long failure became visible ONLY as an empty
-    // queue. Say it out loud instead, with the exact commands.
-    await warnLoginDead(String(err.message).slice(0, 140));
-    return { ok: false, reason: "refresh rejected", hoursLeft: hLeft };
+    // ONLY cry "login expired" when the CLI actually says the session is dead.
+    // On Railway the CLI binary cannot run at all, and this path was alerting
+    // "🔑 HIGGSFIELD LOGIN EXPIRED" twice a day (the 2am/8pm keepalive) for a
+    // login that was perfectly healthy on the Mac. A host that cannot run the
+    // CLI cannot refresh, and that is a fact to log, not an emergency to page.
+    const detail = String(err.stderr ?? err.message ?? "");
+    if (/session expired|not authenticated|unauthorized/i.test(detail)) {
+      await warnLoginDead(detail.trim().split("\n")[0].slice(0, 140));
+      return { ok: false, reason: "refresh rejected", hoursLeft: hLeft };
+    }
+    console.warn(`[HF] keepalive: CLI cannot refresh on this host (${detail.trim().split("\n")[0].slice(0, 100)}) — skipping, the Mac owns refresh`);
+    return { ok: false, reason: "cli unavailable on this host", hoursLeft: hLeft };
   }
 
   const after = readFileCreds();

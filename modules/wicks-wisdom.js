@@ -289,7 +289,10 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
     console.error(msg);
     try {
       const { alertWick } = await import("./wick-telegram.js");
-      await alertWick("🚨 WICK CAROUSEL BATCH DID NOT RUN\n\nThe Higgsfield CLI is not available on this host, so no art could be generated. Railway cannot build batches.\n\nRun it on your Mac to refill the queue.");
+      // This text used to assert "Railway cannot build batches" -- but the alert
+      // also fires on the MAC when the probe fails, and on 2026-08-22 a relaunch
+      // loop sent it 10+ times for a login that was fine. Say only what is known.
+      await alertWick("🚨 WICK BATCH COULD NOT GENERATE ART\n\nThe Higgsfield CLI probe failed on this host, so the batch stopped before spending anything.\n\nCheck the real cause with:\n  node modules/wick-doctor.js");
     } catch { /* alerting must never mask the skip */ }
     return { skipped: true, reason: "higgsfield-cli-unavailable" };
   }
