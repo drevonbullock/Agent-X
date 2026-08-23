@@ -4,6 +4,12 @@
 # sessions, which killed three separate batch runs on 2026-08-21/22 and once
 # took the run's whole log with it. Logs go to logs/ for the same reason.
 cd "/Users/drevonbullock/C.C. Agent X/Agent X"
+# DISARM THE LAUNCHER FIRST. RunAtLoad plists fire on every login, so a
+# leftover one-shot agent is a landmine: a reboot on 2026-08-23 fired two of
+# them and ran two fills concurrently. Deleting the plist file (not the loaded
+# job -- removing the label would kill this very process) means a reboot finds
+# nothing to fire.
+rm -f ~/Library/LaunchAgents/com.dre.wickfill.plist ~/Library/LaunchAgents/com.dre.wickwait.plist
 # launchd's PATH is /usr/bin:/bin -- no homebrew. The Higgsfield CLI launcher is
 # "#!/usr/bin/env node", so without this line the CLI cannot START under
 # launchd: readBalance returns null, hfAvailable returns false, and the batch

@@ -218,9 +218,16 @@ export async function auditReels() {
 }
 
 export async function auditQueue({ autoPull = false } = {}) {
+  // qa_pending always; approved ONLY if never graded. Approved posts used to be
+  // re-graded on every sweep, which (a) paid for the same vision calls over and
+  // over and (b) made verdicts unstable -- a post could pass, sit approved for a
+  // day, then be rejected by a later sweep drawing a different sample from the
+  // same model. The one-time re-grade after the identity rubric landed was
+  // deliberate and correct (it culled 6 off-model posts Dre would have rejected
+  // by hand); rolling re-grades are not.
   const { data } = await supabase.from("wick_posts")
     .select("id,format,topic_id,slide_urls,status,slide_specs")
-    .in("status", ["qa_pending", "approved"])
+    .or("status.eq.qa_pending,and(status.eq.approved,image_qa_at.is.null)")
     .order("created_at");
   if (!data?.length) return { checked: 0, results: [] };
 

@@ -51,7 +51,27 @@ async function usable() {
   return { posts: (p ?? []).filter(ok).length, reels: (r ?? []).filter(ok).length };
 }
 
+// ─── SINGLE INSTANCE ─────────────────────────────────────────────────────────
+// On 2026-08-23 a reboot fired BOTH leftover run-once LaunchAgents (wickwait +
+// wickfill) and two fills ran interleaved for hours: double topic claims,
+// double spend, and a shared-CLI-credential race of exactly the kind that got
+// the session revoked on 08-22. The lock lives in the fill itself so no launch
+// route -- launchd, shell, watcher -- can ever double-run it.
+import { execSync } from "child_process";
+function assertOnlyInstance() {
+  try {
+    const out = execSync("pgrep -f wick-fill-week.js", { stdio: "pipe" }).toString();
+    const others = out.split("\n").map((x) => parseInt(x, 10))
+      .filter((n) => Number.isFinite(n) && n !== process.pid);
+    if (others.length) {
+      console.error(`[Fill] another fill is already running (pid ${others.join(", ")}) — exiting`);
+      process.exit(0);
+    }
+  } catch { /* pgrep found nothing but us */ }
+}
+
 async function main() {
+  assertOnlyInstance();
   let have = await usable();
   console.log(`[Fill] have ${have.posts}/${TARGET_POSTS} posts, ${have.reels}/${TARGET_REELS} reels`);
   console.log(`[Fill] balance ${readBalance()} @ ${creditsPerImage()} credits/image`);
