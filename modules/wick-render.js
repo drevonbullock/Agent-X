@@ -777,16 +777,24 @@ ${BASE_CSS}
 // the brand amber so the eye lands on "5" before it reads a single word.
 export async function compositeLessonCover({ scenePath, headline }) {
   scenePath = fitJpeg(scenePath, W, H, 0.10);
-  const text = String(headline).toUpperCase();
+  // The kicker always renders "HERE'S HOW →", and the hook doctrine tells the
+  // writer to end hooks with a payoff cue — so strip a trailing HERE'S HOW off
+  // the headline or the card says it twice, stacked.
+  const text = String(headline).toUpperCase()
+    .replace(/[.,!?\s]*HERE'?S\s+HOW[.,!?\s]*$/i, "").trim();
   const len = text.length;
-  // Sized so the longest realistic headline still clears ~45px at grid scale.
-  const size = len <= 22 ? 196 : len <= 30 ? 172 : len <= 40 ? 150 : len <= 52 ? 126 : 108;
+  // EDUCATIONAL CARD, NOT MOTIVATIONAL POSTER (Dre, 2026-08-26: "switch the
+  // visual layout up, we need to turn this into educational content instead of
+  // motivation"). The old cover was giant centered type over a moody scrim --
+  // reads as an inspiration poster. This one reads as a lesson: an eyebrow
+  // label up top, a LEFT-ALIGNED hook with every dollar figure lit amber, and
+  // a HERE'S HOW swipe cue. Sizes come down a step because a lesson explains,
+  // it does not shout.
+  const size = len <= 26 ? 148 : len <= 36 ? 128 : len <= 50 ? 108 : 92;
 
-  // Lead with the count. "5 WAYS FREE TRIALS..." -> amber "5", white remainder.
-  const m = text.match(/^(\d+)\s+(.*)$/s);
-  const inner = m
-    ? `<span class="n">${esc(m[1])}</span> ${esc(m[2])}`
-    : esc(text);
+  // Light up EVERY money figure and number, because the hook doctrine puts a
+  // real dollar amount in every cover and the amount IS the hook.
+  const inner = esc(text).replace(/(\$\s?[\d,.]+\w*|\b\d[\d,.]*\b)/g, '<span class="n">$1</span>');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
 ${BASE_CSS}
@@ -794,20 +802,25 @@ ${BASE_CSS}
 /* Heavier scrim than the shared one: big type needs a floor to sit on. */
 .cover-shade{position:absolute;inset:0;z-index:10;
   background:linear-gradient(180deg,rgba(8,6,4,0.35) 0%,rgba(8,6,4,0.10) 22%,rgba(8,6,4,0.30) 42%,rgba(8,6,4,0.88) 62%,rgba(8,6,4,0.97) 100%);}
-.head{position:absolute;left:56px;right:56px;bottom:158px;z-index:20;text-align:center;
-  font-family:'Anton',sans-serif;font-size:${size}px;line-height:0.96;letter-spacing:0px;
+.eyebrow{position:absolute;left:64px;top:64px;z-index:20;
+  font-family:'DM Sans',sans-serif;font-weight:700;font-size:26px;letter-spacing:6px;
+  color:#F5A524;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,0.9);
+  border-left:6px solid #F5A524;padding-left:16px;}
+.head{position:absolute;left:64px;right:64px;bottom:190px;z-index:20;text-align:left;
+  font-family:'Anton',sans-serif;font-size:${size}px;line-height:1.02;letter-spacing:0px;
   color:#fff;text-transform:uppercase;
   text-shadow:0 6px 34px rgba(0,0,0,0.95),0 2px 6px rgba(0,0,0,0.9);}
 .head .n{color:#F5A524;}
-.kicker{position:absolute;left:56px;right:56px;bottom:100px;z-index:20;text-align:center;
-  font-family:'DM Sans',sans-serif;font-weight:700;font-size:28px;letter-spacing:4px;
+.kicker{position:absolute;left:64px;bottom:104px;z-index:20;text-align:left;
+  font-family:'DM Sans',sans-serif;font-weight:800;font-size:40px;letter-spacing:2px;
   color:#F5A524;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,0.9);}
 </style></head><body>
 <div class="slide">
   <div class="bg"><img src="${dataUri(scenePath)}"></div>
   <div class="cover-shade"></div>
+  <div class="eyebrow">A Money Lesson</div>
   <div class="head">${inner}</div>
-  <div class="kicker">Swipe</div>
+  <div class="kicker">Here's how →</div>
   <div class="wm">${esc(WATERMARK)}</div>
 </div></body></html>`;
   return renderHtml(html);

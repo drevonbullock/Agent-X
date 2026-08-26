@@ -92,20 +92,28 @@ concept and hoped. So:
      numbers and steps in small words. "Save twelve dollars a day" is a
      sentence a child understands and an adult screenshots.
 
-HOOKS. The old cover formula is BANNED as a template: "5 TIMES X COST YOU MORE"
-appeared on 9 of 14 covers in one month — a grid of identical posts nobody
-stops for. A hook must now clear ALL three bars:
-  a. It contains a NUMBER or a checkable claim. "PICKING 10K COSTS YOU $12 A
-     DAY" stops the scroll; "5 TIMES LOW CASH COST YOU MORE" does not.
-  b. It creates a gap the post actually closes. The reader must be unable to
-     guess the answer from the cover alone — and the post must pay it off.
-  c. It uses a DIFFERENT FORM from the other covers in the same batch. Rotate:
-     the number claim ("10K COSTS $12 A DAY"), the belief flip ("THE SMART
-     NUMBER IS COSTING YOU"), the direct question ("WHY DID YOU PICK 10K?"),
-     the mistake confession ("I PICKED THE WRONG NUMBER FOR 3 YEARS"), the
-     check-now imperative ("CHECK YOUR SAVINGS GOAL TONIGHT"). Never two
-     covers with the same sentence shape in one batch, and a count formula
-     ("5 WAYS/TIMES") at most ONCE per batch.
+HOOKS — REVISED AGAIN 2026-08-26. Dre: "the hook needs to grab attention like
+'let me show you how to make $100 a day' or 'you missed out on $1000 last week,
+heres how' type of hooks." That is the archetype: A DOLLAR AMOUNT + A DIRECT
+PROMISE OR LOSS + "HERE'S HOW". Every cover hook must be one of these three
+shapes, and every one must contain a real dollar figure the post then proves:
+
+  THE PROMISE    "LET ME SHOW YOU HOW TO KEEP $200 A MONTH"
+  THE LOSS       "YOU GAVE YOUR BANK $340 THIS YEAR. HERE'S HOW"
+  THE COST       "THIS HABIT COSTS YOU $6 EVERY DAY. FIX IT TONIGHT"
+
+Rules that make these honest instead of scammy, because this page teaches
+keeping money, not get-rich promises:
+  a. The dollar figure must be REAL and PROVEN inside the post: it is the
+     arithmetic the slides walk through, not a number invented for the cover.
+     Promise what the reader SAVES, KEEPS or STOPS LOSING — never income
+     claims, never "make $X" unless the post genuinely shows earning it.
+  b. Second person or teacher-first-person only. "YOU" or "LET ME SHOW YOU".
+     A hook that describes people in general grabs nobody.
+  c. The payoff cue is part of the hook: "HERE'S HOW", "FIX IT TONIGHT",
+     "IN 4 STEPS". The reader must know the answer is inside.
+  d. Count formulas ("5 WAYS/TIMES") are BANNED on covers entirely now, and
+     no two covers in a batch may share the same shape of the three above.
 
 STOP WHEN THE POINT LANDS (Dre, 2026-08-09, on "You did not choose to spend it.
 The room chose for you." -> "shorter, that is good enough").
@@ -746,7 +754,7 @@ Return JSON object:
 {
   "pillar": "Money|Systems|Mind|Behaviour",
   "pillar_link": "the two pillars this wires together",
-  "cover_headline": "ALL CAPS hook, max 8 words. It must contain a number or checkable claim, or flip a belief — NEVER the '5 TIMES/WAYS X' count formula unless this batch has none yet",
+  "cover_headline": "ALL CAPS money hook, max 10 words, MUST contain a real dollar figure the post proves. One of three shapes: the promise (LET ME SHOW YOU HOW TO KEEP $X...), the loss (YOU GAVE/LOST $X... HERE'S HOW), the cost (THIS COSTS YOU $X... FIX IT TONIGHT). NEVER a count formula.",
   "cover_scene": "One dense sentence: the PRESENT DAY cover scene for Wick, 3-4 named modern objects, setting.",
   "cover_expression": "His expression on the cover, matched to the headline's tone.",
   "items": [

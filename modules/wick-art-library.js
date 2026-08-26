@@ -57,6 +57,44 @@ export function pickArt(n, used = new Set()) {
   return chosen;
 }
 
+// ─── FRAMING-AWARE PICKS ─────────────────────────────────────────────────────
+// The harvester stores each image's original FRAMING request. That is what
+// unlocks recovered art for text-overlay layouts: art generated with coverTop
+// or upper framing has an empty lower frame BY CONSTRUCTION, so the cover's
+// bottom-anchored hook cannot bury the character. Art without a framing tag
+// (the original 36 recoveries) is never handed to an overlay layout.
+//
+// `used` dedupes within a post; `useCount` caps how often one image appears
+// across the whole batch, because a week of posts reusing one frame four
+// times reads as a template even when every caption differs.
+const useCount = new Map();
+const underCap = (a, cap) => (useCount.get(a.n) ?? 0) < cap;
+const take = (pool, n, used) => {
+  const chosen = pool.filter((a) => !used.has(a.n)).slice(0, n);
+  chosen.forEach((a) => { used.add(a.n); useCount.set(a.n, (useCount.get(a.n) ?? 0) + 1); });
+  return chosen;
+};
+
+export function pickOverlaySafe(n, used = new Set(), { cap = 2 } = {}) {
+  const pool = load().filter((a) =>
+    ["clean", "minor"].includes(a.severity) &&
+    ["coverTop", "upper"].includes(a.framing) && underCap(a, cap));
+  return take(pool, n, used);
+}
+
+export function pickStripSafe(n, used = new Set(), { cap = 2 } = {}) {
+  const pool = load().filter((a) =>
+    ["clean", "minor"].includes(a.severity) && a.strip === "clean" && underCap(a, cap));
+  return take(pool, n, used);
+}
+
+export function libraryFramingStats() {
+  const all = load().filter((a) => ["clean", "minor"].includes(a.severity));
+  const by = {};
+  for (const a of all) by[a.framing ?? "untagged"] = (by[a.framing ?? "untagged"] ?? 0) + 1;
+  return { usable: all.length, ...by };
+}
+
 export function libraryStats() {
   const all = load();
   const by = {};
