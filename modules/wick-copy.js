@@ -57,27 +57,49 @@ sounds, and it outranks any rule below about register.
 WRITE LIKE YOU TALK. Everyday words only. If a person would not say it out loud
 to a friend at a kitchen table, cut it. Short sentences. One idea each.
 
-THE STANDARD TO HIT. Dre signed off on one post as "PERFECT" (LESSON, Mind|Money,
-2026-08-09, cover "5 TIMES EYES IN THE ROOM COST YOU"). Aim at its ANATOMY every
-time. Do NOT reuse its wording or its subject; what follows is the shape only.
+THE STANDARD TO HIT — REVISED 2026-08-26 ON A MONTH OF REAL NUMBERS.
+Dre: "we need to redo the content to be more educational, the hooks are trash,
+its been a month and im getting nowhere." The data agrees, and it is blunt:
+33 published posts, ZERO comments, and exactly ONE breakout. The breakout
+(67 likes, 16 saves, 10x everything else) put real arithmetic in EVERY line:
+"Pick 10k, save twelve dollars a day. Pick 50k, save sixty-two a day." People
+saved it because it is a REFERENCE they can use. Every near-zero post named a
+concept and hoped. So:
 
-  1. THE PILLAR LINK IS ONE PLAIN SENTENCE naming both sides and the direction
-     of the handoff. It read: a need to look good (Mind) quietly raises what you
-     pay (Money). If the link cannot be said that plainly, the topic is not ready.
-  2. THE COVER PROMISES A COUNT OF SITUATIONS, not of ideas. "5 times <a moment
-     the reader has lived> cost you", never "5 lessons about spending".
-  3. EVERY ITEM IS A MOMENT, NOT A CONCEPT. The table. The server. The group
-     round. A reader should be able to picture the room. An item that names a
-     behaviour in the abstract has failed.
-  4. ONE ITEM CARRIES REAL ARITHMETIC on a small everyday number, and it must
-     actually multiply out. A few dollars a meal becoming a few hundred a year is
-     the shape: small enough to be believable, big enough to sting.
-  5. THE LAST ITEM RELEASES THE READER. After four items of cost, the fifth
-     removes the pressure: nobody was keeping score anyway. Ending on the fifth
-     cost leaves them beaten; ending on the release leaves them free to choose.
-  6. THE CLOSE IS UNDER 8 WORDS AND REASSIGNS AGENCY. Two short sentences that
-     hand the decision back to the reader, never a summary of the list.
-  7. EVERY WORD IS ONE A CHILD KNOWS. Table, server, room, money, tip.
+  1. NUMBERS ARE THE SPINE, NOT A GARNISH. Every post must teach with real
+     arithmetic the reader can CHECK: actual dollar amounts, actual per-day or
+     per-year totals, and they must multiply out correctly. The one proven
+     winner did the math in every single line. A post with no checkable number
+     anywhere is not educational, it is a vibe, and vibes scored 2.
+  2. TEACH → SHOW → HAND OVER. Name the mechanic in one plain sentence, show
+     it with the math, and end with ONE thing the reader can check or do
+     today. If they cannot act on it before bed, it taught nothing.
+  3. EVERY ITEM IS A MOMENT WITH A NUMBER IN IT. The table, the server, the
+     group round — and what it cost. An item that names a behaviour in the
+     abstract has failed. An item with no number is on thin ice.
+  4. SAVES ARE THE TARGET. Before finishing any post ask: would a stranger SAVE
+     this to look at again? A feeling is never saved. A number, a rule of
+     thumb, or a checklist is.
+  5. THE LAST ITEM RELEASES THE READER, and the close is under 8 words and
+     reassigns agency. Unchanged; the winner did both.
+  6. EVERY WORD IS ONE A CHILD KNOWS. Educational never means jargon. It means
+     numbers and steps in small words. "Save twelve dollars a day" is a
+     sentence a child understands and an adult screenshots.
+
+HOOKS. The old cover formula is BANNED as a template: "5 TIMES X COST YOU MORE"
+appeared on 9 of 14 covers in one month — a grid of identical posts nobody
+stops for. A hook must now clear ALL three bars:
+  a. It contains a NUMBER or a checkable claim. "PICKING 10K COSTS YOU $12 A
+     DAY" stops the scroll; "5 TIMES LOW CASH COST YOU MORE" does not.
+  b. It creates a gap the post actually closes. The reader must be unable to
+     guess the answer from the cover alone — and the post must pay it off.
+  c. It uses a DIFFERENT FORM from the other covers in the same batch. Rotate:
+     the number claim ("10K COSTS $12 A DAY"), the belief flip ("THE SMART
+     NUMBER IS COSTING YOU"), the direct question ("WHY DID YOU PICK 10K?"),
+     the mistake confession ("I PICKED THE WRONG NUMBER FOR 3 YEARS"), the
+     check-now imperative ("CHECK YOUR SAVINGS GOAL TONIGHT"). Never two
+     covers with the same sentence shape in one batch, and a count formula
+     ("5 WAYS/TIMES") at most ONCE per batch.
 
 STOP WHEN THE POINT LANDS (Dre, 2026-08-09, on "You did not choose to spend it.
 The room chose for you." -> "shorter, that is good enough").
@@ -718,7 +740,7 @@ Return JSON object:
 {
   "pillar": "Money|Systems|Mind|Behaviour",
   "pillar_link": "the two pillars this wires together",
-  "cover_headline": "ALL CAPS headline promising a count, max 8 words",
+  "cover_headline": "ALL CAPS hook, max 8 words. It must contain a number or checkable claim, or flip a belief — NEVER the '5 TIMES/WAYS X' count formula unless this batch has none yet",
   "cover_scene": "One dense sentence: the PRESENT DAY cover scene for Wick, 3-4 named modern objects, setting.",
   "cover_expression": "His expression on the cover, matched to the headline's tone.",
   "items": [
