@@ -8,7 +8,7 @@
 # stacked launch cannot double-run it.
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 cd "/Users/drevonbullock/C.C. Agent X/Agent X"
-cleanup() { launchctl remove com.dre.wickwait 2>/dev/null }
+cleanup() { launchctl remove com.dre.wickrun 2>/dev/null }
 trap cleanup EXIT
 
 for i in {1..360}; do
