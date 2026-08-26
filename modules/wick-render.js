@@ -823,7 +823,7 @@ ${BASE_CSS}
 // The chips read as a worksheet rather than a story, and the ragged left edge is
 // what Dre meant by "too much to the left". Centre alignment with real breathing
 // room is doing the work here, not the labels.
-export async function compositeLessonItem({ scenePath, number, title, problem, solution }) {
+export async function compositeLessonItem({ scenePath, number, title, problem, solution, how }) {
   scenePath = fitJpeg(scenePath, W, 700, 0.10);
   // Dre, 2026-08-09: "subtext needs to be a lot shorter, it won't keep their
   // attention span, plus needs to be bigger for the lessons."
@@ -859,6 +859,10 @@ ${BASE_CSS}
 .txt{font-family:'DM Sans',sans-serif;font-weight:400;font-size:${body}px;line-height:1.3;
   color:#d8cfc4;margin-bottom:30px;max-width:940px;}
 .txt.sol{color:#fff;font-weight:500;margin-bottom:0;}
+/* The HOW beat (Dre: "PROBLEM, SOLUTION, HOW"). Amber and prefixed with an
+   arrow so the action reads as the slide's takeaway, not a third grey line. */
+.how{color:#F5A524;font-weight:700;margin-top:10px;}
+.how::before{content:"→  ";}
 </style></head><body>
 <div class="slide">
   <div class="top"><img src="${dataUri(scenePath)}"><div class="topfade"></div></div>
@@ -866,6 +870,7 @@ ${BASE_CSS}
     <div class="h"><span class="n">${esc(number)}.</span> ${esc(title)}</div>
     <div class="txt">${esc(problem)}</div>
     <div class="txt sol">${esc(solution)}</div>
+    ${how ? `<div class="txt how">${esc(how)}</div>` : ""}
   </div>
   <div class="wm">${esc(WATERMARK)}</div>
 </div></body></html>`;

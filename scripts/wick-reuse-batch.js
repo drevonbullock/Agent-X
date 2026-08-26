@@ -112,7 +112,7 @@ async function buildLesson(topic, art, dir, slot) {
 - Frame 7 CLOSES it: one short line that hands the decision back, then the ask.`,
     fields: `  "cover_headline": "ALL CAPS, promises a count of 5, max 8 words",
   "cover_line": "ONE short line under the headline, max 10 words",
-  "items": [{ "number": 1, "title": "max 5 words", "problem": "ONE sentence, max 12 words", "solution": "ONE sentence, max 12 words" }],`,
+  "items": [{ "number": 1, "title": "max 5 words", "problem": "ONE sentence naming the trap and its number, max 12 words", "solution": "ONE sentence, the fix as a principle, max 12 words", "how": "ONE imperative sentence, the concrete move tonight, max 10 words" }],`,
   }), { label: "LESSON copy" });
   if (!c.items?.length) throw new Error("copy engine returned no items");
 
@@ -130,7 +130,7 @@ async function buildLesson(topic, art, dir, slot) {
     console.log(`   ${it.number ?? i + 1}. ${it.title}`);
     buffers.push(await compositeLessonItem({
       scenePath: await fetchArt(art[i + 1], dir),
-      number: it.number ?? i + 1, title: it.title, problem: it.problem, solution: it.solution,
+      number: it.number ?? i + 1, title: it.title, problem: it.problem, solution: it.solution, how: it.how,
     }));
   }
 

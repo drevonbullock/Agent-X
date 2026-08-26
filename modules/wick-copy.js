@@ -71,9 +71,15 @@ concept and hoped. So:
      per-year totals, and they must multiply out correctly. The one proven
      winner did the math in every single line. A post with no checkable number
      anywhere is not educational, it is a vibe, and vibes scored 2.
-  2. TEACH → SHOW → HAND OVER. Name the mechanic in one plain sentence, show
-     it with the math, and end with ONE thing the reader can check or do
-     today. If they cannot act on it before bed, it taught nothing.
+  2. THE TEACHING SPINE IS PROBLEM → SOLUTION → HOW, in that order, every
+     time. Dre, 2026-08-26: "educate them: PROBLEM, SOLUTION, HOW." Three
+     distinct beats, none skippable:
+       PROBLEM   what is costing them, named plainly, with the number.
+       SOLUTION  the fix as a principle, one sentence.
+       HOW       the concrete move: what to open, set, cancel or check
+                 TONIGHT, specific enough to do without thinking.
+     A post that names a problem with no HOW is complaining. A post that
+     jumps to HOW with no problem is a lecture nobody asked for.
   3. EVERY ITEM IS A MOMENT WITH A NUMBER IN IT. The table, the server, the
      group round — and what it cost. An item that names a behaviour in the
      abstract has failed. An item with no number is on thin ice.
@@ -747,8 +753,9 @@ Return JSON object:
     {
       "number": 1,
       "title": "Short item title, max 6 words",
-      "problem": "ONE short sentence naming the trap, second person. MAX 12 WORDS. This is read in under two seconds on a phone, so cut every clause that is not the trap itself.",
-      "solution": "ONE short sentence naming the practice and what skipping it costs. MAX 12 WORDS. NEVER a method.",
+      "problem": "ONE short sentence naming the trap and its number, second person. MAX 12 WORDS. This is read in under two seconds on a phone, so cut every clause that is not the trap itself.",
+      "solution": "ONE short sentence naming the fix as a principle. MAX 12 WORDS.",
+      "how": "ONE imperative sentence: the concrete move to make tonight — open, set, cancel, check. MAX 10 WORDS. Specific enough to do without thinking.",
       "scene": "One dense sentence SHOWING this item's problem. Name his body position, the action that proves it, 3-4 named modern objects. Present day.",
       "expression": "His facial expression in this scene, emotionally matched to the problem being shown. Specific: troubled, weary, uneasy, resigned, alert.",
       "signpost": "2 to 3 word label for the recap slide signpost"

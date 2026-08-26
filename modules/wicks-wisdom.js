@@ -256,10 +256,10 @@ async function buildLesson(topic, dir, jobIds) {
     const p = await scene(itemPrompt, dir, `item-${item.number}`, "3:2", jobIds);
     buffers.push(await compositeLessonItem({
       scenePath: p, number: item.number, title: item.title,
-      problem: item.problem, solution: item.solution,
+      problem: item.problem, solution: item.solution, how: item.how,
     }));
     specs.push({ c: "compositeLessonItem", pathKeys: ["scenePath"], scenes: [{ prompt: itemPrompt, aspect: "3:2" }],
-      params: { number: item.number, title: item.title, problem: item.problem, solution: item.solution } });
+      params: { number: item.number, title: item.title, problem: item.problem, solution: item.solution, how: item.how } });
   }
 
   // Recap CTA — every item becomes a labelled signpost pointing down the wrong road.

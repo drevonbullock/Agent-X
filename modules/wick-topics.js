@@ -13,9 +13,12 @@ import supabase from "../supabase/client.js";
 //   10%  MONEY_SYSTEMS   how the machine is built and who it pays
 
 export const LANES = {
-  HYBRID: { weight: 0.8, label: "Behaviour into Money" },
-  MIND_BEHAVIOUR: { weight: 0.1, label: "Mind into Behaviour" },
-  MONEY_SYSTEMS: { weight: 0.1, label: "Money into Systems" },
+  // Dre, 2026-08-26: "this is in the money and mind intersection and just money
+  // and then mind" — the page's priority order, in his words. The intersection
+  // dominates, pure money is second, mind alone is third.
+  HYBRID: { weight: 0.6, label: "Money × Mind (the intersection)" },
+  MONEY_SYSTEMS: { weight: 0.25, label: "Just Money" },
+  MIND_BEHAVIOUR: { weight: 0.15, label: "Then Mind" },
 };
 
 // hook = the behavioural mechanic. payoff = where it shows up in money.
