@@ -115,8 +115,12 @@ Return ONLY a JSON array:
   const base = 1000 + Math.max(0, ...existing.filter((t) => t.id >= 1000).map((t) => t.id - 1000));
   const fresh = items.map((it, i) => ({ ...it, id: base + i + 1, lane, generated: true }));
 
+  // upsert, not insert: three same-day batches each computed ids from the same
+  // base-1000 counter and collided on the primary key, so generated topics
+  // stopped persisting at all — which quietly erodes the topic dedup memory.
   const { error } = await supabase.from("wick_generated_topics")
-    .insert(fresh.map((t) => ({ topic_id: t.id, lane: t.lane, title: t.title, hook: t.hook, payoff: t.payoff })));
+    .upsert(fresh.map((t) => ({ topic_id: t.id, lane: t.lane, title: t.title, hook: t.hook, payoff: t.payoff })),
+            { onConflict: "topic_id", ignoreDuplicates: true });
   if (error) console.warn(`[WickTopics] could not persist generated topics: ${error.message}`);
   console.log(`[WickTopics] Generated ${fresh.length} new ${lane} episode(s).`);
   return fresh;
