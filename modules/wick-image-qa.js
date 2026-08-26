@@ -119,7 +119,14 @@ export async function gradeImage(filePath, format = null) {
   content.push({ type: "image", source: { type: "base64", media_type: mediaType(filePath), data: b64 } });
   content.push({ type: "text", text: (ref ? IDENTITY_RUBRIC : "") + RUBRIC + (FORMAT_NOTES[format] ?? "") });
   const msg = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    // Haiku by default. The grader ran on Sonnet with the reference image
+    // attached to EVERY call — two images per grade — and a 99-image harvest
+    // drained Dre's entire Anthropic top-up before the week could even build.
+    // Haiku 4.5 has vision, costs ~12x less, and the checks here are coarse
+    // by design: same character or not, body visible or not, text in the art
+    // or not. Set WICK_QA_MODEL=claude-sonnet-4-6 to raise the bar for a
+    // final pass when budget allows.
+    model: process.env.WICK_QA_MODEL || "claude-haiku-4-5-20251001",
     max_tokens: 300,
     messages: [{ role: "user", content }],
   });

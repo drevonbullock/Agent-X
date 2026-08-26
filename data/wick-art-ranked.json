@@ -341,5 +341,565 @@
   "reason": "A second candle character appears on the right that lacks a face and is clearly off-model, violating the rule that any s",
   "scene": "He stands in a car lot leaning over the hood, one finger pressed on a printed price sheet beside a set of car ",
   "strip": null
+ },
+ {
+  "n": 36,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/63693d18-1463-419d-8cdb-b179c0fc038d.jpg",
+  "job_id": "63693d18-1463-419d-8cdb-b179c0fc038d",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick in a warm interior scene.",
+  "harvested_at": "2026-08-26T15:46:48.486Z"
+ },
+ {
+  "n": 37,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/40903108-c7db-4dff-847c-d9c479a32adb.jpg",
+  "job_id": "40903108-c7db-4dff-847c-d9c479a32adb",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick in a warm interior scene.",
+  "harvested_at": "2026-08-26T15:46:51.098Z"
+ },
+ {
+  "n": 38,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/3ec58a03-e4a9-44f1-9b13-57d1a81e266e.jpg",
+  "job_id": "3ec58a03-e4a9-44f1-9b13-57d1a81e266e",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick in a warm interior scene.",
+  "harvested_at": "2026-08-26T15:46:53.774Z"
+ },
+ {
+  "n": 39,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/59eb977c-b688-4f06-858f-4f6ff9da99b7.jpg",
+  "job_id": "59eb977c-b688-4f06-858f-4f6ff9da99b7",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick in a warm interior scene.",
+  "harvested_at": "2026-08-26T15:46:59.489Z"
+ },
+ {
+  "n": 40,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/67856046-2011-4605-8f86-1ce0743b8698.jpg",
+  "job_id": "67856046-2011-4605-8f86-1ce0743b8698",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "Standing at the same style of counter, he swipes a card at a checkout terminal, the membership card already tucked away in a wallet, the per-day number never opened, a loyalty points screen glowing on the terminal. His expression is Distracted and slightly rushed, not registering the moment as a real cost..",
+  "harvested_at": "2026-08-26T15:47:06.445Z"
+ },
+ {
+  "n": 41,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/0cb4b800-2839-44d9-bc36-409e16a3615e.jpg",
+  "job_id": "0cb4b800-2839-44d9-bc36-409e16a3615e",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "Standing at a counter, he taps a calculator on his phone next to a membership card, dividing the yearly fee by three hundred and sixty five, a receipt flat on the counter beside him, a grocery bag in the background. His expression is Focused and deliberate, doing the math before the decision is made..",
+  "harvested_at": "2026-08-26T15:47:09.973Z"
+ },
+ {
+  "n": 42,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/8a9e1612-869d-40ce-bfd9-61b65c801aca.jpg",
+  "job_id": "8a9e1612-869d-40ce-bfd9-61b65c801aca",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "Slumped at the same style of kitchen table, he stares at a phone showing a bank notification for an annual charge, a cereal bowl pushed to one side, the laptop screen dark, the room dim and unlit. His expression is Hollow and vacant, mildly stunned, like the number landed without warning..",
+  "harvested_at": "2026-08-26T15:47:16.502Z"
+ },
+ {
+  "n": 43,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/91af1c61-6e26-4475-b086-a85f4490681c.jpg",
+  "job_id": "91af1c61-6e26-4475-b086-a85f4490681c",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "Seated at a kitchen table, he holds a single printed sheet listing four annual fees with a pen circling each one, a cold coffee mug beside him, a laptop open to a plain spreadsheet, morning light through a window behind him. His expression is Quietly certain, unhurried, clear eyed..",
+  "harvested_at": "2026-08-26T15:47:19.538Z"
+ },
+ {
+  "n": 44,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/4e046cde-6fd9-4eef-8fa4-b48d4813e6b0.jpg",
+  "job_id": "4e046cde-6fd9-4eef-8fa4-b48d4813e6b0",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "coverTop",
+  "scene": "He sits upright at a desk, notebook open to a fresh page, pen moving, phone propped beside him showing today's date, a single lamp lit in an otherwise dim room. His expression is Focused, mouth set — the look of someone who has decided..",
+  "harvested_at": "2026-08-26T15:47:24.143Z"
+ },
+ {
+  "n": 45,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/e09c688b-c3ab-4397-8a94-9537f0c45b32.jpg",
+  "job_id": "e09c688b-c3ab-4397-8a94-9537f0c45b32",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits on the edge of a bed, a phone calculator open showing 500 times 12 equals 6000, a gym bag unused in the corner, a streaming remote on the nightstand, a single subscription bill printout in his hand he is staring at without blinking. His expression is Still, struck — the moment the small number becomes a large one and there is nothing left to say..",
+  "harvested_at": "2026-08-26T15:47:26.996Z"
+ },
+ {
+  "n": 46,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/dc4dcba4-dfbd-4ed9-817b-8ced5efc2c08.jpg",
+  "job_id": "dc4dcba4-dfbd-4ed9-817b-8ced5efc2c08",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He stands in a narrow flat hallway, a laptop open on a sideboard showing two months of unreviewed charges, a direct debit letter half-slid out of an envelope, his hand braced against the wall, body turned slightly away from the screen as if steadying himself. His expression is Winded — the look of someone reading a number they did not expect..",
+  "harvested_at": "2026-08-26T15:47:31.359Z"
+ },
+ {
+  "n": 47,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/b85fdd31-8291-4ee0-9fb3-5bb1ee076fc9.jpg",
+  "job_id": "b85fdd31-8291-4ee0-9fb3-5bb1ee076fc9",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He leans back on a sofa, contactless card resting loosely on the armrest, a delivery bag already open on the cushion beside him, phone showing a payments app he has not tapped, the coffee table holding three small receipts he hasn't looked at. His expression is Detached, half-present — not reckless, just switched off..",
+  "harvested_at": "2026-08-26T15:47:37.825Z"
+ },
+ {
+  "n": 48,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/04b12570-25c6-48d3-bb0c-25f92eb00db7.jpg",
+  "job_id": "04b12570-25c6-48d3-bb0c-25f92eb00db7",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits at a kitchen table, a closed notebook and an uncapped pen in front of him, phone face-down beside a cold mug, shoulders slack and eyes drifting toward the window rather than the page, a stack of unopened envelopes at the edge of the table. His expression is Flat, quietly avoidant — the look of someone who knows what he should open but hasn't moved..",
+  "harvested_at": "2026-08-26T15:47:40.905Z"
+ },
+ {
+  "n": 49,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/c8819482-1bf3-408b-891e-c4d98774e2d6.jpg",
+  "job_id": "c8819482-1bf3-408b-891e-c4d98774e2d6",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits at a kitchen table, a closed notebook and an uncapped pen in front of him, phone face-down beside a cold mug, shoulders slack and eyes drifting toward the window rather than the page, a stack of unopened envelopes at the edge of the table. His expression is Flat, quietly avoidant — the look of someone who knows what he should open but hasn't moved..",
+  "harvested_at": "2026-08-26T15:47:44.919Z"
+ },
+ {
+  "n": 50,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/e8cdefe7-7f54-4cc7-b98b-cecfe43c594c.jpg",
+  "job_id": "e8cdefe7-7f54-4cc7-b98b-cecfe43c594c",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "stands on a city sidewalk at dusk at a five way junction, 5 illuminated overhead direction signs crowded above the left hand street all pointing the same way, one clear open street to the right leading toward lit towers, a bus shelter and parked cars framing the junction",
+  "harvested_at": "2026-08-26T15:47:53.643Z"
+ },
+ {
+  "n": 51,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/61f9c7c3-5c55-4e52-8b45-14099d9fd7cf.jpg",
+  "job_id": "61f9c7c3-5c55-4e52-8b45-14099d9fd7cf",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick sits at a kitchen table, laptop open showing a simple spreadsheet with a total at the bottom, a pen resting across a notepad, a single mug of tea beside it, morning light coming through a window behind him, his posture upright and calm. His expression is Settled, open, clear-eyed — the look of someone who has seen the number and is ready to move..",
+  "harvested_at": "2026-08-26T15:48:00.662Z"
+ },
+ {
+  "n": 52,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/3565d0fb-00e0-42f3-bafc-6e7dc6e2093a.jpg",
+  "job_id": "3565d0fb-00e0-42f3-bafc-6e7dc6e2093a",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick stands at a card terminal in a busy pharmacy, the screen showing a round-up prompt and a green yes button, his debit card already pressed to the reader, a paper bag of items on the counter, the cashier watching the screen with one hand on the bag. His expression is Warm but unaware — the look of someone doing something that feels good without knowing the full cost..",
+  "harvested_at": "2026-08-26T15:48:03.453Z"
+ },
+ {
+  "n": 53,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/44ba97aa-7055-49ce-b4e3-c2fdc40eee23.jpg",
+  "job_id": "44ba97aa-7055-49ce-b4e3-c2fdc40eee23",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick stands at a self-checkout machine in a bright supermarket, scanning a single snack bar, a gym bag slung over his shoulder, a fluorescent price screen showing one dollar ninety-nine, a short queue of trolleys behind him, his face turned slightly toward the screen. His expression is Unbothered, barely present — the look of someone who sees the price and feels nothing..",
+  "harvested_at": "2026-08-26T15:48:06.606Z"
+ },
+ {
+  "n": 54,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/675a58d2-647a-4435-81cb-1fc22fa056cb.jpg",
+  "job_id": "675a58d2-647a-4435-81cb-1fc22fa056cb",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick is slouched on a sofa under a lamp, scrolling a phone screen showing a grid of app icons, a TV remote resting on the cushion beside him, a laptop on the coffee table with a bank app open to a list of line items, his thumb hovering over the confirm button. His expression is Comfortable, slightly glazed — the face of someone who has already decided before thinking..",
+  "harvested_at": "2026-08-26T15:48:11.641Z"
+ },
+ {
+  "n": 55,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/07a5447b-c440-41e3-89ad-07b1a6f5032a.jpg",
+  "job_id": "07a5447b-c440-41e3-89ad-07b1a6f5032a",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick stands at a café counter mid-tap on a card reader, a paper cup already in his other hand, a queue of people behind him, a small digital receipt printer spitting out a slip he does not look at, the barista already looking past him. His expression is Relaxed, almost absent — the look of someone doing something that feels too small to matter..",
+  "harvested_at": "2026-08-26T15:48:18.815Z"
+ },
+ {
+  "n": 56,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/2b68df22-3214-445a-9931-bf4c22bba24c.jpg",
+  "job_id": "2b68df22-3214-445a-9931-bf4c22bba24c",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "coverTop",
+  "scene": "Wick sits at a kitchen counter under harsh overhead light, phone in one hand showing a payment confirmation, a half-drunk coffee beside it, a laptop open to a bank statement, a stack of small paper receipts fanned out across the counter like playing cards. His expression is Still, steady, not panicked — the look of someone who has just done the maths and is sitting with what it adds up to..",
+  "harvested_at": "2026-08-26T15:48:23.157Z"
+ },
+ {
+  "n": 57,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/0ed0062e-90f0-4db5-b2c0-a26ef83acb35.jpg",
+  "job_id": "0ed0062e-90f0-4db5-b2c0-a26ef83acb35",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "coverTop",
+  "scene": "He sits cross-legged on a couch, phone resting in his lap, a browser tab open to a plain search results page with the top listing deliberately skipped, a notepad on the cushion beside him with a number already written on it, warm lamp light to his left. His expression is Knowing and calm, like someone who figured out a small rule that saves money every single week..",
+  "harvested_at": "2026-08-26T15:48:26.552Z"
+ },
+ {
+  "n": 58,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/e0715c0c-a273-4e80-8c65-1b52c49f1e9d.jpg",
+  "job_id": "e0715c0c-a273-4e80-8c65-1b52c49f1e9d",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits in the same chair in the same room, a delivered box open on the table beside him, the product inside matching the top-reviewed listing exactly, his phone showing the order confirmation with the higher price, shoulders slightly dropped, the receipt still in the box. His expression is Flat and a little hollow, the feeling of realizing you paid for the story, not the thing..",
+  "harvested_at": "2026-08-26T15:48:30.749Z"
+ },
+ {
+  "n": 59,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/4839755c-778f-4fb6-9603-fb09ca693cc0.jpg",
+  "job_id": "4839755c-778f-4fb6-9603-fb09ca693cc0",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits back in a chair, phone in one hand showing two side-by-side product pages with a clear price gap between them, a small triumphant exhale visible in his relaxed shoulders, a receipt on the table beside him with the lower number circled in pen, a plain apartment living room behind him. His expression is Quietly pleased, the way someone looks when a small thing goes exactly as planned..",
+  "harvested_at": "2026-08-26T15:48:33.624Z"
+ },
+ {
+  "n": 60,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/1c1831d4-0450-4489-9b0a-7474b758bfd1.jpg",
+  "job_id": "1c1831d4-0450-4489-9b0a-7474b758bfd1",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits at the same desk, same monitor, the sticky note blank and pushed to the side, body leaning forward into the screen, the top-listed product already open in a new tab, the coffee mug untouched and going cold. His expression is Absorbed and slightly open-mouthed, the number in his head borrowed from the screen..",
+  "harvested_at": "2026-08-26T15:48:39.690Z"
+ },
+ {
+  "n": 61,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/c299a1ec-e558-4b52-b543-de0593024460.jpg",
+  "job_id": "c299a1ec-e558-4b52-b543-de0593024460",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He stands beside a desk, a number written in thick marker on a sticky note pressed to the edge of the monitor, arms folded, eyes scanning search results on the screen without leaning in, a closed notebook and a full coffee mug on the desk beside him. His expression is Grounded and still, like someone who already made the decision and is just checking the math..",
+  "harvested_at": "2026-08-26T15:48:43.073Z"
+ },
+ {
+  "n": 62,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/0a017e0f-2817-48b1-9336-cae3869f95af.jpg",
+  "job_id": "0a017e0f-2817-48b1-9336-cae3869f95af",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He stands at a kitchen counter, laptop open, clicking into the reviewer profile tab to see a single-review account with no history, one finger hovering over the trackpad, a pen and a small notepad beside the laptop, overhead light on and steady. His expression is Focused and slightly skeptical, like someone turning a coin over before they spend it..",
+  "harvested_at": "2026-08-26T15:48:57.282Z"
+ },
+ {
+  "n": 63,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/de715a31-bffa-4283-a8aa-3b7d6c987242.jpg",
+  "job_id": "de715a31-bffa-4283-a8aa-3b7d6c987242",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He leans forward on the same kitchen table, phone tilted toward him, eyes fixed on the single glowing five-star banner at the top of the same review page, a half-eaten breakfast pushed to one side, the screen's blue light the only glow in the room. His expression is Quietly sold, already convinced, not yet aware of it..",
+  "harvested_at": "2026-08-26T15:49:10.799Z"
+ },
+ {
+  "n": 64,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/09cf4fe0-0029-4080-9784-5907d27bf12c.jpg",
+  "job_id": "09cf4fe0-0029-4080-9784-5907d27bf12c",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits upright at a kitchen table, phone face-up, scrolling to the bottom of a product review page with one deliberate thumb stroke, a cold glass of water beside him, the screen showing a long list of mixed ratings, bright morning window light behind him. His expression is Unhurried and clear-eyed, like someone who already knows the trick..",
+  "harvested_at": "2026-08-26T15:49:14.003Z"
+ },
+ {
+  "n": 65,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/be5c1ea6-635d-4a87-ac90-9e4b0081de82.jpg",
+  "job_id": "be5c1ea6-635d-4a87-ac90-9e4b0081de82",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "coverTop",
+  "scene": "He sits at a kitchen table, a phone showing a recent bank statement, a plain glass of water beside it, a pen in his hand circling a line item, overhead light bright and flat, no mood, just numbers. His expression is Calm and clear-eyed, like something just clicked and he isn't mad about it..",
+  "harvested_at": "2026-08-26T15:49:16.681Z"
+ },
+ {
+  "n": 66,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/86d21400-1126-48f4-9fff-052135bd4ee2.jpg",
+  "job_id": "86d21400-1126-48f4-9fff-052135bd4ee2",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He leans against a rooftop rail, a bottle in hand, string lights strung overhead, a city skyline behind him, a receipt curled on the ledge beside him showing a total nearly double a convenience store six-pack, chin up, looking out. His expression is Relaxed, fully at ease, the number on the receipt entirely invisible to him..",
+  "harvested_at": "2026-08-26T15:49:21.114Z"
+ },
+ {
+  "n": 67,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/4f86d35b-fb17-44b7-9620-236045eb3221.jpg",
+  "job_id": "4f86d35b-fb17-44b7-9620-236045eb3221",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He is mid-rep on a cable machine in a glass-walled hotel fitness room on a high floor, city skyline visible behind him, a branded towel draped on the handle, a small printed day-pass ticket tucked under his water bottle on the floor. His expression is Focused, feeling the setting as part of the workout, no doubt on his face..",
+  "harvested_at": "2026-08-26T15:49:24.545Z"
+ },
+ {
+  "n": 68,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/1042914d-0319-4250-83f8-72f966fcdd97.jpg",
+  "job_id": "1042914d-0319-4250-83f8-72f966fcdd97",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He stands at a polished marble bar, a branded paper cup in his hand, an illuminated menu board behind the barista, a sleek card reader already facing him with the total on screen, shoulders slightly back as he taps his phone. His expression is Unhesitating, certain it was worth it, face open and unbothered..",
+  "harvested_at": "2026-08-26T15:49:32.974Z"
+ },
+ {
+  "n": 69,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/7d810448-ada2-4ad6-92c0-f420e518bfca.jpg",
+  "job_id": "7d810448-ada2-4ad6-92c0-f420e518bfca",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits upright at a linen-covered restaurant table, a glass water bottle centered in front of him, a dimmer-switched pendant lamp overhead casting warm light, his eyes on the bill folder just set down beside a folded cloth napkin, hand resting flat on the table. His expression is Still, almost surprised, reading the number with calm that hasn't caught up to what he's seeing..",
+  "harvested_at": "2026-08-26T15:49:42.751Z"
+ },
+ {
+  "n": 70,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/9b13645b-2951-4285-b6c5-3366d93205e4.jpg",
+  "job_id": "9b13645b-2951-4285-b6c5-3366d93205e4",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "stands on a city sidewalk at dusk at a five way junction, 5 illuminated overhead direction signs crowded above the left hand street all pointing the same way, one clear open street to the right leading toward lit towers, a bus shelter and parked cars framing the junction",
+  "harvested_at": "2026-08-26T15:49:47.816Z"
+ },
+ {
+  "n": 71,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/5e914a76-1fa4-46a2-b3c5-fb7a8bb38dc4.jpg",
+  "job_id": "5e914a76-1fa4-46a2-b3c5-fb7a8bb38dc4",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick stands outside a corner shop in daylight, hands in jacket pockets, looking down the street with a small quiet ease, one foot lifted on the kerb, a coffee cup in hand, a clear morning around him with nothing urgent in sight. His expression is Calm and clear, like a man who put something down he did not need to carry..",
+  "harvested_at": "2026-08-26T15:49:53.631Z"
+ },
+ {
+  "n": 72,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/8ef24d77-2372-47d4-beb7-ec4c35bd89f6.jpg",
+  "job_id": "8ef24d77-2372-47d4-beb7-ec4c35bd89f6",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick sits at a desk with a printed form flat in front of him, a pen uncapped but set down to the side, a laptop open to a blank email, his elbows on the table and his face resting in both hands. His expression is Weary, the posture of a man who knows the form has been there for two weeks..",
+  "harvested_at": "2026-08-26T15:49:59.600Z"
+ },
+ {
+  "n": 73,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/d40b1cf2-927f-4ca6-877b-ac0fcfe6053b.jpg",
+  "job_id": "d40b1cf2-927f-4ca6-877b-ac0fcfe6053b",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick stands near a window holding his phone loosely at his side, a subscription charge on the screen, a calendar on the wall behind him with nothing circled, one hand resting flat on the glass looking out. His expression is Troubled, like a man who can see exactly what he should do and is still not doing it..",
+  "harvested_at": "2026-08-26T15:50:05.607Z"
+ },
+ {
+  "n": 74,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/bbafc338-7b39-45af-8e78-a7d0d1469c15.jpg",
+  "job_id": "bbafc338-7b39-45af-8e78-a7d0d1469c15",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick stands near a window holding his phone loosely at his side, a subscription charge on the screen, a calendar on the wall behind him with nothing circled, one hand resting flat on the glass looking out. His expression is Troubled, like a man who can see exactly what he should do and is still not doing it..",
+  "harvested_at": "2026-08-26T15:50:10.113Z"
+ },
+ {
+  "n": 75,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/fac0ffa8-78bd-4ab2-bf5d-f9a06ec0b6d0.jpg",
+  "job_id": "fac0ffa8-78bd-4ab2-bf5d-f9a06ec0b6d0",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick sits on a sofa scrolling his phone, a bank app notification visible on the screen reading a high rate number, a notepad with nothing written on it on the cushion beside him, one leg crossed like he has all the time he does not have. His expression is Resigned, looking at the screen without moving, like a man watching rain he planned to avoid..",
+  "harvested_at": "2026-08-26T15:50:14.609Z"
+ },
+ {
+  "n": 76,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/446c01c0-f18c-4761-a135-8a32c8a85d13.jpg",
+  "job_id": "446c01c0-f18c-4761-a135-8a32c8a85d13",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "full",
+  "scene": "Wick stands at a kitchen counter, sliding an unopened envelope under a stack of books with one hand, his phone face-down beside the kettle, shoulders slightly turned away from the pile. His expression is Uneasy, eyes glancing away from the envelope like it might read him back..",
+  "harvested_at": "2026-08-26T15:50:17.550Z"
+ },
+ {
+  "n": 77,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/e3d382fa-79f5-447a-a5f1-f58ef91cd160.jpg",
+  "job_id": "e3d382fa-79f5-447a-a5f1-f58ef91cd160",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "coverTop",
+  "scene": "Wick sits at a small kitchen table at night, a phone screen glowing with an unread bank alert, an unopened laptop beside a cold coffee, a stack of paper bills still in their envelopes, overhead light the only warm thing in the room. His expression is Calm but aware, like a man who just realised something he should have seen sooner..",
+  "harvested_at": "2026-08-26T15:50:20.849Z"
+ },
+ {
+  "n": 78,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/a8ae16be-59e3-4bdd-9630-5147b158e4dd.jpg",
+  "job_id": "a8ae16be-59e3-4bdd-9630-5147b158e4dd",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "coverTop",
+  "scene": "He stands at a window in a plain room, a sticky note with a crossed-out number and a new lower one beside it, a sold confirmation on his phone screen, the city outside in early evening light. His expression is Quietly resolved, the face of someone who let go of the wrong thing and came out ahead..",
+  "harvested_at": "2026-08-26T15:50:24.686Z"
+ },
+ {
+  "n": 79,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/40ad8857-ffbc-4bef-958d-e333e18979c0.jpg",
+  "job_id": "40ad8857-ffbc-4bef-958d-e333e18979c0",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits alone at the same style cafe table six weeks later, the listing still open on his phone, an untouched coffee gone cold, the chair across from him empty, the door behind him closed. His expression is Worn thin, staring at the phone as if waiting for it to prove him right..",
+  "harvested_at": "2026-08-26T15:50:34.853Z"
+ },
+ {
+  "n": 80,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/7073f3da-e394-45a7-887e-e2e58e250043.jpg",
+  "job_id": "7073f3da-e394-45a7-887e-e2e58e250043",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He shakes hands across a small cafe table, a signed paper between two phones on the surface, a half-eaten croissant on a plate beside him, the door open behind them with people walking past in afternoon light. His expression is Easy and warm, the relief of a man who finished a thing and is already thinking about what is next..",
+  "harvested_at": "2026-08-26T15:50:39.831Z"
+ },
+ {
+  "n": 81,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/4b81bd86-874f-4c53-ae66-3ba4a5ca5129.jpg",
+  "job_id": "4b81bd86-874f-4c53-ae66-3ba4a5ca5129",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits rigid on a sofa, the same unsold listing open on his laptop for the third week, a sticky note with the original price still stuck to the screen, a stack of unopened mail on the cushion beside him. His expression is Stubborn and hollow, holding on to a number the market stopped caring about..",
+  "harvested_at": "2026-08-26T15:50:48.081Z"
+ },
+ {
+  "n": 82,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/d25a633a-f613-48a1-a454-dc2a0fbff2b6.jpg",
+  "job_id": "d25a633a-f613-48a1-a454-dc2a0fbff2b6",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He taps a revised number into his phone at a kitchen counter, a sold notification already lighting up the screen, a mug of tea beside him, the original listing still open in another tab he is about to close. His expression is Decisive and unbothered, the face of someone who separated his feeling from the figure..",
+  "harvested_at": "2026-08-26T15:50:50.805Z"
+ },
+ {
+  "n": 83,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/6dedc397-4c76-449c-ae23-5f1f8c4a4fe8.jpg",
+  "job_id": "6dedc397-4c76-449c-ae23-5f1f8c4a4fe8",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He stands at the same whiteboard in the same room, pages of handwritten steps covering every inch of it, the buyer leaning back with arms crossed and eyes glazed, a phone in their lap they are already reaching for. His expression is Eager in a way that tips into desperate, reading the room wrong and speeding up anyway..",
+  "harvested_at": "2026-08-26T15:51:00.036Z"
+ },
+ {
+  "n": 84,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/30a7c23b-75b1-4e03-ad3e-7f9fe1085b9d.jpg",
+  "job_id": "30a7c23b-75b1-4e03-ad3e-7f9fe1085b9d",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He stands beside a whiteboard in a small bright room, a single bold result written in marker at the top, a buyer leaning forward in a folding chair with a pen already in hand, a printed one-page summary on the table between them. His expression is Steady and unhurried, holding the silence after the number lands..",
+  "harvested_at": "2026-08-26T15:51:06.666Z"
+ },
+ {
+  "n": 85,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/ebe5b772-e8eb-456d-900a-45a5d4b83a57.jpg",
+  "job_id": "ebe5b772-e8eb-456d-900a-45a5d4b83a57",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits upright at a wood desk, a handwritten number on a sticky note beside his open laptop, two competing listings pulled up on screen, a cold cup of coffee he forgot, a quiet home office in morning light. His expression is Calm and clear eyed, like a man who already knows the answer before he asks the question..",
+  "harvested_at": "2026-08-26T15:51:16.926Z"
+ },
+ {
+  "n": 86,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/aa90bd26-3d40-4980-94b4-a78e72105edf.jpg",
+  "job_id": "aa90bd26-3d40-4980-94b4-a78e72105edf",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "coverTop",
+  "scene": "He sits on the edge of his bed, phone in hand showing this post, budget notebook open on the duvet beside him, a pen resting in the spine, bedside lamp on, window dark. His expression is Quiet, present, the look of someone who just saw something true..",
+  "harvested_at": "2026-08-26T15:51:19.598Z"
+ },
+ {
+  "n": 87,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/1175a9f6-c5a2-4b11-b64a-60b778294f43.jpg",
+  "job_id": "1175a9f6-c5a2-4b11-b64a-60b778294f43",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "coverTop",
+  "scene": "He sits on the edge of his bed, phone in hand showing this post, budget notebook open on the duvet beside him, a pen resting in the spine, bedside lamp on, window dark. His expression is Quiet, present, the look of someone who just saw something true..",
+  "harvested_at": "2026-08-26T15:51:23.822Z"
+ },
+ {
+  "n": 88,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/60042e76-25b1-4173-b25f-ae3a7c1af57b.jpg",
+  "job_id": "60042e76-25b1-4173-b25f-ae3a7c1af57b",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits at a kitchen table staring at his banking app showing a negative balance against a handwritten note that reads 'save 200 this month', a pile of small receipts fanned out beside the phone, a half-empty coffee mug going cold. His expression is Still, jaw tight, the slow recognition of someone doing the math for the first time..",
+  "harvested_at": "2026-08-26T15:51:26.345Z"
+ },
+ {
+  "n": 89,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/bb1ec59a-400e-4139-9c3e-69662d14b29d.jpg",
+  "job_id": "bb1ec59a-400e-4139-9c3e-69662d14b29d",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He stands at a shop checkout, card tapping the reader, a printed offer letter poking out of his jacket pocket with the start date still two weeks away, new trainers in a bag at his feet, a receipt beginning to print. His expression is Confident, unhurried, as if the future money is already in his hands..",
+  "harvested_at": "2026-08-26T15:51:29.206Z"
+ },
+ {
+  "n": 90,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/f84a4477-532a-40cb-8a72-bba97e25a302.jpg",
+  "job_id": "f84a4477-532a-40cb-8a72-bba97e25a302",
+  "severity": "clean",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He sits cross-legged on a couch with a laptop open to a flights page, a handwritten budget sheet on the cushion beside him with the savings column barely started, a phone face-up showing a card payment confirmation, a half-packed bag on the floor. His expression is Light, pleased, the face of someone celebrating a plan rather than completing one..",
+  "harvested_at": "2026-08-26T15:51:32.307Z"
+ },
+ {
+  "n": 91,
+  "url": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/library/48167ef0-2eae-4953-9d20-7086934086d1.jpg",
+  "job_id": "48167ef0-2eae-4953-9d20-7086934086d1",
+  "severity": "minor",
+  "strip": "clean",
+  "framing": "upper",
+  "scene": "He stands at a bakery counter mid-reach, one hand lifting a boxed cake off the glass shelf, a folded meal-plan printout visible in his shirt pocket, a half-drunk smoothie cup on the counter beside him, bright fluorescent lights overhead. His expression is Relaxed, certain, the easy look of someone who has already decided he has earned it..",
+  "harvested_at": "2026-08-26T15:51:41.645Z"
  }
 ]
