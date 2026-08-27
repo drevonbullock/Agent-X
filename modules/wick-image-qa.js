@@ -102,14 +102,16 @@ function refImage() {
 
 const IDENTITY_RUBRIC =
   "The FIRST image is the canonical reference of Wick, the only character this page is allowed " +
-  "to show. The SECOND image is the candidate being graded. Before anything else, check " +
-  "IDENTITY: every candle character in the candidate must be unmistakably THE SAME character " +
-  "as the reference — same golden teardrop flame head with the same simple face, same cream " +
-  "wax cylinder body with soft drips, same thin black rubber-hose limbs with rounded mitten " +
-  "hands. A candle with different proportions, a different face, a different body shape, " +
-  "holder or base, or a second candle that does not match the reference is fault code I, " +
-  "severity bad, no exceptions — being 'a nice candle character' is not enough, it must be " +
-  "HIM. ";
+  "to show. The SECOND image is the candidate being graded, and it is a COMPOSITED SLIDE: it may " +
+  "be darkened, cropped, or have large text laid over parts of the scene by design. " +
+  "IDENTITY, fault code I, severity bad, applies ONLY to a STRUCTURALLY different character: " +
+  "not a candle at all, a realistic candle with a natural flame instead of a teardrop flame " +
+  "head with a face, human anatomy (fingers, shoulders, skin, hair), a second candle that " +
+  "does not match, or a completely different color scheme. " +
+  "Render variance is NEVER a fault: differences in gloss, lighting, brightness, mood, " +
+  "expression, flame size, or proportion shifts between generations are normal for this " +
+  "pipeline and must not be flagged. When unsure whether it is Wick, it is Wick — the human " +
+  "reviewer catches borderline cases; your job is the flagrant ones. ";
 
 export async function gradeImage(filePath, format = null) {
   const b64 = fs.readFileSync(filePath).toString("base64");
@@ -117,7 +119,8 @@ export async function gradeImage(filePath, format = null) {
   const content = [];
   if (ref) content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: ref } });
   content.push({ type: "image", source: { type: "base64", media_type: mediaType(filePath), data: b64 } });
-  content.push({ type: "text", text: (ref ? IDENTITY_RUBRIC : "") + RUBRIC + (FORMAT_NOTES[format] ?? "") });
+  content.push({ type: "text", text: (ref ? IDENTITY_RUBRIC : "") + RUBRIC + (FORMAT_NOTES[format] ?? "") +
+    " Respond with ONLY the JSON object on a single line. No preamble, no markdown fences, no explanation outside the JSON." });
   const msg = await client.messages.create({
     // Haiku by default. The grader ran on Sonnet with the reference image
     // attached to EVERY call — two images per grade — and a 99-image harvest
@@ -131,8 +134,18 @@ export async function gradeImage(filePath, format = null) {
     messages: [{ role: "user", content }],
   });
   try {
-    const t = msg.content[0].text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
-    const v = JSON.parse(t.slice(t.indexOf("{")));
+    // Haiku wraps JSON in prose more often than Sonnet did (14 slides in one
+    // batch came back unparseable and were scored as faults). Walk balanced
+    // braces from the first { instead of trusting the text to be clean.
+    const t = msg.content[0].text;
+    const start = t.indexOf("{");
+    if (start === -1) throw new Error("no JSON");
+    let depth = 0, end = -1;
+    for (let k = start; k < t.length; k++) {
+      if (t[k] === "{") depth++;
+      else if (t[k] === "}" && --depth === 0) { end = k + 1; break; }
+    }
+    const v = JSON.parse(t.slice(start, end));
     return { pass: !!v.pass, severity: v.severity ?? "bad", codes: v.codes ?? [], reason: v.reason ?? "" };
   } catch {
     // A grader that cannot parse must not silently pass a slide.
