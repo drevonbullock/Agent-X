@@ -16,9 +16,11 @@ export const LANES = {
   // Dre, 2026-08-26: "this is in the money and mind intersection and just money
   // and then mind" — the page's priority order, in his words. The intersection
   // dominates, pure money is second, mind alone is third.
-  HYBRID: { weight: 0.6, label: "Money × Mind (the intersection)" },
-  MONEY_SYSTEMS: { weight: 0.25, label: "Just Money" },
-  MIND_BEHAVIOUR: { weight: 0.15, label: "Then Mind" },
+  // Back to the original mix per Dre 2026-08-28: "make sure the pillars are
+  // the same: the 80%, the 10%, and the 10%."
+  HYBRID: { weight: 0.8, label: "Money × Mind (the intersection)" },
+  MONEY_SYSTEMS: { weight: 0.1, label: "Just Money" },
+  MIND_BEHAVIOUR: { weight: 0.1, label: "Then Mind" },
 };
 
 // hook = the behavioural mechanic. payoff = where it shows up in money.
