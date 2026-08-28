@@ -5,7 +5,7 @@ import path from "path";
 import supabase from "../supabase/client.js";
 import { pickTopics } from "../modules/wick-topics.js";
 import { pickOverlaySafe, pickStripSafe, libraryFramingStats } from "../modules/wick-art-library.js";
-import { writeToScenes, writeCaption, withJsonRetry, setUsedIdeas } from "../modules/wick-copy.js";
+import { writeToScenes, writeCaption, withJsonRetry, setUsedIdeas, critiqueCoherence } from "../modules/wick-copy.js";
 import { compositeLessonCover, compositeLessonItem, compositeCta, loadStyleSettings } from "../modules/wick-render.js";
 import { auditQueue } from "../modules/wick-image-qa.js";
 
@@ -70,8 +70,7 @@ async function buildOne(topic, slot, dir) {
     { role: "the closing frame", shows: overlay[1].scene },
   ];
 
-  const c = await withJsonRetry(() => writeToScenes(topic, "LESSON", slots, {
-    rules: `- Frame 1 is the COVER. Its headline is a hook from Dre's template, max 10
+  const extraRules = `- Frame 1 is the COVER. Its headline is a hook from Dre's template, max 10
   words, ALL CAPS, with a ROUND number only ($100/$250/$500/$1,000 — never
   $289). The four shapes, exactly: "YOU MISSED OUT ON $1,000 LAST WEEK" /
   "LET ME SHOW YOU HOW TO MAKE $1,000 IN 1 DAY" / "LET ME SHOW YOU HOW YOU
@@ -84,11 +83,36 @@ async function buildOne(topic, slot, dir) {
   as a principle (max 12 words), how = ONE imperative move to make tonight
   (max 10 words). The arithmetic across the items must CASH the cover's round
   number — the exact math lives here, the rounding lives on the cover.
-- Frame 7 CLOSES: one short line that hands the decision back, then the ask.`,
-    fields: `  "cover_headline": "ALL CAPS hook from Dre's template with a ROUND number, max 10 words, no trailing HERE'S HOW",
-  "items": [{ "number": 1, "title": "max 5 words", "problem": "trap + number, max 12 words", "solution": "the fix as a principle, max 12 words", "how": "ONE imperative move tonight, max 10 words" }],`,
+- Frame 7 CLOSES: one short line that hands the decision back, then the ask.
+- NUMBERS: find honest believable figures for THIS scenario first, then round
+  their total into the hook. Never work backwards from a clean hook number to
+  invented items. The same convenient amount repeating across items is a fail.
+- The hook names the everyday thing PLAINLY. No metaphor, no shorthand: a
+  stranger must know what the post is about from the hook alone.`;
+  const extraFields = `  "cover_headline": "ALL CAPS hook from Dre's template with a ROUND number, max 10 words, no trailing HERE'S HOW",
+  "items": [{ "number": 1, "title": "max 5 words", "problem": "trap + number, max 12 words", "solution": "the fix as a principle, max 12 words", "how": "ONE imperative move tonight, max 10 words" }],`;
+  const c = await withJsonRetry(() => writeToScenes(topic, "LESSON", slots, {
+    rules: extraRules, fields: extraFields,
   }), { label: "library LESSON copy" });
   if (!c.items?.length || !c.cover_headline) throw new Error("copy engine returned incomplete copy");
+
+  // THE COPY INSPECTOR. Write, then judge as a stranger, then rewrite ONCE
+  // with the exact objections, then judge again. Two fails kill the topic:
+  // shipping confident nonsense is what "YOU ARE LOSING $500 A YEAR TO THE
+  // STARS" was, and no image gate can save a post whose words are gibberish.
+  let verdict = await critiqueCoherence(c);
+  if (!verdict.pass) {
+    console.log(`   ✎ copy failed inspection: ${verdict.problems.slice(0, 2).join(" | ").slice(0, 160)}`);
+    const c2 = await withJsonRetry(() => writeToScenes(topic, "LESSON", slots, {
+      rules: extraRules + `\n- A previous draft FAILED review for these exact problems. Fix every one:\n` +
+        verdict.problems.map((x) => "  * " + x).join("\n"),
+      fields: extraFields,
+    }), { label: "library LESSON rewrite" });
+    verdict = await critiqueCoherence(c2);
+    if (!verdict.pass) throw new Error(`copy failed inspection twice: ${verdict.problems[0] ?? "incoherent"}`);
+    Object.assign(c, c2);
+  }
+  console.log(`   ✓ copy inspector: "${String(verdict.retell).slice(0, 90)}"`);
 
   const buffers = [];
   buffers.push(await compositeLessonCover({

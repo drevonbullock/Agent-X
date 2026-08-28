@@ -114,9 +114,15 @@ What makes these work, and what every cover hook must therefore have:
   c. SECOND PERSON or LET-ME-SHOW-YOU. Nothing about "people" in general.
   d. NO trailing "HERE'S HOW" in the headline — the card's kicker already says
      it. The hook is the emotional claim, full stop.
-  e. THE PRACTICALITY IS BUILT FROM THE HOOK. The slides must earn the hook's
-     number with PROBLEM → SOLUTION → HOW arithmetic that lands on it. A hook
-     the post cannot cash is banned.
+  e. THE HOOK IS BUILT FROM REAL MATH, NEVER THE REVERSE. First find honest,
+     believable everyday numbers for the scenario; THEN round their total into
+     the hook. Working backwards from a clean hook number to invented figures
+     is how "$240" appeared four times in one post — an instant fail. If the
+     scenario cannot produce honest math, change the scenario, not the numbers.
+  e2. THE HOOK NAMES THE THING PLAINLY. A stranger with zero context must know
+     exactly what it is about. No metaphors, no shorthand: "TO THE STARS" and
+     "TO SMALL STEPS" mean nothing to a cold reader and are automatic fails —
+     say "TO 5-STAR RATINGS" or "TO SMALL PRICE RISES".
   f. THIS APPLIES TO MIND, NOT JUST MONEY. The Mind lane uses the same
      templates with time and attention as the currency: "You are losing 3
      hours a day." "Let me show you how to stop rereading the same worry."
@@ -802,6 +808,58 @@ Exactly 5 items.`,
 }
 
 // ─── CAPTION — the four-beat formula ─────────────────────────────────────────
+
+// ─── THE COPY INSPECTOR ──────────────────────────────────────────────────────
+// Dre, 2026-08-28, reading "YOU ARE LOSING $500 A YEAR TO THE STARS": "What
+// the fuck does that even mean? ... There needs to be an agent that writes the
+// content because this is ridiculous." He is right, and the autopsy is exact:
+// the rule "arithmetic must cash the hook's round number" plus 12-word caps
+// FORCED the writer to invent figures ($240 four times plus $480 "cashing" a
+// $1,000 hook) and compress ideas into unexplained shorthand ("the stars",
+// "small steps"). A writer with quotas and no editor produces confident
+// nonsense.
+//
+// This is the editor. It reads the finished copy as a STRANGER scrolling past,
+// recomputes every number, and fails anything a cold reader would not
+// instantly understand. Callers get its objections back so the rewrite knows
+// exactly what was wrong; two failures kill the topic rather than shipping it.
+export async function critiqueCoherence(copy, format = "LESSON") {
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-6",   // judgment call, worth the better model; text-only so it is cheap
+    max_tokens: 800,
+    messages: [{ role: "user", content: `You are a complete stranger scrolling Instagram. You know nothing
+about this page. Read this ${format} carousel copy COLD and judge it:
+
+${JSON.stringify(copy, null, 1).slice(0, 4000)}
+
+FAIL it unless ALL of these hold:
+1. The hook is instantly understandable with zero context. It names a real,
+   everyday thing in plain words. Metaphor or unexplained shorthand ("the
+   stars", "small steps") is an automatic fail: if you have to read slide two
+   to know what the hook meant, it failed.
+2. Every item makes sense ON ITS OWN and is obviously an instance of the SAME
+   one mechanic the hook names. A fix dressed as a cost, or an unrelated tip
+   smuggled in, is a fail.
+3. RECOMPUTE EVERY NUMBER. Each must be a believable everyday amount for that
+   exact scenario, and the items' honest arithmetic must plausibly support the
+   hook's figure (rounding is fine, invention is not). Identical suspiciously
+   convenient amounts repeated across items is a fail.
+4. After reading, you can retell the post's point in one plain sentence.
+
+Return ONLY JSON:
+{"pass": true|false, "retell": "the point in one sentence, or what confused you",
+ "problems": ["each specific problem, naming the slide or number", ...]}` }],
+  });
+  try {
+    // extractJson walks balanced braces, so trailing prose after the object
+    // (which sonnet loves to add) cannot break the verdict.
+    const v = JSON.parse(extractJson(msg.content[0].text));
+    return { pass: !!v.pass, retell: v.retell ?? "", problems: v.problems ?? [] };
+  } catch {
+    // An unreadable verdict must not pass copy it never judged.
+    return { pass: false, retell: "", problems: ["copy inspector returned unparseable output"] };
+  }
+}
 
 export async function writeCaption(post) {
   // Reels have their own shapes. Without these branches STEPS and TIERS fell
