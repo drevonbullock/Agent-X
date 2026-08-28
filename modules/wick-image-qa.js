@@ -113,13 +113,24 @@ const IDENTITY_RUBRIC =
   "pipeline and must not be flagged. When unsure whether it is Wick, it is Wick — the human " +
   "reviewer catches borderline cases; your job is the flagrant ones. ";
 
+let INSPECTOR_ORDERS = "", ordersAt = 0;
+async function inspectorOrders() {
+  if (Date.now() - ordersAt < 5 * 60_000) return INSPECTOR_ORDERS;
+  try {
+    const { ordersBlock } = await import("./wick-overseer.js");
+    INSPECTOR_ORDERS = await ordersBlock("inspector", "THE OVERSEER'S GRADING ORDERS");
+  } catch { /* keep the last known orders */ }
+  ordersAt = Date.now();
+  return INSPECTOR_ORDERS;
+}
+
 export async function gradeImage(filePath, format = null) {
   const b64 = fs.readFileSync(filePath).toString("base64");
   const ref = refImage();
   const content = [];
   if (ref) content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: ref } });
   content.push({ type: "image", source: { type: "base64", media_type: mediaType(filePath), data: b64 } });
-  content.push({ type: "text", text: (ref ? IDENTITY_RUBRIC : "") + RUBRIC + (FORMAT_NOTES[format] ?? "") +
+  content.push({ type: "text", text: (ref ? IDENTITY_RUBRIC : "") + RUBRIC + (FORMAT_NOTES[format] ?? "") + (await inspectorOrders()) +
     " Respond with ONLY the JSON object on a single line. No preamble, no markdown fences, no explanation outside the JSON." });
   const msg = await client.messages.create({
     // Haiku by default. The grader ran on Sonnet with the reference image

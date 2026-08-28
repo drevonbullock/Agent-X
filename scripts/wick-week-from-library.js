@@ -173,8 +173,18 @@ async function main() {
   const dir = path.join(os.tmpdir(), "wick-lib", BATCH);
   fs.mkdirSync(dir, { recursive: true });
 
+  const { stopRequested, clearStop } = await import("../modules/wick-overseer.js");
+  await clearStop();
   const created = [];
   for (let i = 0; i < canBuild; i++) {
+    // The Overseer's stop lever. Checked between posts so a stop never tears a
+    // half-built post; the current post finishes or fails, then the line halts.
+    if (await stopRequested()) {
+      console.log("[LibWeek] STOPPED by the Overseer");
+      try { const { alertWick } = await import("../modules/wick-telegram.js");
+        await alertWick("🛑 Build stopped by the Overseer after " + created.length + " post(s)."); } catch {}
+      break;
+    }
     const topic = topics[i % topics.length];
     if (!topic) break;
     console.log(`\n[LibWeek] ${i + 1}/${canBuild} LESSON <- #${topic.id} ${topic.title}`);

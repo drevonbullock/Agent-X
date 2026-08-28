@@ -359,6 +359,12 @@ export async function loadImageLessons() {
     IMAGE_LESSONS = rules.length
       ? " MISTAKES ALREADY MADE, DO NOT REPEAT: " + rules.join(" ")
       : "";
+    // The Overseer's standing orders for the ARTIST ride the same appendix.
+    try {
+      const { ordersBlock } = await import("./wick-overseer.js");
+      const o = await ordersBlock("artist", "THE OVERSEER'S ORDERS FOR EVERY IMAGE");
+      if (o) IMAGE_LESSONS += " " + o.replace(/\n/g, " ");
+    } catch { /* orders must never block generation */ }
     if (rules.length) console.log(`[Wick] ${rules.length} learned image rule(s) applied`);
   } catch { IMAGE_LESSONS = ""; }   // learning must never block generation
   return IMAGE_LESSONS;

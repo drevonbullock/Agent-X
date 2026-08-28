@@ -31,12 +31,19 @@ export function setUsedIdeas(list) {
 
 export async function brandRules() {
   const { lessonsBlock } = await import("./wick-lessons.js");
+  // The Overseer's standing orders for the WRITER ride the same preamble every
+  // writer call already shares, so an order holds on every post until removed.
+  let overseer = "";
+  try {
+    const { ordersBlock } = await import("./wick-overseer.js");
+    overseer = await ordersBlock("writer");
+  } catch { /* orders must never block writing */ }
   const base = BRAND_RULES + (await lessonsBlock("copy"));
-  if (!USED_IDEAS.length) return base;
+  if (!USED_IDEAS.length) return base + overseer;
   return base + "\n\nIDEAS ALREADY USED ON THIS PAGE. Every scenario below is BANNED. Do not " +
     "write about the same situation, object, purchase or trap even with new wording. If the " +
     "topic pushes you toward one of these, find a DIFFERENT everyday situation that shows the " +
-    "same mechanic:\n- " + USED_IDEAS.join("\n- ");
+    "same mechanic:\n- " + USED_IDEAS.join("\n- ") + overseer;
 }
 
 const BRAND_RULES = `

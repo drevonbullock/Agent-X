@@ -334,6 +334,24 @@ async function main() {
             const style = await dash.wickSaveStyle(JSON.parse(body || "{}"));
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ style }));
+          } else if (req.method === "POST" && url.pathname === "/wick/feedback") {
+            let body = ""; for await (const c of req) body += c;
+            const { agent, note } = JSON.parse(body || "{}");
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ orders: await dash.wickFeedback(agent, note) }));
+          } else if (req.method === "POST" && url.pathname === "/wick/feedback/clear") {
+            let body = ""; for await (const c of req) body += c;
+            const { agent, index } = JSON.parse(body || "{}");
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ orders: await dash.wickClearOrder(agent, index) }));
+          } else if (req.method === "POST" && url.pathname === "/wick/stop") {
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify(await dash.wickStop()));
+          } else if (req.method === "POST" && url.pathname === "/wick/pause") {
+            let body = ""; for await (const c of req) body += c;
+            const { paused } = JSON.parse(body || "{}");
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify(await dash.wickPause(paused)));
           } else if (req.method === "POST" && url.pathname === "/wick/build") {
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(JSON.stringify(await dash.wickStartBuild()));
