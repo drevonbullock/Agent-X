@@ -75,16 +75,26 @@ const take = (pool, n, used) => {
   return chosen;
 };
 
+// CLEAN ONLY, both pickers. "minor" means the grader saw a real fault —
+// realistic candles and finger-handed characters were banked as minor and
+// then correctly rejected post-composite, wasting the whole post around them.
+// A page whose entire asset is one consistent character ships no known faults.
 export function pickOverlaySafe(n, used = new Set(), { cap = 2 } = {}) {
   const pool = load().filter((a) =>
-    ["clean", "minor"].includes(a.severity) &&
+    a.severity === "clean" &&
     ["coverTop", "upper"].includes(a.framing) && underCap(a, cap));
   return take(pool, n, used);
 }
 
+// Strip slides crop to the TOP of the frame, so only art whose character sits
+// in the upper region survives. The harvester wrongly defaulted 'full'-framed
+// art to strip-safe; a centered character loses his body to the crop — every
+// A-code rejection ('cut off by the frame') in the 08-27 regrade was this.
 export function pickStripSafe(n, used = new Set(), { cap = 2 } = {}) {
   const pool = load().filter((a) =>
-    ["clean", "minor"].includes(a.severity) && a.strip === "clean" && underCap(a, cap));
+    a.severity === "clean" &&
+    (["coverTop", "upper"].includes(a.framing) || (!a.framing && a.strip === "clean")) &&
+    underCap(a, cap));
   return take(pool, n, used);
 }
 
