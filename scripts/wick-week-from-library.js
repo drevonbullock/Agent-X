@@ -6,7 +6,7 @@ import supabase from "../supabase/client.js";
 import { pickTopics } from "../modules/wick-topics.js";
 import { pickOverlaySafe, pickStripSafe, libraryFramingStats } from "../modules/wick-art-library.js";
 import { writeToScenes, writeCaption, withJsonRetry, setUsedIdeas } from "../modules/wick-copy.js";
-import { compositeLessonCover, compositeLessonItem, compositeCta } from "../modules/wick-render.js";
+import { compositeLessonCover, compositeLessonItem, compositeCta, loadStyleSettings } from "../modules/wick-render.js";
 import { auditQueue } from "../modules/wick-image-qa.js";
 
 // ─── THE WEEK, FROM THE LIBRARY, FOR ZERO CREDITS ────────────────────────────
@@ -71,18 +71,21 @@ async function buildOne(topic, slot, dir) {
   ];
 
   const c = await withJsonRetry(() => writeToScenes(topic, "LESSON", slots, {
-    rules: `- Frame 1 is the COVER. Its headline is a MONEY HOOK, max 10 words, ALL CAPS,
-  and it MUST contain a real dollar figure that the items then prove with
-  arithmetic. One of three shapes: the promise (LET ME SHOW YOU HOW TO KEEP
-  $X...), the loss (YOU GAVE/LOST $X... HERE'S HOW), the cost (THIS COSTS YOU
-  $X A MONTH...). Never a count formula.
+    rules: `- Frame 1 is the COVER. Its headline is a hook from Dre's template, max 10
+  words, ALL CAPS, with a ROUND number only ($100/$250/$500/$1,000 — never
+  $289). The four shapes, exactly: "YOU MISSED OUT ON $1,000 LAST WEEK" /
+  "LET ME SHOW YOU HOW TO MAKE $1,000 IN 1 DAY" / "LET ME SHOW YOU HOW YOU
+  CAN SAVE $100 PER DAY" / "YOU ARE LOSING $100 A DAY". Each carries its
+  emotion (regret, hope, alarm). Mind-lane topics use hours or nights instead
+  of dollars. NO trailing "HERE'S HOW" — the card prints that itself. Never a
+  count formula.
 - Frames 2 to 6 are numbered items. Each teaches PROBLEM then SOLUTION then
   HOW: problem = the trap with its number (max 12 words), solution = the fix
   as a principle (max 12 words), how = ONE imperative move to make tonight
-  (max 10 words). The arithmetic across the items must add up to the cover's
-  dollar figure.
+  (max 10 words). The arithmetic across the items must CASH the cover's round
+  number — the exact math lives here, the rounding lives on the cover.
 - Frame 7 CLOSES: one short line that hands the decision back, then the ask.`,
-    fields: `  "cover_headline": "ALL CAPS money hook with a real dollar figure, max 10 words",
+    fields: `  "cover_headline": "ALL CAPS hook from Dre's template with a ROUND number, max 10 words, no trailing HERE'S HOW",
   "items": [{ "number": 1, "title": "max 5 words", "problem": "trap + number, max 12 words", "solution": "the fix as a principle, max 12 words", "how": "ONE imperative move tonight, max 10 words" }],`,
   }), { label: "library LESSON copy" });
   if (!c.items?.length || !c.cover_headline) throw new Error("copy engine returned incomplete copy");
@@ -129,6 +132,7 @@ async function buildOne(topic, slot, dir) {
 }
 
 async function main() {
+  await loadStyleSettings();   // Edit-the-Editor: dashboard-set typography
   const stats = libraryFramingStats();
   console.log(`[LibWeek] library:`, JSON.stringify(stats));
   // Capacity: each post needs 2 overlay-safe + 5 strip-safe uses, cap 2 uses/image.

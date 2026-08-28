@@ -310,6 +310,41 @@ async function main() {
         return;
       }
 
+      // ── Wick factory dashboard — the 8-bit floor (modules/wick-dashboard.js) ──
+      if (url.pathname.startsWith("/wick")) {
+        const expected = REVIEW_TOKEN();
+        if (!expected) { res.writeHead(503); res.end("Set REVIEW_TOKEN to enable the dashboard."); return; }
+        if (url.searchParams.get("token") !== expected) { res.writeHead(403); res.end("Forbidden"); return; }
+        try {
+          const dash = await import("./modules/wick-dashboard.js");
+          if (req.method === "GET" && url.pathname === "/wick") {
+            res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+            res.end(dash.renderWickDashboardHtml(expected));
+          } else if (req.method === "GET" && url.pathname === "/wick/state") {
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify(await dash.wickDashboardState()));
+          } else if (req.method === "POST" && url.pathname === "/wick/decide") {
+            let body = ""; for await (const c of req) body += c;
+            const { id, action } = JSON.parse(body || "{}");
+            const status = await dash.wickDecide(id, action);
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ status }));
+          } else if (req.method === "POST" && url.pathname === "/wick/style") {
+            let body = ""; for await (const c of req) body += c;
+            const style = await dash.wickSaveStyle(JSON.parse(body || "{}"));
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ style }));
+          } else if (req.method === "POST" && url.pathname === "/wick/build") {
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify(await dash.wickStartBuild()));
+          } else { res.writeHead(404); res.end("Unknown /wick route"); }
+        } catch (err) {
+          console.error(`[WickDash] ${err.message}`);
+          res.writeHead(500); res.end("dashboard error");
+        }
+        return;
+      }
+
       // ── Video review: approval dashboard + decision links ──────────────────────
       if (req.method === "GET" && (url.pathname === "/review" || url.pathname === "/review/decide")) {
         const expected = REVIEW_TOKEN();

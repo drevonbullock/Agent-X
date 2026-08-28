@@ -775,6 +775,22 @@ ${BASE_CSS}
 // So the headline now dominates the frame rather than sitting in the bottom
 // margin: 2x the type size, top-anchored, with the leading count knocked out in
 // the brand amber so the eye lands on "5" before it reads a single word.
+// ─── EDITOR SETTINGS ─────────────────────────────────────────────────────────
+// The dashboard's "Edit the Editor" panel writes these to agent_kv (key
+// wick_style); the Editor loads them once per batch. Dre, 2026-08-28: hooks
+// "slanted to the left instead of being in the middle" — alignment is his
+// call, not a hardcode, so it lives here. Centered is the default he chose.
+let STYLE = { coverAlign: "center" };
+export async function loadStyleSettings() {
+  try {
+    const { default: supabase } = await import("../supabase/client.js");
+    const { data } = await supabase.from("agent_kv").select("value").eq("key", "wick_style").maybeSingle();
+    if (data?.value) STYLE = { ...STYLE, ...JSON.parse(data.value) };
+    console.log(`[Wick] editor style: ${JSON.stringify(STYLE)}`);
+  } catch { /* defaults stand */ }
+  return STYLE;
+}
+
 export async function compositeLessonCover({ scenePath, headline }) {
   scenePath = fitJpeg(scenePath, W, H, 0.10);
   // The kicker always renders "HERE'S HOW →", and the hook doctrine tells the
@@ -802,16 +818,15 @@ ${BASE_CSS}
 /* Heavier scrim than the shared one: big type needs a floor to sit on. */
 .cover-shade{position:absolute;inset:0;z-index:10;
   background:linear-gradient(180deg,rgba(8,6,4,0.35) 0%,rgba(8,6,4,0.10) 22%,rgba(8,6,4,0.30) 42%,rgba(8,6,4,0.88) 62%,rgba(8,6,4,0.97) 100%);}
-.eyebrow{position:absolute;left:64px;top:64px;z-index:20;
+.eyebrow{position:absolute;left:64px;right:64px;top:64px;z-index:20;text-align:${STYLE.coverAlign};
   font-family:'DM Sans',sans-serif;font-weight:700;font-size:26px;letter-spacing:6px;
-  color:#F5A524;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,0.9);
-  border-left:6px solid #F5A524;padding-left:16px;}
-.head{position:absolute;left:64px;right:64px;bottom:190px;z-index:20;text-align:left;
+  color:#F5A524;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,0.9);}
+.head{position:absolute;left:64px;right:64px;bottom:190px;z-index:20;text-align:${STYLE.coverAlign};
   font-family:'Anton',sans-serif;font-size:${size}px;line-height:1.02;letter-spacing:0px;
   color:#fff;text-transform:uppercase;
   text-shadow:0 6px 34px rgba(0,0,0,0.95),0 2px 6px rgba(0,0,0,0.9);}
 .head .n{color:#F5A524;}
-.kicker{position:absolute;left:64px;bottom:104px;z-index:20;text-align:left;
+.kicker{position:absolute;left:64px;right:64px;bottom:104px;z-index:20;text-align:${STYLE.coverAlign};
   font-family:'DM Sans',sans-serif;font-weight:800;font-size:40px;letter-spacing:2px;
   color:#F5A524;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,0.9);}
 </style></head><body>

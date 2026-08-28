@@ -382,8 +382,9 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
   // Pull in everything learned from previous pulls and failed image QA before a
   // single frame is generated.
   try {
-    const { loadImageLessons } = await import("./wick-render.js");
+    const { loadImageLessons, loadStyleSettings } = await import("./wick-render.js");
     await loadImageLessons();
+    await loadStyleSettings();   // Edit-the-Editor: dashboard-set typography
   } catch { /* never block a batch on the learning layer */ }
 
   const batchId = `wick-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}`;
