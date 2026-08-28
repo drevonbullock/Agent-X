@@ -16,6 +16,7 @@ const fmtNum = (n) => (n ?? 0).toLocaleString("en-US");
 
 export const HELP = `🕯️ *Wick's Wisdom*
 
+/dashboard — the 8-bit factory floor, live
 /queue — what is waiting to publish
 /next — what goes out next and when
 /report — format scoreboard (shares per like)
@@ -205,11 +206,31 @@ export async function cmdPause(paused) {
 
 // ─── ROUTER ──────────────────────────────────────────────────────────────────
 
+// The factory dashboard's address. RAILWAY_PUBLIC_DOMAIN is injected by
+// Railway itself, so this command answers correctly on the host that serves
+// the page; WICK_DASHBOARD_DOMAIN overrides for a custom domain. The token in
+// the link is the same REVIEW_TOKEN that guards /review, and this reply only
+// ever goes to Dre's own authorised chat.
+function cmdDashboard() {
+  const domain = process.env.WICK_DASHBOARD_DOMAIN || process.env.RAILWAY_PUBLIC_DOMAIN;
+  const token = process.env.REVIEW_TOKEN || process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
+  if (!domain) return "No public domain on this host. Set WICK_DASHBOARD_DOMAIN in Railway variables.";
+  if (!token) return "Set REVIEW_TOKEN in Railway variables to enable the dashboard.";
+  return `🕹 WICK FACTORY
+
+https://${domain}/wick?token=${encodeURIComponent(token)}
+
+Watch every agent live: Writer, Artist, Editor, Inspector, Courier, Publisher. Keep/pull posts, edit the Editor, run a batch.
+
+Long-press this message and Pin it so the link is always at the top of this chat.`;
+}
+
 export async function runCommand(text) {
   const cmd = String(text ?? "").trim().toLowerCase().split(/[\s@]/)[0];
   switch (cmd) {
     case "/start":
     case "/help":      return HELP;
+    case "/dashboard": return cmdDashboard();
     case "/queue":     return cmdQueue();
     case "/next":      return cmdNext();
     case "/report":    return cmdReport();
