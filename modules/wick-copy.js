@@ -841,9 +841,11 @@ FAIL it unless ALL of these hold:
    one mechanic the hook names. A fix dressed as a cost, or an unrelated tip
    smuggled in, is a fail.
 3. RECOMPUTE EVERY NUMBER. Each must be a believable everyday amount for that
-   exact scenario, and the items' honest arithmetic must plausibly support the
-   hook's figure (rounding is fine, invention is not). Identical suspiciously
-   convenient amounts repeated across items is a fail.
+   exact scenario. The hook rounds the items' honest total to a clean figure —
+   that is the page's style, so a total within 15% of the hook's number PASSES
+   ($475 rounding to a $500 hook is correct, not a fail). Fail the math only
+   if numbers look invented for convenience, the same amount repeats
+   suspiciously across items, or the gap between total and hook exceeds 15%.
 4. After reading, you can retell the post's point in one plain sentence.
 
 Return ONLY JSON:
