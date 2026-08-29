@@ -18,6 +18,12 @@ import supabase from "../supabase/client.js";
 // Every fact shown comes from data the agents already write. The vault
 // dramatizes; it never invents.
 
+// Higgsfield-generated vault art (2026-08-29, ~18 credits, mirrored to
+// Supabase). Each room is a real pixel-art painting; the CSS keeps only the
+// interactive layer — sprites, plates, counters — on top of it.
+let ASSETS = {};
+try { ASSETS = JSON.parse((await import("fs")).readFileSync(new URL("../data/vault-assets.json", import.meta.url), "utf8")); } catch { /* CSS fallback look */ }
+
 const ROOMS = [
   { key: "writer",    name: "WRITING ROOM",   color: "#f5a524", sprite: "#f5a524",
     does: "Writes hooks from Dre's template and PROBLEM→SOLUTION→HOW copy, then faces the Copy Inspector." },
@@ -187,7 +193,7 @@ export function renderWickDashboardHtml(token) {
   body{margin:0;color:var(--txt);font-family:'VT323',monospace;font-size:17px;line-height:1.35;
     background:
       radial-gradient(ellipse 140% 90% at 50% -10%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%),
-      repeating-linear-gradient(0deg, var(--rock1) 0 14px, var(--rock2) 14px 20px, var(--rock1) 20px 34px, var(--rock3) 34px 38px),
+      url(${ASSETS.rock ?? ""}) repeat top left/280px,
       var(--rock3);}
   body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:200;
     background:repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 2px, transparent 2px 4px);
@@ -226,21 +232,16 @@ export function renderWickDashboardHtml(token) {
   .vault::before{left:-6px;}
   .vault::after{right:-6px;transform:scaleX(-1);}
 
-  .slab{height:16px;margin:0 -4px;position:relative;z-index:4;
-    background:linear-gradient(180deg,var(--steelhi) 0 3px,var(--steel) 3px 11px,var(--steeldark) 11px);
+  .slab{height:22px;margin:0 -4px;position:relative;z-index:4;
+    background:url(${ASSETS.slab ?? ""}) repeat-x center/auto 100%, var(--steeldark);
     border-top:2px solid #7d7264;border-bottom:3px solid #000;}
-  .slab::before{content:"";position:absolute;inset:0;
-    background:repeating-radial-gradient(circle at 10px 8px, #2c251e 0 2px, transparent 2px 3px) 0 0/44px 16px;}
 
   .floorrow{display:grid;grid-template-columns:1fr 44px 1fr;position:relative;}
 
   /* ── ELEVATOR SHAFT ──────────────────────────────────────── */
-  .shaft{background:
-      repeating-linear-gradient(0deg, #0e0a06 0 10px, #171006 10px 12px),
-      linear-gradient(90deg, #000 0 4px, #1c130a 4px calc(100% - 4px), #000 calc(100% - 4px));
+  .shaft{background:url(${ASSETS.shaft ?? ""}) repeat-y center/100% auto, #0e0a06;
     border-left:3px solid #000;border-right:3px solid #000;position:relative;overflow:hidden;}
-  .shaft .rail{position:absolute;top:0;bottom:0;left:50%;width:4px;transform:translateX(-50%);
-    background:repeating-linear-gradient(0deg,#3a2c18 0 6px,#241a0e 6px 12px);}
+  .shaft .rail{display:none;}
   .car{position:absolute;left:5px;right:5px;height:44px;z-index:2;
     background:linear-gradient(180deg,#e07a30,var(--shaft) 45%,#8a3c12);
     border:3px solid #000;box-shadow:inset 0 3px 0 rgba(255,255,255,.25);}
@@ -248,11 +249,17 @@ export function renderWickDashboardHtml(token) {
     width:12px;height:18px;background:#2a1204;border:2px solid #000;}
 
   /* ── ROOMS ───────────────────────────────────────────────── */
-  .room{min-height:132px;position:relative;cursor:pointer;overflow:hidden;
-    background:linear-gradient(180deg,var(--roomhi) 0 26%,var(--roommid) 26% 74%,var(--roomlo));
-    border-left:4px solid var(--steeldark);border-right:4px solid var(--steeldark);
-    box-shadow:inset 0 0 34px rgba(0,0,0,.55);}
-  .room::before{content:"";position:absolute;left:0;right:0;bottom:0;height:30px;   /* tiled floor */
+  .room{min-height:168px;position:relative;cursor:pointer;overflow:hidden;
+    background:var(--roomlo) center/cover no-repeat;
+    box-shadow:inset 0 0 34px rgba(0,0,0,.35);}
+  .room.writer{background-image:url(${ASSETS.writer ?? ""});}
+  .room.artist{background-image:url(${ASSETS.artist ?? ""});}
+  .room.editor{background-image:url(${ASSETS.editor ?? ""});}
+  .room.inspector{background-image:url(${ASSETS.inspector ?? ""});}
+  .room.courier{background-image:url(${ASSETS.courier ?? ""});}
+  .room.publisher{background-image:url(${ASSETS.publisher ?? ""});}
+  .lampbar,.furn,.doorpost{display:none;}
+  .room::before{content:"";display:none;position:absolute;left:0;right:0;bottom:0;height:30px;   /* tiled floor */
     background:
       linear-gradient(180deg, rgba(255,220,150,.10), transparent 60%),
       repeating-linear-gradient(90deg,#7a5a34 0 26px,#6a4c2a 26px 52px);
@@ -293,7 +300,7 @@ export function renderWickDashboardHtml(token) {
   .f-publisher i:nth-child(2){left:22%;bottom:24px;width:4px;height:26px;background:#5a4a36;}
   .f-publisher i:nth-child(3){left:14%;bottom:46px;width:22px;height:4px;background:#5a4a36;transform:rotate(-18deg);} /* antenna */
 
-  .plate{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);z-index:4;
+  .plate{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);z-index:4;
     background:linear-gradient(180deg,#39322a,#211c16);border:2px solid #000;box-shadow:inset 0 2px 0 rgba(255,255,255,.12);
     padding:2px 10px;font-size:15px;letter-spacing:1px;white-space:nowrap;}
   .plate .star{color:var(--amber);}
@@ -301,7 +308,8 @@ export function renderWickDashboardHtml(token) {
     background:var(--amber);color:#000;border:2px solid #000;padding:3px 5px;}
 
   /* ── 8-BIT CHARACTERS (box-shadow sprites) ───────────────── */
-  .sprite{position:absolute;bottom:30px;width:2px;height:2px;z-index:3;transition:left 2.6s linear;}
+  .sprite{position:absolute;bottom:17%;width:2px;height:2px;z-index:3;transition:left 2.6s linear;
+    filter:drop-shadow(0 0 1px #000);}
   .sprite .px{width:2px;height:2px;}
   .sprite .shadow{position:absolute;top:30px;left:-8px;width:26px;height:5px;border-radius:50%;background:rgba(0,0,0,.4);}
   .crate{position:absolute;top:8px;left:12px;width:12px;height:10px;background:linear-gradient(180deg,#c9803a,#8a5423);
@@ -384,7 +392,7 @@ const FURN={writer:'f-writer',artist:'f-artist',editor:'f-editor',inspector:'f-i
 
 function roomHtml(r){
   const n=S.counts[r.key]??0;
-  return '<div class="room" onclick="openPanel(\\''+r.key+'\\')">'+
+  return '<div class="room '+r.key+'" onclick="openPanel(\\''+r.key+'\\')">'+
     '<div class="doorpost l"></div><div class="doorpost r"></div>'+
     '<div class="lampbar"><div class="lamp"></div><div class="lamp"></div></div>'+
     '<div class="furn '+FURN[r.key]+'"><i></i><i></i><i></i></div>'+

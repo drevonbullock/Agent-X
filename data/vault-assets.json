@@ -1,0 +1,11 @@
+{
+ "writer": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/dashboard/writer.jpg",
+ "artist": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/dashboard/artist.jpg",
+ "editor": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/dashboard/editor.jpg",
+ "inspector": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/dashboard/inspector.jpg",
+ "courier": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/dashboard/courier.jpg",
+ "publisher": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/dashboard/publisher.jpg",
+ "rock": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/dashboard/rock.jpg",
+ "slab": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/dashboard/slab.jpg",
+ "shaft": "https://yfkcfsswsejucbxkkceo.supabase.co/storage/v1/object/public/agent-x-images/wick/dashboard/shaft.jpg"
+}
