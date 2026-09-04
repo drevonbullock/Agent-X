@@ -1,10 +1,12 @@
 import React from "react";
 import { Composition } from "remotion";
 import { WickReel, wickReelSchema } from "./WickReel";
+import { WickExplainer, explainerSchema, SCENE_FRAMES } from "./WickExplainer";
 
 // 1080x1920 @ 30fps. Duration is derived from the beats so a 3-beat and a
 // 5-beat reel both time correctly: 90 hook + 105/beat + 150 payoff.
 export const RemotionRoot: React.FC = () => (
+  <>
   <Composition
     id="WickReel"
     component={WickReel}
@@ -29,4 +31,35 @@ export const RemotionRoot: React.FC = () => (
       ],
     }}
   />
+  <Composition
+    id="WickExplainer"
+    component={WickExplainer}
+    schema={explainerSchema}
+    width={1080}
+    height={1920}
+    fps={30}
+    durationInFrames={78 + SCENE_FRAMES * 3 + 96}
+    calculateMetadata={({ props }) => ({
+      durationInFrames: 78 + SCENE_FRAMES * (props.scenes?.length ?? 3) + 96,
+    })}
+    defaultProps={{
+      title: "$5 A DAY IS $1,825 A YEAR",
+      subtitle: "The number you ignore is the number that decides.",
+      closing: "Small is not the same as nothing.",
+      wickImage: "hook.jpg",
+      scenes: [
+        { type: "multiply" as const, caption: "One small habit, every day.",
+          unit: 5, times: 365, unitLabel: "a day", totalLabel: "a year" },
+        { type: "leak" as const, caption: "Where a $1,000 balance actually goes.",
+          start: 1000, leaks: [
+            { label: "Subscriptions you forgot", amount: 240 },
+            { label: "Fees nobody checks", amount: 180 },
+            { label: "The premium tier you outgrew", amount: 280 } ] },
+        { type: "race" as const, caption: "Same start. One choice apart.",
+          years: 10, a: { label: "Kept the number", start: 1000, rate: 0.08 },
+          b: { label: "Spent the difference", start: 1000, rate: 0.01 } },
+      ],
+    }}
+  />
+  </>
 );
