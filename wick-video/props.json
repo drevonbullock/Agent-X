@@ -1,0 +1,36 @@
+{
+ "hook": "YOU ARE LOSING $1,000 A YEAR",
+ "total": 1000,
+ "closing": "You did not choose it. The default did.",
+ "heroClip": null,
+ "beats": [
+  {
+   "title": "The Fee Nobody Checks",
+   "problem": "A $50 yearly fee is 14 cents a day you never counted.",
+   "how": "Divide your biggest fee by 365 tonight.",
+   "amount": 240,
+   "image": "beat-0.jpg"
+  },
+  {
+   "title": "The Price That Crept",
+   "problem": "Four bills each rose $5 a month while you looked away.",
+   "how": "Open last January statement and compare.",
+   "amount": 240,
+   "image": "beat-1.jpg"
+  },
+  {
+   "title": "The Tier You Outgrew",
+   "problem": "You pay for premium on an app you open twice a month.",
+   "how": "Downgrade one subscription before bed.",
+   "amount": 280,
+   "image": "beat-2.jpg"
+  },
+  {
+   "title": "The Renewal You Skipped",
+   "problem": "The date chose for you because you never set a reminder.",
+   "how": "Put every renewal date in one calendar.",
+   "amount": 240,
+   "image": "beat-3.jpg"
+  }
+ ]
+}
