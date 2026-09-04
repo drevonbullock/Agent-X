@@ -61,7 +61,9 @@ async function vo() {
       fs.writeFileSync(f, Buffer.from(await r.arrayBuffer()));
     }
     // Shot length = narration + a beat of air, so the cut lands after the line.
-    s.frames = Math.ceil((secs(f) + 0.85) * 30);
+    // 0.45s of air, not 0.85. In a sub-20s film a beat of silence is 3% of the
+    // runtime; the cut has to land almost on the last word.
+    s.frames = Math.ceil((secs(f) + 0.45) * 30);
     console.log(`[vo]  ${s.id} ${(s.frames / 30).toFixed(1)}s  ${s.vo.slice(0, 56)}`);
   }
   film.hasVoice = true;
@@ -148,7 +150,7 @@ async function clips() {
 function plan() {
   const stills = film.shots.filter((s) => s.art && s.motion !== "diagram" && !s.asset).length;
   const vids = film.shots.filter((s) => s.motion === "video" && !String(s.asset ?? "").endsWith(".mp4")).length;
-  const secsTotal = film.shots.reduce((a, s) => a + (s.frames ?? 105), 0) / 30;
+  const secsTotal = film.shots.reduce((a, s) => a + (s.frames ?? 95), 0) / 30;
   console.log(`\n  ${film.title}`);
   console.log(`  ${film.shots.length} shots, ~${secsTotal.toFixed(0)}s, ${film.chapters.length} chapters`);
   console.log(`  illustrations to generate : ${stills}  (~${stills * 2} credits)`);

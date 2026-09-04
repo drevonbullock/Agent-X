@@ -74,11 +74,11 @@ export const RemotionRoot: React.FC = () => (
     width={1080}
     height={1920}
     fps={30}
-    durationInFrames={12 * 105}
+    durationInFrames={5 * 95}
     defaultProps={film as any}
     calculateMetadata={({ props }) => ({
       // Runtime follows the narration once the voice pass has measured it.
-      durationInFrames: (props.shots ?? []).reduce((a: number, s: any) => a + (s.frames ?? 105), 0) || 1260,
+      durationInFrames: (props.shots ?? []).reduce((a: number, s: any) => a + (s.frames ?? 95), 0) || 475,
     })}
   />
   </>

@@ -110,9 +110,9 @@ const Plate: React.FC<{ shot: FilmProps["shots"][number] }> = ({ shot }) => {
           transform: `scale(${cam.scale}) translate(${cam.x}px, ${cam.y}px)`,
         }}>
           <div style={{
-            width: 620, height: 620, borderRadius: 18,
-            border: `2px dashed rgba(245,165,36,.32)`,
-            background: "rgba(245,165,36,.045)",
+            width: 640, height: 640, borderRadius: 26,
+            background: "linear-gradient(160deg, rgba(255,233,196,.07), rgba(255,233,196,.02))",
+            boxShadow: "inset 0 0 0 1px rgba(255,233,196,.10), 0 30px 80px rgba(0,0,0,.5)",
             display: "flex", flexDirection: "column",
             justifyContent: "center", alignItems: "center", padding: 44, gap: 16,
           }}>
@@ -132,15 +132,7 @@ const Plate: React.FC<{ shot: FilmProps["shots"][number] }> = ({ shot }) => {
         background: "radial-gradient(ellipse 60% 36% at 50% 42%, rgba(255,214,150,.07), transparent 72%)",
       }} />
       <AbsoluteFill style={{
-        background: "linear-gradient(180deg, rgba(4,7,15,.72) 0%, rgba(4,7,15,.10) 34%, rgba(4,7,15,.30) 58%, rgba(4,7,15,.92) 100%)",
-      }} />
-      {/* film grain, one static layer — sells "made" rather than "rendered" */}
-      <AbsoluteFill style={{
-        opacity: 0.05, mixBlendMode: "overlay",
-        backgroundImage:
-          `radial-gradient(circle at ${20 + (frame % 7)}% 30%, #fff 0.6px, transparent 0.7px),` +
-          `radial-gradient(circle at ${70 - (frame % 5)}% 70%, #fff 0.6px, transparent 0.7px)`,
-        backgroundSize: "5px 5px, 7px 7px",
+        background: "linear-gradient(180deg, rgba(4,7,15,.62) 0%, rgba(4,7,15,.06) 30%, rgba(4,7,15,.22) 54%, rgba(4,7,15,.88) 100%)",
       }} />
     </AbsoluteFill>
   );
@@ -303,7 +295,9 @@ const Chrome: React.FC<{ chapters: string[]; index: number }> = ({ chapters, ind
 const Shot: React.FC<{ shot: FilmProps["shots"][number]; diagrams: any; chapters: string[]; voice?: boolean; sfx?: boolean }> =
 ({ shot, diagrams, chapters, voice, sfx }) => {
   const frame = useCurrentFrame();
-  const flash = interpolate(frame, [0, 4], [0.5, 0], {
+  // A soft, fast lift at the cut. The old version blasted white at 0.5 opacity
+  // for 4 frames, which reads as a glitch rather than an edit.
+  const flash = interpolate(frame, [0, 6], [0.16, 0], {
     extrapolateLeft: "clamp", extrapolateRight: "clamp",
   });
   const spec = shot.diagram ? diagrams[shot.diagram] : null;
@@ -325,7 +319,7 @@ export const ExplainerFilm: React.FC<FilmProps> = ({ chapters, shots, diagrams, 
   <AbsoluteFill style={{ background: INK }}>
     <Series>
       {shots.map((s) => (
-        <Series.Sequence key={s.id} durationInFrames={s.frames ?? 105}>
+        <Series.Sequence key={s.id} durationInFrames={s.frames ?? 95}>
           <Shot shot={s} diagrams={diagrams} chapters={chapters} voice={hasVoice} sfx={hasSfx} />
         </Series.Sequence>
       ))}
