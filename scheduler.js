@@ -1,6 +1,5 @@
 import cron from "node-cron";
-import { runThreads, runLinkedIn, runVideo, runInstagram } from "./index.js";
-import { postLinkedInNewsImage, postInstagramNewsImage } from "./modules/news-agent.js";
+import { runThreads, runLinkedIn, runVideo } from "./index.js";
 import { checkPerf, processVariationQueue } from "./modules/variation-engine.js";
 import { runWeeklyAnalysis } from "./modules/feedback-loop.js";
 import { processYouTubeVideo } from "./modules/youtube-cutter.js";
@@ -12,7 +11,7 @@ import { mineCompetitors, loadDynamicThemes } from "./modules/competitor-researc
 import { checkRepeatEngagers } from "./modules/lead-capture.js";
 import { runWeeklyBatch, publishNextApproved } from "./modules/wicks-wisdom.js";
 import { runWeeklyReels } from "./modules/wick-reel-batch.js";
-import { pollTelegramApprovals, checkWickQueueDepth, deliverPendingPosts, deliverPendingReels } from "./modules/wick-telegram.js";
+import { pollTelegramApprovals, deliverPendingPosts, deliverPendingReels } from "./modules/wick-telegram.js";
 import { syncWickMetrics } from "./modules/wick-analytics.js";
 import { initTokens, refreshTokens, checkAnthropicCredit, checkLinkedInToken, checkTelegram } from "./modules/token-manager.js";
 import { isHiggsfieldCliAvailable } from "./agent/generate-higgsfield.js";

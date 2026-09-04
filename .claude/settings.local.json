@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(npm install @anthropic-ai/sdk)",
-      "Bash(node index.js --test)",
-      "Bash(open \"/Users/drevonbullock/Claude Code/Agent X/components/quote-card-preview.html\")"
-    ]
-  }
-}

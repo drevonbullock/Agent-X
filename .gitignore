@@ -48,3 +48,10 @@ skills-lock.json
 .zencoder/
 logs/
 logs/
+
+# scrub 2026-08-29
+.DS_Store
+log.json
+preview_*.png
+wick_car_*.jpg
+wick_versus_*.jpg
