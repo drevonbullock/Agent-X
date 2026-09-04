@@ -124,41 +124,62 @@ const WickSprite: React.FC<{ side?: "left" | "right"; scale?: number }> =
   const { fps, durationInFrames } = useVideoConfig();
   const t = frame / fps;
 
-  const enter = spring({ frame: frame - 6, fps, config: { damping: 18, mass: 0.9 } });
-  const exit = interpolate(frame, [durationInFrames - 12, durationInFrames], [1, 0], {
+  // SQUASH AND STRETCH, not translation. The first version floated the whole
+  // sprite up and down and rotated it, which reads as a wobbling sticker — a
+  // real character breathes by compressing and extending against the ground.
+  // Anchored at the feet so he stays planted; volume is conserved (x widens as
+  // y compresses) which is what sells it as mass rather than a scaling image.
+  const breath = Math.sin(t * 1.25);              // slow, ~1.25 rad/s
+  const sy = 1 + breath * 0.018;
+  const sx = 1 - breath * 0.014;
+
+  // Weight shift: a few pixels laterally, no rotation. Rotating the body was
+  // the single worst tell in v1.
+  const shift = Math.sin(t * 0.62) * 5;
+
+  // Flame flicker, SLOW. v1 summed 9Hz and 14Hz sines, which strobes on a
+  // 30fps render. Real candle flicker is irregular but gentle: two slow
+  // incommensurate frequencies read as organic without flashing.
+  const flick = 1 + Math.sin(t * 2.3) * 0.05 + Math.sin(t * 3.7) * 0.03;
+
+  // Entrance: anticipation (dip) then overshoot then settle.
+  const e = spring({ frame: frame - 4, fps, config: { damping: 12, mass: 0.8, stiffness: 110 } });
+  const rise = interpolate(e, [0, 1], [86, 0]);
+  const exit = interpolate(frame, [durationInFrames - 14, durationInFrames - 2], [1, 0], {
     extrapolateLeft: "clamp", extrapolateRight: "clamp",
   });
-  const bob = Math.sin(t * 1.7) * 9;                       // breathing
-  const sway = Math.sin(t * 0.9) * 1.6;                    // weight shift
-  const flicker = 0.86 + Math.sin(t * 9.1) * 0.07 + Math.sin(t * 14.3) * 0.05;
   const dir = side === "right" ? 1 : -1;
 
   return (
     <div style={{
-      position: "absolute", bottom: 96, [side]: 40, zIndex: 3,
-      opacity: enter * exit,
-      transform: `translateY(${bob + (1 - enter) * 70}px) rotate(${sway * dir}deg) scale(${scale})`,
-      transformOrigin: "bottom center",
+      position: "absolute", bottom: 92, [side]: 34, zIndex: 3,
+      opacity: e * exit,
+      transform: `translateX(${shift * dir}px) translateY(${rise}px)`,
     }}>
-      {/* the glow breathes with the flame */}
+      {/* contact shadow: widens as he compresses, which is what ties him to
+          the floor instead of leaving him hovering */}
       <div style={{
-        position: "absolute", left: "50%", top: "8%", transform: "translateX(-50%)",
-        width: 300, height: 300, borderRadius: "50%",
-        background: `radial-gradient(circle, rgba(245,165,36,${0.30 * flicker}), transparent 66%)`,
-        filter: "blur(30px)",
+        position: "absolute", bottom: -6, left: "50%",
+        width: 210 * sx, height: 16,
+        transform: "translateX(-50%)", borderRadius: "50%",
+        background: `radial-gradient(ellipse, rgba(0,0,0,${0.42 + breath * 0.05}), transparent 70%)`,
+        filter: "blur(6px)",
       }} />
-      {/* The plate is not mathematically pure black — it carries a soft glow —
-          so screen blend alone leaves a visible rectangle. contrast() crushes
-          the near-black to true black (which screen then drops entirely) and
-          the radial mask feathers whatever survives at the edges. brightness
-          compensates so he reads bright against the dark ground. */}
+      {/* glow breathes with the flame */}
+      <div style={{
+        position: "absolute", left: "50%", top: "4%", transform: "translateX(-50%)",
+        width: 330, height: 330, borderRadius: "50%",
+        background: `radial-gradient(circle, rgba(245,165,36,${0.26 * flick}), transparent 64%)`,
+        filter: "blur(34px)",
+      }} />
+      {/* Real alpha (ffmpeg colorkey), so no blend-mode hackery: screen blend,
+          the contrast crush and the radial mask all existed only to fake
+          transparency, and all three left a visible rectangle. */}
       <Img src={staticFile("wick.png")} style={{
         width: 340, display: "block",
-        mixBlendMode: "screen",
-        filter: `brightness(${1.55 * flicker}) contrast(1.34) saturate(1.12)`,
-        transform: `scaleX(${dir})`,
-        maskImage: "radial-gradient(ellipse 72% 76% at 50% 48%, #000 62%, transparent 92%)",
-        WebkitMaskImage: "radial-gradient(ellipse 72% 76% at 50% 48%, #000 62%, transparent 92%)",
+        transformOrigin: "bottom center",
+        transform: `scale(${scale}) scaleX(${sx * dir}) scaleY(${sy})`,
+        filter: `brightness(${0.98 + (flick - 1) * 0.9}) drop-shadow(0 0 26px rgba(245,165,36,${0.34 * flick}))`,
       }} />
     </div>
   );
@@ -388,13 +409,11 @@ const Leak: React.FC<Extract<ExplainerProps["scenes"][number], { type: "leak" }>
             background: `linear-gradient(180deg, ${AMBER}, #b9761a)`,
             transition: "none",
           }} />
-          <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
-            <span style={{
-              fontFamily: "Anton, Impact, sans-serif", fontSize: 96,
-              color: pct > 0.45 ? NAVY_DEEP : "#fff",
-            }}>{money(remaining)}</span>
-          </AbsoluteFill>
         </div>
+        <div style={{
+          fontFamily: "Anton, Impact, sans-serif", fontSize: 118, color: "#fff",
+          marginTop: 22, textShadow: "0 6px 26px rgba(0,0,0,.8)",
+        }}>{money(remaining)}</div>
 
         <div style={{ marginTop: 40, width: 760 }}>
           {leaks.map((l, i) => {
