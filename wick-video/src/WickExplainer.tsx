@@ -71,23 +71,119 @@ export type ExplainerProps = z.infer<typeof explainerSchema>;
 
 const resolve = (s: string) => (/^https?:\/\//.test(s) ? s : staticFile(s));
 
-// Shared frame: dark ground, a caption line at top, the diagram beneath.
-const Stage: React.FC<{ caption: string; children: React.ReactNode }> = ({ caption, children }) => {
+// ─── LIVING BACKGROUND ───────────────────────────────────────────────────────
+// Flat navy read as a slide deck. This is a slow gradient-orb drift over a
+// faint grid: it never competes with the numbers (no hard edges, nothing
+// crossing the type) but the frame is never static either. Deterministic —
+// every value is a function of the frame, so renders are reproducible.
+const LivingBg: React.FC<{ seed?: number }> = ({ seed = 0 }) => {
+  const frame = useCurrentFrame();
+  const t = frame / 30;
+  const orb = (i: number, size: number, hue: string) => {
+    const a = t * (0.16 + i * 0.05) + seed + i * 2.1;
+    return {
+      position: "absolute" as const,
+      width: size, height: size, borderRadius: "50%",
+      left: `${50 + Math.sin(a) * (16 + i * 7)}%`,
+      top: `${42 + Math.cos(a * 0.8) * (14 + i * 6)}%`,
+      transform: "translate(-50%,-50%)",
+      background: `radial-gradient(circle, ${hue}, transparent 68%)`,
+      filter: "blur(58px)",
+    };
+  };
+  return (
+    <AbsoluteFill style={{ background: NAVY_DEEP, overflow: "hidden" }}>
+      <div style={orb(0, 820, "rgba(245,165,36,.13)")} />
+      <div style={orb(1, 700, "rgba(76,148,240,.11)")} />
+      <div style={orb(2, 560, "rgba(61,220,132,.07)")} />
+      {/* faint grid, drifting up so the frame breathes */}
+      <AbsoluteFill style={{
+        backgroundImage:
+          "linear-gradient(rgba(255,233,196,.045) 1px, transparent 1px)," +
+          "linear-gradient(90deg, rgba(255,233,196,.045) 1px, transparent 1px)",
+        backgroundSize: "88px 88px",
+        backgroundPosition: `0px ${-(t * 7) % 88}px`,
+        maskImage: "radial-gradient(ellipse 78% 62% at 50% 45%, #000 35%, transparent 78%)",
+      }} />
+      <AbsoluteFill style={{
+        background: "radial-gradient(ellipse 92% 58% at 50% 40%, transparent 40%, rgba(3,6,14,.72))",
+      }} />
+    </AbsoluteFill>
+  );
+};
+
+// ─── WICK, ANIMATED ──────────────────────────────────────────────────────────
+// He cannot be generated in motion without drifting off-model, so he is a
+// verified still that MOVES: a breathing bob, a flame flicker driven by summed
+// sines (organic, never a loop you can count), and a lean toward whatever the
+// scene is showing. Screen blend keys the pure-black plate out against the dark
+// background, so no alpha channel is needed.
+const WickSprite: React.FC<{ side?: "left" | "right"; scale?: number }> =
+({ side = "right", scale = 1 }) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const t = frame / fps;
+
+  const enter = spring({ frame: frame - 6, fps, config: { damping: 18, mass: 0.9 } });
+  const exit = interpolate(frame, [durationInFrames - 12, durationInFrames], [1, 0], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+  });
+  const bob = Math.sin(t * 1.7) * 9;                       // breathing
+  const sway = Math.sin(t * 0.9) * 1.6;                    // weight shift
+  const flicker = 0.86 + Math.sin(t * 9.1) * 0.07 + Math.sin(t * 14.3) * 0.05;
+  const dir = side === "right" ? 1 : -1;
+
+  return (
+    <div style={{
+      position: "absolute", bottom: 96, [side]: 40, zIndex: 3,
+      opacity: enter * exit,
+      transform: `translateY(${bob + (1 - enter) * 70}px) rotate(${sway * dir}deg) scale(${scale})`,
+      transformOrigin: "bottom center",
+    }}>
+      {/* the glow breathes with the flame */}
+      <div style={{
+        position: "absolute", left: "50%", top: "8%", transform: "translateX(-50%)",
+        width: 300, height: 300, borderRadius: "50%",
+        background: `radial-gradient(circle, rgba(245,165,36,${0.30 * flicker}), transparent 66%)`,
+        filter: "blur(30px)",
+      }} />
+      {/* The plate is not mathematically pure black — it carries a soft glow —
+          so screen blend alone leaves a visible rectangle. contrast() crushes
+          the near-black to true black (which screen then drops entirely) and
+          the radial mask feathers whatever survives at the edges. brightness
+          compensates so he reads bright against the dark ground. */}
+      <Img src={staticFile("wick.png")} style={{
+        width: 340, display: "block",
+        mixBlendMode: "screen",
+        filter: `brightness(${1.55 * flicker}) contrast(1.34) saturate(1.12)`,
+        transform: `scaleX(${dir})`,
+        maskImage: "radial-gradient(ellipse 72% 76% at 50% 48%, #000 62%, transparent 92%)",
+        WebkitMaskImage: "radial-gradient(ellipse 72% 76% at 50% 48%, #000 62%, transparent 92%)",
+      }} />
+    </div>
+  );
+};
+
+// Shared frame: living background, caption, the diagram, and Wick present.
+const Stage: React.FC<{ caption: string; children: React.ReactNode; seed?: number; wick?: boolean; wickSide?: "left" | "right" }> =
+({ caption, children, seed = 0, wick = true, wickSide = "right" }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const capIn = spring({ frame, fps, config: { damping: 200 } });
+  // Overshoot easing: the caption arrives with weight instead of fading.
+  const capIn = spring({ frame, fps, config: { damping: 15, mass: 0.7, stiffness: 90 } });
   return (
-    <AbsoluteFill style={{
-      background: `radial-gradient(ellipse 90% 55% at 50% 34%, ${NAVY}, ${NAVY_DEEP})`,
-    }}>
-      <AbsoluteFill style={{ padding: "150px 84px 0", alignItems: "center" }}>
+    <AbsoluteFill>
+      <LivingBg seed={seed} />
+      <AbsoluteFill style={{ padding: "144px 84px 0", alignItems: "center" }}>
         <div style={{
           fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 54,
           color: "#fff", textAlign: "center", lineHeight: 1.2,
-          opacity: capIn, transform: `translateY(${(1 - capIn) * 22}px)`,
+          opacity: Math.min(1, capIn), transform: `translateY(${(1 - capIn) * 30}px)`,
+          textShadow: "0 6px 30px rgba(0,0,0,.7)",
         }}>{caption}</div>
       </AbsoluteFill>
       {children}
+      {wick ? <WickSprite side={wickSide} scale={0.82} /> : null}
     </AbsoluteFill>
   );
 };
@@ -111,7 +207,7 @@ const Multiply: React.FC<Extract<ExplainerProps["scenes"][number], { type: "mult
   }));
 
   return (
-    <Stage caption={caption}>
+    <Stage caption={caption} seed={1} wick={false}>
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", paddingTop: 90 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 26, opacity: unitIn }}>
           <span style={{ fontFamily: "Anton, Impact, sans-serif", fontSize: 150, color: "#fff" }}>
@@ -165,7 +261,7 @@ const Split: React.FC<Extract<ExplainerProps["scenes"][number], { type: "split" 
   const sum = parts.reduce((a, p) => a + p.amount, 0) || 1;
 
   return (
-    <Stage caption={caption}>
+    <Stage caption={caption} seed={2} wickSide="right">
       <AbsoluteFill style={{ justifyContent: "center", padding: "120px 84px 0" }}>
         <div style={{
           fontFamily: "Anton, Impact, sans-serif", fontSize: 128, color: "#fff",
@@ -231,7 +327,7 @@ const Race: React.FC<Extract<ExplainerProps["scenes"][number], { type: "race" }>
   const label = (s: number, r: number) => grow(s, r, progress);
 
   return (
-    <Stage caption={caption}>
+    <Stage caption={caption} seed={3} wick={false}>
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", paddingTop: 110 }}>
         <svg width={W} height={H} style={{ overflow: "visible" }}>
           {[0, 0.25, 0.5, 0.75, 1].map((g) => (
@@ -279,7 +375,7 @@ const Leak: React.FC<Extract<ExplainerProps["scenes"][number], { type: "leak" }>
   const pct = remaining / start;
 
   return (
-    <Stage caption={caption}>
+    <Stage caption={caption} seed={4} wickSide="left">
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", paddingTop: 100 }}>
         {/* the tank */}
         <div style={{
@@ -330,13 +426,14 @@ const Title: React.FC<{ title: string; subtitle: string; wickImage: string }> =
   const parts = title.toUpperCase().split(/(\$[\d,]+)/g);
   return (
     <AbsoluteFill style={{ background: NAVY_DEEP }}>
+      <LivingBg seed={0} />
       {wickImage ? (
-        <AbsoluteFill style={{ overflow: "hidden" }}>
+        <AbsoluteFill style={{ overflow: "hidden", opacity: 0.28 }}>
           <Img src={resolve(wickImage)} style={{
             width: "100%", height: "100%", objectFit: "cover", transform: `scale(${scale})`,
           }} />
           <AbsoluteFill style={{
-            background: "linear-gradient(180deg, rgba(7,13,28,.62), rgba(7,13,28,.95))",
+            background: "linear-gradient(180deg, rgba(7,13,28,.72), rgba(7,13,28,.96))",
           }} />
         </AbsoluteFill>
       ) : null}
@@ -356,6 +453,7 @@ const Title: React.FC<{ title: string; subtitle: string; wickImage: string }> =
           textAlign: "center", opacity: inS,
         }}>{subtitle}</div>
       </AbsoluteFill>
+      <WickSprite side="right" scale={1.05} />
     </AbsoluteFill>
   );
 };
@@ -365,10 +463,8 @@ const Close: React.FC<{ closing: string }> = ({ closing }) => {
   const { fps } = useVideoConfig();
   const inS = spring({ frame, fps, config: { damping: 200 } });
   return (
-    <AbsoluteFill style={{
-      background: `radial-gradient(ellipse 80% 50% at 50% 45%, ${NAVY}, ${NAVY_DEEP})`,
-      justifyContent: "center", alignItems: "center", padding: "0 90px",
-    }}>
+    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: "0 90px" }}>
+      <LivingBg seed={5} />
       <div style={{
         fontFamily: "Anton, Impact, sans-serif", fontSize: 92, color: "#fff", textAlign: "center",
         textTransform: "uppercase", lineHeight: 1.1, opacity: inS,
@@ -378,6 +474,7 @@ const Close: React.FC<{ closing: string }> = ({ closing }) => {
         width: 130, height: 5, background: AMBER, marginTop: 40,
         transform: `scaleX(${inS})`,
       }} />
+      <WickSprite side="right" scale={0.9} />
     </AbsoluteFill>
   );
 };
