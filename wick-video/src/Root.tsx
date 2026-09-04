@@ -2,6 +2,8 @@ import React from "react";
 import { Composition } from "remotion";
 import { WickReel, wickReelSchema } from "./WickReel";
 import { WickExplainer, explainerSchema, SCENE_FRAMES } from "./WickExplainer";
+import { ExplainerFilm, filmSchema } from "./ExplainerFilm";
+import film from "../../data/explainer-paycheck.json";
 
 // 1080x1920 @ 30fps. Duration is derived from the beats so a 3-beat and a
 // 5-beat reel both time correctly: 90 hook + 105/beat + 150 payoff.
@@ -64,6 +66,20 @@ export const RemotionRoot: React.FC = () => (
           b: { label: "Spent the difference", start: 1000, rate: 0.01 } },
       ],
     }}
+  />
+  <Composition
+    id="ExplainerFilm"
+    component={ExplainerFilm}
+    schema={filmSchema}
+    width={1080}
+    height={1920}
+    fps={30}
+    durationInFrames={12 * 105}
+    defaultProps={film as any}
+    calculateMetadata={({ props }) => ({
+      // Runtime follows the narration once the voice pass has measured it.
+      durationInFrames: (props.shots ?? []).reduce((a: number, s: any) => a + (s.frames ?? 105), 0) || 1260,
+    })}
   />
   </>
 );
