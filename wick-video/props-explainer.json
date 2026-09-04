@@ -1,0 +1,76 @@
+{
+ "title": "$5 A DAY IS $1,825 A YEAR",
+ "subtitle": "The number you ignore is the number that decides.",
+ "closing": "Small is not the same as nothing.",
+ "wickImage": "hook.jpg",
+ "chapters": [
+  "INTRO",
+  "THE MULTIPLIER",
+  "THE LEAK",
+  "THE GAP",
+  "TAKEAWAY"
+ ],
+ "narration": {
+  "title": "Five dollars a day sounds like nothing. Here is what it actually adds up to.",
+  "scenes": [
+   "One small habit. Five dollars, every day, for a year. That is one thousand eight hundred and twenty five dollars. The amount never felt big. The total always is.",
+   "Now look at where a thousand dollar balance actually goes. Subscriptions you forgot. Fees nobody checks. A premium tier you outgrew. None of them felt like a decision.",
+   "Same starting point. One choice apart. After ten years, the person who kept the number has more than double. Nothing dramatic happened. One of them just did not spend the difference."
+  ],
+  "close": "Small is not the same as nothing. Pick one number tonight and write it down."
+ },
+ "scenes": [
+  {
+   "type": "multiply",
+   "caption": "One small habit, every day.",
+   "unit": 5,
+   "times": 365,
+   "unitLabel": "a day",
+   "totalLabel": "a year"
+  },
+  {
+   "type": "leak",
+   "caption": "Where a $1,000 balance actually goes.",
+   "start": 1000,
+   "leaks": [
+    {
+     "label": "Subscriptions you forgot",
+     "amount": 240
+    },
+    {
+     "label": "Fees nobody checks",
+     "amount": 180
+    },
+    {
+     "label": "The premium tier you outgrew",
+     "amount": 280
+    }
+   ]
+  },
+  {
+   "type": "race",
+   "caption": "Same start. One choice apart.",
+   "years": 10,
+   "a": {
+    "label": "Kept the number",
+    "start": 1000,
+    "rate": 0.08
+   },
+   "b": {
+    "label": "Spent the difference",
+    "start": 1000,
+    "rate": 0.01
+   }
+  }
+ ],
+ "timing": {
+  "title": 194,
+  "scenes": [
+   357,
+   431,
+   449
+  ],
+  "close": 198
+ },
+ "hasVoice": true
+}

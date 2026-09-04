@@ -40,7 +40,11 @@ export const RemotionRoot: React.FC = () => (
     fps={30}
     durationInFrames={78 + SCENE_FRAMES * 3 + 96}
     calculateMetadata={({ props }) => ({
-      durationInFrames: 78 + SCENE_FRAMES * (props.scenes?.length ?? 3) + 96,
+      // Narration-driven when voiceover has been generated; falls back to the
+      // fixed beat otherwise.
+      durationInFrames: props.timing
+        ? props.timing.title + props.timing.scenes.reduce((a: number, b: number) => a + b, 0) + props.timing.close
+        : 78 + SCENE_FRAMES * (props.scenes?.length ?? 3) + 96,
     })}
     defaultProps={{
       title: "$5 A DAY IS $1,825 A YEAR",

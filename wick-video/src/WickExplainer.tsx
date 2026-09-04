@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  AbsoluteFill, Img, Series,
+  AbsoluteFill, Audio, Img, Series,
   interpolate, spring, useCurrentFrame, useVideoConfig, staticFile,
 } from "remotion";
 import { z } from "zod";
@@ -66,6 +66,20 @@ export const explainerSchema = z.object({
   ])),
   closing: z.string(),
   wickImage: z.string(),
+  // Written by scripts/wick-voiceover.js after it measures each clip, so scene
+  // lengths follow the narrator instead of a guessed constant.
+  hasVoice: z.boolean().optional(),
+  timing: z.object({
+    title: z.number(),
+    scenes: z.array(z.number()),
+    close: z.number(),
+  }).optional(),
+  chapters: z.array(z.string()).optional(),
+  narration: z.object({
+    title: z.string().optional(),
+    scenes: z.array(z.string()).optional(),
+    close: z.string().optional(),
+  }).optional(),
 });
 export type ExplainerProps = z.infer<typeof explainerSchema>;
 
@@ -79,115 +93,90 @@ const resolve = (s: string) => (/^https?:\/\//.test(s) ? s : staticFile(s));
 const LivingBg: React.FC<{ seed?: number }> = ({ seed = 0 }) => {
   const frame = useCurrentFrame();
   const t = frame / 30;
-  const orb = (i: number, size: number, hue: string) => {
-    const a = t * (0.16 + i * 0.05) + seed + i * 2.1;
-    return {
-      position: "absolute" as const,
-      width: size, height: size, borderRadius: "50%",
-      left: `${50 + Math.sin(a) * (16 + i * 7)}%`,
-      top: `${42 + Math.cos(a * 0.8) * (14 + i * 6)}%`,
-      transform: "translate(-50%,-50%)",
-      background: `radial-gradient(circle, ${hue}, transparent 68%)`,
-      filter: "blur(58px)",
-    };
-  };
+  // EDITORIAL, NOT AMBIENT. The orb-drift version read as a screensaver behind
+  // the numbers. An explainer channel's frame is a STUDIO: a graded backdrop
+  // with a horizon, a floor the diagrams sit on, and a slow parallax so the
+  // camera feels alive without anything wandering across the type.
+  const drift = Math.sin(t * 0.12 + seed) * 14;
   return (
-    <AbsoluteFill style={{ background: NAVY_DEEP, overflow: "hidden" }}>
-      <div style={orb(0, 820, "rgba(245,165,36,.13)")} />
-      <div style={orb(1, 700, "rgba(76,148,240,.11)")} />
-      <div style={orb(2, 560, "rgba(61,220,132,.07)")} />
-      {/* faint grid, drifting up so the frame breathes */}
+    <AbsoluteFill style={{ background: "#070c18", overflow: "hidden" }}>
+      {/* graded backdrop, brighter behind the subject */}
       <AbsoluteFill style={{
-        backgroundImage:
-          "linear-gradient(rgba(255,233,196,.045) 1px, transparent 1px)," +
-          "linear-gradient(90deg, rgba(255,233,196,.045) 1px, transparent 1px)",
-        backgroundSize: "88px 88px",
-        backgroundPosition: `0px ${-(t * 7) % 88}px`,
-        maskImage: "radial-gradient(ellipse 78% 62% at 50% 45%, #000 35%, transparent 78%)",
+        background:
+          "radial-gradient(ellipse 120% 62% at 50% 30%, #14203c 0%, #0c1428 42%, #060a14 78%)",
+        transform: `translateY(${drift * 0.4}px)`,
       }} />
+      {/* horizon: the studio floor line */}
       <AbsoluteFill style={{
-        background: "radial-gradient(ellipse 92% 58% at 50% 40%, transparent 40%, rgba(3,6,14,.72))",
+        top: "80%",
+        background: "linear-gradient(180deg, rgba(120,170,255,.10), transparent 34%)",
+        borderTop: "1px solid rgba(140,190,255,.13)",
+        transform: `translateY(${drift * 0.7}px)`,
+      }} />
+      {/* perspective floor grid, receding */}
+      <AbsoluteFill style={{
+        top: "80%",
+        backgroundImage:
+          "linear-gradient(90deg, rgba(140,190,255,.10) 1px, transparent 1px)," +
+          "linear-gradient(rgba(140,190,255,.08) 1px, transparent 1px)",
+        backgroundSize: "120px 46px",
+        backgroundPosition: `${(t * 9) % 120}px 0`,
+        maskImage: "linear-gradient(180deg, #000 0%, transparent 62%)",
+        WebkitMaskImage: "linear-gradient(180deg, #000 0%, transparent 62%)",
+        transform: `translateY(${drift * 0.7}px)`,
+      }} />
+      {/* key light from above, so the subject sits in a pool rather than on a flat field */}
+      <AbsoluteFill style={{
+        background: "radial-gradient(ellipse 58% 34% at 50% 44%, rgba(255,214,150,.075), transparent 70%)",
+      }} />
+      {/* vignette */}
+      <AbsoluteFill style={{
+        background: "radial-gradient(ellipse 96% 66% at 50% 46%, transparent 42%, rgba(2,4,10,.82))",
       }} />
     </AbsoluteFill>
   );
 };
 
-// ─── WICK, ANIMATED ──────────────────────────────────────────────────────────
-// He cannot be generated in motion without drifting off-model, so he is a
-// verified still that MOVES: a breathing bob, a flame flicker driven by summed
-// sines (organic, never a loop you can count), and a lean toward whatever the
-// scene is showing. Screen blend keys the pure-black plate out against the dark
-// background, so no alpha channel is needed.
-const WickSprite: React.FC<{ side?: "left" | "right"; scale?: number }> =
-({ side = "right", scale = 1 }) => {
+// ─── EXPLAINER CHROME ────────────────────────────────────────────────────────
+// What actually makes a video read as an explainer channel rather than a social
+// post: the viewer always knows where they are. A chapter rail names the
+// current section, a progress bar shows how far in they are, and a step
+// counter promises an end. All three reduce the urge to swipe.
+const Chrome: React.FC<{ chapters: string[]; index: number }> = ({ chapters, index }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
-  const t = frame / fps;
-
-  // SQUASH AND STRETCH, not translation. The first version floated the whole
-  // sprite up and down and rotated it, which reads as a wobbling sticker — a
-  // real character breathes by compressing and extending against the ground.
-  // Anchored at the feet so he stays planted; volume is conserved (x widens as
-  // y compresses) which is what sells it as mass rather than a scaling image.
-  const breath = Math.sin(t * 1.25);              // slow, ~1.25 rad/s
-  const sy = 1 + breath * 0.018;
-  const sx = 1 - breath * 0.014;
-
-  // Weight shift: a few pixels laterally, no rotation. Rotating the body was
-  // the single worst tell in v1.
-  const shift = Math.sin(t * 0.62) * 5;
-
-  // Flame flicker, SLOW. v1 summed 9Hz and 14Hz sines, which strobes on a
-  // 30fps render. Real candle flicker is irregular but gentle: two slow
-  // incommensurate frequencies read as organic without flashing.
-  const flick = 1 + Math.sin(t * 2.3) * 0.05 + Math.sin(t * 3.7) * 0.03;
-
-  // Entrance: anticipation (dip) then overshoot then settle.
-  const e = spring({ frame: frame - 4, fps, config: { damping: 12, mass: 0.8, stiffness: 110 } });
-  const rise = interpolate(e, [0, 1], [86, 0]);
-  const exit = interpolate(frame, [durationInFrames - 14, durationInFrames - 2], [1, 0], {
-    extrapolateLeft: "clamp", extrapolateRight: "clamp",
-  });
-  const dir = side === "right" ? 1 : -1;
-
+  const { durationInFrames } = useVideoConfig();
+  const p = frame / durationInFrames;
   return (
-    <div style={{
-      position: "absolute", bottom: 92, [side]: 34, zIndex: 3,
-      opacity: e * exit,
-      transform: `translateX(${shift * dir}px) translateY(${rise}px)`,
-    }}>
-      {/* contact shadow: widens as he compresses, which is what ties him to
-          the floor instead of leaving him hovering */}
+    <AbsoluteFill style={{ pointerEvents: "none" }}>
+      {/* progress */}
       <div style={{
-        position: "absolute", bottom: -6, left: "50%",
-        width: 210 * sx, height: 16,
-        transform: "translateX(-50%)", borderRadius: "50%",
-        background: `radial-gradient(ellipse, rgba(0,0,0,${0.42 + breath * 0.05}), transparent 70%)`,
-        filter: "blur(6px)",
+        position: "absolute", top: 0, left: 0, height: 6, width: `${p * 100}%`,
+        background: `linear-gradient(90deg, ${AMBER}, #ffd479)`,
+        boxShadow: `0 0 18px rgba(245,165,36,.55)`,
       }} />
-      {/* glow breathes with the flame */}
+      {/* chapter rail */}
       <div style={{
-        position: "absolute", left: "50%", top: "4%", transform: "translateX(-50%)",
-        width: 330, height: 330, borderRadius: "50%",
-        background: `radial-gradient(circle, rgba(245,165,36,${0.26 * flick}), transparent 64%)`,
-        filter: "blur(34px)",
-      }} />
-      {/* Real alpha (ffmpeg colorkey), so no blend-mode hackery: screen blend,
-          the contrast crush and the radial mask all existed only to fake
-          transparency, and all three left a visible rectangle. */}
-      <Img src={staticFile("wick.png")} style={{
-        width: 340, display: "block",
-        transformOrigin: "bottom center",
-        transform: `scale(${scale}) scaleX(${sx * dir}) scaleY(${sy})`,
-        filter: `brightness(${0.98 + (flick - 1) * 0.9}) drop-shadow(0 0 26px rgba(245,165,36,${0.34 * flick}))`,
-      }} />
-    </div>
+        position: "absolute", top: 42, left: 44, display: "flex", alignItems: "center", gap: 14,
+      }}>
+        <div style={{ width: 10, height: 10, background: AMBER, borderRadius: 2 }} />
+        <span style={{
+          fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 26,
+          letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,233,196,.82)",
+        }}>{chapters[index] ?? ""}</span>
+      </div>
+      {/* step counter */}
+      <div style={{
+        position: "absolute", top: 42, right: 44,
+        fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 26,
+        letterSpacing: 2, color: "rgba(255,233,196,.45)",
+      }}>{index > 0 && index <= chapters.length - 2 ? `${index} / ${chapters.length - 2}` : ""}</div>
+    </AbsoluteFill>
   );
 };
 
 // Shared frame: living background, caption, the diagram, and Wick present.
-const Stage: React.FC<{ caption: string; children: React.ReactNode; seed?: number; wick?: boolean; wickSide?: "left" | "right" }> =
-({ caption, children, seed = 0, wick = true, wickSide = "right" }) => {
+const Stage: React.FC<{ caption: string; children: React.ReactNode; seed?: number; chapter?: string }> =
+({ caption, children, seed = 0, chapter }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   // Overshoot easing: the caption arrives with weight instead of fading.
@@ -195,7 +184,7 @@ const Stage: React.FC<{ caption: string; children: React.ReactNode; seed?: numbe
   return (
     <AbsoluteFill>
       <LivingBg seed={seed} />
-      <AbsoluteFill style={{ padding: "144px 84px 0", alignItems: "center" }}>
+      <AbsoluteFill style={{ padding: "176px 84px 0", alignItems: "center" }}>
         <div style={{
           fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 54,
           color: "#fff", textAlign: "center", lineHeight: 1.2,
@@ -204,7 +193,6 @@ const Stage: React.FC<{ caption: string; children: React.ReactNode; seed?: numbe
         }}>{caption}</div>
       </AbsoluteFill>
       {children}
-      {wick ? <WickSprite side={wickSide} scale={0.82} /> : null}
     </AbsoluteFill>
   );
 };
@@ -228,7 +216,7 @@ const Multiply: React.FC<Extract<ExplainerProps["scenes"][number], { type: "mult
   }));
 
   return (
-    <Stage caption={caption} seed={1} wick={false}>
+    <Stage caption={caption} seed={1}>
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", paddingTop: 90 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 26, opacity: unitIn }}>
           <span style={{ fontFamily: "Anton, Impact, sans-serif", fontSize: 150, color: "#fff" }}>
@@ -282,7 +270,7 @@ const Split: React.FC<Extract<ExplainerProps["scenes"][number], { type: "split" 
   const sum = parts.reduce((a, p) => a + p.amount, 0) || 1;
 
   return (
-    <Stage caption={caption} seed={2} wickSide="right">
+    <Stage caption={caption} seed={2}>
       <AbsoluteFill style={{ justifyContent: "center", padding: "120px 84px 0" }}>
         <div style={{
           fontFamily: "Anton, Impact, sans-serif", fontSize: 128, color: "#fff",
@@ -348,7 +336,7 @@ const Race: React.FC<Extract<ExplainerProps["scenes"][number], { type: "race" }>
   const label = (s: number, r: number) => grow(s, r, progress);
 
   return (
-    <Stage caption={caption} seed={3} wick={false}>
+    <Stage caption={caption} seed={3}>
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", paddingTop: 110 }}>
         <svg width={W} height={H} style={{ overflow: "visible" }}>
           {[0, 0.25, 0.5, 0.75, 1].map((g) => (
@@ -396,7 +384,7 @@ const Leak: React.FC<Extract<ExplainerProps["scenes"][number], { type: "leak" }>
   const pct = remaining / start;
 
   return (
-    <Stage caption={caption} seed={4} wickSide="left">
+    <Stage caption={caption} seed={4}>
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", paddingTop: 100 }}>
         {/* the tank */}
         <div style={{
@@ -472,7 +460,6 @@ const Title: React.FC<{ title: string; subtitle: string; wickImage: string }> =
           textAlign: "center", opacity: inS,
         }}>{subtitle}</div>
       </AbsoluteFill>
-      <WickSprite side="right" scale={1.05} />
     </AbsoluteFill>
   );
 };
@@ -493,36 +480,56 @@ const Close: React.FC<{ closing: string }> = ({ closing }) => {
         width: 130, height: 5, background: AMBER, marginTop: 40,
         transform: `scaleX(${inS})`,
       }} />
-      <WickSprite side="right" scale={0.9} />
     </AbsoluteFill>
   );
 };
 
 // ─── THE EXPLAINER ───────────────────────────────────────────────────────────
 export const SCENE_FRAMES = 132;
-export const WickExplainer: React.FC<ExplainerProps> = ({ title, subtitle, scenes, closing, wickImage }) => (
-  <AbsoluteFill style={{ background: NAVY_DEEP }}>
-    <Series>
-      <Series.Sequence durationInFrames={78}>
-        <Title title={title} subtitle={subtitle} wickImage={wickImage} />
-      </Series.Sequence>
-      {scenes.map((s, i) => (
-        <Series.Sequence key={i} durationInFrames={SCENE_FRAMES}>
-          {s.type === "multiply" ? <Multiply {...s} />
-            : s.type === "split" ? <Split {...s} />
-            : s.type === "race" ? <Race {...s} />
-            : <Leak {...s} />}
+
+// Voice clip for a section. Silent when no narration was generated, so the
+// composition renders identically with or without audio.
+const Vo: React.FC<{ id: string; on?: boolean }> = ({ id, on }) =>
+  on ? <Audio src={staticFile(`vo/${id}.mp3`)} /> : null;
+
+export const WickExplainer: React.FC<ExplainerProps> = ({
+  title, subtitle, scenes, closing, wickImage, hasVoice, timing, chapters,
+}) => {
+  const chaps = chapters ?? ["INTRO", ...scenes.map((_, i) => `PART ${i + 1}`), "TAKEAWAY"];
+  const tTitle = timing?.title ?? 78;
+  const tScenes = timing?.scenes ?? scenes.map(() => SCENE_FRAMES);
+  const tClose = timing?.close ?? 96;
+
+  return (
+    <AbsoluteFill style={{ background: "#070c18" }}>
+      <Series>
+        <Series.Sequence durationInFrames={tTitle}>
+          <Vo id="title" on={hasVoice} />
+          <Title title={title} subtitle={subtitle} wickImage={wickImage} />
+          <Chrome chapters={chaps} index={0} />
         </Series.Sequence>
-      ))}
-      <Series.Sequence durationInFrames={96}>
-        <Close closing={closing} />
-      </Series.Sequence>
-    </Series>
-    <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 54 }}>
-      <div style={{
-        fontFamily: "'DM Sans', sans-serif", fontSize: 26, letterSpacing: 6,
-        color: "rgba(255,233,196,.5)",
-      }}>@WICKSWISDOM</div>
+        {scenes.map((sc, i) => (
+          <Series.Sequence key={i} durationInFrames={tScenes[i] ?? SCENE_FRAMES}>
+            <Vo id={`s${i}`} on={hasVoice} />
+            {sc.type === "multiply" ? <Multiply {...sc} />
+              : sc.type === "split" ? <Split {...sc} />
+              : sc.type === "race" ? <Race {...sc} />
+              : <Leak {...sc} />}
+            <Chrome chapters={chaps} index={i + 1} />
+          </Series.Sequence>
+        ))}
+        <Series.Sequence durationInFrames={tClose}>
+          <Vo id="close" on={hasVoice} />
+          <Close closing={closing} />
+          <Chrome chapters={chaps} index={chaps.length - 1} />
+        </Series.Sequence>
+      </Series>
+      <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 54 }}>
+        <div style={{
+          fontFamily: "'DM Sans', sans-serif", fontSize: 26, letterSpacing: 6,
+          color: "rgba(255,233,196,.5)",
+        }}>@WICKSWISDOM</div>
+      </AbsoluteFill>
     </AbsoluteFill>
-  </AbsoluteFill>
-);
+  );
+};
