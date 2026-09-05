@@ -17,8 +17,7 @@
    "camera": "slowPush",
    "art": "A candle character standing alone in a dim apartment at night, looking down at a phone in his hand, the screen the only bright thing in the room. Wide shot, he is small in the frame, the room large and quiet around him.",
    "sfx": "low_drone",
-   "transition": "push",
-   "mg": "coinDrain"
+   "transition": "push"
   },
   {
    "id": "s02",
@@ -41,7 +40,10 @@
    "diagram": "splitLeftover",
    "sfx": "drop",
    "transition": "matchCut",
-   "mg": "circleHighlight"
+   "annotate": {
+    "kind": "ring",
+    "part": 3
+   }
   },
   {
    "id": "s04",
@@ -53,7 +55,10 @@
    "diagram": "splitFixed2",
    "sfx": "ding",
    "transition": "wipe",
-   "mg": "arrowDown"
+   "annotate": {
+    "kind": "point",
+    "part": 0
+   }
   },
   {
    "id": "s05",
@@ -64,8 +69,7 @@
    "camera": "slowPush",
    "art": "A candle character sitting on the edge of a bed at night, phone held in both hands, the screen glowing warmly on his face. Calm and settled, the room dark around him.",
    "sfx": "chime",
-   "transition": "dip",
-   "mg": "pulseRings"
+   "transition": "dip"
   }
  ],
  "diagrams": {

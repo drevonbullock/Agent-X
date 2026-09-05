@@ -61,7 +61,12 @@ export const filmSchema = z.object({
     diagram: z.string().optional(),
     sfx: z.string().optional(),
     transition: z.enum(["push", "wipe", "matchCut", "dip"]).optional(),
-    mg: z.enum(["coinDrain", "circleHighlight", "arrowDown", "pulseRings"]).optional(),
+    // An annotation names the DIAGRAM PART it is about. That link is the whole
+    // point: a graphic that cannot say what it is pointing at will float.
+    annotate: z.object({
+      kind: z.enum(["ring", "point"]),
+      part: z.number(),
+    }).optional(),
     asset: z.string().nullable().optional(),   // filename once generated
     frames: z.number().optional(),             // set by the voiceover pass
   })),
@@ -152,55 +157,154 @@ const Plate: React.FC<{ shot: FilmProps["shots"][number] }> = ({ shot }) => {
 // ─── DIAGRAMS ────────────────────────────────────────────────────────────────
 // The bar builds part by part across consecutive shots, so the viewer watches
 // the same paycheck being carved up rather than seeing four unrelated charts.
-const SplitBar: React.FC<{ spec: any; carried?: number }> = ({ spec, carried = 0 }) => {
+// LAYOUT CONSTANTS. The annotations below need to know EXACTLY where a segment
+// and a label row sit. Left to flex, a graphic lands NEAR the thing it means
+// rather than ON it, which is worse than having no graphic at all.
+const PAD = 76;
+const BARW = 1080 - PAD * 2;
+const BARH = 88;
+const ROWH = 74;
+const GUTTER = 104;   // empty band above the bar. Annotations live here, so
+                      // they are structurally incapable of covering the chart.
+
+// Deterministic width estimate for a right-aligned amount, so a ring can be cut
+// to the figure it encircles instead of being a fixed blob.
+const figureW = (s: string) => s.length * 27 + 22;
+
+// ─── ANNOTATION: RING ────────────────────────────────────────────────────────
+// Drawn around ONE label row's amount, anchored to that row's real y. It draws
+// itself on like a pen stroke and then holds.
+const Ring: React.FC<{ part: number; text: string; delay: number }> = ({ part, text, delay }) => {
+  const frame = useCurrentFrame();
+  const w = figureW(text);
+  const draw = interpolate(frame, [delay, delay + 26], [0, 1], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+  });
+  const LEN = 2 * Math.PI * ((w / 2 + 26 + 42) / 2);
+  return (
+    <div style={{
+      position: "absolute", top: part * ROWH, right: -34,
+      width: w + 68, height: ROWH, pointerEvents: "none",
+    }}>
+      <svg width={w + 68} height={ROWH} style={{ overflow: "visible" }}>
+        <ellipse
+          cx={(w + 68) / 2} cy={ROWH / 2} rx={w / 2 + 26} ry={40}
+          fill="none" stroke={AMBER_INK} strokeWidth={7} strokeLinecap="round"
+          strokeDasharray={LEN} strokeDashoffset={LEN * (1 - draw)}
+          transform={`rotate(-4 ${(w + 68) / 2} ${ROWH / 2})`}
+        />
+      </svg>
+    </div>
+  );
+};
+
+// ─── ANNOTATION: POINT ───────────────────────────────────────────────────────
+// A short arrow in the gutter, aimed at the horizontal centre of ONE segment.
+// It is short and lives in reserved empty space, so it cannot block the chart.
+const Point: React.FC<{ mid: number; delay: number }> = ({ mid, delay }) => {
+  const frame = useCurrentFrame();
+  const draw = interpolate(frame, [delay, delay + 16], [0, 1], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+  });
+  const head = interpolate(frame, [delay + 13, delay + 23], [0, 1], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+  });
+  const y0 = 16, y1 = GUTTER - 26;
+  return (
+    <div style={{
+      position: "absolute", left: mid - 60, bottom: "100%",
+      width: 120, height: GUTTER, pointerEvents: "none",
+    }}>
+      <svg width={120} height={GUTTER} style={{ overflow: "visible" }}>
+        <line x1={60} y1={y0} x2={60} y2={y0 + (y1 - y0) * draw}
+          stroke={AMBER_INK} strokeWidth={8} strokeLinecap="round" />
+        <polyline points={`34,${y1 - 30} 60,${y1} 86,${y1 - 30}`} fill="none"
+          stroke={AMBER_INK} strokeWidth={8} strokeLinecap="round" strokeLinejoin="round"
+          opacity={head} />
+      </svg>
+    </div>
+  );
+};
+
+// ─── DIAGRAM: SPLIT BAR ──────────────────────────────────────────────────────
+const SplitBar: React.FC<{ spec: any; carried?: number; annotate?: any }> =
+({ spec, carried = 0, annotate }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const parts = spec.parts ?? [];
   const total = spec.total ?? 1;
 
+  // Every segment's exact position, so an annotation can aim AT one.
+  let acc = 0;
+  const geo = parts.map((p: any) => {
+    const x = (acc / total) * BARW;
+    const w = (p.amount / total) * BARW;
+    acc += p.amount;
+    return { x, w, mid: x + w / 2 };
+  });
+
+  // An annotation waits for its own row to finish arriving. Drawing over a
+  // number that is still animating is the tell that it was bolted on.
+  const rowIn = (i: number) => 10 + Math.max(0, i - carried) * 8;
+  const aDelay = annotate ? rowIn(annotate.part) + 14 : 0;
+
   return (
-    <AbsoluteFill style={{ justifyContent: "center", padding: "0 76px" }}>
-      <div style={{
-        fontFamily: "Anton, Impact, sans-serif", fontSize: 130, color: INK,
-        textAlign: "center", marginBottom: 30,
-      }}>{money(total)}</div>
+    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+      <div style={{ width: BARW }}>
+        <div style={{
+          fontFamily: "Anton, Impact, sans-serif", fontSize: 130, color: INK,
+          textAlign: "center", marginBottom: 10,
+        }}>{money(total)}</div>
 
-      <div style={{
-        display: "flex", height: 88, borderRadius: 8, overflow: "hidden",
-        background: "#E4DCCC", marginBottom: 40,
-        boxShadow: "0 14px 34px rgba(20,28,43,.13)",
-      }}>
-        {parts.map((p: any, i: number) => {
-          // MATCH CUT: segments the previous shot already showed are drawn at
-          // full width immediately, so the bar appears continuous across the
-          // cut and only the NEW slice animates in.
-          const w = i < carried ? 1 : spring({ frame: frame - 4 - (i - carried) * 8, fps, config: { damping: 200 } });
-          return (
-            <div key={i} style={{
-              width: `${(p.amount / total) * 100 * w}%`,
-              background: p.accent
-                ? `linear-gradient(180deg, ${AMBER}, #D18B0C)`
-                : `rgba(20,28,43,${0.62 - i * 0.13})`,
-              borderRight: `3px solid ${PAPER}`,
-            }} />
-          );
-        })}
-      </div>
-
-      {parts.map((p: any, i: number) => {
-        const o = i < carried ? 1 : spring({ frame: frame - 10 - (i - carried) * 8, fps, config: { damping: 200 } });
-        return (
-          <div key={i} style={{
-            display: "flex", justifyContent: "space-between", alignItems: "baseline",
-            fontFamily: "'DM Sans', sans-serif", fontSize: 48, marginBottom: 18,
-            color: p.accent ? AMBER_INK : INK, opacity: o,
-            transform: `translateX(${(1 - o) * -22}px)`,
+        {/* the bar, with the annotation gutter reserved directly above it */}
+        <div style={{ position: "relative", marginTop: GUTTER }}>
+          <div style={{
+            display: "flex", height: BARH, borderRadius: 8, overflow: "hidden",
+            background: "#E4DCCC", boxShadow: "0 14px 34px rgba(20,28,43,.13)",
           }}>
-            <span>{p.label}</span>
-            <span style={{ fontWeight: 800 }}>{money(p.amount)}</span>
+            {parts.map((p: any, i: number) => {
+              // MATCH CUT: segments the previous shot already showed are drawn
+              // at full width immediately, so the bar appears continuous across
+              // the cut and only the NEW slice animates in.
+              const w = i < carried ? 1 : spring({ frame: frame - 4 - (i - carried) * 8, fps, config: { damping: 200 } });
+              return (
+                <div key={i} style={{
+                  width: `${(p.amount / total) * 100 * w}%`,
+                  background: p.accent
+                    ? `linear-gradient(180deg, ${AMBER}, #D18B0C)`
+                    : `rgba(20,28,43,${0.62 - i * 0.13})`,
+                  borderRight: `3px solid ${PAPER}`,
+                }} />
+              );
+            })}
           </div>
-        );
-      })}
+          {annotate?.kind === "point" && geo[annotate.part] ? (
+            <Point mid={geo[annotate.part].mid} delay={aDelay} />
+          ) : null}
+        </div>
+
+        {/* label rows, at a fixed height so a ring can find one by index */}
+        <div style={{ position: "relative", marginTop: 40 }}>
+          {parts.map((p: any, i: number) => {
+            const o = i < carried ? 1 : spring({ frame: frame - rowIn(i), fps, config: { damping: 200 } });
+            return (
+              <div key={i} style={{
+                height: ROWH, display: "flex", alignItems: "center",
+                justifyContent: "space-between",
+                fontFamily: "'DM Sans', sans-serif", fontSize: 48,
+                color: p.accent ? AMBER_INK : INK, opacity: o,
+                transform: `translateX(${(1 - o) * -22}px)`,
+              }}>
+                <span>{p.label}</span>
+                <span style={{ fontWeight: 800 }}>{money(p.amount)}</span>
+              </div>
+            );
+          })}
+          {annotate?.kind === "ring" && parts[annotate.part] ? (
+            <Ring part={annotate.part} text={money(parts[annotate.part].amount)} delay={aDelay} />
+          ) : null}
+        </div>
+      </div>
     </AbsoluteFill>
   );
 };
@@ -246,120 +350,6 @@ const CompareBars: React.FC<{ spec: any }> = ({ spec }) => {
       }}>{spec.note}</div>
     </AbsoluteFill>
   );
-};
-
-// ─── MOTION GRAPHICS ─────────────────────────────────────────────────────────
-// Dre, 2026-09-04: "add little motion graphics with animated shot."
-//
-// The small drawn elements that separate an explainer from a slideshow. Rules
-// they all follow, because motion graphics are where taste gets lost fastest:
-//   - each one ILLUSTRATES the sentence it sits under. Nothing decorative.
-//   - they draw ON and then hold. Looping ornaments read as filler.
-//   - they never cross the caption or the diagram; they live in the upper
-//     frame where the art is.
-//   - deterministic: every value is a function of the frame, so renders match.
-
-const MG = {
-  // Coins falling and fading — the money leaving. Sits under the loss hook.
-  coinDrain: (frame: number, fps: number) => {
-    const n = 9;
-    return (
-      <AbsoluteFill style={{ pointerEvents: "none" }}>
-        {Array.from({ length: n }).map((_, i) => {
-          const delay = i * 7;
-          const t = Math.max(0, frame - delay);
-          const fall = interpolate(t, [0, 46], [0, 620], { extrapolateRight: "clamp" });
-          const fade = interpolate(t, [0, 8, 38, 48], [0, 1, 1, 0], { extrapolateRight: "clamp" });
-          const drift = Math.sin((t / 12) + i) * 16;
-          // Even spread with a deterministic jitter. The modulo version bunched
-          // every early coin on the left, because low indices barely advance it.
-          const x = 70 + (i / (n - 1)) * 880 + Math.sin(i * 2.7) * 34;
-          return (
-            <div key={i} style={{
-              position: "absolute", left: x, top: 250 + Math.sin(i * 1.9) * 70,
-              transform: `translate(${drift}px, ${fall}px) rotate(${fall * 0.5}deg)`,
-              opacity: fade,
-              width: 34, height: 34, borderRadius: "50%",
-              background: `linear-gradient(160deg, ${AMBER}, #C9820F)`,
-              boxShadow: `0 4px 10px rgba(20,28,43,.18)`,
-            }} />
-          );
-        })}
-      </AbsoluteFill>
-    );
-  },
-
-  // A circle scribbled around the subject — the classic explainer emphasis.
-  circleHighlight: (frame: number) => {
-    const draw = interpolate(frame, [6, 34], [0, 1], {
-      extrapolateLeft: "clamp", extrapolateRight: "clamp",
-    });
-    const LEN = 1420;
-    return (
-      <AbsoluteFill style={{ pointerEvents: "none", justifyContent: "center", alignItems: "center" }}>
-        <svg width={760} height={620} style={{ marginTop: -120, overflow: "visible" }}>
-          <ellipse
-            cx={380} cy={310} rx={330} ry={250}
-            fill="none" stroke={AMBER} strokeWidth={9} strokeLinecap="round"
-            strokeDasharray={LEN} strokeDashoffset={LEN * (1 - draw)}
-            transform="rotate(-8 380 310)"
-          />
-        </svg>
-      </AbsoluteFill>
-    );
-  },
-
-  // An arrow drawing downward into the frame — "this goes here".
-  arrowDown: (frame: number) => {
-    const draw = interpolate(frame, [8, 30], [0, 1], {
-      extrapolateLeft: "clamp", extrapolateRight: "clamp",
-    });
-    const head = interpolate(frame, [26, 38], [0, 1], {
-      extrapolateLeft: "clamp", extrapolateRight: "clamp",
-    });
-    return (
-      <AbsoluteFill style={{ pointerEvents: "none", justifyContent: "center", alignItems: "center" }}>
-        <svg width={300} height={460} style={{ marginTop: -60, overflow: "visible" }}>
-          <line x1={150} y1={20} x2={150} y2={20 + 340 * draw}
-            stroke={AMBER} strokeWidth={10} strokeLinecap="round" />
-          <polyline points="104,320 150,368 196,320" fill="none"
-            stroke={AMBER} strokeWidth={10} strokeLinecap="round" strokeLinejoin="round"
-            opacity={head} transform={`translate(0, ${(1 - head) * -18})`} />
-        </svg>
-      </AbsoluteFill>
-    );
-  },
-
-  // Rings pulsing out from a point — confirmation, "this is the move".
-  pulseRings: (frame: number) => (
-    <AbsoluteFill style={{ pointerEvents: "none", justifyContent: "center", alignItems: "center" }}>
-      {[0, 1, 2].map((i) => {
-        const t = (frame - i * 14) % 52;
-        const p = t < 0 ? 0 : t / 52;
-        return (
-          <div key={i} style={{
-            position: "absolute", marginTop: -110,
-            width: 200 + p * 460, height: 200 + p * 460, borderRadius: "50%",
-            border: `4px solid ${AMBER}`, opacity: (1 - p) * 0.55,
-          }} />
-        );
-      })}
-      <div style={{
-        position: "absolute", marginTop: -110, width: 118, height: 118, borderRadius: "50%",
-        background: AMBER, boxShadow: "0 10px 26px rgba(20,28,43,.20)",
-        display: "flex", justifyContent: "center", alignItems: "center",
-        fontSize: 62, color: "#fff", fontFamily: "'DM Sans', sans-serif", fontWeight: 800,
-      }}>✓</div>
-    </AbsoluteFill>
-  ),
-};
-
-const MotionGraphic: React.FC<{ kind?: string }> = ({ kind }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  if (!kind) return null;
-  const fn = (MG as any)[kind];
-  return fn ? fn(frame, fps) : null;
 };
 
 // ─── ON-SCREEN TEXT ──────────────────────────────────────────────────────────
@@ -470,8 +460,7 @@ const Shot: React.FC<{ shot: FilmProps["shots"][number]; diagrams: any; chapters
         <Plate shot={shot} />
         {spec ? (spec.type === "compare"
           ? <CompareBars spec={spec} />
-          : <SplitBar spec={spec} carried={prevDiagram?.parts?.length ?? 0} />) : null}
-        <MotionGraphic kind={shot.mg} />
+          : <SplitBar spec={spec} carried={prevDiagram?.parts?.length ?? 0} annotate={shot.annotate} />) : null}
         <Caption text={shot.onScreen} />
         <Chrome chapters={chapters} index={shot.chapter} />
       </AbsoluteFill>
