@@ -61,6 +61,7 @@ export const filmSchema = z.object({
     diagram: z.string().optional(),
     sfx: z.string().optional(),
     transition: z.enum(["push", "wipe", "matchCut", "dip"]).optional(),
+    mg: z.enum(["coinDrain", "circleHighlight", "arrowDown", "pulseRings"]).optional(),
     asset: z.string().nullable().optional(),   // filename once generated
     frames: z.number().optional(),             // set by the voiceover pass
   })),
@@ -247,6 +248,120 @@ const CompareBars: React.FC<{ spec: any }> = ({ spec }) => {
   );
 };
 
+// ─── MOTION GRAPHICS ─────────────────────────────────────────────────────────
+// Dre, 2026-09-04: "add little motion graphics with animated shot."
+//
+// The small drawn elements that separate an explainer from a slideshow. Rules
+// they all follow, because motion graphics are where taste gets lost fastest:
+//   - each one ILLUSTRATES the sentence it sits under. Nothing decorative.
+//   - they draw ON and then hold. Looping ornaments read as filler.
+//   - they never cross the caption or the diagram; they live in the upper
+//     frame where the art is.
+//   - deterministic: every value is a function of the frame, so renders match.
+
+const MG = {
+  // Coins falling and fading — the money leaving. Sits under the loss hook.
+  coinDrain: (frame: number, fps: number) => {
+    const n = 9;
+    return (
+      <AbsoluteFill style={{ pointerEvents: "none" }}>
+        {Array.from({ length: n }).map((_, i) => {
+          const delay = i * 7;
+          const t = Math.max(0, frame - delay);
+          const fall = interpolate(t, [0, 46], [0, 620], { extrapolateRight: "clamp" });
+          const fade = interpolate(t, [0, 8, 38, 48], [0, 1, 1, 0], { extrapolateRight: "clamp" });
+          const drift = Math.sin((t / 12) + i) * 16;
+          // Even spread with a deterministic jitter. The modulo version bunched
+          // every early coin on the left, because low indices barely advance it.
+          const x = 70 + (i / (n - 1)) * 880 + Math.sin(i * 2.7) * 34;
+          return (
+            <div key={i} style={{
+              position: "absolute", left: x, top: 250 + Math.sin(i * 1.9) * 70,
+              transform: `translate(${drift}px, ${fall}px) rotate(${fall * 0.5}deg)`,
+              opacity: fade,
+              width: 34, height: 34, borderRadius: "50%",
+              background: `linear-gradient(160deg, ${AMBER}, #C9820F)`,
+              boxShadow: `0 4px 10px rgba(20,28,43,.18)`,
+            }} />
+          );
+        })}
+      </AbsoluteFill>
+    );
+  },
+
+  // A circle scribbled around the subject — the classic explainer emphasis.
+  circleHighlight: (frame: number) => {
+    const draw = interpolate(frame, [6, 34], [0, 1], {
+      extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    });
+    const LEN = 1420;
+    return (
+      <AbsoluteFill style={{ pointerEvents: "none", justifyContent: "center", alignItems: "center" }}>
+        <svg width={760} height={620} style={{ marginTop: -120, overflow: "visible" }}>
+          <ellipse
+            cx={380} cy={310} rx={330} ry={250}
+            fill="none" stroke={AMBER} strokeWidth={9} strokeLinecap="round"
+            strokeDasharray={LEN} strokeDashoffset={LEN * (1 - draw)}
+            transform="rotate(-8 380 310)"
+          />
+        </svg>
+      </AbsoluteFill>
+    );
+  },
+
+  // An arrow drawing downward into the frame — "this goes here".
+  arrowDown: (frame: number) => {
+    const draw = interpolate(frame, [8, 30], [0, 1], {
+      extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    });
+    const head = interpolate(frame, [26, 38], [0, 1], {
+      extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    });
+    return (
+      <AbsoluteFill style={{ pointerEvents: "none", justifyContent: "center", alignItems: "center" }}>
+        <svg width={300} height={460} style={{ marginTop: -60, overflow: "visible" }}>
+          <line x1={150} y1={20} x2={150} y2={20 + 340 * draw}
+            stroke={AMBER} strokeWidth={10} strokeLinecap="round" />
+          <polyline points="104,320 150,368 196,320" fill="none"
+            stroke={AMBER} strokeWidth={10} strokeLinecap="round" strokeLinejoin="round"
+            opacity={head} transform={`translate(0, ${(1 - head) * -18})`} />
+        </svg>
+      </AbsoluteFill>
+    );
+  },
+
+  // Rings pulsing out from a point — confirmation, "this is the move".
+  pulseRings: (frame: number) => (
+    <AbsoluteFill style={{ pointerEvents: "none", justifyContent: "center", alignItems: "center" }}>
+      {[0, 1, 2].map((i) => {
+        const t = (frame - i * 14) % 52;
+        const p = t < 0 ? 0 : t / 52;
+        return (
+          <div key={i} style={{
+            position: "absolute", marginTop: -110,
+            width: 200 + p * 460, height: 200 + p * 460, borderRadius: "50%",
+            border: `4px solid ${AMBER}`, opacity: (1 - p) * 0.55,
+          }} />
+        );
+      })}
+      <div style={{
+        position: "absolute", marginTop: -110, width: 118, height: 118, borderRadius: "50%",
+        background: AMBER, boxShadow: "0 10px 26px rgba(20,28,43,.20)",
+        display: "flex", justifyContent: "center", alignItems: "center",
+        fontSize: 62, color: "#fff", fontFamily: "'DM Sans', sans-serif", fontWeight: 800,
+      }}>✓</div>
+    </AbsoluteFill>
+  ),
+};
+
+const MotionGraphic: React.FC<{ kind?: string }> = ({ kind }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  if (!kind) return null;
+  const fn = (MG as any)[kind];
+  return fn ? fn(frame, fps) : null;
+};
+
 // ─── ON-SCREEN TEXT ──────────────────────────────────────────────────────────
 // Arrives with weight, holds, then leaves before the cut. Text that lingers
 // into the next shot is the classic amateur tell.
@@ -356,6 +471,7 @@ const Shot: React.FC<{ shot: FilmProps["shots"][number]; diagrams: any; chapters
         {spec ? (spec.type === "compare"
           ? <CompareBars spec={spec} />
           : <SplitBar spec={spec} carried={prevDiagram?.parts?.length ?? 0} />) : null}
+        <MotionGraphic kind={shot.mg} />
         <Caption text={shot.onScreen} />
         <Chrome chapters={chapters} index={shot.chapter} />
       </AbsoluteFill>
