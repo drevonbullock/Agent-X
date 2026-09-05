@@ -27,11 +27,22 @@ import { z } from "zod";
 // else is identical. So the film renders complete with zero video credits, and
 // gets better shot by shot as clips are added.
 
-const INK = "#070c18";
-const AMBER = "#F5A524";
-const CREAM = "#ffe9c4";
-const RED = "#ff5470";
-const GREEN = "#3ddc84";
+// LIGHT PALETTE. Dre, 2026-09-04: "the background needs to be lighter like
+// bright off white." Inverting a dark film is not a colour swap — every scrim,
+// shadow and type colour has to flip or the frame turns to mud. On white:
+//   - text goes INK, never grey, or it reads washed out on a phone in daylight
+//   - drop shadows become soft and tinted, not black; black shadows on white
+//     look like clip art
+//   - amber has poor contrast as TEXT on white, so it fills shapes and gets a
+//     darker sibling (AMBER_INK) whenever it has to be read as a word
+const PAPER = "#F7F3EA";        // warm off-white, not clinical #fff
+const PAPER_DEEP = "#EDE7DA";   // the shade behind the subject
+const INK = "#141C2B";          // near-black navy, the type colour
+const INK_SOFT = "#5A6472";     // secondary type
+const AMBER = "#F0A31C";        // fills, bars, the accent
+const AMBER_INK = "#B26A00";    // amber as readable TEXT on paper
+const RED = "#D6335C";
+const GREEN = "#1FA463";
 
 const money = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
 const resolve = (s: string) => (/^https?:\/\//.test(s) ? s : staticFile(s));
@@ -90,10 +101,10 @@ const Plate: React.FC<{ shot: FilmProps["shots"][number] }> = ({ shot }) => {
   const src = shot.asset ? resolve(shot.asset) : null;
 
   return (
-    <AbsoluteFill style={{ background: INK, overflow: "hidden" }}>
-      {/* graded ground, moving slower than the subject */}
+    <AbsoluteFill style={{ background: PAPER, overflow: "hidden" }}>
+      {/* graded paper: brightest behind the subject, warming at the edges */}
       <AbsoluteFill style={{
-        background: "radial-gradient(ellipse 120% 70% at 50% 42%, #16233f 0%, #0b1222 48%, #05080f 82%)",
+        background: `radial-gradient(ellipse 120% 70% at 50% 40%, #FFFDF8 0%, ${PAPER} 46%, ${PAPER_DEEP} 84%)`,
         transform: `scale(${bg.scale}) translate(${bg.x}px, ${bg.y}px)`,
       }} />
       {src ? (
@@ -112,28 +123,26 @@ const Plate: React.FC<{ shot: FilmProps["shots"][number] }> = ({ shot }) => {
         }}>
           <div style={{
             width: 640, height: 640, borderRadius: 26,
-            background: "linear-gradient(160deg, rgba(255,233,196,.07), rgba(255,233,196,.02))",
-            boxShadow: "inset 0 0 0 1px rgba(255,233,196,.10), 0 30px 80px rgba(0,0,0,.5)",
+            background: "linear-gradient(160deg, #FFFFFF, #F1EBDF)",
+            boxShadow: "inset 0 0 0 1px rgba(20,28,43,.07), 0 26px 60px rgba(20,28,43,.10)",
             display: "flex", flexDirection: "column",
             justifyContent: "center", alignItems: "center", padding: 44, gap: 16,
           }}>
             <div style={{
               fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: 26,
-              letterSpacing: 4, color: "rgba(245,165,36,.7)",
+              letterSpacing: 4, color: AMBER_INK,
             }}>{shot.motion === "video" ? "ANIMATED SHOT" : "ILLUSTRATION"}</div>
             <div style={{
               fontFamily: "'DM Sans', sans-serif", fontSize: 30, lineHeight: 1.35,
-              color: "rgba(255,233,196,.5)", textAlign: "center",
+              color: INK_SOFT, textAlign: "center",
             }}>{(shot.art ?? "").slice(0, 150)}</div>
           </div>
         </AbsoluteFill>
       )}
       {/* light pool + vignette keep the type readable over any art */}
+      {/* the floor the type sits on — paper, not shadow */}
       <AbsoluteFill style={{
-        background: "radial-gradient(ellipse 60% 36% at 50% 42%, rgba(255,214,150,.07), transparent 72%)",
-      }} />
-      <AbsoluteFill style={{
-        background: "linear-gradient(180deg, rgba(4,7,15,.62) 0%, rgba(4,7,15,.06) 30%, rgba(4,7,15,.22) 54%, rgba(4,7,15,.88) 100%)",
+        background: `linear-gradient(180deg, rgba(247,243,234,.55) 0%, rgba(247,243,234,0) 26%, rgba(247,243,234,.30) 52%, rgba(247,243,234,.94) 100%)`,
       }} />
     </AbsoluteFill>
   );
@@ -151,15 +160,14 @@ const SplitBar: React.FC<{ spec: any; carried?: number }> = ({ spec, carried = 0
   return (
     <AbsoluteFill style={{ justifyContent: "center", padding: "0 76px" }}>
       <div style={{
-        fontFamily: "Anton, Impact, sans-serif", fontSize: 130, color: "#fff",
+        fontFamily: "Anton, Impact, sans-serif", fontSize: 130, color: INK,
         textAlign: "center", marginBottom: 30,
-        textShadow: "0 8px 34px rgba(0,0,0,.8)",
       }}>{money(total)}</div>
 
       <div style={{
         display: "flex", height: 88, borderRadius: 8, overflow: "hidden",
-        background: "rgba(255,233,196,.07)", marginBottom: 40,
-        boxShadow: "0 12px 40px rgba(0,0,0,.5)",
+        background: "#E4DCCC", marginBottom: 40,
+        boxShadow: "0 14px 34px rgba(20,28,43,.13)",
       }}>
         {parts.map((p: any, i: number) => {
           // MATCH CUT: segments the previous shot already showed are drawn at
@@ -170,9 +178,9 @@ const SplitBar: React.FC<{ spec: any; carried?: number }> = ({ spec, carried = 0
             <div key={i} style={{
               width: `${(p.amount / total) * 100 * w}%`,
               background: p.accent
-                ? `linear-gradient(180deg, ${AMBER}, #c07d14)`
-                : `rgba(255,233,196,${0.34 - i * 0.06})`,
-              borderRight: "3px solid rgba(4,7,15,.9)",
+                ? `linear-gradient(180deg, ${AMBER}, #D18B0C)`
+                : `rgba(20,28,43,${0.62 - i * 0.13})`,
+              borderRight: `3px solid ${PAPER}`,
             }} />
           );
         })}
@@ -184,9 +192,8 @@ const SplitBar: React.FC<{ spec: any; carried?: number }> = ({ spec, carried = 0
           <div key={i} style={{
             display: "flex", justifyContent: "space-between", alignItems: "baseline",
             fontFamily: "'DM Sans', sans-serif", fontSize: 48, marginBottom: 18,
-            color: p.accent ? AMBER : CREAM, opacity: o,
+            color: p.accent ? AMBER_INK : INK, opacity: o,
             transform: `translateX(${(1 - o) * -22}px)`,
-            textShadow: "0 3px 16px rgba(0,0,0,.85)",
           }}>
             <span>{p.label}</span>
             <span style={{ fontWeight: 800 }}>{money(p.amount)}</span>
@@ -214,16 +221,16 @@ const CompareBars: React.FC<{ spec: any }> = ({ spec }) => {
           <div key={i} style={{ marginBottom: 54 }}>
             <div style={{
               display: "flex", justifyContent: "space-between", alignItems: "baseline",
-              fontFamily: "'DM Sans', sans-serif", fontSize: 44, color: CREAM, marginBottom: 12,
+              fontFamily: "'DM Sans', sans-serif", fontSize: 44, color: INK, marginBottom: 12,
             }}>
               <span>{r.label}</span>
               <span style={{ color: r.color, fontWeight: 800 }}>{money(r.amount)}/mo</span>
             </div>
-            <div style={{ height: 62, background: "rgba(255,233,196,.07)", borderRadius: 6, overflow: "hidden" }}>
+            <div style={{ height: 62, background: "#E4DCCC", borderRadius: 6, overflow: "hidden" }}>
               <div style={{
                 width: `${(r.year / max) * 100 * g}%`, height: "100%",
                 background: `linear-gradient(90deg, ${r.color}, ${r.color}bb)`,
-                boxShadow: `0 0 30px ${r.color}55`,
+                boxShadow: `0 6px 18px ${r.color}33`,
               }} />
             </div>
             <div style={{
@@ -233,7 +240,7 @@ const CompareBars: React.FC<{ spec: any }> = ({ spec }) => {
         );
       })}
       <div style={{
-        fontFamily: "'DM Sans', sans-serif", fontSize: 38, color: "rgba(255,233,196,.6)",
+        fontFamily: "'DM Sans', sans-serif", fontSize: 38, color: INK_SOFT,
         textAlign: "center",
       }}>{spec.note}</div>
     </AbsoluteFill>
@@ -255,13 +262,13 @@ const Caption: React.FC<{ text: string }> = ({ text }) => {
     <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 210 }}>
       <div style={{
         fontFamily: "Anton, Impact, sans-serif", fontSize: 92, lineHeight: 1.04,
-        color: "#fff", textAlign: "center", textTransform: "uppercase",
+        color: INK, textAlign: "center", textTransform: "uppercase",
         opacity: Math.min(1, inS) * out,
         transform: `translateY(${(1 - Math.min(1, inS)) * 34}px)`,
-        textShadow: "0 8px 38px rgba(0,0,0,.95)", padding: "0 70px",
+        padding: "0 70px",
       }}>
         {parts.map((p, i) => (
-          <span key={i} style={{ color: /^\$/.test(p) ? AMBER : "#fff" }}>{p}</span>
+          <span key={i} style={{ color: /^\$/.test(p) ? AMBER_INK : INK }}>{p}</span>
         ))}
       </div>
     </AbsoluteFill>
@@ -278,7 +285,7 @@ const Chrome: React.FC<{ chapters: string[]; index: number }> = ({ chapters, ind
         position: "absolute", top: 0, left: 0, height: 5,
         width: `${(frame / durationInFrames) * 100}%`,
         background: `linear-gradient(90deg, ${AMBER}, #ffd479)`,
-        boxShadow: "0 0 16px rgba(245,165,36,.6)",
+        boxShadow: "0 1px 6px rgba(240,163,28,.5)",
       }} />
       <div style={{
         position: "absolute", top: 38, left: 44, display: "flex", alignItems: "center", gap: 13,
@@ -286,7 +293,7 @@ const Chrome: React.FC<{ chapters: string[]; index: number }> = ({ chapters, ind
         <div style={{ width: 9, height: 9, background: AMBER, borderRadius: 2 }} />
         <span style={{
           fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: 24,
-          letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,233,196,.8)",
+          letterSpacing: 3, textTransform: "uppercase", color: INK_SOFT,
         }}>{chapters[index] ?? ""}</span>
       </div>
     </AbsoluteFill>
@@ -360,7 +367,7 @@ const Shot: React.FC<{ shot: FilmProps["shots"][number]; diagrams: any; chapters
         }} />
       ) : null}
       {t.dip > 0 ? (
-        <AbsoluteFill style={{ background: "#04060d", opacity: t.dip, pointerEvents: "none" }} />
+        <AbsoluteFill style={{ background: PAPER_DEEP, opacity: t.dip, pointerEvents: "none" }} />
       ) : null}
       {voice ? <Audio src={staticFile(`vo/${shot.id}.mp3`)} /> : null}
       {sfx && shot.sfx ? <Audio src={staticFile(`sfx/${shot.sfx}.mp3`)} volume={0.35} /> : null}
@@ -369,7 +376,7 @@ const Shot: React.FC<{ shot: FilmProps["shots"][number]; diagrams: any; chapters
 };
 
 export const ExplainerFilm: React.FC<FilmProps> = ({ chapters, shots, diagrams, hasVoice, hasSfx }) => (
-  <AbsoluteFill style={{ background: INK }}>
+  <AbsoluteFill style={{ background: PAPER }}>
     <Series>
       {shots.map((s, i) => (
         <Series.Sequence key={s.id} durationInFrames={s.frames ?? 95}>
@@ -385,7 +392,7 @@ export const ExplainerFilm: React.FC<FilmProps> = ({ chapters, shots, diagrams, 
     <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 50 }}>
       <div style={{
         fontFamily: "'DM Sans', sans-serif", fontSize: 24, letterSpacing: 6,
-        color: "rgba(255,233,196,.45)",
+        color: "rgba(20,28,43,.38)",
       }}>@WICKSWISDOM</div>
     </AbsoluteFill>
   </AbsoluteFill>
