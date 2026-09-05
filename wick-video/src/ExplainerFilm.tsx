@@ -49,6 +49,7 @@ export const filmSchema = z.object({
     art: z.string().optional(),
     diagram: z.string().optional(),
     sfx: z.string().optional(),
+    transition: z.enum(["push", "wipe", "matchCut", "dip"]).optional(),
     asset: z.string().nullable().optional(),   // filename once generated
     frames: z.number().optional(),             // set by the voiceover pass
   })),
@@ -141,7 +142,7 @@ const Plate: React.FC<{ shot: FilmProps["shots"][number] }> = ({ shot }) => {
 // ─── DIAGRAMS ────────────────────────────────────────────────────────────────
 // The bar builds part by part across consecutive shots, so the viewer watches
 // the same paycheck being carved up rather than seeing four unrelated charts.
-const SplitBar: React.FC<{ spec: any }> = ({ spec }) => {
+const SplitBar: React.FC<{ spec: any; carried?: number }> = ({ spec, carried = 0 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const parts = spec.parts ?? [];
@@ -161,7 +162,10 @@ const SplitBar: React.FC<{ spec: any }> = ({ spec }) => {
         boxShadow: "0 12px 40px rgba(0,0,0,.5)",
       }}>
         {parts.map((p: any, i: number) => {
-          const w = spring({ frame: frame - 6 - i * 9, fps, config: { damping: 200 } });
+          // MATCH CUT: segments the previous shot already showed are drawn at
+          // full width immediately, so the bar appears continuous across the
+          // cut and only the NEW slice animates in.
+          const w = i < carried ? 1 : spring({ frame: frame - 4 - (i - carried) * 8, fps, config: { damping: 200 } });
           return (
             <div key={i} style={{
               width: `${(p.amount / total) * 100 * w}%`,
@@ -175,7 +179,7 @@ const SplitBar: React.FC<{ spec: any }> = ({ spec }) => {
       </div>
 
       {parts.map((p: any, i: number) => {
-        const o = spring({ frame: frame - 14 - i * 9, fps, config: { damping: 200 } });
+        const o = i < carried ? 1 : spring({ frame: frame - 10 - (i - carried) * 8, fps, config: { damping: 200 } });
         return (
           <div key={i} style={{
             display: "flex", justifyContent: "space-between", alignItems: "baseline",
@@ -289,26 +293,75 @@ const Chrome: React.FC<{ chapters: string[]; index: number }> = ({ chapters, ind
   );
 };
 
+// ─── TRANSITIONS ─────────────────────────────────────────────────────────────
+// Hard cuts with a flash were the weak link. These are the four transitions
+// that actually appear in professional explainers, each earning its place:
+//
+//   push    the new shot drives the old one off. Directional, energetic, reads
+//           as "next point" — used when the argument advances.
+//   wipe    a hard-edged band sweeps the frame and the new shot is behind it.
+//           Graphic and confident; used at the turn from problem to solution.
+//   matchCut the diagram PERSISTS and only the new segment animates. This is
+//           the strongest cut in the film: the viewer never loses the bar, so
+//           four shots read as one continuous argument rather than four charts.
+//   dip     a fast dip through black. Used once, before the payoff, because a
+//           beat of nothing makes the next thing land harder.
+//
+// Implemented as an entry transform on the incoming shot rather than a
+// cross-fade, because Series cuts hard and an entry move is what sells motion.
+type Trans = "push" | "wipe" | "matchCut" | "dip";
+
+function useTransition(kind: Trans) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  // 10 frames — long enough to read, short enough to never feel like waiting.
+  const p = spring({ frame, fps, config: { damping: 200, stiffness: 120, mass: 0.5 } });
+  const done = p > 0.995;
+
+  switch (kind) {
+    case "push":
+      return { style: { transform: `translateY(${(1 - p) * 100}%)` }, band: null, dip: 0, done };
+    case "wipe":
+      return {
+        style: { clipPath: `inset(0 0 ${(1 - p) * 100}% 0)` },
+        band: p < 1 ? p : null, dip: 0, done,
+      };
+    case "dip":
+      return { style: {}, band: null, dip: interpolate(frame, [0, 5, 11], [1, 0.85, 0], {
+        extrapolateLeft: "clamp", extrapolateRight: "clamp" }), done };
+    default:
+      return { style: {}, band: null, dip: 0, done };   // matchCut: no move at all
+  }
+}
+
 // ─── SHOT ────────────────────────────────────────────────────────────────────
 // Whip-flash on entry: a one-frame light wipe at the cut. Cheap, and it is what
 // makes consecutive shots feel edited rather than sequenced.
-const Shot: React.FC<{ shot: FilmProps["shots"][number]; diagrams: any; chapters: string[]; voice?: boolean; sfx?: boolean }> =
-({ shot, diagrams, chapters, voice, sfx }) => {
-  const frame = useCurrentFrame();
-  // A soft, fast lift at the cut. The old version blasted white at 0.5 opacity
-  // for 4 frames, which reads as a glitch rather than an edit.
-  const flash = interpolate(frame, [0, 6], [0.16, 0], {
-    extrapolateLeft: "clamp", extrapolateRight: "clamp",
-  });
+const Shot: React.FC<{ shot: FilmProps["shots"][number]; diagrams: any; chapters: string[]; voice?: boolean; sfx?: boolean; prevDiagram?: any }> =
+({ shot, diagrams, chapters, voice, sfx, prevDiagram }) => {
   const spec = shot.diagram ? diagrams[shot.diagram] : null;
+  const t = useTransition((shot.transition ?? "push") as Trans);
 
   return (
     <AbsoluteFill>
-      <Plate shot={shot} />
-      {spec ? (spec.type === "compare" ? <CompareBars spec={spec} /> : <SplitBar spec={spec} />) : null}
-      <Caption text={shot.onScreen} />
-      <Chrome chapters={chapters} index={shot.chapter} />
-      <AbsoluteFill style={{ background: "#fff", opacity: flash, pointerEvents: "none" }} />
+      <AbsoluteFill style={t.style as any}>
+        <Plate shot={shot} />
+        {spec ? (spec.type === "compare"
+          ? <CompareBars spec={spec} />
+          : <SplitBar spec={spec} carried={prevDiagram?.parts?.length ?? 0} />) : null}
+        <Caption text={shot.onScreen} />
+        <Chrome chapters={chapters} index={shot.chapter} />
+      </AbsoluteFill>
+      {/* wipe band: a hard amber edge leading the reveal */}
+      {t.band !== null && t.band < 1 ? (
+        <AbsoluteFill style={{
+          top: `${(1 - t.band) * 100}%`, height: 8, background: AMBER,
+          boxShadow: `0 0 40px ${AMBER}`, pointerEvents: "none",
+        }} />
+      ) : null}
+      {t.dip > 0 ? (
+        <AbsoluteFill style={{ background: "#04060d", opacity: t.dip, pointerEvents: "none" }} />
+      ) : null}
       {voice ? <Audio src={staticFile(`vo/${shot.id}.mp3`)} /> : null}
       {sfx && shot.sfx ? <Audio src={staticFile(`sfx/${shot.sfx}.mp3`)} volume={0.35} /> : null}
     </AbsoluteFill>
@@ -318,9 +371,14 @@ const Shot: React.FC<{ shot: FilmProps["shots"][number]; diagrams: any; chapters
 export const ExplainerFilm: React.FC<FilmProps> = ({ chapters, shots, diagrams, hasVoice, hasSfx }) => (
   <AbsoluteFill style={{ background: INK }}>
     <Series>
-      {shots.map((s) => (
+      {shots.map((s, i) => (
         <Series.Sequence key={s.id} durationInFrames={s.frames ?? 95}>
-          <Shot shot={s} diagrams={diagrams} chapters={chapters} voice={hasVoice} sfx={hasSfx} />
+          <Shot
+            shot={s} diagrams={diagrams} chapters={chapters}
+            voice={hasVoice} sfx={hasSfx}
+            prevDiagram={s.transition === "matchCut" && i > 0 && shots[i - 1].diagram
+              ? diagrams[shots[i - 1].diagram!] : undefined}
+          />
         </Series.Sequence>
       ))}
     </Series>

@@ -1,57 +1,125 @@
 {
-  "id": "paycheck",
-  "title": "WHERE YOUR PAYCHECK ACTUALLY GOES",
-  "runtimeTarget": "18s",
-  "_doc": "Dre, 2026-09-04: 'all videos need to be 15-20 sec long max and get to the point.' At ~150 words a minute that is a HARD ceiling of about 48 spoken words for the whole film. So the classical structure still holds (what / how / why, one problem, one solution) but each beat gets ONE sentence and the film carries exactly one number. Anything that needs a second number is a different video. Five shots: hook, the invisible slice, the reveal, the fix, the close.",
-
-  "chapters": ["THE PROBLEM", "THE FIX"],
-
-  "shots": [
-    {
-      "id": "s01", "chapter": 0, "motion": "video",
-      "vo": "You made three thousand this month. Can you say where it went?",
-      "onScreen": "WHERE DID IT GO?",
-      "camera": "slowPush",
-      "art": "A candle character standing alone in a dim apartment at night, looking down at a phone in his hand, the screen the only bright thing in the room. Wide shot, he is small in the frame, the room large and quiet around him.",
-      "sfx": "low_drone"
-    },
-    {
-      "id": "s02", "chapter": 0, "motion": "diagram",
-      "vo": "Rent and bills you can name. The rest disappears.",
-      "onScreen": "THE PART YOU CAN NAME",
-      "camera": "static",
-      "diagram": "splitFixed",
-      "sfx": "thud"
-    },
-    {
-      "id": "s03", "chapter": 0, "motion": "diagram",
-      "vo": "After everything, sixty dollars was left to save. Not because you chose sixty.",
-      "onScreen": "$60 LEFT",
-      "camera": "static",
-      "diagram": "splitLeftover",
-      "sfx": "drop"
-    },
-    {
-      "id": "s04", "chapter": 1, "motion": "diagram",
-      "vo": "Take it first instead of last, and the same paycheck saves three hundred.",
-      "onScreen": "TAKE IT FIRST",
-      "camera": "static",
-      "diagram": "splitFixed2",
-      "sfx": "ding"
-    },
-    {
-      "id": "s05", "chapter": 1, "motion": "video",
-      "vo": "Set one transfer tonight. You cannot save what is left.",
-      "onScreen": "SET ONE TRANSFER TONIGHT",
-      "camera": "slowPush",
-      "art": "A candle character sitting on the edge of a bed at night, phone held in both hands, the screen glowing warmly on his face. Calm and settled, the room dark around him.",
-      "sfx": "chime"
-    }
-  ],
-
-  "diagrams": {
-    "splitFixed":    { "type": "split", "total": 3000, "parts": [ { "label": "Rent and bills", "amount": 1800 } ] },
-    "splitLeftover": { "type": "split", "total": 3000, "parts": [ { "label": "Rent and bills", "amount": 1800 }, { "label": "Subscriptions and fees", "amount": 340 }, { "label": "Living", "amount": 800 }, { "label": "Left to save", "amount": 60, "accent": true } ] },
-    "splitFixed2":   { "type": "split", "total": 3000, "parts": [ { "label": "Saved first", "amount": 300, "accent": true }, { "label": "Rent and bills", "amount": 1800 }, { "label": "Subscriptions and fees", "amount": 340 }, { "label": "Living", "amount": 560 } ] }
+ "id": "paycheck",
+ "title": "YOU ARE LOSING $240 EVERY MONTH",
+ "runtimeTarget": "18s",
+ "_doc": "Dre, 2026-09-04: '15-20 sec max, get to the point' and 'I need way better professional transitions and hooks.' THE HOOK NOW OBEYS DRE'S OWN TEMPLATE (memory: feedback-wick-hooks) which the first cut violated: 'WHERE DID IT GO?' carried no number and no emotion. The loss shape with a round number is the law \u2014 the film then proves the figure ($300 saved first minus $60 saved last = $240 a month). TRANSITIONS are assigned per cut, not uniform: push when the argument advances, matchCut across the diagram shots so the bar never resets, dip to black before the payoff, wipe at the turn to the solution.",
+ "chapters": [
+  "THE PROBLEM",
+  "THE FIX"
+ ],
+ "shots": [
+  {
+   "id": "s01",
+   "chapter": 0,
+   "motion": "video",
+   "vo": "You are losing two hundred and forty dollars every month. Here is where it goes.",
+   "onScreen": "YOU ARE LOSING $240 A MONTH",
+   "camera": "slowPush",
+   "art": "A candle character standing alone in a dim apartment at night, looking down at a phone in his hand, the screen the only bright thing in the room. Wide shot, he is small in the frame, the room large and quiet around him.",
+   "sfx": "low_drone",
+   "transition": "push"
+  },
+  {
+   "id": "s02",
+   "chapter": 0,
+   "motion": "diagram",
+   "vo": "Rent and bills you can name. That part is easy.",
+   "onScreen": "THE PART YOU CAN NAME",
+   "camera": "static",
+   "diagram": "splitFixed",
+   "sfx": "thud",
+   "transition": "push"
+  },
+  {
+   "id": "s03",
+   "chapter": 0,
+   "motion": "diagram",
+   "vo": "But after everything else, only sixty dollars was left to save.",
+   "onScreen": "ONLY $60 LEFT",
+   "camera": "static",
+   "diagram": "splitLeftover",
+   "sfx": "drop",
+   "transition": "matchCut"
+  },
+  {
+   "id": "s04",
+   "chapter": 1,
+   "motion": "diagram",
+   "vo": "Take it first instead of last, and the same paycheck saves three hundred.",
+   "onScreen": "TAKE IT FIRST: $300",
+   "camera": "static",
+   "diagram": "splitFixed2",
+   "sfx": "ding",
+   "transition": "wipe"
+  },
+  {
+   "id": "s05",
+   "chapter": 1,
+   "motion": "video",
+   "vo": "That is two hundred and forty dollars a month you already had. Set one transfer tonight.",
+   "onScreen": "SET ONE TRANSFER TONIGHT",
+   "camera": "slowPush",
+   "art": "A candle character sitting on the edge of a bed at night, phone held in both hands, the screen glowing warmly on his face. Calm and settled, the room dark around him.",
+   "sfx": "chime",
+   "transition": "dip"
   }
+ ],
+ "diagrams": {
+  "splitFixed": {
+   "type": "split",
+   "total": 3000,
+   "parts": [
+    {
+     "label": "Rent and bills",
+     "amount": 1800
+    }
+   ]
+  },
+  "splitLeftover": {
+   "type": "split",
+   "total": 3000,
+   "parts": [
+    {
+     "label": "Rent and bills",
+     "amount": 1800
+    },
+    {
+     "label": "Subscriptions and fees",
+     "amount": 340
+    },
+    {
+     "label": "Living",
+     "amount": 800
+    },
+    {
+     "label": "Left to save",
+     "amount": 60,
+     "accent": true
+    }
+   ]
+  },
+  "splitFixed2": {
+   "type": "split",
+   "total": 3000,
+   "parts": [
+    {
+     "label": "Saved first",
+     "amount": 300,
+     "accent": true
+    },
+    {
+     "label": "Rent and bills",
+     "amount": 1800
+    },
+    {
+     "label": "Subscriptions and fees",
+     "amount": 340
+    },
+    {
+     "label": "Living",
+     "amount": 560
+    }
+   ]
+  }
+ }
 }

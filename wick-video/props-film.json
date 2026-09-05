@@ -1,12 +1,10 @@
 {
  "id": "paycheck",
  "title": "WHERE YOUR PAYCHECK ACTUALLY GOES",
- "runtimeTarget": "100s",
- "_doc": "Script + storyboard for one explainer. Written to the classical structure Dre specified: WHAT it is, HOW it works, WHY it matters, with one problem and one solution. Every shot names its own asset prompt and motion, so scripts/wick-explainer-assets.js can generate the whole film in one pass. `motion: video` shots cost Higgsfield credits; `motion: still` shots are illustrations driven by camera work, which is how real explainer channels do most of their runtime.",
+ "runtimeTarget": "18s",
+ "_doc": "Dre, 2026-09-04: 'all videos need to be 15-20 sec long max and get to the point.' At ~150 words a minute that is a HARD ceiling of about 48 spoken words for the whole film. So the classical structure still holds (what / how / why, one problem, one solution) but each beat gets ONE sentence and the film carries exactly one number. Anything that needs a second number is a different video. Five shots: hook, the invisible slice, the reveal, the fix, the close.",
  "chapters": [
-  "THE QUESTION",
-  "WHAT HAPPENS",
-  "WHY IT HAPPENS",
+  "THE PROBLEM",
   "THE FIX"
  ],
  "shots": [
@@ -14,7 +12,7 @@
    "id": "s01",
    "chapter": 0,
    "motion": "video",
-   "vo": "Your paycheck landed two weeks ago. Can you say where it went?",
+   "vo": "You made three thousand this month. Can you say where it went?",
    "onScreen": "WHERE DID IT GO?",
    "camera": "slowPush",
    "art": "A candle character standing alone in a dim apartment at night, looking down at a phone in his hand, the screen the only bright thing in the room. Wide shot, he is small in the frame, the room large and quiet around him.",
@@ -23,121 +21,45 @@
   {
    "id": "s02",
    "chapter": 0,
-   "motion": "still",
-   "vo": "Most people can name two or three things. The rest is a blur. That blur is the whole problem.",
-   "onScreen": "THE BLUR",
-   "camera": "driftLeft",
-   "art": "The same candle character seen from behind, facing a wall covered in overlapping paper receipts and statements, all blank with no readable text, layered like wallpaper. Moody, warm lamp light from one side.",
-   "sfx": "paper"
-  },
-  {
-   "id": "s03",
-   "chapter": 1,
-   "motion": "still",
-   "vo": "Here is what actually happens. The moment money arrives, it starts splitting.",
-   "onScreen": "IT SPLITS ON ARRIVAL",
-   "camera": "punchIn",
-   "diagram": "splitIntro",
-   "art": "A candle character standing beside a large simple metal funnel on a plain table, watching a stream of warm golden light pour into the top of it. Clean, uncluttered, one object.",
-   "sfx": "whoosh"
-  },
-  {
-   "id": "s04",
-   "chapter": 1,
    "motion": "diagram",
-   "vo": "Rent and bills take the first cut. You expect that one. It is the only part most people can actually name.",
-   "onScreen": "THE PART YOU EXPECT",
+   "vo": "Rent and bills you can name. The rest disappears.",
+   "onScreen": "THE PART YOU CAN NAME",
    "camera": "static",
    "diagram": "splitFixed",
    "sfx": "thud"
   },
   {
-   "id": "s05",
-   "chapter": 1,
+   "id": "s03",
+   "chapter": 0,
    "motion": "diagram",
-   "vo": "Then comes the part nobody watches. Subscriptions. Fees. The upgrade you took last year and never used since.",
-   "onScreen": "THE PART NOBODY WATCHES",
-   "camera": "static",
-   "diagram": "splitInvisible",
-   "sfx": "tick"
-  },
-  {
-   "id": "s06",
-   "chapter": 1,
-   "motion": "still",
-   "vo": "And then there is the leftover. The amount you tell yourself you will save.",
-   "onScreen": "\"WHATEVER'S LEFT\"",
-   "camera": "driftRight",
-   "art": "A candle character looking into a wide shallow bowl on a kitchen counter with a single small coin at the bottom of it. Warm overhead light, the bowl mostly empty.",
-   "sfx": "coin"
-  },
-  {
-   "id": "s07",
-   "chapter": 2,
-   "motion": "diagram",
-   "vo": "Here is why that never works. Leftover is not a plan. It is a remainder. And a remainder is whatever the month decides to leave you.",
-   "onScreen": "LEFTOVER IS A REMAINDER",
+   "vo": "After everything, sixty dollars was left to save. Not because you chose sixty.",
+   "onScreen": "$60 LEFT",
    "camera": "static",
    "diagram": "splitLeftover",
    "sfx": "drop"
   },
   {
-   "id": "s08",
-   "chapter": 2,
-   "motion": "still",
-   "vo": "Every month you did not choose the number, the month chose it for you. Usually zero.",
-   "onScreen": "THE MONTH CHOSE",
-   "camera": "punchIn",
-   "art": "A candle character standing in front of a large blank wall calendar, arms at his sides, looking up at it. The calendar grid is empty with no numbers or writing anywhere.",
-   "sfx": "low_drone"
-  },
-  {
-   "id": "s09",
-   "chapter": 3,
+   "id": "s04",
+   "chapter": 1,
    "motion": "diagram",
-   "vo": "The fix is one move. Flip the order. Name the number first, and let the leftover be what it is.",
-   "onScreen": "FLIP THE ORDER",
+   "vo": "Take it first instead of last, and the same paycheck saves three hundred.",
+   "onScreen": "TAKE IT FIRST",
    "camera": "static",
    "diagram": "splitFixed2",
-   "sfx": "whoosh"
-  },
-  {
-   "id": "s10",
-   "chapter": 3,
-   "motion": "diagram",
-   "vo": "Same paycheck. Same bills. The only thing that changed is which one got decided first.",
-   "onScreen": "SAME MONEY. DIFFERENT ORDER.",
-   "camera": "static",
-   "diagram": "compare",
    "sfx": "ding"
   },
   {
-   "id": "s11",
-   "chapter": 3,
+   "id": "s05",
+   "chapter": 1,
    "motion": "video",
-   "vo": "So tonight, before you close your phone, set one automatic transfer for the day after you get paid. Any amount. The amount matters less than the order.",
+   "vo": "Set one transfer tonight. You cannot save what is left.",
    "onScreen": "SET ONE TRANSFER TONIGHT",
    "camera": "slowPush",
    "art": "A candle character sitting on the edge of a bed at night, phone held in both hands, the screen glowing warmly on his face. Calm and settled, the room dark around him.",
    "sfx": "chime"
-  },
-  {
-   "id": "s12",
-   "chapter": 3,
-   "motion": "still",
-   "vo": "You cannot save what is left. You can only save what you took first.",
-   "onScreen": "YOU CANNOT SAVE WHAT IS LEFT",
-   "camera": "slowPull",
-   "art": "A candle character standing alone in warm morning light by a window, calm and upright, the room simple and uncluttered around him.",
-   "sfx": "rise"
   }
  ],
  "diagrams": {
-  "splitIntro": {
-   "type": "split",
-   "total": 3000,
-   "parts": []
-  },
   "splitFixed": {
    "type": "split",
    "total": 3000,
@@ -145,20 +67,6 @@
     {
      "label": "Rent and bills",
      "amount": 1800
-    }
-   ]
-  },
-  "splitInvisible": {
-   "type": "split",
-   "total": 3000,
-   "parts": [
-    {
-     "label": "Rent and bills",
-     "amount": 1800
-    },
-    {
-     "label": "Subscriptions and fees",
-     "amount": 340
     }
    ]
   },
@@ -207,20 +115,6 @@
      "amount": 560
     }
    ]
-  },
-  "compare": {
-   "type": "compare",
-   "a": {
-    "label": "Saved last",
-    "amount": 60
-   },
-   "b": {
-    "label": "Saved first",
-    "amount": 300
-   },
-   "note": "a year apart",
-   "aYear": 720,
-   "bYear": 3600
   }
  }
 }
