@@ -99,6 +99,49 @@ concept and hoped. So:
      numbers and steps in small words. "Save twelve dollars a day" is a
      sentence a child understands and an adult screenshots.
 
+THE TEACHING DOCTRINE — 2026-09-11. Dre: "lets make the page focused on
+education", one mechanism start to finish, same money niche.
+
+THE PAGE TEACHES. Every post is a lesson with a named subject, not an
+observation. The difference between the two is one word: a NAME.
+
+  Observation: "You spend more right after payday."
+  Lesson:      "This is the payday effect. You spend more in the days after
+                money lands, regardless of what your balance actually is."
+
+The name IS the product. People save content that hands them vocabulary — a
+word for something they already felt but could not point at. An observation
+earns a nod and a scroll. A named mechanism earns a save, and saves are what
+carried this account's only breakout post (16 saves against a typical 0).
+
+EVERY POST TEACHES EXACTLY ONE MECHANISM. Not two. Not a list of five. One
+rule, carried start to finish:
+
+  1. THE BEHAVIOUR — what they actually do, stated flatly in the first line.
+     No judgment, no setup. They must recognise themselves before they know
+     what the post is even about.
+  2. THE NAME — "This is called X." Give it a handle.
+  3. THE DEFINITION — one sentence, words a child knows. What it IS.
+  4. THE PROOF — the arithmetic. Real, checkable, everyday numbers. This is
+     where a lesson separates itself from a quote.
+  5. THE MOVE — one thing, doable tonight, no app and no purchase.
+  6. THE RELEASE — under 8 words, hands agency back.
+
+NAMING RULES:
+  a. A REAL name beats a coined one. Use the established term when it exists:
+     the ostrich effect, anchoring, the pain of paying, denominator blindness.
+  b. Where no real name exists, coin one PLAINLY and own it: "the shrinking
+     minimum", "the round number trap". Never invent something academic-
+     sounding to borrow credibility.
+  c. THE NAME APPEARS IN THE FIRST THREE SLIDES AND IN THE CAPTION. A name
+     said once is not taught.
+  d. NEVER name a mechanism you cannot define in ONE plain sentence. If the
+     definition needs a paragraph, the topic is too big for one post.
+
+WHAT THIS IS NOT. Education never means lecturing, and it never means telling
+anyone what to buy, invest in, or hold. The mechanism is always how a system
+exploits or rewards a predictable human tendency. That lane does not move.
+
 HOOKS — DRE'S TEMPLATE, VERBATIM, 2026-08-28. His words: "the hook is okay
 with the numbers, but 'THE TIMER COST YOU $289 THIS YEAR' is a terrible hook.
 The numbers always need to be whole numbers... use the template that I'm giving
@@ -133,6 +176,36 @@ What makes these work, and what every cover hook must therefore have:
   f. THIS APPLIES TO MIND, NOT JUST MONEY. The Mind lane uses the same
      templates with time and attention as the currency: "You are losing 3
      hours a day." "Let me show you how to stop rereading the same worry."
+
+HOOK CRAFT — Dre, 2026-09-10. The four templates above still govern the NUMBER
+and the EMOTION. This governs the CONSTRUCTION.
+
+  THE FIRST LINE STATES THE SUBJECT INSTANTLY. Dre's rule, and the research
+  agrees. A cold viewer must know what the post is about inside one line. No
+  throat-clearing, no scene-setting, no "let me tell you". Subject first.
+
+  TRIPLE HOOK — three hooks fire at once, not one:
+    - TEXT hook: the on-screen line.
+    - VISUAL hook: what the frame SHOWS in the first beat. It must differ from
+      the last post's opening frame, or the feed reads a repeat and skips.
+    - SPOKEN hook: the first thing said, which is NOT the on-screen text. Two
+      channels saying identical words waste one of them.
+
+  PATTERN INTERRUPT. The first beat breaks the scroll rhythm: an unexpected
+  frame, a hard cut, a number that should not be that size, a sentence that
+  stops early. Sameness is what gets skipped — 44 of this account's first 46
+  captions opened with the identical three words.
+
+  THE PULL — what holds them past the hook. Pick ONE per post and commit:
+    - TABOO pull         the thing people do and will not admit.
+    - DARK pull          the cost nobody says out loud.
+    - CONTRADICTORY pull "the responsible move is the expensive one."
+    - PROOF pull         the arithmetic that proves it. Strongest for saves.
+    - WHIPLASH pull      the reversal that lands after they have committed.
+
+  EVERY HOOK GETS PAID OFF. The reward delivers exactly what the hook promised.
+  An unpaid hook teaches the viewer to skip the next one.
+
      "You missed out on a full night's sleep this week." Same shapes, same
      emotion, same round numbers.
   g. Count formulas stay banned, and no two covers in a batch share the same
@@ -904,8 +977,16 @@ The hidden rule it reveals: ${post.copy.hidden_rule ?? post.copy.closing_line ??
 THE CAPTION SHAPE. Follow this structure exactly, in this order. It is taken
 from the account's own best performing caption, so the rhythm is proven.
 
-1. OPENER: "Most people think" plus the wrong conclusion the viewer just reached.
-   One line. NEVER describe the image.
+1. OPENER: state the SUBJECT in the first line. The reader knows what this is
+   about before they know your angle. ROTATE THE SHAPE EVERY POST — this
+   account opened 44 of its first 46 captions with the identical three words
+   and the feed read it as one post repeated. "Most people think" is BANNED as
+   a default: at most one post in ten, never twice running. Strong openers name
+   the behaviour, the mechanism, or the number:
+     "You check the balance, then close the app."
+     "There is a name for what your brain does at the checkout."
+     "Sixty dollars was what stayed. That was the entire plan."
+   NEVER describe the image.
 2. THE REVERSAL: two or three words on their own line. "It doesn't." "It isn't."
    "That is the trap." Hard stop.
 3. THE PIVOT: one line naming what is actually going on.
