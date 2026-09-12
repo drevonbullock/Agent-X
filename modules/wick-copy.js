@@ -15,7 +15,7 @@ const client = new Anthropic();
 //
 // Everything is PRESENT DAY. No philosophy, no philosophers, no antiquity.
 
-export const PILLARS = ["Money", "Systems", "Mind", "Behaviour"];
+export const PILLARS = ["Earn", "Credit", "Grow", "Systems"];
 
 // Learned rules from pulled work, fetched fresh each call so a lesson applies to
 // the very next post rather than the next deploy. See modules/wick-lessons.js.
@@ -49,13 +49,26 @@ export async function brandRules() {
 const BRAND_RULES = `
 WICK'S WISDOM — non-negotiable content rules.
 
-THE FOUR PILLARS: Mind, Behaviour, Money, Systems. There is no fifth.
+THE FOUR PILLARS: Earn, Credit, Grow, Systems. There is no fifth.
+(Pivoted 2026-09-12. Dre chose the wealth-building lane over the behavioural
+one, knowingly and after the trade-offs were put to him.)
+
+  EARN    how money is made. Reselling and flipping with the actual blueprint,
+          side income, pricing your own work, finding a path to a first dollar.
+  CREDIT  how money moves before you have it. How a score is built, what good
+          and bad debt actually cost, how leverage multiplies both directions,
+          why the economy runs on credit.
+  GROW    how money compounds. What a rate does over 40 years, how investing
+          mechanically works, why time beats amount.
+  SYSTEMS the operating layer that decides whether any of the above survives
+          contact with a real week.
 
 THE INTEGRATION RULE (the most important rule on this page): every post must
-connect TWO pillars and show the wiring between them. Mind changes Behaviour.
-Behaviour compounds into Money. Systems decide which behaviours are easy. Money
-buys back Mind. Name the link and make the reader feel the handoff. A post that
-lives inside one pillar has failed, however good the line sounds.
+connect TWO pillars and show the wiring between them. Earn creates the capital.
+Credit multiplies it or eats it. Grow compounds what is left. Systems decide
+whether the reader still does any of it in March. Name the link and make the
+reader feel the handoff. A post inside one pillar has failed, however good the
+line sounds.
 
 TONE (Dre, 2026-08-09: "more simple and motivational, less jargon, make the
 viewer feel motivated to act after seeing a post"). This governs HOW every line
@@ -138,9 +151,11 @@ NAMING RULES:
   d. NEVER name a mechanism you cannot define in ONE plain sentence. If the
      definition needs a paragraph, the topic is too big for one post.
 
-WHAT THIS IS NOT. Education never means lecturing, and it never means telling
-anyone what to buy, invest in, or hold. The mechanism is always how a system
-exploits or rewards a predictable human tendency. That lane does not move.
+WHAT THIS IS NOT. Education never means lecturing, and it never means naming a
+specific investment, platform or product to buy. Teach the mechanism, show the
+arithmetic both directions, and let the reader make their own call. The page
+is valuable because it explains how the machine works — not because it tells
+anyone which button to press.
 
 HOOKS — DRE'S TEMPLATE, VERBATIM, 2026-08-28. His words: "the hook is okay
 with the numbers, but 'THE TIMER COST YOU $289 THIS YEAR' is a terrible hook.
@@ -152,6 +167,7 @@ four are the archetypes, exactly as he gave them:
   "Let me show you how to make $1,000 in 1 day."
   "Let me show you how you can save $100 per day."
   "You are losing $100 a day."
+  "What you should do with your first $1,000."   (direction — added 2026-09-12)
 
 What makes these work, and what every cover hook must therefore have:
   a. ROUND NUMBERS ONLY. $100, $250, $500, $1,000, $2,000 — never $289, never
@@ -173,7 +189,14 @@ What makes these work, and what every cover hook must therefore have:
      exactly what it is about. No metaphors, no shorthand: "TO THE STARS" and
      "TO SMALL STEPS" mean nothing to a cold reader and are automatic fails —
      say "TO 5-STAR RATINGS" or "TO SMALL PRICE RISES".
-  f. THIS APPLIES TO MIND, NOT JUST MONEY. The Mind lane uses the same
+  g. THE "WHAT" SHAPE. Dre, 2026-09-12: "add 'whats' as in tell others what
+     they should do as hooks and why." A directive hook promises a DECISION
+     rather than a feeling, which is what this lane sells: "What you should do
+     with your first $1,000." "What nobody tells you about a 700 credit score."
+     "What $500 of inventory actually turns into." It still obeys (a) to (e2) —
+     round numbers, second person, plain nouns, honest math underneath. The
+     "and why" belongs in the post, never crammed into the hook.
+  f. THIS APPLIES ACROSS ALL FOUR PILLARS. The same
      templates with time and attention as the currency: "You are losing 3
      hours a day." "Let me show you how to stop rereading the same worry."
 
@@ -300,16 +323,31 @@ This does NOT license teaching the HOW. Point at the door, do not walk them
 through it. "You can decide this one on purpose now" is motivating and free.
 "Here is the five step framework" is the paid product.
 
-THE LANE: hidden rules. Every post reveals a rule that was already running the
-reader's life that nobody named for them.
+THE LANE: how money actually works. Dre, 2026-09-12: "the page that actually
+shows you how to make money, how money works and actual tricks and tips most
+people do not know and it actually valuable." Every post teaches a concrete,
+operational money mechanic. The reader finishes knowing something they can do
+or check, not something they can merely agree with.
 
-THE FORMULA: lead with the behaviour, land on the money. Open on a feeling the
-reader recognizes. Reveal the mechanic underneath it. Behaviour is the hook; money
-is the stakes.
+THE FORMULA: lead with the number, land on the method. Open on a figure bigger
+or smaller than the reader expects. Show the mechanism that produces it. Give
+them the steps. The number is the hook; the method is the payoff.
 
-THE MECHANISM RULE: the money layer is always a MECHANISM, never a lecture. Explain
-how a system exploits or rewards a predictable human tendency. NEVER tell anyone
-what to buy, invest in, or do with their money. No financial advice, ever.
+THE MECHANISM RULE — REVISED 2026-09-12. This is the guardrail that keeps the
+page valuable AND keeps it out of trouble. Teach the MECHANISM and the MATH,
+including the downside, every time.
+  ALLOWED — how compounding works and what forty years of it actually returns;
+    how a credit score is calculated; how leverage multiplies a gain AND a loss;
+    how to source, price and list a resale item; what an interest rate does to a
+    balance over time; why the economy runs on credit.
+  ALLOWED — structural advice: "pay yourself first", "check the fee before the
+    return", "know your exit number before you buy the inventory".
+  BANNED — naming a specific ticker, fund, broker, platform or product, or any
+    claim about what a named investment will do next. "Buy VOO" and "use this
+    app" are automatic fails. The mechanic is the product, not the pick.
+  ALWAYS — when the topic is debt or investing, the downside gets equal airtime.
+    A post showing only the upside is not teaching, it is selling, and this page
+    is read by people who cannot afford to be sold to.
 
 THIS PAGE IS NOT A PHILOSOPHY PAGE. This is the rule that gets broken most, so
 read it twice:
@@ -415,17 +453,31 @@ function topicBrief(topic) {
   // Voice references Dre set per lane. These shape CADENCE and STANCE, never
   // content: never name them, never quote them, never imitate a catchphrase.
   const lane = {
-    HYBRID: `This is a HYBRID post, the page's main lane. The behavioural mechanic is the hook and the money consequence is the payoff. Both halves must be present and the handoff between them must be explicit.
+    EARN_GROW: `This is an EARN into GROW post, the page's main lane. Teach the
+method that makes the money, then show what that money becomes if it is not
+spent. Both halves must be present: a blueprint with no compounding is a hustle
+tip, and compounding with no blueprint is a lecture.
 
-VOICE: the plain-spoken certainty of Jim Rohn and Earl Nightingale, with money talked about as simply as Buffett explains it to a beginner. Warm about the person, honest about the number, and always leaving them something they can act on.`,
+VOICE: Hormozi's specificity about offers and numbers, said plainly. Concrete
+steps in order, real figures, no hype and no "imagine if". The reader should be
+able to do step one tonight with what they already own.`,
 
-    MIND_BEHAVIOUR: `This is a MIND into BEHAVIOUR post. Show how the thought pattern produces the action. Money may appear at the edge but is not the subject.
+    CREDIT_SYSTEMS: `This is a CREDIT into SYSTEMS post. Show how the machine is
+built, who designed it that way, and who it pays. The reader finishes able to
+predict what the system will do to them next time.
 
-VOICE: Jim Rohn, Earl Nightingale, Tony Robbins, Florence Scovel Shinn. Short declaratives in everyday words. Concrete pictures, never abstraction. Speak to ONE person like you believe in them. Certain, encouraging, never preachy and never cheerleading.`,
+VOICE: Dalio explaining how the machine works. Mechanical, neutral, unhurried.
+Name who profits and let the reader draw their own conclusion. Both directions
+of the arithmetic get shown — this lane covers debt, and a post that shows only
+the upside of borrowing is selling, not teaching.`,
 
-    MONEY_SYSTEMS: `This is a MONEY into SYSTEMS post. Show how the machine is built, who designed it that way, and who it pays. Explain the mechanism, never give advice.
+    GROW_SYSTEMS: `This is a GROW into SYSTEMS post. Show the arithmetic of
+compounding and the mechanics of how investing actually functions, then the
+habit that makes it survive a real decade.
 
-VOICE: Hormozi, Dalio, Buffett, Kiyosaki, but explained the way you would to a friend who has never read a finance book. Plain nouns, simple arithmetic, zero hype. Name who profits and let the reader draw the conclusion, then leave them feeling they can spot it next time. Never tell anyone what to buy.`,
+VOICE: Buffett explaining it to a beginner. Patient, arithmetic first, plain
+nouns. NEVER name a ticker, fund, broker or platform — the mechanism is the
+product, not the pick. The downside gets equal airtime as the upside, always.`,
   }[topic.lane];
 
   return `YOUR ASSIGNED TOPIC. Write about this and nothing else.

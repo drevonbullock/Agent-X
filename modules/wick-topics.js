@@ -1,67 +1,78 @@
 import supabase from "../supabase/client.js";
 
 // ─── WICK'S WISDOM — TOPIC REGISTRY ──────────────────────────────────────────
-// The 30 episodes. This file is the source of truth for WHAT the page talks
-// about. The copy engine only decides HOW a topic is written, never what it is.
+// The episodes. This file is the source of truth for WHAT the page talks about.
+// The copy engine only decides HOW a topic is written, never what it is.
 //
 // Letting the model pick its own theme is what produced philosophy posts. It
 // cannot drift if it never chooses the subject.
 //
-// Mix, enforced by pickTopic():
-//   80%  HYBRID          behaviour hook that pays off in money (the integration)
-//   10%  MIND_BEHAVIOUR  how the head runs the hands
-//   10%  MONEY_SYSTEMS   how the machine is built and who it pays
+// PIVOTED 2026-09-12. Dre moved the page from behavioural money to wealth
+// building, knowingly and after the trade-offs were put to him: "how you can
+// flip $500 in 2 weeks by reselling and giving the blueprint how, how credit
+// works and how to take advantage of good debt, how to find a path to make
+// money, how the economy runs on credit and why you should use it, how to
+// invest in stocks and why you should."
+//
+// The old 33 behavioural episodes are retired. They are preserved in git
+// history rather than deleted from the world — if the pivot does not produce
+// the reach signal Dre is testing for (30 -> 90+ in three weeks), that set is
+// one revert away.
+//
+// Mix, enforced by pickTopic(), weighted to Dre's own stated priority order.
+// He led with earning, named credit twice, and investing once:
+//   60%  EARN_GROW        make the money, then show what it becomes
+//   25%  CREDIT_SYSTEMS   how credit, debt and the economy actually work
+//   15%  GROW_SYSTEMS     compounding and the mechanics of investing
 
 export const LANES = {
-  // Dre, 2026-08-26: "this is in the money and mind intersection and just money
-  // and then mind" — the page's priority order, in his words. The intersection
-  // dominates, pure money is second, mind alone is third.
-  // Back to the original mix per Dre 2026-08-28: "make sure the pillars are
-  // the same: the 80%, the 10%, and the 10%."
-  HYBRID: { weight: 0.8, label: "Money × Mind (the intersection)" },
-  MONEY_SYSTEMS: { weight: 0.1, label: "Just Money" },
-  MIND_BEHAVIOUR: { weight: 0.1, label: "Then Mind" },
+  EARN_GROW:      { weight: 0.60, label: "Earn × Grow (the blueprint)" },
+  CREDIT_SYSTEMS: { weight: 0.25, label: "How credit works" },
+  GROW_SYSTEMS:   { weight: 0.15, label: "How compounding works" },
 };
 
-// hook = the behavioural mechanic. payoff = where it shows up in money.
+// hook = the mechanic being taught. payoff = the number or method it lands on.
 // Both are the SPINE of the post, not copy to be quoted verbatim.
 export const TOPICS = [
-  // ── HYBRID (80%) — behaviour hook, money payoff ──────────────────────────
-  { id: 1,  lane: "HYBRID", title: "Why You Avoid Checking Your Bank Account", hook: "Ostrich effect", payoff: "Avoidance compounds into fees", published: true },
-  { id: 2,  lane: "HYBRID", title: "Why a Raise Never Feels Like Enough", hook: "Hedonic adaptation", payoff: "Lifestyle creep math" },
-  { id: 3,  lane: "HYBRID", title: "Why You Overspend When You're Sad", hook: "Emotional regulation", payoff: "How retailers target that moment" },
-  { id: 4,  lane: "HYBRID", title: "Why Debt Feels Heavier Than the Number", hook: "Cognitive load", payoff: "Balance order vs interest rate" },
-  { id: 5,  lane: "HYBRID", title: "Why Treat Yourself Is the Most Expensive Phrase", hook: "Moral licensing", payoff: "Recurring spend vs compounding" },
-  { id: 6,  lane: "HYBRID", title: "Why Free Trials Work on You Every Time", hook: "Loss aversion plus defaults", payoff: "Subscription drift engineering" },
-  { id: 7,  lane: "HYBRID", title: "Why You'd Rather Not Know Your Credit Score", hook: "Avoidance", payoff: "What the score actually measures" },
-  { id: 8,  lane: "HYBRID", title: "Why On Sale Makes You Spend More", hook: "Anchoring", payoff: "Manufactured reference pricing" },
-  { id: 9,  lane: "HYBRID", title: "Why You Stay Loyal to Brands That Overcharge You", hook: "Identity plus sunk cost", payoff: "How loyalty programs profit" },
-  { id: 10, lane: "HYBRID", title: "Why Payday Feels Like Permission", hook: "Mental accounting", payoff: "Why windfalls vanish" },
-  { id: 11, lane: "HYBRID", title: "Why You Can't Stop Scrolling Shopping Apps", hook: "Variable reward", payoff: "Infinite scroll and one click design" },
-  { id: 12, lane: "HYBRID", title: "Why Splitting the Bill Always Feels Unfair", hook: "Fairness bias", payoff: "Why groups overspend" },
-  { id: 13, lane: "HYBRID", title: "Why You Keep Things You Never Use", hook: "Endowment effect", payoff: "Real cost of storage and clutter" },
-  { id: 14, lane: "HYBRID", title: "Why Owning Feels Safer Than Renting", hook: "Status quo bias", payoff: "The math both directions" },
-  { id: 15, lane: "HYBRID", title: "Why Your Budget Dies in Week Three", hook: "Planning fallacy", payoff: "Structural failure of fixed budgets" },
-  { id: 16, lane: "HYBRID", title: "Why the First Price You Hear Ruins the Deal", hook: "Anchoring", payoff: "Negotiation and salary offers" },
-  { id: 17, lane: "HYBRID", title: "Why You Spend More With a Card Than Cash", hook: "Pain of paying", payoff: "Tap to pay raises spend" },
-  { id: 18, lane: "HYBRID", title: "Why You Say Yes to Things You Can't Afford", hook: "Social conformity", payoff: "Cost of keeping up" },
-  { id: 19, lane: "HYBRID", title: "Why Ten Dollars a Month Feels Like Nothing", hook: "Denomination effect", payoff: "The annual number" },
-  { id: 20, lane: "HYBRID", title: "Why You Fight Harder to Avoid Losing Than to Win", hook: "Loss aversion", payoff: "Sunk cost in jobs and investments" },
+  // ── EARN × GROW (60%) — how money is made, and what it turns into ────────
+  { id: 1,  lane: "EARN_GROW", title: "Flip $500 Into $1,000 Reselling", hook: "Sourcing below market and the 2x rule", payoff: "The 14-day cycle, item by item" },
+  { id: 2,  lane: "EARN_GROW", title: "How To Price A Resale Item So It Sells", hook: "Price is a speed dial, not a value claim", payoff: "Sell-through rate vs margin" },
+  { id: 3,  lane: "EARN_GROW", title: "Where To Find Inventory Under $50", hook: "Arbitrage lives where convenience is low", payoff: "Five sourcing channels, real costs" },
+  { id: 4,  lane: "EARN_GROW", title: "Test Demand Before You Buy Anything", hook: "Sold listings, not active listings", payoff: "The 10-minute check that prevents dead stock" },
+  { id: 5,  lane: "EARN_GROW", title: "What $500 Of Inventory Becomes In A Year", hook: "Turns per year, not margin per item", payoff: "Six turns at 2x vs one turn at 4x" },
+  { id: 6,  lane: "EARN_GROW", title: "Your Hourly Rate Is The Wrong Number", hook: "Price the outcome, not the hour", payoff: "Same work, three pricing models" },
+  { id: 7,  lane: "EARN_GROW", title: "How To Price Your Own Work", hook: "Anchoring and the first number said", payoff: "What a 20% raise on rate compounds to" },
+  { id: 8,  lane: "EARN_GROW", title: "The First $100 You Make Is The Hardest", hook: "Distribution beats product at the start", payoff: "The shortest honest path to a first sale" },
+  { id: 9,  lane: "EARN_GROW", title: "Why Most Resellers Quit In Month Two", hook: "Cash tied up in unsold stock", payoff: "Working capital, shown as a cycle" },
+  { id: 10, lane: "EARN_GROW", title: "One Skill Into A Paid Service In 30 Days", hook: "Narrow beats broad when you are unknown", payoff: "The 30-day sequence" },
+  { id: 11, lane: "EARN_GROW", title: "A $20 Profit, Repeated 50 Times", hook: "Frequency is the variable people ignore", payoff: "$1,000 a month from small margins" },
+  { id: 12, lane: "EARN_GROW", title: "What To Do With Your First $1,000 Of Profit", hook: "Reinvest, reserve, or take it", payoff: "The three-way split and what each costs" },
+  { id: 13, lane: "EARN_GROW", title: "Why Reinvesting Beats Withdrawing In Year One", hook: "Compounding applies to inventory too", payoff: "Same start, two paths, 12 months" },
+  { id: 14, lane: "EARN_GROW", title: "Negotiate A Raise With A Number", hook: "Evidence beats sentiment in salary talks", payoff: "What a 10% raise compounds to by 40" },
+  { id: 15, lane: "EARN_GROW", title: "What Your Time Is Actually Worth Right Now", hook: "Opportunity cost when you have no clients", payoff: "When cheap work is the right call" },
+  { id: 16, lane: "EARN_GROW", title: "Scaling From 10 Sales To 100", hook: "What breaks first is always fulfilment", payoff: "The three bottlenecks in order" },
+  { id: 17, lane: "EARN_GROW", title: "Side Hustle Versus Side Business", hook: "One buys your time back, one does not", payoff: "The test: does it run without you" },
+  { id: 18, lane: "EARN_GROW", title: "The Margin You Actually Keep", hook: "Fees, shipping and returns eat the headline", payoff: "Gross to net on a real $100 sale" },
 
-  // ── MIND & BEHAVIOUR (10%) ───────────────────────────────────────────────
-  { id: 21, lane: "MIND_BEHAVIOUR", title: "Why You Procrastinate, and It Isn't Laziness", hook: "Avoiding a feeling, not a task", payoff: "Avoiding a feeling, not a task" },
-  { id: 22, lane: "MIND_BEHAVIOUR", title: "Why You Self Sabotage Right Before You Win", hook: "Success threatens self image", payoff: "Success threatens self image" },
-  { id: 23, lane: "MIND_BEHAVIOUR", title: "Why People Ghost You", hook: "Avoidance is cheaper than confrontation", payoff: "Avoidance is cheaper than confrontation" },
-  { id: 24, lane: "MIND_BEHAVIOUR", title: "Why Criticism Sticks and Praise Doesn't", hook: "Negativity bias", payoff: "Negativity bias" },
-  { id: 25, lane: "MIND_BEHAVIOUR", title: "Why Time Feels Faster Every Year", hook: "Fewer new experiences to encode", payoff: "Fewer new experiences to encode" },
+  // ── CREDIT × SYSTEMS (25%) — how credit, debt and the economy work ───────
+  { id: 19, lane: "CREDIT_SYSTEMS", title: "How A Credit Score Is Actually Calculated", hook: "Five weighted inputs, not a mystery", payoff: "What moves it fastest, in order" },
+  { id: 20, lane: "CREDIT_SYSTEMS", title: "What A 700 Credit Score Is Worth In Dollars", hook: "A score is a price, not a grade", payoff: "Same loan, three scores, the spread" },
+  { id: 21, lane: "CREDIT_SYSTEMS", title: "Good Debt And Bad Debt — The One Test", hook: "Does it produce income or consume it", payoff: "The test applied to four real debts" },
+  { id: 22, lane: "CREDIT_SYSTEMS", title: "Leverage Multiplies Both Directions", hook: "The same multiplier works on losses", payoff: "A 20% move, geared and ungeared" },
+  { id: 23, lane: "CREDIT_SYSTEMS", title: "Why The Economy Runs On Credit", hook: "Credit is spending that has not happened yet", payoff: "How one loan becomes three incomes" },
+  { id: 24, lane: "CREDIT_SYSTEMS", title: "What An Interest Rate Does Over Time", hook: "Rate compounds against you at the same speed", payoff: "The same balance at 6%, 12%, 24%" },
+  { id: 25, lane: "CREDIT_SYSTEMS", title: "The Minimum Payment Is A Product", hook: "It shrinks as your balance shrinks", payoff: "12 years vs 4.7, same first payment" },
+  { id: 26, lane: "CREDIT_SYSTEMS", title: "How Credit Utilisation Actually Works", hook: "It is measured on the statement date", payoff: "Why paying early changes the number" },
 
-  // ── MONEY & SYSTEMS (10%) ────────────────────────────────────────────────
-  { id: 26, lane: "MONEY_SYSTEMS", title: "How Credit Scores Actually Work", hook: "Measures profitability to lenders, not responsibility", payoff: "Measures profitability to lenders, not responsibility" },
-  { id: 27, lane: "MONEY_SYSTEMS", title: "Why Rent Keeps Going Up", hook: "Supply, zoning, who sets the price", payoff: "Supply, zoning, who sets the price" },
-  { id: 28, lane: "MONEY_SYSTEMS", title: "What Inflation Really Does to Your Savings", hook: "Sitting still is a decision with a cost", payoff: "Sitting still is a decision with a cost" },
-  { id: 29, lane: "MONEY_SYSTEMS", title: "How Minimum Payments Are Designed", hook: "The payment schedule is the product", payoff: "The payment schedule is the product" },
-  { id: 30, lane: "MONEY_SYSTEMS", title: "Where Your Money Goes When You Swipe", hook: "The invisible chain taking a cut", payoff: "The invisible chain taking a cut" },
+  // ── GROW × SYSTEMS (15%) — compounding and investing mechanics ───────────
+  { id: 27, lane: "GROW_SYSTEMS", title: "What Compounding Returns Over 40 Years", hook: "Growth is exponential, intuition is linear", payoff: "The curve, decade by decade" },
+  { id: 28, lane: "GROW_SYSTEMS", title: "Why Time Beats Amount", hook: "A 10-year head start outruns a bigger sum", payoff: "Two savers, same total, different end" },
+  { id: 29, lane: "GROW_SYSTEMS", title: "What Actually Happens When You Buy A Share", hook: "The mechanics of ownership and settlement", payoff: "Where the money goes, step by step" },
+  { id: 30, lane: "GROW_SYSTEMS", title: "What A 1% Fee Costs Over A Lifetime", hook: "Fees compound exactly like returns do", payoff: "Same portfolio, 1% apart, 30 years" },
+  { id: 31, lane: "GROW_SYSTEMS", title: "Why Averaging In Works Mechanically", hook: "Fixed money buys more units when prices fall", payoff: "The arithmetic, not the reassurance" },
+  { id: 32, lane: "GROW_SYSTEMS", title: "The Downside Nobody Puts In The Hook", hook: "Sequence risk and why timing still bites", payoff: "The same average return, two orders" },
 ];
+
 
 export const byId = (id) => TOPICS.find((t) => t.id === id);
 
@@ -90,9 +101,9 @@ async function extendLane(lane, need, existing) {
   const taken = existing.map((t) => t.title).join("; ");
 
   const brief = {
-    HYBRID: "A behavioural mechanic people feel every week, whose cost shows up in money. Voice reference: Rohn and Nightingale on the behaviour, Hormozi and Buffett on the number.",
-    MIND_BEHAVIOUR: "How a thought pattern produces an action. Voice reference: Jim Rohn, Earl Nightingale, Tony Robbins, Florence Scovel Shinn.",
-    MONEY_SYSTEMS: "How a money machine is built and who it pays. Voice reference: Hormozi, Dalio, Buffett, Kiyosaki. Mechanism only, never advice.",
+    EARN_GROW: "A concrete method for making money, and what that money becomes if it is not spent. Voice reference: Hormozi on the method, Buffett on the compounding. Steps in order, real figures, no hype.",
+    CREDIT_SYSTEMS: "How credit, debt and the economy actually work, and who the design pays. Voice reference: Dalio explaining the machine. Both directions of the arithmetic, always.",
+    GROW_SYSTEMS: "The arithmetic of compounding and the mechanics of investing. Voice reference: Buffett to a beginner. Never a ticker, fund, broker or platform — the mechanism is the product, not the pick.",
   }[lane];
 
   const msg = await client.messages.create({
@@ -147,13 +158,17 @@ export async function pickTopics(count, { allowPublished = false } = {}) {
   const pool = await allTopics();
   const eligible = pool.filter((t) => allowPublished || !t.published);
 
-  const quota = {
-    HYBRID: Math.round(count * LANES.HYBRID.weight),
-    MIND_BEHAVIOUR: Math.round(count * LANES.MIND_BEHAVIOUR.weight),
-    MONEY_SYSTEMS: Math.round(count * LANES.MONEY_SYSTEMS.weight),
-  };
-  // Rounding can under or overshoot; settle the difference on the main lane.
-  quota.HYBRID += count - (quota.HYBRID + quota.MIND_BEHAVIOUR + quota.MONEY_SYSTEMS);
+  // Derived from LANES rather than hardcoded. The previous version named the
+  // three lanes literally, so the 2026-09-12 pivot turned it into a TypeError
+  // the moment the lane keys changed. Renaming a lane must never break the
+  // scheduler again.
+  const laneKeys = Object.keys(LANES);
+  const quota = Object.fromEntries(
+    laneKeys.map((k) => [k, Math.round(count * LANES[k].weight)]),
+  );
+  // Rounding can under or overshoot; settle the difference on the heaviest lane.
+  const main = laneKeys.reduce((a, b) => (LANES[a].weight >= LANES[b].weight ? a : b));
+  quota[main] += count - laneKeys.reduce((sum, k) => sum + quota[k], 0);
 
   const picked = [];
   for (const [lane, n] of Object.entries(quota)) {

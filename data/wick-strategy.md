@@ -38,11 +38,11 @@ highest-priority gap in the whole system, and it is not one I can invent.**
 |---|---|---|
 | Audience research | 2 | ✅ `wick-audience.md` |
 | Customer personas | 2 | ✅ three, with primary named |
-| **Geographic location** | 2 | ⚠️ **missing — see below** |
-| **Qualitative data** | 2 | ❌ **none exists** |
-| **Business goal** | 11 | ❌ **none — blocking** |
-| SMART marketing goals | 11 | ❌ blocked on the above |
-| Positioning statement | 24 | ⚠️ drafted below, needs sign-off |
+| Geographic location | 2 | ✅ **US** (confirmed 2026-09-12) |
+| **Qualitative data** | 2 | ❌ **none exists — still the biggest hole** |
+| Business goal | 11 | ✅ audience for a digital product |
+| SMART marketing goal | 11 | ✅ written below |
+| Positioning statement | 24 | ✅ confirmed below |
 | Funnel | 5 | ❌ none — 100% awareness stage |
 | Content type mix | 24 | ⚠️ one type of three |
 | Media mix | 10 | ⚠️ owned only, no email list |
@@ -81,30 +81,31 @@ content is jurisdictional**: currency, typical rent, typical wage, credit
 norms, and banking mechanics all differ by country, and a post built on US
 numbers reads as wrong to a UK viewer.
 
-**Unresolved and worth checking in Instagram's own audience insights before
-the next batch.** Until then the content should assume US dollars (the existing
-posts already do) and avoid mechanics that are country-specific — credit-score
-systems, tax-advantaged account names, overdraft rules. Behavioural mechanics
-travel; product rules do not.
+**RESOLVED 2026-09-12: US.** Instagram's own demographics endpoint returns empty
+(Meta suppresses it below ~100 followers), so this was a decision rather than a
+lookup. Dre chose US: largest English-language money market, and it matches the
+dollars already in the posts.
+
+Consequence now that the lane is wealth building: country-specific mechanics are
+IN SCOPE rather than banned. US credit scoring, US resale marketplaces, US card
+terms. Revisit if the demographics endpoint later shows a different reality.
 
 ---
 
-## POSITIONING STATEMENT — draft, needs Dre's sign-off
+## POSITIONING STATEMENT — confirmed 2026-09-12
 
-Using the course template (Section 24):
+Rewritten after Dre pivoted the page to wealth building.
 
-> For **people who are overwhelmed rather than uninformed about money**, who
-> need **a name for why the sensible thing they already do keeps failing**,
-> **Wick's Wisdom** provides **one named behavioural mechanism per post, proved
-> with everyday arithmetic**, and **never tells anyone what to buy, invest in,
-> or hold**, because **the rules operating on your money should be nameable by
-> the person they are operating on.**
+> For **people who want to build wealth but were never taught how money
+> actually works**, who need **concrete methods and real arithmetic rather than
+> motivation**, **Wick's Wisdom** provides **how to earn it, how credit moves
+> it, and how compounding grows it — every claim proved with numbers you can
+> check**, and **never names a ticker, platform or product to buy**, because
+> **the mechanics that build wealth were never hidden, just never taught.**
 
-That last clause is the brand promise, and it is also the guardrail: the moment
-this page recommends a product, it becomes a finance-guru account and the
-positioning dies.
-
----
+That last clause is the brand promise. The guardrail clause is what keeps it
+from becoming the thousandth finance-guru account: the page explains how the
+machine works and refuses to tell anyone which button to press.
 
 ## THE FUNNEL — currently absent
 
@@ -173,19 +174,47 @@ grows 3–5× faster than 2–3×/week.
 
 ---
 
-## THE BLOCKING QUESTION
+## THE GOALS CASCADE — answered 2026-09-12
 
-Everything below "set meaningful goals" stays provisional until this is
-answered, because the course's own cascade will not run without it:
+The course requires *business goal → marketing goals → social goals → metrics*,
+and every metric traceable up that chain. Dre's answers complete it:
 
-**What is Wick's Wisdom actually for?**
+**BUSINESS GOAL** — build an audience for a digital product (product TBD; the
+list is how he'll decide what to build).
 
-Not the content goal — the business goal. Followers are a metric, not a goal.
-The existing note "CTA = shares only until 1k followers" implies 1k is a
-threshold, but nothing states what happens when it is crossed, which means no
-SMART goal can be written and no KPI can be chosen.
+**MARKETING GOAL** — grow reach enough that the rule of seven can operate at
+all. Nothing else is reachable from 27 median reach.
 
-Until Dre answers, the working assumption is **brand awareness with a 1k
-follower threshold**, and the KPI is **reach per post** — because at this stage
-reach is the only metric with room to move, and every other number is
-downstream of it.
+**SOCIAL GOAL (SMART)** — *Raise median reach per post from 27 to 90+ within
+three weeks of daily posting, on US audiences, by flipping the format mix to
+60–70% Reels.*
+- Specific: median reach per post
+- Measurable: 27 → 90 (the insights API already reports it)
+- Attainable: Reels average 3–5× carousel reach; his own 6 videos averaged 120
+  against 28 for carousels, so the multiplier is already demonstrated on THIS
+  account
+- Relevant: reach is upstream of every other number, including list signups
+- Time-bound: three weeks
+
+**KPI** — median reach per post. Not average: one 1,444 outlier distorts the
+mean badly, and this account has already proved that.
+
+**SECONDARY METRICS** — saves (intent to return) and shares (the growth engine,
+24 across 46 posts). Both watched, neither judged yet; they move after reach.
+
+---
+
+## WHAT'S STILL OPEN
+
+1. **Qualitative data — still zero.** The cheapest fix remains unchanged: DM the
+   41 followers and ask. Note the pivot makes this *more* urgent, since the new
+   personas are research hypotheses with no local validation at all.
+2. **The product.** "Some sort of digital product." Until it's named, the lead
+   magnet is a guess and the list has no stated purpose beyond existing.
+3. **Lead magnet.** Dre wants "some free product I can give." Recommendation on
+   record: the goal-to-daily-number calculator — it's what the one breakout post
+   already did, it's a working tool rather than a PDF, and it doubles as a
+   prototype of the eventual paid product. Build it AFTER the reach test, not
+   before; at 27 reach there is nobody to give it to.
+4. **Anthropic API credit.** Zero balance. The writer cannot run. This is the
+   critical path for the entire three-week test.

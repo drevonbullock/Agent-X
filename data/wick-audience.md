@@ -70,96 +70,118 @@ The money-specific psychology:
 - Psychographics — values, fears, goals — drive engagement far harder than
   demographics. These audiences want a partner, not a transaction.
 
-**What that means for Wick:** the audience is not uninformed, it's *overwhelmed*.
-They don't need to be told saving is good. They need a named mechanism for why
-the thing they already do keeps failing. That is precisely this brand's lane.
+**What that meant under the OLD behavioural lane:** the audience is overwhelmed
+rather than uninformed. That finding is still true of Instagram's money audience
+at large — but it described the *avoidant* majority, and as of 2026-09-12 this
+page deliberately targets the earning-motivated minority instead. See the PIVOT
+NOTE below. The platform and format numbers above are unaffected by the pivot;
+only the psychographic target changed.
+
+---
+
+## PIVOT NOTE — 2026-09-12
+
+The personas below were REPLACED when Dre moved the page from behavioural money
+to wealth building. The originals (Avoider / Optimizer / Treater) described the
+audience for "hidden behavioural rules" content and no longer match a page that
+teaches reselling, credit and compounding. They are in git history.
+
+**Named honestly:** the old research found the largest available audience was
+overwhelmed and avoidant. This lane targets the opposite psychographic — people
+actively looking to earn. That is a real trade Dre made with the trade-offs in
+front of him, and the reach test (30 → 90+ in three weeks) is what settles it.
+
+**Geography: US.** Dollars, US credit mechanics, US resale marketplaces.
 
 ---
 
 ## THE THREE PERSONAS
 
-### 1. THE AVOIDER — *primary emotional target*
+### 1. THE STARTER — *primary*
 
-The 1-in-3 who stop looking when it gets stressful.
+Wants a first extra dollar and has never made one outside a paycheck.
 
-- **Who:** 25–34, employed, $40–70k. Not broke — uninformed about their own
-  position by choice. Hasn't opened the banking app in four days.
-- **Interests:** self-improvement, productivity, therapy-speak, habit content,
-  "getting my life together" content. Follows more wellness than finance.
-- **Online activity:** heavy evening and late-night scrolling, 9pm–1am. Mostly
-  passive. Saves far more than they like — saving is a way of deferring.
-- **Preferences:** wants permission before instruction. Recoils from anything
-  that sounds like a lecture or implies they've been stupid.
-- **Content they like:** "the reason you do X is Y" reframes. Named psychological
-  effects. Anything that makes an uncomfortable behaviour feel *explainable*
-  rather than shameful.
-- **How they consume:** muted, in bed, thumb already moving. Reads captions, not
-  audio. Will not turn sound on. Shares privately by DM, rarely to story.
-- **The hook that lands:** validation first, mechanism second. Never alarm —
-  alarm makes this persona close the app, which is the exact behaviour being
-  described.
+- **Who:** 22–32, US, employed or studying, little or no capital. High
+  motivation, low trust — they have been sold to by guru content before and
+  can smell it.
+- **Interests:** side hustles, reselling, sneakers and thrifting, "make money
+  online", self-improvement, sports betting adjacent content. Follows more
+  aspiration than instruction.
+- **Online activity:** heavy evening and weekend scrolling. Actively searches
+  "how to make money" style terms. Watches long, saves rarely, screenshots
+  often.
+- **Preferences:** wants PROOF it is real before instruction. Recoils from
+  anything that smells like a course pitch or a withheld secret.
+- **Content they like:** exact numbers and exact steps. Real receipts. "I
+  bought this for $12 and sold it for $40" beats any framework.
+- **How they consume:** Reels, sound on, thumb fast. Shares to friends who are
+  also trying. **This persona drives reach.**
+- **The hook that lands:** a specific small number they could actually start
+  with. $500, not $50,000.
 
-### 2. THE OPTIMIZER — *primary commercial target*
+### 2. THE OPERATOR
 
-The one who actually engaged with the 1,444 post.
+Already earning something on the side and hitting a ceiling.
 
-- **Who:** 28–40, higher income ($70–120k), already budgets, already has a
-  savings goal. Wants an edge, not a rescue.
-- **Interests:** systems, spreadsheets, behavioural economics, productivity
-  stacks, "how things actually work" content. Reads Kahneman-adjacent material.
-- **Online activity:** morning and lunch-hour scrolling. Actively searches. Will
-  follow an account for a single useful framework.
-- **Preferences:** wants the arithmetic shown. Distrusts round claims without
-  math. Will fact-check a number and unfollow if it's wrong.
-- **Content they like:** ladders and comparisons — the escalating structure
-  ("pick 10k → 20k → 50k → 100k") that made the one hit. Reference material with
-  future utility. **This persona drives saves.**
-- **How they consume:** sound on, sometimes desktop. Saves as a reference table.
-  Shares to prove a point in a group chat — the highest-value share there is.
-- **The hook that lands:** a number they thought they understood, re-derived into
-  a number that hurts.
+- **Who:** 25–40, US, running a resale or freelance operation, $500–3,000/mo
+  extra. Competent, impatient, time-poor.
+- **Interests:** margins, tooling, logistics, pricing, automation. Reads
+  business content, not motivation.
+- **Online activity:** morning and lunch. Searches specific problems. Follows
+  for one useful improvement, unfollows when the content repeats.
+- **Preferences:** wants the constraint named — what actually breaks at scale.
+  Has no patience for beginner framing.
+- **Content they like:** bottlenecks, turn rates, gross-to-net breakdowns, the
+  unglamorous operational stuff nobody posts. **Drives saves and shares.**
+- **How they consume:** saves as reference, sometimes desktop. Shares into
+  group chats with other operators — the highest-value share available.
+- **The hook that lands:** a number that exposes a leak they did not know
+  they had.
 
-### 3. THE TREATER
+### 3. THE LEARNER
 
-The 30% whose anxiety converts directly into spending.
+Steady income, never taught how any of it works.
 
-- **Who:** 22–30, lower income, paycheck to paycheck, genuinely trying. Knows the
-  behaviour is the problem and can't name the mechanism.
-- **Interests:** relatable humour, "why am I like this" content, hauls and
-  anti-haul content, budgeting-that-failed content.
-- **Online activity:** highest volume of the three. All day, in gaps. Comments
-  more than the other two combined.
-- **Preferences:** wants to feel seen and not judged. Humour is the entry fee.
-- **Content they like:** the callout-that-hugs. Content naming a specific
-  behaviour they recognize in themselves within the first two seconds.
-- **How they consume:** Reels almost exclusively. Sound on. Shares publicly to
-  story as self-identification — "this is so me." **This persona drives reach.**
-- **The hook that lands:** hyper-specific behaviour, stated flatly, no judgment.
+- **Who:** 25–45, US, salaried, solvent. Not chasing a hustle — wants to stop
+  feeling illiterate about credit and investing.
+- **Interests:** explainers, documentaries, "how things work" content, news
+  about the economy.
+- **Online activity:** steady, moderate. Reads captions fully. Follows few
+  accounts and keeps them.
+- **Preferences:** wants mechanics, not encouragement. Will quietly leave if a
+  number is wrong, and will fact-check.
+- **Content they like:** how a credit score is computed, what a fee costs over
+  30 years, why the economy runs on credit. Arithmetic with both directions
+  shown. **This is who the old account's one breakout post reached.**
+- **How they consume:** saves and revisits. Rarely comments. Sends to a partner
+  or sibling rather than posting publicly.
+- **The hook that lands:** a number they assumed they understood, re-derived
+  into one that surprises them.
 
 ---
 
 ## WHO TO BUILD FOR
 
-**Primary: The Avoider. Secondary: The Optimizer.**
+**Primary: The Starter. Secondary: The Learner.**
 
 Reasoning, not preference:
 
-- The Avoider is the **largest** group and maps exactly to this brand's lane —
-  hidden rules, named mechanisms, no investment advice. Every "you avoid X
-  because Y" post is built for them, and the brand already has the register.
-- The Optimizer is the only persona with **proven** engagement on this account.
-  The single breakout post was Optimizer content. That's the only real evidence
-  the account owns, and it shouldn't be discarded.
-- The Treater drives reach but converts worst to a behavioural-money brand —
-  they want catharsis, this brand sells mechanism. Serve them with hooks, not
-  with topics.
+- **The Starter** is the largest group in this lane and the one the flagship
+  pillar (EARN, 60% of posts) speaks to directly. "Flip $500" is built for
+  them. They also drive reach, which is the metric Dre is testing.
+- **The Learner** is the only persona with *proven* engagement on this account
+  — the 1,444-reach post was arithmetic about a savings goal, and 16 saves came
+  from people treating it as reference. That evidence survives the pivot
+  because CREDIT and GROW serve the same instinct.
+- **The Operator** is the smallest group but the highest-quality sharer. Serve
+  them with the unglamorous operational posts; do not build the page around
+  them.
 
-**The combination that should work:** Treater's hook (specific, flat, no
-judgment) → Avoider's middle (the named mechanism that explains the behaviour)
-→ Optimizer's payoff (the arithmetic that proves it). One post, three jobs,
-matching Hook → Retain → Reward exactly.
-
----
+**The risk, stated plainly:** The Starter is the most marketed-to person on the
+internet and has the lowest trust as a result. The only defence is being
+specific and honest where competitors are vague — real numbers, named costs,
+and the downside included. That is also exactly what the mechanism guardrail
+already forces, so the brand rules and the audience strategy agree.
 
 ## WHAT THIS CHANGES
 

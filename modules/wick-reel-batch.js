@@ -23,7 +23,7 @@ import { hfAvailable, generateScene, download, STYLE_STACK } from "./wick-render
 const BUCKET = "agent-x-images";
 const PLAIN = "wick_examples/00_character_sheet.png";
 const SUIT = "wick_examples/00_character_sheet_suit.png";
-const REEL_LANES = ["MIND_BEHAVIOUR", "MONEY_SYSTEMS"];
+const REEL_LANES = ["CREDIT_SYSTEMS", "GROW_SYSTEMS"];
 
 // Weakest to strongest, mapped onto each sheet's expression order.
 const LADDER_PLAIN = [6, 7, 8, 2, 1, 0, 5, 3, 4];
@@ -144,7 +144,7 @@ export async function runWeeklyReels({ count } = {}) {
     const t = topics[i];
     // Alternate the two layouts so a reels tab never shows a run of one shape.
     const layout = i % 2 === 0 ? "steps" : "receipt";
-    const suited = t.lane === "MONEY_SYSTEMS";
+    const suited = t.lane === "CREDIT_SYSTEMS";
     const sheet = suited && fs.existsSync(path.join(process.cwd(), SUIT)) ? SUIT : PLAIN;
 
     console.log(`[WickReels] ${i + 1}/${topics.length} ${layout.toUpperCase()} ep${t.id} [${t.lane}]${suited ? " SUIT" : ""}`);
