@@ -441,11 +441,18 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
     if (!topic) break;
     // Two formats are scoped to a lane rather than dealt by rotation, because
     // Dre scoped them by subject: parables are for how a person thinks and acts,
-    // costumes are for showing every actor inside a money mechanism. Those lanes
-    // are 10% each of the registry, so the mix lands with no extra counter to
-    // drift out of sync. Everything else (the 80% HYBRID lane) rotates.
-    const kind = topic.lane === "MIND_BEHAVIOUR" ? "PARABLE"
-               : topic.lane === "MONEY_SYSTEMS"  ? "COSTUME"
+    // costumes are for showing every actor inside a money mechanism. Remapped
+    // for the 2026-09-12 wealth-building pivot: GROW_SYSTEMS (compounding, a
+    // story told over decades) takes the parable, CREDIT_SYSTEMS (who profits
+    // at each step of a credit chain) takes the costume. Everything else — the
+    // 60% EARN_GROW lane, which wants blueprints — rotates.
+    //
+    // These were still comparing against MIND_BEHAVIOUR and MONEY_SYSTEMS after
+    // the pivot. That threw no error; the branches simply never matched again,
+    // so PARABLE and COSTUME silently stopped being produced at all. Renaming
+    // an enum is exactly where this class of bug hides.
+    const kind = topic.lane === "GROW_SYSTEMS"   ? "PARABLE"
+               : topic.lane === "CREDIT_SYSTEMS" ? "COSTUME"
                : kinds[i];
     console.log(`[Wick] copy ${i + 1}/${kinds.length} ${kind} <- #${topic.id} ${topic.title}`);
     const spec = kind === "VERSUS" ? await writeVersusCarousel(topic)

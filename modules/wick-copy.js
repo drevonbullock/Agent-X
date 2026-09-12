@@ -807,7 +807,7 @@ Exactly 3 beats.`,
 
 export async function writeCostume(topic) {
   if (!topic) throw new Error("writeCostume requires a topic from wick-topics.js");
-  const angle = topic.lane === "MONEY_SYSTEMS"
+  const angle = topic.lane === "CREDIT_SYSTEMS"
     ? `Cast the ACTORS IN THE CHAIN. Each role is a party that profits from, designs, or absorbs the cost of this mechanic. The reader should finish the carousel understanding who is paid at every step and by whom.`
     : `Cast the MODES THE READER SWITCHES BETWEEN. Each role is a version of a person that shows up at a different point in this mechanic. One of them is the one that costs them money. Do not label which; let the reader recognize themselves.`;
 
