@@ -143,7 +143,14 @@ export async function rebuildPulled(post) {
     return { rebuilt: false, reason: "Higgsfield CLI unavailable on this host" };
   }
   const { runWeeklyBatch } = await import("./wicks-wisdom.js");
-  const r = await runWeeklyBatch({ formats: [post.format] });
+  // A pulled post is rebuilt in its own format, EXCEPT the two formats with
+  // nowhere to put a number. Since the 2026-09-12 wealth-building pivot every
+  // post must carry its arithmetic, and PARABLE (speech bubbles) and COSTUME (a
+  // cast of roles) cannot. This is the one path that still requests a format by
+  // name, so rebuilding an old parable or costume as-is would quietly bring back
+  // the exact gap the batch routing was fixed to close.
+  const NUMERIC_REBUILD = { PARABLE: "LESSON", COSTUME: "ORDER" };
+  const r = await runWeeklyBatch({ formats: [NUMERIC_REBUILD[post.format] ?? post.format] });
   return { rebuilt: !r?.skipped, result: r };
 }
 

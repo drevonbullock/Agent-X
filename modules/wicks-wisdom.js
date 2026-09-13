@@ -319,7 +319,7 @@ async function planFormats(perWeek) {
     // Even rotation, starting with the least-tested formats.
     const order = [...FORMATS].sort((a, b) => stats.get(a).n - stats.get(b).n);
     const plan = Array.from({ length: perWeek }, (_, i) => order[i % order.length]);
-    console.log(`[Wick] Testing phase: ${underTested.join(", ")} under ${MIN_SAMPLES} posts. Rotating all four evenly.`);
+    console.log(`[Wick] Testing phase: ${underTested.join(", ")} under ${MIN_SAMPLES} posts. Rotating all formats evenly.`);
     return plan;
   }
 
@@ -439,21 +439,26 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
     }
     const topic = topics[i % topics.length];
     if (!topic) break;
-    // Two formats are scoped to a lane rather than dealt by rotation, because
-    // Dre scoped them by subject: parables are for how a person thinks and acts,
-    // costumes are for showing every actor inside a money mechanism. Remapped
-    // for the 2026-09-12 wealth-building pivot: GROW_SYSTEMS (compounding, a
-    // story told over decades) takes the parable, CREDIT_SYSTEMS (who profits
-    // at each step of a credit chain) takes the costume. Everything else — the
-    // 60% EARN_GROW lane, which wants blueprints — rotates.
+    // FORMAT IS CHOSEN BY THE ROTATION, NOT BY THE LANE. (2026-09-13)
     //
-    // These were still comparing against MIND_BEHAVIOUR and MONEY_SYSTEMS after
-    // the pivot. That threw no error; the branches simply never matched again,
-    // so PARABLE and COSTUME silently stopped being produced at all. Renaming
-    // an enum is exactly where this class of bug hides.
-    const kind = topic.lane === "GROW_SYSTEMS"   ? "PARABLE"
-               : topic.lane === "CREDIT_SYSTEMS" ? "COSTUME"
-               : kinds[i];
+    // This used to force GROW_SYSTEMS -> PARABLE and CREDIT_SYSTEMS -> COSTUME.
+    // That mapping came from the old brand, where PARABLE served Mind/Behaviour
+    // and COSTUME served "who profits", and it survived the wealth-building
+    // pivot by being renamed instead of rethought.
+    //
+    // Renamed, it was wrong. It routed the two most NUMERIC lanes into the only
+    // two formats with nowhere to put a number: PARABLE is speech bubbles and
+    // COSTUME is a cast of roles. The teaching doctrine requires the proof in
+    // every post, those two lanes are 40% of the page, and PARABLE/COSTUME are
+    // not even in FORMATS — this override was the only thing producing them. A
+    // leverage post shipped as a costume with zero numbers passed inspection in
+    // testing.
+    //
+    // Every lane now rotates through FORMATS, all of which carry numbers.
+    // PARABLE and COSTUME are not deleted: their writers and renderers remain,
+    // reachable by passing `formats` explicitly. They are simply no longer
+    // forced onto the numeric lanes.
+    const kind = kinds[i];
     console.log(`[Wick] copy ${i + 1}/${kinds.length} ${kind} <- #${topic.id} ${topic.title}`);
     const spec = kind === "VERSUS" ? await writeVersusCarousel(topic)
                : kind === "ORDER"  ? await writeOrderCarousel(topic)

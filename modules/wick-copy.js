@@ -349,6 +349,27 @@ including the downside, every time.
     A post showing only the upside is not teaching, it is selling, and this page
     is read by people who cannot afford to be sold to.
 
+THE RATE RULE (2026-09-13). Language models are unreliable at compound
+interest, and a wrong compounding figure is the fastest way to lose the Learner,
+who checks. In testing, a post stated "7% a year" while its figures quietly
+followed 6%. So:
+  a. 7% A YEAR is the page's ONE standard return for every compounding or
+     investing example. One assumption on every post keeps the page consistent
+     and every figure checkable.
+  b. COMPUTE FROM THIS REFERENCE — $100 a month at 7%, compounded monthly:
+        10 years  $17,300        20 years  $52,100
+        30 years  $122,000       40 years  $262,500
+     Scale exactly with the monthly amount: $200 a month is double every
+     figure, $50 a month is half. Do not recompute these from memory.
+  c. STATE THE RATE IN THE COPY. A compounding figure with no stated rate cannot
+     be checked, so it counts as a failed figure.
+  d. NEVER STATE ONE RATE AND COMPUTE WITH ANOTHER.
+  e. NAME A CONCRETE DOWNSIDE, NOT A HEDGE. "Returns vary" is a shrug. "Some
+     years lose money" is a downside. The reader must learn one specific thing
+     that can actually go wrong.
+  For LOANS and card balances, use the rate the scenario states, and still obey
+  (c), (d) and (e).
+
 THIS PAGE IS NOT A PHILOSOPHY PAGE. This is the rule that gets broken most, so
 read it twice:
 - NEVER mention philosophy, a philosopher, or a school of thought. No Stoics, no
@@ -517,49 +538,50 @@ export function findJargon(obj) {
 // at position 4", which failed whole posts for a reason that had nothing to do
 // with the content. Walks the braces, ignoring any inside string literals.
 function extractJson(t) {
+  // Returns the LONGEST balanced {...} or [...] span that JSON.parse accepts.
+  //
+  // The old version took the FIRST "[" or "{" in the output. That broke on
+  // 2026-09-13 when the ORDER writer began explaining its formula in prose ahead
+  // of the JSON ("wait [X] years, get [amount]"). The extractor grabbed "[X]",
+  // JSON.parse threw, and writeOrderCarousel crashed. It happened twice in a
+  // row, so it was a pattern and not a flake, and nothing in the weekly batch
+  // retries a writer, so one bracketed word in the preamble killed the post.
+  //
+  // Scanning every candidate and keeping the longest that parses fixes the
+  // whole class of failure: a placeholder like "[amount]" never parses, the real
+  // payload does, and the payload is almost always the longest span, so it also
+  // beats a short incidental array like "[10, 20, 30]" sitting in the prose.
+  const spanFrom = (start) => {
+    const open = t[start], close = open === "{" ? "}" : "]";
+    let depth = 0, inStr = false, esc = false;
+    for (let i = start; i < t.length; i++) {
+      const ch = t[i];
+      if (inStr) {
+        if (esc) esc = false;
+        else if (ch === "\\") esc = true;
+        else if (ch === '"') inStr = false;
+        continue;
+      }
+      if (ch === '"') { inStr = true; continue; }
+      if (ch === open) depth++;
+      else if (ch === close && --depth === 0) return t.slice(start, i + 1);
+    }
+    return null;
+  };
+  let best = null;
+  for (let i = 0; i < t.length; i++) {
+    if (t[i] !== "{" && t[i] !== "[") continue;
+    const span = spanFrom(i);
+    if (!span || (best && span.length <= best.length)) continue;
+    try { JSON.parse(span); best = span; } catch { /* placeholder or fragment */ }
+  }
+  if (best) return best;
+  // Nothing parsed. Fall back to the old first-bracket span so the caller's
+  // JSON.parse reports the real error rather than a misleading one.
   const start = t.search(/[[{]/);
   if (start < 0) throw new Error("no JSON found in model output");
-  const open = t[start];
-  const close = open === "{" ? "}" : "]";
-  let depth = 0, inStr = false, esc = false;
-  for (let i = start; i < t.length; i++) {
-    const ch = t[i];
-    if (inStr) {
-      if (esc) esc = false;
-      else if (ch === "\\") esc = true;
-      else if (ch === '"') inStr = false;
-      continue;
-    }
-    if (ch === '"') { inStr = true; continue; }
-    if (ch === open) depth++;
-    else if (ch === close) {
-      depth--;
-      if (depth === 0) return t.slice(start, i + 1);
-    }
-  }
-  return t.slice(start);   // unbalanced; let JSON.parse report it
+  return spanFrom(start) ?? t.slice(start);
 }
-
-// Retry a copy call when the model returns something that is not clean JSON.
-// BRAND_RULES has grown to ~3,400 tokens of competing instruction, and under
-// that load the model occasionally emits prose or an empty block. That is a
-// transient miss, not a content problem, and it should not cost a whole post:
-// two reuse batches died on "no JSON found in model output" for exactly this.
-export async function withJsonRetry(fn, { attempts = 3, label = "copy" } = {}) {
-  let last;
-  for (let i = 1; i <= attempts; i++) {
-    try { return await fn(); }
-    catch (err) {
-      last = err;
-      const isParse = /JSON|Unexpected|no JSON found/i.test(err.message);
-      if (!isParse) throw err;
-      console.warn(`[WickCopy] ${label} attempt ${i}/${attempts} returned unusable JSON (${err.message.slice(0, 60)}), retrying`);
-      await new Promise((r) => setTimeout(r, 1200 * i));
-    }
-  }
-  throw last;
-}
-
 function parseJson(raw) {
   const t = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
   const parsed = JSON.parse(extractJson(t));
@@ -608,8 +630,8 @@ Reference rhythm only, never copy the content:
 Return JSON object:
 {
   "theme": "short internal name for the theme",
-  "pillar": "the primary pillar: Money|Systems|Mind|Behaviour",
-  "pillar_link": "the two pillars this set wires together, e.g. Mind to Money",
+  "pillar": "the primary pillar: Earn|Credit|Grow|Systems",
+  "pillar_link": "the two pillars this set wires together, e.g. Earn to Grow",
   "sub_type": "owner_vs_owned",
   "hidden_rule": "the rule the whole set reveals, one sentence, and it must name the handoff between the two pillars",
   "pairs": [
@@ -682,12 +704,20 @@ Same shape every time. Only the pair of opposites changes.
 Build your own shape for the assigned topic and hold it exactly across all four.
 Escalate: line 1 is the most recognizable, line 4 is the one that stings.
 
+RATES AND RISK ON THE SLIDES (2026-09-13). If the four lines use compounding,
+interest, a loan or an investment return, THE RATE RULE in the brand rules
+governs the numbers. On this format the rate and the risk live on slide 5: the
+reveal_line states the rate ("At 7% a year, time does the work.") and the
+closing_line names a CONCRETE downside ("Some years lose money. Time still
+wins."). Both obey their word caps. "Returns vary" is a hedge, not a downside,
+and fails.
+
 If your shape carries a number, every number must actually multiply out. Check it.
 
 Return JSON object:
 {
   "theme": "short internal name",
-  "pillar": "Money|Systems|Mind|Behaviour",
+  "pillar": "Earn|Credit|Grow|Systems",
   "pillar_link": "the two pillars this set wires together",
   "sub_type": "repeating_formula",
   "formula": "the sentence shape you are holding, with the swapped part marked, for internal reference only",
@@ -764,8 +794,8 @@ THE RULES OF THIS FORMAT:
 Return JSON object:
 {
   "theme": "short internal name",
-  "pillar": "Mind|Behaviour",
-  "pillar_link": "Mind to Behaviour, or Behaviour to Mind",
+  "pillar": "Earn|Credit|Grow|Systems",
+  "pillar_link": "the two pillars this story wires together, e.g. Earn to Grow",
   "sub_type": "parable",
   "speaker": "the ordinary present day thing that speaks, 2-4 words",
   "hidden_rule": "one sentence, the rule the story reveals",
@@ -832,7 +862,7 @@ so is anything that names a historical figure or a philosophy.
 Return JSON object:
 {
   "theme": "short internal name",
-  "pillar": "Money|Systems|Mind|Behaviour",
+  "pillar": "Earn|Credit|Grow|Systems",
   "pillar_link": "the two pillars this wires together",
   "hidden_rule": "one sentence naming what the full cast reveals",
   "roles": [
@@ -900,7 +930,7 @@ Cover headline rhythm only, write a new one for the assigned topic:
 
 Return JSON object:
 {
-  "pillar": "Money|Systems|Mind|Behaviour",
+  "pillar": "Earn|Credit|Grow|Systems",
   "pillar_link": "the two pillars this wires together",
   "cover_headline": "ALL CAPS hook from Dre's template, max 10 words, ROUND numbers only ($100/$250/$500/$1,000 — never $289). Shapes: YOU MISSED OUT ON $X LAST WEEK / LET ME SHOW YOU HOW TO SAVE $X PER DAY / YOU ARE LOSING $X A DAY. Mind lane uses hours or nights instead of dollars. No trailing HERE'S HOW. Never a count formula.",
   "cover_scene": "One dense sentence: the PRESENT DAY cover scene for Wick, 3-4 named modern objects, setting.",
@@ -972,13 +1002,32 @@ FAIL it unless ALL of these hold:
 2. Every item makes sense ON ITS OWN and is obviously an instance of the SAME
    one mechanic the hook names. A fix dressed as a cost, or an unrelated tip
    smuggled in, is a fail.
-3. RECOMPUTE EVERY NUMBER. Each must be a believable everyday amount for that
-   exact scenario. The hook rounds the items' honest total to a clean figure —
+3. RECOMPUTE EVERY NUMBER. Each must be a believable amount for that exact
+   scenario. The hook rounds the items' honest total to a clean figure —
    that is the page's style, so a total within 15% of the hook's number PASSES
    ($475 rounding to a $500 hook is correct, not a fail). Fail the math only
    if numbers look invented for convenience, the same amount repeats
    suspiciously across items, or the gap between total and hook exceeds 15%.
+   COMPOUNDING, INTEREST AND LOAN FIGURES: recompute them from the stated
+   amount, rate and period. A large result is CORRECT if the arithmetic
+   produces it — $200/month at 8% for 40 years really is about $698,000, so
+   do not fail a number merely for being big. A shared input repeated by design
+   (the same monthly contribution on every rung of a ladder) is not suspicious.
+   IF NO RATE IS STATED ANYWHERE: do NOT assume one and grade against your own
+   guess. That produces false fails, and worse, the rewrite step would then
+   "correct" right numbers into wrong ones. Instead, check the rungs are
+   consistent with ONE plausible rate (roughly 4% to 10%). FAIL the post, but
+   name the reason exactly as: "rate not stated, a reader cannot check these
+   numbers". Do not call the math wrong unless no single rate fits it.
 4. After reading, you can retell the post's point in one plain sentence.
+5. THE GUARDRAIL (added 2026-09-12, the page teaches earning, credit and
+   investing). FAIL if the copy names a specific ticker, fund, ETF, broker,
+   trading app, card, bank product or platform to buy or use, or predicts what
+   any named investment will do. Explaining HOW something works is fine;
+   recommending a named product is a fail.
+6. BOTH DIRECTIONS. If the post is about debt, leverage, credit or investing,
+   FAIL it unless the downside or risk is stated in the copy itself — not
+   implied, not left for the caption. Showing only the upside is selling.
 
 Return ONLY JSON:
 {"pass": true|false, "retell": "the point in one sentence, or what confused you",
@@ -1111,7 +1160,7 @@ ${rules}
 Return JSON with EVERY key below present. Do not omit any of them:
 {
   "theme": "short internal name",
-  "pillar": "Money|Systems|Mind|Behaviour",
+  "pillar": "Earn|Credit|Grow|Systems",
   "pillar_link": "the two pillars wired",
   "hidden_rule": "one sentence naming the handoff",
   "labels": ["one per frame, in the same order, ${slots.length} entries"],
@@ -1158,7 +1207,7 @@ present day.
 Return JSON:
 {
   "title": "ALL CAPS, max 6 words, the promise of the sequence",
-  "pillar": "Mind|Behaviour|Money|Systems",
+  "pillar": "Earn|Credit|Grow|Systems",
   "steps": [
     { "rule": "the imperative, max 6 words, no trailing punctuation",
       "why": "the mechanism, max 12 words, starts lowercase, ends with a full stop" }
@@ -1204,7 +1253,7 @@ Reference rhythm ONLY, never reuse this content:
 Return JSON:
 {
   "title_lines": ["line one, max 5 words", "line two, max 5 words"],
-  "pillar": "Mind|Behaviour|Money|Systems",
+  "pillar": "Earn|Credit|Grow|Systems",
   "tiers": [
     { "label": "ONE WORD, ALL CAPS", "stat": "the count, e.g. 5 times or 3 weeks" }
   ],
@@ -1257,7 +1306,7 @@ LANE: ${topic.lane}   HIDDEN RULE: ${topic.hook ?? ""}
 
 Respond with valid JSON only:
 {
-  "pillar": "Mind|Money style pillar pair",
+  "pillar": "Earn|Credit|Grow|Systems style pillar pair, e.g. Credit to Grow",
   "pillar_link": "ONE plain sentence naming both pillars and the direction of the handoff.",
   "title": "The receipt header. ALL CAPS, max 5 words, naming what is being priced. 'THE REAL PRICE OF BEING NICE' is the shape.",
   "subtitle": "3 to 5 words under the header, like a shop name. Plain and dry.",
