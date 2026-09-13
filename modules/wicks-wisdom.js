@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import supabase from "../supabase/client.js";
 import { postCarouselToInstagram, postImageToInstagram } from "../distributors/instagram.js";
-import { writeVersusCarousel, writeOrderCarousel, writeCostume, writeLesson, writeParable, writeCaption } from "./wick-copy.js";
+import { writeVersusCarousel, writeOrderCarousel, writeCostume, writeLesson, writeParable, writeCaption, writeInspected } from "./wick-copy.js";
 import { pickTopics } from "./wick-topics.js";
 import {
   hfAvailable, generateScene, download, tmpDir,
@@ -175,7 +175,7 @@ async function buildOrderCarousel(c, dir, jobIds) {
 
 // PARABLE — three speech-bubble beats, the application, then the ask.
 async function buildParable(topic, dir, jobIds) {
-  const c = await writeParable(topic);
+  const c = await writeInspected(writeParable, topic, "PARABLE", `PARABLE #${topic.id}`);
   console.log(`[Wick] PARABLE: "${c.theme}" (speaker: ${c.speaker})`);
   const buffers = [];
   const specs = [];
@@ -207,7 +207,7 @@ async function buildParable(topic, dir, jobIds) {
 
 async function buildCostume(topic, dir, jobIds) {
   // 6 role slides + 1 CTA. The cast is written per topic, not a fixed list.
-  const c = await writeCostume(topic);
+  const c = await writeInspected(writeCostume, topic, "COSTUME", `COSTUME #${topic.id}`);
   console.log(`[Wick] COSTUME: "${c.theme}" (${c.roles.length} roles + CTA)`);
   const buffers = [];
   const specs = [];
@@ -236,7 +236,9 @@ async function buildCostume(topic, dir, jobIds) {
 }
 
 async function buildLesson(topic, dir, jobIds) {
-  const l = await writeLesson(topic);
+  // Gated before the first scene() call, so rejected copy never spends a credit.
+  // A double fail throws; the job loop's try/catch skips this post.
+  const l = await writeInspected(writeLesson, topic, "LESSON", `LESSON #${topic.id}`);
   console.log(`[Wick] LESSON: "${l.cover_headline}" (${l.items.length} items)`);
   const buffers = [];
   const specs = [];
@@ -425,6 +427,7 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
   const jobs = [];
   const { canAfford } = await import("./credit-guard.js");
 
+  const skippedCopy = [];
   for (let i = 0; i < kinds.length; i++) {
     // Checked per post, not once at the start. A batch spends over many minutes
     // and would otherwise sail past the reserve midway through.
@@ -460,10 +463,33 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
     // forced onto the numeric lanes.
     const kind = kinds[i];
     console.log(`[Wick] copy ${i + 1}/${kinds.length} ${kind} <- #${topic.id} ${topic.title}`);
-    const spec = kind === "VERSUS" ? await writeVersusCarousel(topic)
-               : kind === "ORDER"  ? await writeOrderCarousel(topic)
-               : null; // COSTUME/LESSON/PARABLE write their copy inside their builder
+    // THE COPY GATE. VERSUS and ORDER are written here; LESSON, PARABLE and
+    // COSTUME are gated inside their builders, before any art credit is spent.
+    // A post that fails review twice is SKIPPED, never thrown: this loop has no
+    // other error handling, so a throw here used to abort the whole batch over
+    // a single bad topic.
+    let spec = null;
+    if (kind === "VERSUS" || kind === "ORDER") {
+      try {
+        spec = await writeInspected(
+          kind === "VERSUS" ? writeVersusCarousel : writeOrderCarousel,
+          topic, kind, `${kind} #${topic.id}`,
+        );
+      } catch (err) {
+        console.log(`[Wick] SKIPPED ${kind} #${topic.id} ${topic.title}: ${err.message.slice(0, 140)}`);
+        skippedCopy.push(`${kind} #${topic.id} ${topic.title}`);
+        continue;
+      }
+    }
     jobs.push({ kind, spec, topic });
+  }
+  // One summary, not one alert per skip. A skipped post is exactly the silent
+  // shortfall fill-week exists to catch, so Dre hears about it.
+  if (skippedCopy.length) {
+    try {
+      const { alertWick } = await import("./wick-telegram.js");
+      await alertWick(`✎ ${skippedCopy.length} post(s) failed the copy inspector twice and were skipped, not published:\n\n${skippedCopy.join("\n")}`);
+    } catch { /* alerting must never block the batch */ }
   }
   console.log(`[Wick] Plan: ${kinds.join(", ")} = ${jobs.length} posts`);
 

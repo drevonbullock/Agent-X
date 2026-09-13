@@ -361,12 +361,19 @@ followed 6%. So:
         30 years  $122,000       40 years  $262,500
      Scale exactly with the monthly amount: $200 a month is double every
      figure, $50 a month is half. Do not recompute these from memory.
-  c. STATE THE RATE IN THE COPY. A compounding figure with no stated rate cannot
-     be checked, so it counts as a failed figure.
+  c. STATE THE RATE IN TEXT THE READER SEES. In testing, the rate was written
+     only into a scene description, which is an image instruction nobody reads.
+     Reader-visible fields: cover_headline, label, top_label, bottom_label, the
+     line text, title, problem, solution, how, reveal_line, closing_line. NEVER
+     only in art direction: any *_scene or *_expression field, scene,
+     expression, pose, setting, wardrobe, beat. A compounding figure with no
+     rate the reader can see counts as a failed figure.
   d. NEVER STATE ONE RATE AND COMPUTE WITH ANOTHER.
   e. NAME A CONCRETE DOWNSIDE, NOT A HEDGE. "Returns vary" is a shrug. "Some
      years lose money" is a downside. The reader must learn one specific thing
      that can actually go wrong.
+  When the topic brief carries VERIFIED FIGURES, those numbers override this
+  table, and the rates written in them are the rates to state.
   For LOANS and card balances, use the rate the scenario states, and still obey
   (c), (d) and (e).
 
@@ -501,17 +508,38 @@ nouns. NEVER name a ticker, fund, broker or platform — the mechanism is the
 product, not the pick. The downside gets equal airtime as the upside, always.`,
   }[topic.lane];
 
+  // VERIFIED FIGURES. Computed in code, never by the model. In testing the writer
+  // copied a reference table perfectly, then invented numbers the moment a
+  // scenario needed real arithmetic: #28 put the $100-a-month result on a
+  // $60-a-month saver and made up a second figure outright. So numeric topics
+  // carry their own exact figures and the writer uses them as given.
+  const figures = topic.figures ? `
+
+VERIFIED FIGURES — computed in code. Use these numbers EXACTLY as given. Do not
+recompute, re-estimate or "correct" them, and do not invent any other figure for
+this topic. The cover hook may round a figure to a clean number per the hook
+rules; every slide shows the figure exactly as written here.
+${topic.figures}` : "";
+
+  // FEEDBACK. Set only on a rewrite, by writeInspected. The writers take nothing
+  // but a topic, so the inspector's objections travel in the one brief they
+  // all already read.
+  const feedback = topic.feedback?.length ? `
+
+A PREVIOUS DRAFT OF THIS POST FAILED REVIEW. Fix every one of these problems:
+${topic.feedback.map((x) => "  * " + x).join("\n")}` : "";
+
   return `YOUR ASSIGNED TOPIC. Write about this and nothing else.
 
 TITLE: ${topic.title}
-BEHAVIOURAL MECHANIC: ${topic.hook}
-WHERE IT LANDS: ${topic.payoff}
+THE MECHANIC: ${topic.hook}
+WHERE IT LANDS: ${topic.payoff}${figures}
 
 ${lane}
 
 The title above is the subject, not a line to quote. Do not print it on a slide
 verbatim. Every slide must serve this one topic. Do not widen it into a general
-lesson about life, and do not reach for any other subject.`;
+lesson about life, and do not reach for any other subject.${feedback}`;
 }
 
 // Jargon the model reaches for because it is the nearest word. A prompt rule
@@ -582,6 +610,27 @@ function extractJson(t) {
   if (start < 0) throw new Error("no JSON found in model output");
   return spanFrom(start) ?? t.slice(start);
 }
+
+// Retry a copy call when the model returns something that is not clean JSON.
+// BRAND_RULES has grown to ~3,400 tokens of competing instruction, and under
+// that load the model occasionally emits prose or an empty block. That is a
+// transient miss, not a content problem, and it should not cost a whole post:
+// two reuse batches died on "no JSON found in model output" for exactly this.
+export async function withJsonRetry(fn, { attempts = 3, label = "copy" } = {}) {
+  let last;
+  for (let i = 1; i <= attempts; i++) {
+    try { return await fn(); }
+    catch (err) {
+      last = err;
+      const isParse = /JSON|Unexpected|no JSON found/i.test(err.message);
+      if (!isParse) throw err;
+      console.warn(`[WickCopy] ${label} attempt ${i}/${attempts} returned unusable JSON (${err.message.slice(0, 60)}), retrying`);
+      await new Promise((r) => setTimeout(r, 1200 * i));
+    }
+  }
+  throw last;
+}
+
 function parseJson(raw) {
   const t = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
   const parsed = JSON.parse(extractJson(t));
@@ -1042,6 +1091,39 @@ Return ONLY JSON:
     // An unreadable verdict must not pass copy it never judged.
     return { pass: false, retell: "", problems: ["copy inspector returned unparseable output"] };
   }
+}
+
+// ─── THE COPY GATE ───────────────────────────────────────────────────────────
+// Write, judge as a stranger, rewrite ONCE with the exact objections, judge
+// again. Two fails THROW, so the caller skips that post instead of shipping it.
+//
+// This is the gate wick-week-from-library.js has always run. It was never wired
+// into runWeeklyBatch — the path the scheduler AND fill-week both use — and
+// WICK_AUTO_PUBLISH defaults on, so batch copy reached Instagram with no words
+// check at all. Image QA does not read text. Survivable on a behavioural page;
+// not acceptable on one that teaches credit, debt and investing.
+//
+// The write is retry-wrapped as well. The batch used to call writers bare, so a
+// single malformed model response threw out of the copy loop and killed the
+// entire batch.
+export async function writeInspected(writeFn, topic, format, label = format) {
+  const draft = await withJsonRetry(() => writeFn(topic), { label: `${label} copy` });
+  let verdict = await critiqueCoherence(draft, format);
+  if (verdict.pass) {
+    console.log(`   ✓ copy inspector: "${String(verdict.retell).slice(0, 90)}"`);
+    return draft;
+  }
+  console.log(`   ✎ ${label} failed inspection: ${verdict.problems.slice(0, 2).join(" | ").slice(0, 160)}`);
+  const rewrite = await withJsonRetry(
+    () => writeFn({ ...topic, feedback: verdict.problems }),
+    { label: `${label} rewrite` },
+  );
+  verdict = await critiqueCoherence(rewrite, format);
+  if (!verdict.pass) {
+    throw new Error(`copy failed inspection twice: ${verdict.problems[0] ?? "incoherent"}`);
+  }
+  console.log(`   ✓ copy inspector (after rewrite): "${String(verdict.retell).slice(0, 90)}"`);
+  return rewrite;
 }
 
 export async function writeCaption(post) {
