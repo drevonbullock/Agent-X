@@ -35,30 +35,32 @@ export const LANES = {
 // Both are the SPINE of the post, not copy to be quoted verbatim.
 //
 // figures = exact numbers COMPUTED IN CODE (2026-09-13), for every topic whose
-// proof depends on compounding, amortisation or a sequence of returns. The
+// proof depends on compounding, amortisation, a sequence of returns, or fee
+// and margin arithmetic (EARN, added after #1's title promised $1,000 on a
+// verified $790 net). The
 // writer is told to use them verbatim. In testing it copied a reference table
 // perfectly but invented numbers the moment a scenario needed real arithmetic,
 // so the math lives here and the model only writes around it.
 export const TOPICS = [
   // ── EARN × GROW (60%) — how money is made, and what it turns into ────────
-  { id: 1,  lane: "EARN_GROW", title: "Flip $500 Into $1,000 Reselling", hook: "Sourcing below market and the 2x rule", payoff: "The 14-day cycle, item by item" },
+  { id: 1,  lane: "EARN_GROW", title: "Flip $500 Into $800 Reselling", hook: "Sourcing below market and the 2x rule", payoff: "The 14-day cycle, item by item", figures: "Assumptions stated: 20 items bought at $25 each ($500), all sold at $50 each, 13% marketplace fees, $4 shipping per item. Gross sales $1,000. Fees $130. Shipping $80. Cash back $790, a profit of $290 on $500. The honest round hook is $800, not $1,000." },
   { id: 2,  lane: "EARN_GROW", title: "How To Price A Resale Item So It Sells", hook: "Price is a speed dial, not a value claim", payoff: "Sell-through rate vs margin" },
   { id: 3,  lane: "EARN_GROW", title: "Where To Find Inventory Under $50", hook: "Arbitrage lives where convenience is low", payoff: "Five sourcing channels, real costs" },
   { id: 4,  lane: "EARN_GROW", title: "Test Demand Before You Buy Anything", hook: "Sold listings, not active listings", payoff: "The 10-minute check that prevents dead stock" },
-  { id: 5,  lane: "EARN_GROW", title: "What $500 Of Inventory Becomes In A Year", hook: "Turns per year, not margin per item", payoff: "Six turns at 2x vs one turn at 4x" },
+  { id: 5,  lane: "EARN_GROW", title: "What $500 Of Inventory Becomes In A Year", hook: "Turns per year, not margin per item", payoff: "Six turns at 2x vs one turn at 4x", figures: "$500 of inventory, with 17% of every sale lost to fees and shipping. Selling at 2x and reinvesting everything, 6 times in a year: $10,462. Selling once at 4x: $1,660. Honest limit: finding 6 rounds of inventory that sells at 2x is the hard part, and most people cannot." },
   { id: 6,  lane: "EARN_GROW", title: "Your Hourly Rate Is The Wrong Number", hook: "Price the outcome, not the hour", payoff: "Same work, three pricing models" },
   { id: 7,  lane: "EARN_GROW", title: "How To Price Your Own Work", hook: "Anchoring and the first number said", payoff: "What a 20% raise on rate compounds to" },
   { id: 8,  lane: "EARN_GROW", title: "The First $100 You Make Is The Hardest", hook: "Distribution beats product at the start", payoff: "The shortest honest path to a first sale" },
   { id: 9,  lane: "EARN_GROW", title: "Why Most Resellers Quit In Month Two", hook: "Cash tied up in unsold stock", payoff: "Working capital, shown as a cycle" },
   { id: 10, lane: "EARN_GROW", title: "One Skill Into A Paid Service In 30 Days", hook: "Narrow beats broad when you are unknown", payoff: "The 30-day sequence" },
-  { id: 11, lane: "EARN_GROW", title: "A $20 Profit, Repeated 50 Times", hook: "Frequency is the variable people ignore", payoff: "$1,000 a month from small margins" },
+  { id: 11, lane: "EARN_GROW", title: "A $20 Profit, Repeated 50 Times", hook: "Frequency is the variable people ignore", payoff: "$1,000 a month from small margins", figures: "$20 profit per sale, 50 sales a month: $1,000 a month. 50 sales is about 12 a week, fewer than 2 a day." },
   { id: 12, lane: "EARN_GROW", title: "What To Do With Your First $1,000 Of Profit", hook: "Reinvest, reserve, or take it", payoff: "The three-way split and what each costs" },
   { id: 13, lane: "EARN_GROW", title: "Why Reinvesting Beats Withdrawing In Year One", hook: "Compounding applies to inventory too", payoff: "Same start, two paths, 12 months" },
-  { id: 14, lane: "EARN_GROW", title: "Negotiate A Raise With A Number", hook: "Evidence beats sentiment in salary talks", payoff: "What a 10% raise compounds to by 40" },
+  { id: 14, lane: "EARN_GROW", title: "Negotiate A Raise With A Number", hook: "Evidence beats sentiment in salary talks", payoff: "What a 10% raise compounds to by 40", figures: "Two people, both getting 3% raises every year. One starts at $50,000, the other negotiated $55,000. The $5,000 gap grows with every raise. Over 15 years the second person earns $92,995 more from one conversation." },
   { id: 15, lane: "EARN_GROW", title: "What Your Time Is Actually Worth Right Now", hook: "Opportunity cost when you have no clients", payoff: "When cheap work is the right call" },
   { id: 16, lane: "EARN_GROW", title: "Scaling From 10 Sales To 100", hook: "What breaks first is always fulfilment", payoff: "The three bottlenecks in order" },
   { id: 17, lane: "EARN_GROW", title: "Side Hustle Versus Side Business", hook: "One buys your time back, one does not", payoff: "The test: does it run without you" },
-  { id: 18, lane: "EARN_GROW", title: "The Margin You Actually Keep", hook: "Fees, shipping and returns eat the headline", payoff: "Gross to net on a real $100 sale" },
+  { id: 18, lane: "EARN_GROW", title: "The Margin You Actually Keep", hook: "Fees, shipping and returns eat the headline", payoff: "Gross to net on a real $100 sale", figures: "A $100 sale: 13% marketplace fee $13, shipping label $8, packaging $1. $78 reaches you. If the item cost $40, the real profit is $38, not the $60 the price suggests." },
 
   // ── CREDIT × SYSTEMS (25%) — how credit, debt and the economy work ───────
   { id: 19, lane: "CREDIT_SYSTEMS", title: "How A Credit Score Is Actually Calculated", hook: "Five weighted inputs, not a mystery", payoff: "What moves it fastest, in order", figures: "Credit score weights (FICO, published): payment history 35%, amounts owed 30%, length of history 15%, new credit 10%, credit mix 10%. Payment history and amounts owed together are 65% of the score." },
@@ -107,7 +109,7 @@ async function extendLane(lane, need, existing) {
   const taken = existing.map((t) => t.title).join("; ");
 
   const brief = {
-    EARN_GROW: "A concrete method for making money, and what that money becomes if it is not spent. Voice reference: Hormozi on the method, Buffett on the compounding. Steps in order, real figures, no hype.",
+    EARN_GROW: "A concrete method for making money, and what it becomes when put back into the same method: more stock, more turns, a better rate. Never a market or interest return; that belongs to GROW_SYSTEMS. Voice reference: Hormozi. Steps in order, real figures, no hype.",
     CREDIT_SYSTEMS: "How credit, debt and the economy actually work, and who the design pays. Voice reference: Dalio explaining the machine. Both directions of the arithmetic, always.",
     GROW_SYSTEMS: "The arithmetic of compounding and the mechanics of investing. Voice reference: Buffett to a beginner. Never a ticker, fund, broker or platform — the mechanism is the product, not the pick.",
   }[lane];

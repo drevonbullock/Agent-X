@@ -70,6 +70,11 @@ whether the reader still does any of it in March. Name the link and make the
 reader feel the handoff. A post inside one pillar has failed, however good the
 line sounds.
 
+The wiring is ONE mechanism crossing two pillars, never two lessons stapled
+together. "Reselling profit, put back into more stock, compounds" crosses Earn
+into Grow with one mechanism. "Flip items, then also invest in the market" is
+two mechanisms, and it fails review.
+
 TONE (Dre, 2026-08-09: "more simple and motivational, less jargon, make the
 viewer feel motivated to act after seeing a post"). This governs HOW every line
 sounds, and it outranks any rule below about register.
@@ -168,6 +173,11 @@ four are the archetypes, exactly as he gave them:
   "Let me show you how you can save $100 per day."
   "You are losing $100 a day."
   "What you should do with your first $1,000."   (direction — added 2026-09-12)
+
+  The dollar amounts in these templates show the SHAPE of a hook, never the
+  number to use. In testing two of three LESSON covers printed "$1,000" copied
+  from the template while the posts proved $92,995 and $1,558. The cover's number
+  is the post's own proven figure, rounded.
 
 What makes these work, and what every cover hook must therefore have:
   a. ROUND NUMBERS ONLY. $100, $250, $500, $1,000, $2,000 — never $289, never
@@ -482,9 +492,15 @@ function topicBrief(topic) {
   // content: never name them, never quote them, never imitate a catchphrase.
   const lane = {
     EARN_GROW: `This is an EARN into GROW post, the page's main lane. Teach the
-method that makes the money, then show what that money becomes if it is not
-spent. Both halves must be present: a blueprint with no compounding is a hustle
-tip, and compounding with no blueprint is a lecture.
+method that makes the money, then show what that money becomes when it is put
+BACK INTO THE SAME METHOD: more inventory, more turns, a higher rate, a second
+client. That is still one mechanism, because the growth is the method repeating.
+
+NEVER turn the second half into stock-market, savings or interest-rate returns.
+In testing a reselling lesson ended on "invest $100 a month at 7%". The inspector
+correctly failed it as a second, unrelated mechanic, and it dragged investing
+disclaimers into a post about flipping. Market investing belongs only in
+GROW_SYSTEMS posts.
 
 VOICE: Hormozi's specificity about offers and numbers, said plainly. Concrete
 steps in order, real figures, no hype and no "imagine if". The reader should be
@@ -518,7 +534,9 @@ product, not the pick. The downside gets equal airtime as the upside, always.`,
 VERIFIED FIGURES — computed in code. Use these numbers EXACTLY as given. Do not
 recompute, re-estimate or "correct" them, and do not invent any other figure for
 this topic. The cover hook may round a figure to a clean number per the hook
-rules; every slide shows the figure exactly as written here.
+rules; every slide shows the figure exactly as written here. Keep
+each number's MEANING too: if a figure is a profit, never present it as a sale
+price or as money kept from a sale, because that silently deletes the fees.
 ${topic.figures}` : "";
 
   // FEEDBACK. Set only on a rewrite, by writeInspected. The writers take nothing
@@ -526,7 +544,10 @@ ${topic.figures}` : "";
   // all already read.
   const feedback = topic.feedback?.length ? `
 
-A PREVIOUS DRAFT OF THIS POST FAILED REVIEW. Fix every one of these problems:
+A PREVIOUS DRAFT OF THIS POST FAILED REVIEW. Fix every one of these problems.
+Every fix must stay INSIDE the word limits: when a fix needs words, cut them from
+elsewhere in the same field. Earlier rewrites fixed one problem by adding words
+and then failed on length instead:
 ${topic.feedback.map((x) => "  * " + x).join("\n")}` : "";
 
   return `YOUR ASSIGNED TOPIC. Write about this and nothing else.
@@ -693,7 +714,7 @@ Return JSON object:
       "bottom_expression": "His facial expression in the second panel. Usually the emotional cost: hollow and vacant, anxious, defeated, numb, quietly ashamed, exhausted. Match the feeling of the scene."
     }
   ],
-  "closing_line": "ONE short sentence, max 10 words, landing all four at once. Stop when it lands.",
+  "closing_line": "ONE short sentence, max 10 words, landing all four at once. Stop when it lands. EXCEPTION: if the pairs use compounding, interest, a loan or an investment return, this line must instead name a CONCRETE downside, e.g. '7% is not promised. Some years lose money.', and one pair label must state the rate.",
   "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait. 'the friend who got a raise and still feels broke' is right. 'someone who needs this' is wrong.",
   "cta_scene": "One dense sentence: a closing PRESENT DAY scene for Wick that visually gathers the theme, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene. Usually warm, resolved, quietly hopeful, or knowing."
@@ -757,8 +778,8 @@ RATES AND RISK ON THE SLIDES (2026-09-13). If the four lines use compounding,
 interest, a loan or an investment return, THE RATE RULE in the brand rules
 governs the numbers. On this format the rate and the risk live on slide 5: the
 reveal_line states the rate ("At 7% a year, time does the work.") and the
-closing_line names a CONCRETE downside ("Some years lose money. Time still
-wins."). Both obey their word caps. "Returns vary" is a hedge, not a downside,
+closing_line names a CONCRETE downside ("7% is not promised. Some years lose
+money."). Both obey their word caps. "Returns vary" is a hedge, not a downside,
 and fails.
 
 If your shape carries a number, every number must actually multiply out. Check it.
@@ -1034,14 +1055,44 @@ Exactly 5 items.`,
 // recomputes every number, and fails anything a cold reader would not
 // instantly understand. Callers get its objections back so the rewrite knows
 // exactly what was wrong; two failures kill the topic rather than shipping it.
-export async function critiqueCoherence(copy, format = "LESSON") {
+// What a stranger actually sees. Image directions and internal metadata are
+// stripped before judging. The inspector used to receive the whole copy object
+// cut at 4,000 characters, image prompts included, so on VERSUS the four pairs
+// of scene descriptions pushed closing_line past the cutoff: it reported pair 4
+// "cut off mid-sentence" (our truncation, not the post) and could never see the
+// closing line — the one place a VERSUS downside can live.
+const ART_OR_META = /(scene|expression)$|^(pose|setting|wardrobe|beat|theme|formula|sub_type|pillar|pillar_link|hidden_rule)$/;
+function readerVisible(v) {
+  if (Array.isArray(v)) return v.map(readerVisible);
+  if (v && typeof v === "object") {
+    return Object.fromEntries(Object.entries(v)
+      .filter(([k]) => !ART_OR_META.test(k))
+      .map(([k, x]) => [k, readerVisible(x)]));
+  }
+  return v;
+}
+
+export async function critiqueCoherence(copy, format = "LESSON", figures = null) {
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",   // judgment call, worth the better model; text-only so it is cheap
     max_tokens: 800,
     messages: [{ role: "user", content: `You are a complete stranger scrolling Instagram. You know nothing
 about this page. Read this ${format} carousel copy COLD and judge it:
 
-${JSON.stringify(copy, null, 1).slice(0, 4000)}
+${JSON.stringify(readerVisible(copy), null, 1).slice(0, 6000)}
+
+(This is exactly the text printed on the slides. Image directions were removed
+because a viewer never sees them, so do not fault the post for their absence.)
+${figures ? `
+VERIFIED FIGURES — computed in code, compounded exactly as written there. Treat
+these numbers as CORRECT and do not recompute them under a different convention.
+For these figures, check only that the copy uses them faithfully: the right
+number, attached to the right scenario and person, with the rate stated. A
+number the figures call profit, net, cost, price, balance or total must mean the
+same thing in the copy: presenting a $20 PROFIT as a $20 sale price ("sell one
+item for $20... keep $1,000") silently drops the fees, and FAILS.
+${figures}
+` : ""}
 
 FAIL it unless ALL of these hold:
 1. The hook is instantly understandable with zero context. It names a real,
@@ -1074,13 +1125,20 @@ FAIL it unless ALL of these hold:
    trading app, card, bank product or platform to buy or use, or predicts what
    any named investment will do. Explaining HOW something works is fine;
    recommending a named product is a fail.
-6. BOTH DIRECTIONS. If the post is about debt, leverage, credit or investing,
-   FAIL it unless the downside or risk is stated in the copy itself — not
-   implied, not left for the caption. Showing only the upside is selling.
+6. BOTH DIRECTIONS. This rule exists to stop SELLING. If the post promotes
+   borrowing, leverage or investing, FAIL it unless a concrete risk is stated
+   in the copy itself, not implied and not left for the caption. A risk that is
+   stated and then answered ("7% is not promised. Some years lose money. Start
+   anyway.") PASSES: naming the risk is the requirement, not ending on it. A post
+   whose whole point IS the cost of a debt, fee or trap already states the
+   downside. Do not fail it for lacking a second one.
 
 Return ONLY JSON:
 {"pass": true|false, "retell": "the point in one sentence, or what confused you",
- "problems": ["each specific problem, naming the slide or number", ...]}` }],
+ "problems": ["each FAILED check only, naming the slide or number", ...]}
+
+List ONLY checks that failed. Never list a check that passed: problems are fed
+back to the writer as things to fix, so a passing note gets "fixed" into an error.` }],
   });
   try {
     // extractJson walks balanced braces, so trailing prose after the object
@@ -1091,6 +1149,95 @@ Return ONLY JSON:
     // An unreadable verdict must not pass copy it never judged.
     return { pass: false, retell: "", problems: ["copy inspector returned unparseable output"] };
   }
+}
+
+// ─── LAYOUT CHECK ────────────────────────────────────────────────────────────
+// Deterministic, because the inspector reads meaning and never counts. In
+// testing a rewrite put a 40-word, ~214-character sentence into a LESSON
+// solution slot designed for 12 words, and it passed review. compositeLessonItem
+// steps body type 48 -> 42 -> 36px as problem + solution passes 160 and 220
+// characters, and 36px is the floor: past ~220 the text runs under the watermark
+// and .slide is overflow:hidden, so it is clipped silently.
+//
+// Caps are each schema's own word limits with 25% slack, so a line one or two
+// words long costs nothing. Past the slack it fails and is rewritten.
+const WORD_CAPS = {
+  LESSON:  { cover_headline: 10, "items[].title": 6, "items[].problem": 12, "items[].solution": 12, "items[].how": 10, closing_line: 10 },
+  VERSUS:  { "pairs[].top_label": 7, "pairs[].bottom_label": 7, closing_line: 10 },
+  ORDER:   { "lines[].label": 9, reveal_line: 10, closing_line: 8 },
+  COSTUME: { "roles[].label": 5, closing_line: 10 },
+  PARABLE: { closing_line: 8 },
+};
+const LESSON_BODY_CHARS = 220;
+
+// Closing slides size their type from COMBINED length, so send_to is budgeted
+// together with the lines that share its slide, never by a word count of its
+// own. In testing a 17-word send_to failed a 12-word cap on two LESSON posts
+// (and alone killed #25) although compositeCta steps type down past 100 and 150
+// characters and fits it with room to spare.
+const CLOSING_BUDGET = {
+  // compositeCta: closing_line + send_to. Smallest type starts past 150.
+  LESSON:  { fields: ["closing_line", "send_to"], max: 200, slide: "compositeCta" },
+  VERSUS:  { fields: ["closing_line", "send_to"], max: 200, slide: "compositeCta" },
+  COSTUME: { fields: ["closing_line", "send_to"], max: 200, slide: "compositeCta" },
+  // compositeReveal: reveal_line + closing_line + send_to. Smallest past 190.
+  ORDER:   { fields: ["reveal_line", "closing_line", "send_to"], max: 240, slide: "compositeReveal" },
+  PARABLE: { fields: ["reveal_line", "closing_line", "send_to"], max: 240, slide: "compositeReveal" },
+};
+
+export function layoutProblems(copy, format) {
+  const out = [];
+  const words = (x) => String(x ?? "").trim().split(/\s+/).filter(Boolean).length;
+  for (const [path, cap] of Object.entries(WORD_CAPS[format] ?? {})) {
+    const limit = Math.ceil(cap * 1.25);
+    const m = path.match(/^(\w+)\[\]\.(\w+)$/);
+    const entries = m
+      ? (copy?.[m[1]] ?? []).map((row, i) => [`${m[1]} ${i + 1} ${m[2]}`, row?.[m[2]]])
+      : [[path, copy?.[path]]];
+    for (const [where, text] of entries) {
+      if (text == null || text === "") continue;
+      const n = words(text);
+      if (n > limit) out.push(`LAYOUT: ${where} is ${n} words; the slot is designed for ${cap} and is clipped past ${limit}. Rewrite it to fit.`);
+    }
+  }
+  const budget = CLOSING_BUDGET[format];
+  if (budget) {
+    const chars = budget.fields.reduce((sum, f) => sum + String(copy?.[f] ?? "").length, 0);
+    if (chars > budget.max) out.push(`LAYOUT: ${budget.fields.join(" + ")} is ${chars} characters; the closing slide (${budget.slide}) fits about ${budget.max} at its smallest type. Shorten them.`);
+  }
+  if (format === "LESSON") {
+    (copy?.items ?? []).forEach((it, i) => {
+      const chars = String(it?.problem ?? "").length + String(it?.solution ?? "").length;
+      if (chars > LESSON_BODY_CHARS) out.push(`LAYOUT: item ${i + 1} problem + solution is ${chars} characters; the slide's smallest type fits ${LESSON_BODY_CHARS} before text is clipped. Shorten both.`);
+    });
+  }
+  return out;
+}
+
+// ─── HOOK BACKING ────────────────────────────────────────────────────────────
+// Every dollar amount on a LESSON cover must round a figure the post actually
+// proves: within 15% of an amount printed on the slides or in the topic's
+// verified figures. Deterministic, because the inspector passed "$1,000" covers
+// on posts whose numbers were $92,995 and $1,558 — the same unbacked-cover class
+// as "YOU ARE LOSING $500 A YEAR TO THE STARS".
+const dollars = (t) => [...String(t ?? "").matchAll(/\$\s?([\d,]+(?:\.\d+)?)/g)]
+  .map((m) => Number(m[1].replace(/,/g, ""))).filter((n) => n > 0);
+
+export function hookProblems(copy, format, figures = null) {
+  if (format !== "LESSON" || !copy?.cover_headline) return [];
+  const claims = dollars(copy.cover_headline);
+  if (!claims.length) return [];
+  const bodyText = JSON.stringify({ ...copy, cover_headline: undefined }) + " " + (figures ?? "");
+  const pool = dollars(bodyText);
+  const out = [];
+  for (const c of claims) {
+    const backed = pool.some((n) => Math.abs(n - c) / n <= 0.15);
+    if (!backed) {
+      const nearest = pool.sort((a, b) => Math.abs(a - c) - Math.abs(b - c))[0];
+      out.push(`HOOK: the cover says $${c.toLocaleString("en-US")} but no figure in the post supports it${nearest ? ` (nearest proven figure: $${nearest.toLocaleString("en-US")})` : ""}. The cover must round a number the slides prove.`);
+    }
+  }
+  return out;
 }
 
 // ─── THE COPY GATE ───────────────────────────────────────────────────────────
@@ -1107,23 +1254,33 @@ Return ONLY JSON:
 // single malformed model response threw out of the copy loop and killed the
 // entire batch.
 export async function writeInspected(writeFn, topic, format, label = format) {
-  const draft = await withJsonRetry(() => writeFn(topic), { label: `${label} copy` });
-  let verdict = await critiqueCoherence(draft, format);
-  if (verdict.pass) {
-    console.log(`   ✓ copy inspector: "${String(verdict.retell).slice(0, 90)}"`);
-    return draft;
+  // Both checks every time: layout is free and deterministic, the inspector reads
+  // meaning. Their problems are combined so ONE rewrite gets the full list.
+  const judge = async (copy) => {
+    const layout = [...layoutProblems(copy, format), ...hookProblems(copy, format, topic.figures)];
+    const v = await critiqueCoherence(copy, format, topic.figures);
+    return { pass: v.pass && layout.length === 0, retell: v.retell, problems: [...layout, ...v.problems] };
+  };
+  // Up to TWO rewrites. With one, 3 of 4 real posts in testing were rejected,
+  // and every rejection was a rewrite that fixed the flagged problem and broke a
+  // different constraint, usually length. Fixable problems, so one more pass is
+  // cheap. It still fails closed.
+  const MAX_REWRITES = 2;
+  let copy = await withJsonRetry(() => writeFn(topic), { label: `${label} copy` });
+  let verdict = await judge(copy);
+  for (let n = 1; !verdict.pass && n <= MAX_REWRITES; n++) {
+    console.log(`   ✎ ${label} failed review (rewrite ${n}/${MAX_REWRITES}): ${verdict.problems.slice(0, 2).join(" | ").slice(0, 160)}`);
+    copy = await withJsonRetry(
+      () => writeFn({ ...topic, feedback: verdict.problems }),
+      { label: `${label} rewrite ${n}` },
+    );
+    verdict = await judge(copy);
   }
-  console.log(`   ✎ ${label} failed inspection: ${verdict.problems.slice(0, 2).join(" | ").slice(0, 160)}`);
-  const rewrite = await withJsonRetry(
-    () => writeFn({ ...topic, feedback: verdict.problems }),
-    { label: `${label} rewrite` },
-  );
-  verdict = await critiqueCoherence(rewrite, format);
   if (!verdict.pass) {
-    throw new Error(`copy failed inspection twice: ${verdict.problems[0] ?? "incoherent"}`);
+    throw new Error(`copy failed review after ${MAX_REWRITES} rewrites: ${verdict.problems[0] ?? "incoherent"}`);
   }
-  console.log(`   ✓ copy inspector (after rewrite): "${String(verdict.retell).slice(0, 90)}"`);
-  return rewrite;
+  console.log(`   ✓ copy inspector: "${String(verdict.retell).slice(0, 90)}"`);
+  return copy;
 }
 
 export async function writeCaption(post) {
