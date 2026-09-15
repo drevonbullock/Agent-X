@@ -629,7 +629,7 @@ async function versusSlide({ artPath, good, bad, split, topic, index, total }) {
   const longest = Math.max(String(good ?? "").length, String(bad ?? "").length);
   let header, headH;
   if (first) {
-    headH = 600;
+    headH = 520;
     header = `<div class="art card" style="height:${headH}px;"><img src="${dataUri(fitJpeg(artPath, 952, headH, 0.1))}"></div>`;
   } else {
     headH = 300;
@@ -641,7 +641,7 @@ async function versusSlide({ artPath, good, bad, split, topic, index, total }) {
       `<div class="wick card"><img src="${dataUri(wickCard(artPath, 300, 300))}"></div></div>`;
   }
   const size = first
-    ? (split ? (longest > 30 ? 36 : 42) : (longest > 40 ? 40 : 46))
+    ? (split ? (longest > 30 ? 44 : 50) : (longest > 40 ? 50 : 56))
     : (split ? (longest > 30 ? 56 : 62) : (longest > 40 ? 56 : 64));
   const rows = order.map(([cls, t]) => `<div class="row ${cls}"><span class="chip"></span><div>${markNumbers(esc(t))}</div></div>`).join("");
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
@@ -692,7 +692,7 @@ export async function compositeSinglePanel({ scenePath, label, topic = "", index
   const hero = dollars(text).sort((a, b) => dollarValue(b) - dollarValue(a))[0];
   const bar = topBar(`<span class="pill">${esc(topic || "Money")}</span>`, total ? `${index}/${total}` : "");
   let css, inner;
-  if (index <= 1 || !hero) {
+  if (index <= 1) {
     const len = text.length;
     const size = len <= 30 ? 110 : len <= 45 ? 96 : len <= 60 ? 84 : 72;
     css = `
@@ -701,6 +701,14 @@ export async function compositeSinglePanel({ scenePath, label, topic = "", index
   font-family:'Anton',sans-serif;font-size:${size}px;line-height:1.04;color:${INK};text-transform:uppercase;}`;
     inner = `<div class="art card"><img src="${dataUri(fitJpeg(scenePath, 952, 640, 0.08))}"></div>
   <div class="head"><div>${markNumbers(esc(text))}</div></div>`;
+  } else if (!hero) {
+    const len = text.length;
+    const size = len <= 30 ? 124 : len <= 45 ? 108 : len <= 60 ? 94 : 80;
+    css = `
+.block{position:absolute;left:72px;right:72px;top:150px;bottom:110px;display:flex;flex-direction:column;justify-content:center;gap:56px;}
+.head{font-family:'Anton',sans-serif;font-size:${size}px;line-height:1.04;color:${INK};text-transform:uppercase;}
+.wick{width:300px;height:300px;}`;
+    inner = `<div class="block"><div class="wick card"><img src="${dataUri(wickCard(scenePath, 300, 300))}"></div><div class="head">${markNumbers(esc(text))}</div></div>`;
   } else {
     css = `
 .block{position:absolute;left:72px;right:72px;top:150px;bottom:110px;display:flex;flex-direction:column;justify-content:center;gap:60px;}
