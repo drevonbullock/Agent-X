@@ -459,7 +459,7 @@ function stripDashes(s) {
 
 // The topic is handed to the model as a fixed assignment. It writes the carousel
 // FOR this subject and never chooses its own, which is what caused drift.
-function topicBrief(topic) {
+export function topicBrief(topic) {
   // Voice references Dre set per lane. These shape CADENCE and STANCE, never
   // content: never name them, never quote them, never imitate a catchphrase.
   const lane = {
@@ -479,6 +479,16 @@ credit. Plain steps and real numbers.`,
   // scenario needed real arithmetic: #28 put the $100-a-month result on a
   // $60-a-month saver and made up a second figure outright. So numeric topics
   // carry their own exact figures and the writer uses them as given.
+  // Cover numbers the figures actually back, rounded the way the hook law wants.
+  // In testing a cover printed "$1,000" three attempts running on a post whose
+  // figures never contain it; listing the backed choices removes the guess.
+  const coverNumbers = topic.figures
+    ? [...new Set([...String(topic.figures).matchAll(/\$\s?([\d,]+(?:\.\d+)?)/g)]
+        .map((m) => Number(m[1].replace(/,/g, "")))
+        .filter((n) => n >= 1)
+        .map((n) => (n >= 100 ? Number(n.toPrecision(2)) : Math.round(n))))]
+        .sort((a, b) => b - a)
+    : [];
   const figures = topic.figures ? `
 
 VERIFIED FIGURES — computed in code. Use these numbers EXACTLY as given. Do not
@@ -488,9 +498,19 @@ rules; every slide shows the figure exactly as written here. Keep
 each number's MEANING too: if a figure is a profit, never present it as a sale
 price or as money kept from a sale, because that silently deletes the fees.
 Do not add ANY other specific number (a fee, a percentage, a dollar amount, a
-count) unless it is in these figures or arithmetic on them. An invented number
-fails review.
-${topic.figures}` : "";
+count) unless it is in these figures. Simple multiplication for a ladder (12
+sales of $20 is $240) is fine, but NEVER compute a comparison yourself: what
+waiting costs, how much more one choice earns, or the gap between two results
+must be stated in these figures for that exact scenario. In testing a post took
+the 10-to-20-year gain and called it the cost of waiting five years. An invented
+number fails review.
+Keep every figure's QUALIFIERS: "the average actively managed fund" never becomes
+"most funds", and "$100 a month for ten years" never becomes "$100".
+${topic.figures}${coverNumbers.length ? `
+
+COVER NUMBERS BACKED BY THESE FIGURES: ${coverNumbers.map((n) => "$" + n.toLocaleString("en-US")).join(", ")}.
+Any dollar amount on the cover must be one of these or an exact figure above,
+even when a hook template shows a different number such as $1,000.` : ""}` : "";
 
   // FEEDBACK. Set only on a rewrite, by writeInspected. The writers take nothing
   // but a topic, so the inspector's objections travel in the one brief they
@@ -1050,6 +1070,17 @@ Every OTHER specific number in the copy (a fee, a percentage, a dollar amount, a
 count) must come from these figures or be arithmetic on them. A number that is
 neither, such as "most funds charge 1% or more" or a loan amount the figures
 never mention, is invented and FAILS.
+A figure's QUALIFIERS are part of the figure, but SHORTENING is fine and turning
+it into a GENERAL claim is not. "The average actively managed fund charges $65"
+may be written "the average managed fund charges $65": that PASSES. It may NOT
+become "most funds", "other funds" or "funds charge $65", which describe funds in
+general: that FAILS. Likewise "$100 a month for ten years becomes $17,308" may not
+become "$100 becomes $17,308". Judge whether the reader would believe something
+FALSE, not whether every word of the figure was repeated.
+A comparison (what waiting costs, how much more one choice earns, the gap between
+two results) must match a comparison the figures state for that exact scenario.
+Two figures subtracted and relabeled as a different scenario, such as the 10 to
+20 year gain presented as the cost of waiting five years, is wrong and FAILS.
 ${figures}
 ` : ""}
 
