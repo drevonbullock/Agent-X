@@ -38,7 +38,14 @@ export async function brandRules() {
     const { ordersBlock } = await import("./wick-overseer.js");
     overseer = await ordersBlock("writer");
   } catch { /* orders must never block writing */ }
-  const base = BRAND_RULES + (await lessonsBlock("copy"));
+  // The weekly trend brief (algorithm + money culture). Dre, 2026-09-15: "always
+  // follow those." Loaded fresh each call so a Sunday refresh reaches the next post.
+  let trends = "";
+  try {
+    const { trendBlock } = await import("./wick-trends.js");
+    trends = await trendBlock();
+  } catch { /* the trend brief must never block writing */ }
+  const base = BRAND_RULES + trends + (await lessonsBlock("copy"));
   if (!USED_IDEAS.length) return base + overseer;
   return base + "\n\nIDEAS ALREADY USED ON THIS PAGE. Every scenario below is BANNED. Do not " +
     "write about the same situation, object, purchase or trap even with new wording. If the " +
@@ -161,6 +168,12 @@ four are the archetypes, exactly as he gave them:
   number to use. In testing two of three LESSON covers printed "$1,000" copied
   from the template while the posts proved $92,995 and $1,558. The cover's number
   is the post's own proven figure, rounded.
+  The template's emotional word must also be TRUE for this post. "Losing" means
+  money actually leaves the reader's account. Money they keep that could earn
+  more is money they are "missing out on", never money they are "losing".
+  And the NUMBER after "losing" or "missing out on" is the amount actually lost
+  or missed, never the total or the balance: keeping $3,600 that earns $69 less
+  than it could is missing out on $69, not on $3,700.
 
 What makes these work, and what every cover hook must therefore have:
   a. ROUND NUMBERS ONLY. $100, $250, $500, $1,000, $2,000 — never $289, never
@@ -200,12 +213,25 @@ and the EMOTION. This governs the CONSTRUCTION.
   agrees. A cold viewer must know what the post is about inside one line. No
   throat-clearing, no scene-setting, no "let me tell you". Subject first.
 
-  TRIPLE HOOK — three hooks fire at once, not one:
-    - TEXT hook: the on-screen line.
-    - VISUAL hook: what the frame SHOWS in the first beat. It must differ from
-      the last post's opening frame, or the feed reads a repeat and skips.
-    - SPOKEN hook: the first thing said, which is NOT the on-screen text. Two
-      channels saying identical words waste one of them.
+  HOOK STACKING — Dre, 2026-09-15: "use hook stacking when creating content."
+  In 2026 the keep-or-swipe decision happens at about ONE second, so every post
+  opens with a stack of hooks that all land at once:
+    1. VISUAL hook at frame one: the cover image or first frame shows the subject
+       or the money itself. It must differ from the last post's opening frame, or
+       the feed reads a repeat and skips.
+    2. TEXT hook on frame one: the real hook for everyone watching muted. It
+       states the subject and the number.
+    3. SPOKEN hook (reels) by 1.5 seconds: sharpens the text hook, never repeats
+       it word for word. Two channels saying identical words waste one of them.
+    4. CONTEXT LOCK by 3 seconds: tell them exactly what they get if they stay,
+       such as the steps, the exact fee, or the number at the end.
+  And stack TWO hook TYPES in the headline itself: a primary money hook (the
+  number) plus a second pull, such as a curiosity gap, a contradiction, a callout
+  or urgency. Number plus callout: "YOU ARE LOSING [number] TO THE MINIMUM
+  PAYMENT". Number plus contradiction: "THE [cheap] FUND THAT BEATS THE [expensive]
+  ONE". These show the SHAPE only; the numbers always come from the post.
+  On carousels, slide 2 RE-HOOKS: it pays off the cover's promise immediately and
+  opens the next loop, because swiping on is the carousel's watch-time signal.
 
   PATTERN INTERRUPT. The first beat breaks the scroll rhythm: an unexpected
   frame, a hard cut, a number that should not be that size, a sentence that
@@ -1077,6 +1103,12 @@ become "most funds", "other funds" or "funds charge $65", which describe funds i
 general: that FAILS. Likewise "$100 a month for ten years becomes $17,308" may not
 become "$100 becomes $17,308". Judge whether the reader would believe something
 FALSE, not whether every word of the figure was repeated.
+This applies to the COVER most of all, and to its emotional word. "Losing" means
+money actually leaves the reader's account. "YOU ARE LOSING $3,600 A YEAR" about
+$3,600 the reader KEEPS is false and FAILS; the true claim is the interest they
+are missing out on. The number after "losing" or "missing out on" must be the
+amount actually lost or missed, not the total or the balance: "YOU MISSED OUT ON
+$3,700" about a $3,669 balance whose missed interest is $69 is false and FAILS.
 A comparison (what waiting costs, how much more one choice earns, the gap between
 two results) must match a comparison the figures state for that exact scenario.
 Two figures subtracted and relabeled as a different scenario, such as the 10 to

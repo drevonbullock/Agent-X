@@ -91,6 +91,17 @@ export function startScheduler() {
   cron.schedule("0 9 * * *",  wickPublish("9:00am"),  { timezone: "America/New_York" });
   cron.schedule("0 12 * * *", wickPublish("12:00pm"), { timezone: "America/New_York" });
 
+  // ── WICK TRENDS — refresh the algorithm + money-culture brief Sunday 4:30am ──
+  // Dre, 2026-09-15: "know what the algorithm is pushing and what the current
+  // culture on money is and always follow those." Runs before the 6am batch so
+  // each week is written against a fresh brief. A failure keeps the last brief.
+  cron.schedule("30 4 * * 0", async () => {
+    try {
+      const { refreshTrendBrief } = await import("./modules/wick-trends.js");
+      await refreshTrendBrief();
+    } catch (err) { console.error(`[Scheduler] Wick trend refresh failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
   // ── WICK'S WISDOM — build next weekly batch Sunday 6am (QUEUED, never posted) ──
   cron.schedule("0 6 * * 0", async () => {
     if (paused()) return;

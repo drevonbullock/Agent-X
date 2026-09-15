@@ -87,6 +87,10 @@ export const TOPICS = [
   { id: 39, lane: "CREDIT", title: "How To Take Advantage Of Credit", hook: "Use credit only where it earns more than it costs", payoff: "When borrowing makes you money", figures: "Pay the full statement balance every month and credit card interest is $0. On $1,000 a month of normal spending, a 2% cash back card returns $20 a month, $240 a year. Borrowing to buy something that earns more than the loan costs: $10,000 borrowed at 6% costs $600 a year; if it earns 10%, that is $1,000 a year, leaving $400 a year before taxes." },
   { id: 40, lane: "MONEY", title: "How Money Actually Works", hook: "Money flows toward whoever owns assets", payoff: "A paycheck versus an asset on the same $50,000", figures: "A $50,000 salary stops when the work stops. $50,000 invested at 7% a year earns about $3,500 a year with no work. Money flows toward whoever owns the thing that pays." },
   { id: 41, lane: "MONEY", title: "The Three Ways To Make Money", hook: "Sell your time, sell things, or own things", payoff: "What each one pays when you start", figures: "Sell your time: $20 an hour for 20 hours is $400 a week. Sell things: $500 of resale stock sold at double, after 13% fees and $4 shipping per item, returns $790, a $290 profit. Own things: $10,000 in VOO at 7% a year earns about $700 in a year with no hours worked." },
+  // ── ADDED 2026-09-15 — current money culture (moneymaxxing, BNPL, no-buy) ─
+  { id: 42, lane: "MONEY", title: "Moneymaxxing: Where Your Savings Should Sit", hook: "The same money earns over ten times more in the right account", payoff: "$10,000 at 4.20% versus 0.38%", figures: "Top high-yield savings accounts pay about 4.20% APY (Newtek Bank 4.20%, September 2026). The average US savings account pays 0.38% APY (FDIC, August 2026). On $10,000 for one year that is about $420 versus $38, which is $382 more for moving the same money. Moneymaxxing means squeezing that kind of value out of every dollar: high-yield savings, cashback, bill negotiation, credit card points." },
+  { id: 43, lane: "CREDIT", title: "What Buy Now, Pay Later Really Costs", hook: "Pay in 4 is free until it is not", payoff: "Late fees and APR on Affirm and Klarna", figures: "Pay in 4 on Affirm and Klarna splits a purchase into 4 interest-free payments when every payment is on time. Affirm charges no late fees. A missed Klarna payment can cost up to $7. Longer plans charge interest: up to 36% APR on Affirm and up to 33.99% APR on Klarna. $1,000 over 12 months at 36% APR is $100.46 a month, $1,205.55 total, $205.55 of interest. At 33.99% APR it is $99.46 a month, $193.52 of interest." },
+  { id: 44, lane: "MONEY", title: "The No-Buy Month, In Real Numbers", hook: "Money you do not spend still has a job", payoff: "$300 a month kept for a year", figures: "$300 a month kept instead of spent on non-essentials is $3,600 in a year. Deposited monthly into a high-yield savings account at 4.20% APY, it grows to about $3,669 by the end of the year. Left in a 0.38% average savings account it earns almost nothing." },
 ];
 
 
@@ -106,7 +110,7 @@ async function usedTopicIds() {
 // Extend the registry rather than repeat it. Dre: "you're never going to
 // recycle, you're always going to be generating more." The 30 seed episodes are
 // four weeks of posting at 2/day, so once a lane runs dry new episodes are
-// written in the same shape and stored, keeping the 80/10/10 mix intact.
+// written in the same shape and stored, keeping the lane mix intact.
 //
 // Generated ids start at 1000 so a seed episode is always distinguishable.
 async function extendLane(lane, need, existing) {
@@ -122,22 +126,33 @@ async function extendLane(lane, need, existing) {
     CREDIT: "What credit is and how to take advantage of credit. Plain steps, real numbers.",
   }[lane];
 
+  // Generated topics follow the weekly trend brief too. Dre, 2026-09-15: "know
+  // what the algorithm is pushing and what the current culture on money is and
+  // always follow those."
+  let trends = "";
+  try {
+    const { trendBlock } = await import("./wick-trends.js");
+    trends = await trendBlock();
+  } catch { /* the brief must never block topic generation */ }
+
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 1600,
-    messages: [{ role: "user", content: `Write ${need} new episode ideas for a behavioural-money Instagram page.
+    messages: [{ role: "user", content: `Write ${need} new episode ideas for Wick's Wisdom, an Instagram page that teaches money, investing and credit to a US audience.
 
 LANE: ${lane}. ${brief}
-
+${trends}
 Existing episodes in this lane, for shape only:
 ${sample}
 
 Already covered on the page, do NOT duplicate or restate any of these:
 ${taken}
 
-Rules: present day only. No philosophy, no philosophers, no history. Name a real
-behavioural or structural mechanic, not a vibe. The payoff must be something a
-person can check. Never name a real company or living person.
+Rules: present day only. No philosophy, no philosophers, no history. Each idea
+teaches one concrete thing a person can do or check. Follow the trend brief:
+favour what the algorithm is rewarding and what money culture is talking about
+right now. Naming real funds, brokers, banks and apps is encouraged (VOO, VTI,
+SPY, Webull).
 
 Return ONLY a JSON array:
 [{"title":"Why ...","hook":"the mechanic, 2-6 words","payoff":"where it lands, 3-8 words"}]` }],
@@ -167,7 +182,7 @@ async function allTopics() {
   return [...TOPICS, ...gen];
 }
 
-// Pick `count` topics honouring the 80/10/10 mix, preferring unused ones.
+// Pick `count` topics honouring the LANES mix (Money / Investing / Credit), preferring unused ones.
 // Episode 1 is excluded by default because it is already published.
 export async function pickTopics(count, { allowPublished = false } = {}) {
   const used = await usedTopicIds();
