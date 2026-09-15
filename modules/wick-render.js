@@ -608,143 +608,149 @@ ${BASE_CSS}
   return renderHtml(html);
 }
 
-// ─── VERSUS variant B — SIDE BY SIDE ────────────────────────────────────────
-// The second VERSUS layout Dre supplied: a vertical split rather than a stack.
-// Left is the consequence, right is the cause that produced it ("Diabetes at 70"
-// / "Started at 20"). Reading left to right lands the causation in one beat,
-// which the stacked version cannot do.
-export async function compositeSplitPanel({ leftPath, rightPath, leftLabel, rightLabel }) {
-  const PW = Math.floor((W - 4) / 2);
-  // Guard: a landscape source cropped to this half loses most of its width and
-  // routinely crops the character out. Split panels must be generated at 9:16.
-  for (const [side, f] of [["left", leftPath], ["right", rightPath]]) {
-    try {
-      const out = execFileSync(FFPROBE, ["-v", "error", "-select_streams", "v:0",
-        "-show_entries", "stream=width,height", "-of", "csv=p=0", f], { timeout: 15_000 }).toString().trim();
-      const [w, h] = out.split(",").map(Number);
-      if (w > h) console.warn(`[Wick] split ${side} panel is landscape (${w}x${h}); it will crop hard. Generate 9:16 for split layouts.`);
-    } catch { /* probe is advisory only */ }
+// ─── EDITORIAL VERSUS + ORDER (2026-09-15) ──────────────────────────────────
+// Same paper system as LESSON (see EDITORIAL LESSON SYSTEM below). One generated
+// scene now serves the whole post: it is the art card on the first and last
+// slides and a whole-body Wick card on the slides between, so Wick is on every
+// slide (image QA code C) without paying for a scene per slide.
+//
+// VERSUS: the winning side is a white card with an amber check, the losing side
+// an ink card with an X. The icons are drawn in CSS, not glyphs, so a missing
+// symbol font can never print empty boxes. Stacked keeps the good side on top;
+// split puts the consequence on the left and the cause on the right, as Dre's
+// reference did. Old queued rows still pass two scene paths; only the first is
+// used now.
+const dollars = (t) => (String(t ?? "").match(/\$\s?[\d,]+(?:\.\d+)?/g) ?? []).map((a) => a.replace(/\s/g, ""));
+const dollarValue = (a) => parseFloat(String(a).replace(/[$,]/g, "")) || 0;
+
+async function versusSlide({ artPath, good, bad, split, topic, index, total }) {
+  const first = index <= 1;
+  const order = split ? [["lose", bad], ["win", good]] : [["win", good], ["lose", bad]];
+  const longest = Math.max(String(good ?? "").length, String(bad ?? "").length);
+  let header, headH;
+  if (first) {
+    headH = 600;
+    header = `<div class="art card" style="height:${headH}px;"><img src="${dataUri(fitJpeg(artPath, 952, headH, 0.1))}"></div>`;
+  } else {
+    headH = 300;
+    const [a, b] = order.map(([, t]) => dollars(t)[0]);
+    const stat = a && b
+      ? `<div class="vs" style="font-size:${heroFit(`${a}${b}vs`, 600, 190)}px;"><span class="mk">${esc(a)}</span> <span class="x">vs</span> ${esc(b)}</div>`
+      : (a || b) ? `<div class="vs" style="font-size:${heroFit(a || b, 600, 230)}px;"><span class="mk">${esc(a || b)}</span></div>` : "";
+    header = `<div class="hdr" style="${stat ? "" : "justify-content:center;"}">${stat}` +
+      `<div class="wick card"><img src="${dataUri(wickCard(artPath, 300, 300))}"></div></div>`;
   }
-  leftPath = fitJpeg(leftPath, PW, H);
-  rightPath = fitJpeg(rightPath, PW, H);
+  const size = first
+    ? (split ? (longest > 30 ? 36 : 42) : (longest > 40 ? 40 : 46))
+    : (split ? (longest > 30 ? 56 : 62) : (longest > 40 ? 56 : 64));
+  const rows = order.map(([cls, t]) => `<div class="row ${cls}"><span class="chip"></span><div>${markNumbers(esc(t))}</div></div>`).join("");
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
-${BASE_CSS}
-.half{position:absolute;top:0;width:${PW}px;height:${H}px;overflow:hidden;}
-.half.l{left:0;} .half.r{right:0;}
-.half img{width:100%;height:100%;object-fit:cover;display:block;}
-.vseam{position:absolute;top:0;left:${PW}px;width:4px;height:${H}px;background:#0d0b09;z-index:30;}
-.hlabel{position:absolute;left:22px;right:22px;bottom:${Math.round(H * 0.30)}px;z-index:20;
-  text-align:center;font-family:'DM Sans',sans-serif;font-weight:700;font-size:42px;
-  line-height:1.16;color:#fff;
-  text-shadow:0 2px 4px rgba(0,0,0,0.98),0 4px 18px rgba(0,0,0,0.92),0 0 46px rgba(0,0,0,0.85);}
-.hshade{position:absolute;left:0;right:0;bottom:0;height:52%;
-  background:linear-gradient(180deg,transparent 0%,rgba(8,6,4,0.28) 50%,rgba(8,6,4,0.50) 100%);}
+${BASE_CSS}${PAPER_CSS}
+.art{position:absolute;left:64px;right:64px;top:140px;}
+.hdr{position:absolute;left:72px;right:72px;top:140px;height:${headH}px;display:flex;align-items:center;justify-content:space-between;gap:32px;}
+.vs{font-family:'Anton',sans-serif;line-height:1;color:${INK};white-space:nowrap;}
+.vs .x{color:${INK_SOFT};font-size:0.5em;vertical-align:middle;}
+.wick{width:300px;height:300px;flex-shrink:0;}
+.rows{position:absolute;left:64px;right:64px;top:${140 + headH + 32}px;bottom:104px;display:flex;flex-direction:${split ? "row" : "column"};gap:24px;}
+.row{flex:1;min-width:0;border-radius:28px;padding:26px 34px;display:flex;${split ? "flex-direction:column;justify-content:center;gap:22px;" : "align-items:center;gap:28px;"}
+  font-family:'DM Sans',sans-serif;font-weight:800;font-size:${size}px;line-height:1.14;}
+.row.win{background:#FFFFFF;color:${INK};border:4px solid ${AMBER};}
+.row.lose{background:${INK};color:${PAPER};}
+.lose .hl{background:none;color:${AMBER};padding:0;}
+.chip{position:relative;width:64px;height:64px;border-radius:50%;flex-shrink:0;}
+.win .chip{background:${AMBER};}
+.win .chip::after{content:"";position:absolute;left:24px;top:11px;width:14px;height:30px;border:solid ${INK};border-width:0 7px 7px 0;transform:rotate(45deg);}
+.lose .chip{background:rgba(247,243,234,0.16);}
+.lose .chip::before,.lose .chip::after{content:"";position:absolute;left:15px;top:28px;width:34px;height:8px;border-radius:4px;background:${PAPER};}
+.lose .chip::before{transform:rotate(45deg);} .lose .chip::after{transform:rotate(-45deg);}
 </style></head><body>
 <div class="slide">
-  <div class="half l"><img src="${dataUri(leftPath)}"><div class="hshade"></div>
-    <div class="hlabel">${esc(leftLabel)}</div></div>
-  <div class="half r"><img src="${dataUri(rightPath)}"><div class="hshade"></div>
-    <div class="hlabel">${esc(rightLabel)}</div></div>
-  <div class="vseam"></div>
+  ${topBar(`<span class="pill">${esc(topic || "Money")}</span>`, total ? `${index}/${total}` : "")}
+  ${header}
+  <div class="rows">${rows}</div>
   <div class="wm">${esc(WATERMARK)}</div>
+  <div class="swipe">SWIPE →</div>
 </div></body></html>`;
   return renderHtml(html);
 }
 
-// ─── ORDER — one full-bleed scene, one line ─────────────────────────────────
-// ORDER is NOT a comparison. It is the same sentence said four times about four
-// different things, one scene per slide, and the repetition is the whole effect.
-// It was previously rendered with the two-panel comparison renderer, which is
-// why Dre said the orders looked exactly like the versus.
-export async function compositeSinglePanel({ scenePath, label }) {
-  scenePath = fitJpeg(scenePath, W, H, 0.30);
-  const size = 54;
+export async function compositeSplitPanel({ leftPath, rightPath, leftLabel, rightLabel, topic = "", index = 0, total = 0 }) {
+  return versusSlide({ artPath: rightPath || leftPath, good: rightLabel, bad: leftLabel, split: true, topic, index, total });
+}
+
+export async function compositeTwoPanel({ topPath, bottomPath, topLabel, bottomLabel, topic = "", index = 0, total = 0 }) {
+  return versusSlide({ artPath: topPath || bottomPath, good: topLabel, bad: bottomLabel, split: false, topic, index, total });
+}
+
+// ─── ORDER — the same sentence, a bigger number each slide ──────────────────
+// ORDER is NOT a comparison: one sentence said four times with the number
+// changing, and the repetition is the effect. Slide 1 is the thumbnail, so it
+// carries the art card and the line as a headline. After that the line's biggest
+// dollar figure takes the slide, so the swipe reads as the number climbing.
+export async function compositeSinglePanel({ scenePath, label, topic = "", index = 0, total = 0 }) {
+  const text = String(label ?? "");
+  const hero = dollars(text).sort((a, b) => dollarValue(b) - dollarValue(a))[0];
+  const bar = topBar(`<span class="pill">${esc(topic || "Money")}</span>`, total ? `${index}/${total}` : "");
+  let css, inner;
+  if (index <= 1 || !hero) {
+    const len = text.length;
+    const size = len <= 30 ? 110 : len <= 45 ? 96 : len <= 60 ? 84 : 72;
+    css = `
+.art{position:absolute;left:64px;right:64px;top:140px;height:640px;}
+.head{position:absolute;left:72px;right:72px;top:810px;bottom:110px;display:flex;align-items:center;
+  font-family:'Anton',sans-serif;font-size:${size}px;line-height:1.04;color:${INK};text-transform:uppercase;}`;
+    inner = `<div class="art card"><img src="${dataUri(fitJpeg(scenePath, 952, 640, 0.08))}"></div>
+  <div class="head"><div>${markNumbers(esc(text))}</div></div>`;
+  } else {
+    css = `
+.block{position:absolute;left:72px;right:72px;top:150px;bottom:110px;display:flex;flex-direction:column;justify-content:center;gap:60px;}
+.stat{font-family:'Anton',sans-serif;font-size:${heroFit(hero, 936, 300)}px;line-height:1;color:${INK};white-space:nowrap;}
+.lineRow{display:flex;align-items:center;gap:36px;}
+.line{flex:1;min-width:0;font-family:'DM Sans',sans-serif;font-weight:800;font-size:${text.length > 48 ? 56 : 64}px;line-height:1.12;color:${INK};}
+.wick{width:240px;height:240px;flex-shrink:0;}`;
+    inner = `<div class="block">
+    <div class="stat"><span class="mk">${esc(hero)}</span></div>
+    <div class="lineRow"><div class="line">${markNumbers(esc(text))}</div><div class="wick card"><img src="${dataUri(wickCard(scenePath, 240, 240))}"></div></div>
+  </div>`;
+  }
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
-${BASE_CSS}
-.bg{position:absolute;inset:0;} .bg img{width:100%;height:100%;object-fit:cover;display:block;}
-.oshade{position:absolute;left:0;right:0;bottom:0;height:60%;z-index:10;
-  background:linear-gradient(180deg,transparent 0%,rgba(8,6,4,0.26) 46%,rgba(8,6,4,0.55) 100%);}
-.oline{position:absolute;left:78px;right:78px;bottom:${Math.round(H * 0.30)}px;z-index:20;
-  text-align:center;font-family:'DM Sans',sans-serif;font-weight:700;font-size:${size}px;
-  line-height:1.2;color:#fff;
-  text-shadow:0 2px 4px rgba(0,0,0,0.98),0 4px 18px rgba(0,0,0,0.92),0 0 46px rgba(0,0,0,0.85);}
+${BASE_CSS}${PAPER_CSS}${css}
 </style></head><body>
 <div class="slide">
-  <div class="bg"><img src="${dataUri(scenePath)}"></div><div class="oshade"></div>
-  <div class="oline">${esc(label)}</div>
+  ${bar}
+  ${inner}
   <div class="wm">${esc(WATERMARK)}</div>
+  <div class="swipe">SWIPE →</div>
 </div></body></html>`;
   return renderHtml(html);
 }
 
 // ORDER's final slide: breaks the drumbeat and names the rule, then the share ask.
-export async function compositeReveal({ scenePath, revealLine, closingLine, sendTo }) {
-  // Same brief as compositeCta: the closing frame is where the share is asked
-  // for, so it must be the most readable slide in the carousel, not the least.
-  // Copy is capped at two short sentences now, so these scale well up.
-  scenePath = fitJpeg(scenePath, W, H, 0.22);
+// The closing frame is where the share is asked for, so it is the most readable
+// slide in the post. Copy budget is 240 characters (wick-copy CLOSING_BUDGET).
+export async function compositeReveal({ scenePath, revealLine, closingLine, sendTo, topic = "", index = 0, total = 0 }) {
   const len = String(revealLine ?? "").length + String(closingLine ?? "").length + String(sendTo ?? "").length;
-  const v1 = len > 190 ? 58 : len > 130 ? 66 : 74;   // reveal line
-  const v2 = len > 190 ? 42 : 50;                    // closing line: the payoff, never smaller than the send instruction
-  const v3 = len > 190 ? 42 : 50;                    // send this to
-  const v4 = len > 190 ? 34 : 40;                    // repost ask
+  const r1 = len > 190 ? 64 : len > 130 ? 74 : 84;
+  const r2 = len > 190 ? 38 : 44;
+  const r3 = len > 190 ? 32 : 36;
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
-${BASE_CSS}
-.bg{position:absolute;inset:0;} .bg img{width:100%;height:100%;object-fit:cover;display:block;}
-.rshade{position:absolute;inset:0;z-index:10;
-  background:linear-gradient(180deg,transparent 0%,rgba(8,6,4,0.34) 28%,rgba(8,6,4,0.92) 52%,rgba(8,6,4,0.98) 100%);}
-.rbody{position:absolute;left:56px;right:56px;bottom:104px;z-index:20;text-align:center;}
-.r1{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${v1}px;line-height:1.1;color:#fff;
-  margin-bottom:26px;text-shadow:0 3px 14px rgba(0,0,0,0.9);}
-.r2{font-family:'DM Sans',sans-serif;font-weight:400;font-size:${v2}px;line-height:1.26;
-  color:#ece5dd;margin-bottom:30px;}
-.r3{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${v3}px;line-height:1.2;color:#fff;}
-.r3 b{color:#F5A524;}
-.r4{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${v4}px;line-height:1.2;
-  color:#F5A524;margin-top:18px;}
+${BASE_CSS}${PAPER_CSS}
+.art{position:absolute;left:64px;right:64px;top:140px;height:520px;}
+.close{position:absolute;left:72px;right:72px;top:690px;bottom:100px;display:flex;flex-direction:column;justify-content:center;gap:22px;}
+.r1{font-family:'Anton',sans-serif;font-size:${r1}px;line-height:1.04;color:${INK};text-transform:uppercase;}
+.r2{font-family:'DM Sans',sans-serif;font-weight:800;font-size:${r2}px;line-height:1.18;color:${INK};}
+.r3{font-family:'DM Sans',sans-serif;font-weight:600;font-size:${r3}px;line-height:1.28;color:${INK};}
+.r4{font-family:'DM Sans',sans-serif;font-weight:800;font-size:28px;letter-spacing:2px;color:#B26A00;text-transform:uppercase;}
 </style></head><body>
 <div class="slide">
-  <div class="bg"><img src="${dataUri(scenePath)}"></div><div class="rshade"></div>
-  <div class="rbody">
-    <div class="r1">${esc(revealLine)}</div>
-    ${closingLine ? `<div class="r2">${esc(closingLine)}</div>` : ""}
-    <div class="r3">Send this to <b>${esc(inlineSendTo(sendTo))}</b>.</div>
-    <div class="r4">Repost it if it landed.</div>
+  ${topBar(`<span class="pill amber">Save this</span>`, total ? `${index}/${total}` : "")}
+  <div class="art card"><img src="${dataUri(fitJpeg(scenePath, 952, 520, 0.08))}"></div>
+  <div class="close">
+    <div class="r1">${markNumbers(esc(revealLine))}</div>
+    ${closingLine ? `<div class="r2">${markNumbers(esc(closingLine))}</div>` : ""}
+    <div class="r3">Send this to <span class="hl">${esc(inlineSendTo(sendTo))}</span>.</div>
+    <div class="r4">Send it. Repost it.</div>
   </div>
-  <div class="wm">${esc(WATERMARK)}</div>
-</div></body></html>`;
-  return renderHtml(html);
-}
-
-export async function compositeTwoPanel({ topPath, bottomPath, topLabel, bottomLabel }) {
-  const PH = Math.floor((H - 4) / 2);
-  topPath = fitJpeg(topPath, W, PH);
-  bottomPath = fitJpeg(bottomPath, W, PH);
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
-${BASE_CSS}
-.panel{position:absolute;left:0;width:${W}px;height:${(H - 4) / 2}px;overflow:hidden;}
-.panel.top{top:0;} .panel.bot{bottom:0;}
-.panel img{width:100%;height:100%;object-fit:cover;display:block;}
-.seam{position:absolute;top:${(H - 4) / 2}px;left:0;width:${W}px;height:4px;background:#0d0b09;z-index:30;}
-/* Label sits INSIDE the art, about a third up from the panel's base, and the
-   scene stays visible behind it. The old scrim ran to 92% opacity across the
-   bottom half, which read as a black bar with a caption pasted under the picture
-   and threw away the art we had just paid for. Legibility now comes from a hard
-   drop shadow plus a soft local pool behind the text, the way the reference does
-   it. */
-.plabel{position:absolute;left:70px;right:70px;bottom:${Math.round(((H - 4) / 2) * 0.22)}px;
-  z-index:20;text-align:center;
-  font-family:'DM Sans',sans-serif;font-weight:700;font-size:46px;line-height:1.2;color:#fff;
-  text-shadow:0 2px 4px rgba(0,0,0,0.98),0 4px 18px rgba(0,0,0,0.92),0 0 46px rgba(0,0,0,0.85);}
-.pshade{position:absolute;left:0;right:0;bottom:0;height:46%;
-  background:linear-gradient(180deg,transparent 0%,rgba(8,6,4,0.30) 55%,rgba(8,6,4,0.52) 100%);}
-</style></head><body>
-<div class="slide">
-  <div class="panel top"><img src="${dataUri(topPath)}"><div class="pshade"></div>
-    <div class="plabel">${esc(topLabel)}</div></div>
-  <div class="seam"></div>
-  <div class="panel bot"><img src="${dataUri(bottomPath)}"><div class="pshade"></div>
-    <div class="plabel">${esc(bottomLabel)}</div></div>
   <div class="wm">${esc(WATERMARK)}</div>
 </div></body></html>`;
   return renderHtml(html);
@@ -797,116 +803,125 @@ export async function loadStyleSettings() {
   return STYLE;
 }
 
-export async function compositeLessonCover({ scenePath, headline }) {
-  scenePath = fitJpeg(scenePath, W, H, 0.10);
-  // The kicker always renders "HERE'S HOW →", and the hook doctrine tells the
-  // writer to end hooks with a payoff cue — so strip a trailing HERE'S HOW off
-  // the headline or the card says it twice, stacked.
-  const text = String(headline).toUpperCase()
-    .replace(/[.,!?\s]*HERE'?S\s+HOW[.,!?\s]*$/i, "").trim();
+// ─── EDITORIAL LESSON SYSTEM (2026-09-15) ────────────────────────────────────
+// Dre: "change the looks of the carousels that's best for algorithm and culture."
+// Research, September 2026: infographic-style finance posts are saved about 3x
+// more than scene-led ones, bold clean typography is what is trending, slides
+// 1 to 3 decide the swipe-through, and the last slide should be worth saving on
+// its own. The old look put a dark generated scene behind every slide and buried
+// the numbers in small grey text.
+//
+// Now: warm off-white paper, ink type, the key number as the biggest thing on the
+// slide under an amber marker, a topic pill (viewers can pick topics on
+// Instagram), a slide counter and a swipe cue. Wick stays on EVERY slide as a card
+// cut from the post's cover art, because image QA fails a slide where Wick is
+// absent (code C) and a crop that leaves a floating head (code A); the card keeps
+// his whole body. One generated image now serves the whole post.
+const PAPER = "#F7F3EA", INK = "#141C2B", INK_SOFT = "#5A6472", AMBER = "#F0A31C";
+
+const PAPER_CSS = `
+.slide{background:${PAPER};}
+.wm{color:rgba(20,28,43,0.45);text-shadow:none;bottom:44px;left:72px;right:auto;text-align:left;}
+.pill{display:inline-block;padding:10px 22px;border-radius:999px;background:${INK};color:${PAPER};
+  font-family:'DM Sans',sans-serif;font-weight:800;font-size:24px;letter-spacing:4px;text-transform:uppercase;}
+.pill.amber{background:${AMBER};color:${INK};}
+.count{font-family:'DM Sans',sans-serif;font-weight:700;font-size:26px;letter-spacing:2px;color:${INK_SOFT};}
+.swipe{position:absolute;right:72px;bottom:40px;font-family:'DM Sans',sans-serif;font-weight:800;
+  font-size:26px;letter-spacing:3px;color:${INK};}
+.hl{background:linear-gradient(180deg,transparent 56%,${AMBER} 56%);padding:0 6px;}
+.mk{position:relative;display:inline-block;z-index:0;}
+.mk::after{content:"";position:absolute;left:-10px;right:-10px;bottom:8%;height:30%;background:${AMBER};z-index:-1;}
+.card{border-radius:32px;overflow:hidden;box-shadow:0 18px 40px rgba(20,28,43,0.18);background:#1a120b;}
+.card img{width:100%;height:100%;object-fit:cover;display:block;}
+`;
+
+// Wick, whole body, from a generated scene. Scenes compose him upper-centre, so
+// keep the middle 64% of the width and the top half of the height, then scale to
+// the card. A tighter face crop would fail QA code A.
+function wickCard(srcPath, w, h) {
+  const out = srcPath.replace(/\.(png|jpg|jpeg|webp)$/i, "") + `_wick_${w}x${h}.jpg`;
+  try {
+    execFileSync(FFMPEG, ["-y", "-i", srcPath, "-vf",
+      `crop=iw*0.64:ih*0.5:iw*0.18:ih*0.03,scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h}`,
+      "-q:v", "3", out], { stdio: "pipe", timeout: 60_000 });
+    return out;
+  } catch {
+    return fitJpeg(srcPath, w, h, 0.12);
+  }
+}
+
+// Every money figure and percentage gets the amber marker: the number is the hook.
+const markNumbers = (escaped) =>
+  escaped.replace(/(\$\s?[\d,]+(?:\.\d+)?\w*|\b\d[\d,.]*%)/g, '<span class="hl">$1</span>');
+
+// Anton runs about 0.47em per character, so a hero number is sized from the width
+// it has rather than guessed from a length bucket.
+const heroFit = (text, avail, max) => Math.min(max, Math.floor(avail / (Math.max(3, String(text).length) * 0.47)));
+
+const topBar = (left, right) =>
+  `<div style="position:absolute;left:72px;right:72px;top:60px;display:flex;justify-content:space-between;align-items:center;z-index:20;">${left}<span class="count">${right}</span></div>`;
+
+export async function compositeLessonCover({ scenePath, headline, topic = "", index = 1, total = 0 }) {
+  const art = fitJpeg(scenePath, 952, 720, 0.08);
+  const text = String(headline).toUpperCase().replace(/[.,!?\s]*HERE'?S\s+HOW[.,!?\s]*$/i, "").trim();
   const len = text.length;
-  // EDUCATIONAL CARD, NOT MOTIVATIONAL POSTER (Dre, 2026-08-26: "switch the
-  // visual layout up, we need to turn this into educational content instead of
-  // motivation"). The old cover was giant centered type over a moody scrim --
-  // reads as an inspiration poster. This one reads as a lesson: an eyebrow
-  // label up top, a LEFT-ALIGNED hook with every dollar figure lit amber, and
-  // a HERE'S HOW swipe cue. Sizes come down a step because a lesson explains,
-  // it does not shout.
-  const size = len <= 26 ? 148 : len <= 36 ? 128 : len <= 50 ? 108 : 92;
-
-  // Light up EVERY money figure and number, because the hook doctrine puts a
-  // real dollar amount in every cover and the amount IS the hook.
-  const inner = esc(text).replace(/(\$\s?[\d,.]+\w*|\b\d[\d,.]*\b)/g, '<span class="n">$1</span>');
-
+  const size = len <= 26 ? 118 : len <= 36 ? 104 : len <= 50 ? 88 : 76;
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
-${BASE_CSS}
-.bg{position:absolute;inset:0;} .bg img{width:100%;height:100%;object-fit:cover;display:block;}
-/* Heavier scrim than the shared one: big type needs a floor to sit on. */
-.cover-shade{position:absolute;inset:0;z-index:10;
-  background:linear-gradient(180deg,rgba(8,6,4,0.35) 0%,rgba(8,6,4,0.10) 22%,rgba(8,6,4,0.30) 42%,rgba(8,6,4,0.88) 62%,rgba(8,6,4,0.97) 100%);}
-.eyebrow{position:absolute;left:64px;right:64px;top:64px;z-index:20;text-align:${STYLE.coverAlign};
-  font-family:'DM Sans',sans-serif;font-weight:700;font-size:26px;letter-spacing:6px;
-  color:#F5A524;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,0.9);}
-.head{position:absolute;left:64px;right:64px;bottom:190px;z-index:20;text-align:${STYLE.coverAlign};
-  font-family:'Anton',sans-serif;font-size:${size}px;line-height:1.02;letter-spacing:0px;
-  color:#fff;text-transform:uppercase;
-  text-shadow:0 6px 34px rgba(0,0,0,0.95),0 2px 6px rgba(0,0,0,0.9);}
-.head .n{color:#F5A524;}
-.kicker{position:absolute;left:64px;right:64px;bottom:104px;z-index:20;text-align:${STYLE.coverAlign};
-  font-family:'DM Sans',sans-serif;font-weight:800;font-size:40px;letter-spacing:2px;
-  color:#F5A524;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,0.9);}
+${BASE_CSS}${PAPER_CSS}
+.art{position:absolute;left:64px;right:64px;top:140px;height:720px;}
+.head{position:absolute;left:72px;right:72px;top:900px;bottom:120px;display:flex;align-items:center;
+  font-family:'Anton',sans-serif;font-size:${size}px;line-height:1.04;color:${INK};text-transform:uppercase;}
 </style></head><body>
 <div class="slide">
-  <div class="bg"><img src="${dataUri(scenePath)}"></div>
-  <div class="cover-shade"></div>
-  <div class="eyebrow">A Money Lesson</div>
-  <div class="head">${inner}</div>
-  <div class="kicker">Here's how →</div>
+  ${topBar(`<span class="pill">${esc(topic || "Money")}</span>`, total ? `${index}/${total}` : "")}
+  <div class="art card"><img src="${dataUri(art)}"></div>
+  <div class="head"><div>${markNumbers(esc(text))}</div></div>
   <div class="wm">${esc(WATERMARK)}</div>
+  <div class="swipe">SWIPE →</div>
 </div></body></html>`;
   return renderHtml(html);
 }
 
-// LESSON interior — scene top, numbered headline, PROBLEM / SOLUTION on black.
-// Body slide, matched to the reference account's layout (Dre supplied it as the
-// target): art bleeding across the top, then EVERYTHING CENTRE ALIGNED under it.
-// A bold sentence-case headline, a full line of air, then short paragraphs with
-// generous space between them.
-//
-// The old version was left-aligned with "PROBLEM:" / "SOLUTION" chips in amber.
-// The chips read as a worksheet rather than a story, and the ragged left edge is
-// what Dre meant by "too much to the left". Centre alignment with real breathing
-// room is doing the work here, not the labels.
-export async function compositeLessonItem({ scenePath, number, title, problem, solution, how }) {
-  scenePath = fitJpeg(scenePath, W, 700, 0.10);
-  // Dre, 2026-08-09: "subtext needs to be a lot shorter, it won't keep their
-  // attention span, plus needs to be bigger for the lessons."
-  //
-  // The copy engine now caps problem and solution at ONE sentence of 12 words,
-  // which frees a huge amount of vertical space, so the type scales UP hard.
-  // Old sizes (27-31px body, 42-48px head) were sized to fit 2-3 sentence
-  // paragraphs and were unreadable at feed-grid scale.
-  //
-  // The ladder still steps down if the model overruns its word cap, because a
-  // slide that overflows past the watermark is worse than one set slightly
-  // smaller. But the TOP of the ladder is now the normal case, not the rare one.
-  const chars = String(problem).length + String(solution).length;
-  const body = chars > 220 ? 36 : chars > 160 ? 42 : 48;
-  const head = String(title).length > 34 ? 54 : 62;
-
+// LESSON interior: the number first, then the lesson, then the move.
+export async function compositeLessonItem({ scenePath, number, title, problem, solution, how, topic = "", index = 0, total = 0 }) {
+  const card = wickCard(scenePath, 260, 260);
+  // The hero is the figure the item is about: a dollar amount the solution adds
+  // (not one it repeats from the problem), the biggest if several. "$100 a month
+  // becomes $121,997" heroes $121,997; "VOO charges $3 on that same $10,000"
+  // heroes $3.
+  const inProblem = new Set(dollars(problem));
+  const largest = (list) => [...list].sort((a, b) => dollarValue(b) - dollarValue(a))[0];
+  const find = (re) => String(solution ?? "").match(re) || String(problem ?? "").match(re);
+  const m = find(/\d+(?:\.\d+)?%/) || find(/\b\d{2,}[\d,]*\b/);
+  const hero = largest(dollars(solution).filter((a) => !inProblem.has(a))) || largest(dollars(solution))
+    || largest(dollars(problem)) || (m ? m[0].replace(/\s/g, "") : String(number ?? "").padStart(2, "0"));
+  const bodyChars = String(problem ?? "").length + String(solution ?? "").length + String(how ?? "").length;
+  const body = bodyChars > 230 ? 40 : bodyChars > 170 ? 44 : 48;
+  const tSize = String(title ?? "").length > 30 ? 56 : 64;
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
-${BASE_CSS}
-.slide{display:flex;flex-direction:column;background:#0a0806;}
-.top{position:relative;width:${W}px;height:700px;flex-shrink:0;overflow:hidden;}
-.top img{width:100%;height:100%;object-fit:cover;display:block;}
-.topfade{position:absolute;left:0;right:0;bottom:0;height:34%;
-  background:linear-gradient(180deg,transparent,#0a0806);}
-.body{flex:1;padding:0 66px 96px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;text-align:center;}
-.h{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${head}px;line-height:1.12;
-  color:#fff;margin-bottom:34px;}
-.h .n{color:#F5A524;}
-/* Tighter leading than before: at 48px a 1.46 line-height opens gaps that read
-   as separate thoughts. The two blocks are separated by margin, not by air
-   inside them. The solution line is brightened so the pair reads as
-   problem then answer at a glance rather than one undifferentiated wall. */
-.txt{font-family:'DM Sans',sans-serif;font-weight:400;font-size:${body}px;line-height:1.3;
-  color:#d8cfc4;margin-bottom:30px;max-width:940px;}
-.txt.sol{color:#fff;font-weight:500;margin-bottom:0;}
-/* The HOW beat (Dre: "PROBLEM, SOLUTION, HOW"). Amber and prefixed with an
-   arrow so the action reads as the slide's takeaway, not a third grey line. */
-.how{color:#F5A524;font-weight:700;margin-top:10px;}
-.how::before{content:"→  ";}
+${BASE_CSS}${PAPER_CSS}
+.hero{position:absolute;left:72px;right:72px;top:140px;height:290px;display:flex;align-items:center;justify-content:space-between;gap:32px;}
+.stat{font-family:'Anton',sans-serif;font-size:${heroFit(hero, 620, 240)}px;line-height:1;color:${INK};white-space:nowrap;}
+.wick{width:260px;height:260px;flex-shrink:0;}
+.body{position:absolute;left:72px;right:72px;top:460px;bottom:110px;display:flex;flex-direction:column;justify-content:center;gap:30px;}
+.t{font-family:'DM Sans',sans-serif;font-weight:800;font-size:${tSize}px;line-height:1.1;color:${INK};}
+.t .n{color:#B26A00;}
+.p{font-family:'DM Sans',sans-serif;font-weight:400;font-size:${body}px;line-height:1.3;color:${INK_SOFT};}
+.s{font-family:'DM Sans',sans-serif;font-weight:600;font-size:${body}px;line-height:1.3;color:${INK};}
+.how{background:${AMBER};border-radius:22px;padding:24px 30px;font-family:'DM Sans',sans-serif;font-weight:800;
+  font-size:${body - 2}px;line-height:1.25;color:${INK};}
 </style></head><body>
 <div class="slide">
-  <div class="top"><img src="${dataUri(scenePath)}"><div class="topfade"></div></div>
+  ${topBar(`<span class="pill">${esc(topic || "Money")}</span>`, total ? `${index}/${total}` : "")}
+  <div class="hero"><div class="stat"><span class="mk">${esc(hero)}</span></div><div class="wick card"><img src="${dataUri(card)}"></div></div>
   <div class="body">
-    <div class="h"><span class="n">${esc(number)}.</span> ${esc(title)}</div>
-    <div class="txt">${esc(problem)}</div>
-    <div class="txt sol">${esc(solution)}</div>
-    ${how ? `<div class="txt how">${esc(how)}</div>` : ""}
+    <div class="t"><span class="n">${esc(number)}.</span> ${esc(title)}</div>
+    <div class="p">${markNumbers(esc(problem))}</div>
+    <div class="s">${markNumbers(esc(solution))}</div>
+    ${how ? `<div class="how">→ ${esc(how)}</div>` : ""}
   </div>
   <div class="wm">${esc(WATERMARK)}</div>
+  <div class="swipe">SWIPE →</div>
 </div></body></html>`;
   return renderHtml(html);
 }
@@ -925,41 +940,55 @@ const inlineSendTo = (t) => String(t ?? "")
            (m) => m.toLowerCase())
   .replace(/\.\s*$/, "");
 
-export async function compositeCta({ scenePath, closingLine, sendTo, keyword, resource }) {
-  // Dre, 2026-08-09: "make the cta slide words wayy bigger to see."
-  // The old sizes (42/38/32px) were set when closing lines ran long. Copy is now
-  // capped at two short sentences, so the type scales up hard AND the image
-  // gives back 70px of height to hold it. A ladder still steps down when a
-  // send_to runs long, because overflowing past the watermark is worse than
-  // slightly smaller type.
-  scenePath = fitJpeg(scenePath, W, 720, 0.25);
-  const len = String(closingLine ?? "").length + String(sendTo ?? "").length;
-  const s1 = len > 150 ? 52 : len > 100 ? 60 : 68;   // closing line
-  const s2 = len > 150 ? 44 : len > 100 ? 50 : 56;   // send this to
-  const s3 = len > 150 ? 36 : 44;                    // repost ask
+// Closing slide. With `steps` it is a save-worthy checklist (research: the last
+// slide should be worth saving on its own); without, a closing card for formats
+// that have no steps.
+export async function compositeCta({ scenePath, closingLine, sendTo, keyword, resource, steps = null, topic = "", index = 0, total = 0 }) {
+  const list = Array.isArray(steps) ? steps.filter(Boolean) : [];
+  const send = sendTo
+    ? `Send this to <span class="hl">${esc(inlineSendTo(sendTo))}</span>.`
+    : `Comment <span class="hl">${esc(keyword)}</span> and I'll send you ${esc(resource)}.`;
+  const counter = total ? `${index}/${total}` : "";
+  let inner, css;
+  if (list.length) {
+    const card = wickCard(scenePath, 220, 220);
+    const chars = list.join(" ").length;
+    const stepSize = chars > 300 ? 34 : chars > 220 ? 38 : 42;
+    css = `
+.wrap{position:absolute;left:72px;right:72px;top:150px;bottom:100px;display:flex;flex-direction:column;justify-content:center;gap:90px;}
+.steps{list-style:none;display:flex;flex-direction:column;gap:28px;}
+.steps li{display:flex;gap:22px;align-items:flex-start;font-family:'DM Sans',sans-serif;font-weight:600;
+  font-size:${stepSize}px;line-height:1.26;color:${INK};}
+.box{width:42px;height:42px;border:4px solid ${INK};border-radius:10px;flex-shrink:0;margin-top:${Math.max(0, Math.round((stepSize * 1.26 - 42) / 2))}px;}
+.closeRow{display:flex;align-items:center;gap:32px;}
+.close{flex:1;min-width:0;}
+.c1{font-family:'DM Sans',sans-serif;font-weight:800;font-size:50px;line-height:1.14;color:${INK};margin-bottom:18px;}
+.c2{font-family:'DM Sans',sans-serif;font-weight:600;font-size:36px;line-height:1.28;color:${INK};}
+.wick{width:220px;height:220px;flex-shrink:0;}`;
+    inner = `
+  ${topBar(`<span class="pill amber">Save this checklist</span>`, counter)}
+  <div class="wrap">
+    <ol class="steps">${list.map((st) => `<li><span class="box"></span><span>${markNumbers(esc(st))}</span></li>`).join("")}</ol>
+    <div class="closeRow"><div class="close"><div class="c1">${esc(closingLine)}</div><div class="c2">${send}</div></div>
+      <div class="wick card"><img src="${dataUri(card)}"></div></div>
+  </div>`;
+  } else {
+    const art = fitJpeg(scenePath, 952, 640, 0.08);
+    css = `
+.art{position:absolute;left:64px;right:64px;top:140px;height:640px;}
+.close{position:absolute;left:72px;right:72px;top:830px;bottom:130px;display:flex;flex-direction:column;justify-content:center;}
+.c1{font-family:'DM Sans',sans-serif;font-weight:800;font-size:58px;line-height:1.12;color:${INK};margin-bottom:26px;}
+.c2{font-family:'DM Sans',sans-serif;font-weight:600;font-size:40px;line-height:1.25;color:${INK};}
+.c3{font-family:'DM Sans',sans-serif;font-weight:800;font-size:30px;letter-spacing:2px;color:#B26A00;margin-top:22px;text-transform:uppercase;}`;
+    inner = `
+  ${topBar(`<span class="pill">${esc(topic || "Money")}</span>`, counter)}
+  <div class="art card"><img src="${dataUri(art)}"></div>
+  <div class="close"><div class="c1">${esc(closingLine)}</div><div class="c2">${send}</div><div class="c3">Save it. Send it.</div></div>`;
+  }
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONTS}<style>
-${BASE_CSS}
-.slide{display:flex;flex-direction:column;background:#0a0806;}
-.top{position:relative;width:${W}px;height:720px;flex-shrink:0;overflow:hidden;}
-.top img{width:100%;height:100%;object-fit:cover;display:block;}
-.topfade{position:absolute;left:0;right:0;bottom:0;height:36%;
-  background:linear-gradient(180deg,transparent,#0a0806);}
-.body{flex:1;padding:10px 54px 0;display:flex;flex-direction:column;justify-content:center;text-align:center;}
-.l1{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${s1}px;line-height:1.14;color:#fff;margin-bottom:24px;}
-.l2{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${s2}px;line-height:1.2;color:#fff;}
-.l3{font-family:'DM Sans',sans-serif;font-weight:700;font-size:${s3}px;line-height:1.2;
-  color:#F5A524;margin-top:20px;}
-.kw{color:#F5A524;}
+${BASE_CSS}${PAPER_CSS}${css}
 </style></head><body>
-<div class="slide">
-  <div class="top"><img src="${dataUri(scenePath)}"><div class="topfade"></div></div>
-  <div class="body">
-    <div class="l1">${esc(closingLine)}</div>
-    <div class="l2">${sendTo
-      ? `Send this to <span class="kw">${esc(inlineSendTo(sendTo))}</span>.`
-      : `Comment <span class="kw">${esc(keyword)}</span> and I'll send you ${esc(resource)}.`}</div>
-    <div class="l3">Repost it if it landed.</div>
-  </div>
+<div class="slide">${inner}
   <div class="wm">${esc(WATERMARK)}</div>
 </div></body></html>`;
   return renderHtml(html);

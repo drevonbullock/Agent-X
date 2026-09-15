@@ -258,7 +258,9 @@ export async function auditQueue({ autoPull = false } = {}) {
   // by hand); rolling re-grades are not.
   const { data } = await supabase.from("wick_posts")
     .select("id,format,topic_id,slide_urls,status,slide_specs")
-    .or("status.eq.qa_pending,and(status.eq.approved,image_qa_at.is.null)")
+    // pending = built with WICK_AUTO_PUBLISH=false, waiting on Dre's Telegram tap.
+    // Those were skipped entirely, so approval-first posts reached him ungraded.
+    .or("status.eq.qa_pending,and(status.in.(approved,pending),image_qa_at.is.null)")
     .order("created_at");
   if (!data?.length) return { checked: 0, results: [] };
 

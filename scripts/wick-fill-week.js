@@ -60,8 +60,14 @@ async function usable() {
 import { execSync } from "child_process";
 function assertOnlyInstance() {
   try {
-    const out = execSync("pgrep -f wick-fill-week.js", { stdio: "pipe" }).toString();
-    const others = out.split("\n").map((x) => parseInt(x, 10))
+    // Only NODE processes count. `pgrep -f` also matched the wrapper shells of a
+    // `zsh -c "... node scripts/wick-fill-week.js"` launch, whose command lines
+    // contain the script name, so the fill refused to start from a shell.
+    const out = execSync("ps -axo pid=,comm=,args=", { stdio: "pipe" }).toString();
+    const others = out.split("\n")
+      .map((l) => l.trim().match(/^(\d+)\s+(\S+)\s+(.*)$/)).filter(Boolean)
+      .filter(([, , comm, args]) => /(^|\/)node$/.test(comm) && args.includes("wick-fill-week.js"))
+      .map(([, pid]) => parseInt(pid, 10))
       .filter((n) => Number.isFinite(n) && n !== process.pid);
     if (others.length) {
       console.error(`[Fill] another fill is already running (pid ${others.join(", ")}) — exiting`);

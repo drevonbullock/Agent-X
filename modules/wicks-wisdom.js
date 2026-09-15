@@ -89,87 +89,70 @@ async function scene(prompt, dir, name, aspect, jobIds) {
 
 // ─── BUILDERS — each returns { slideBuffers[], copy, format, sub_type, pillar } ──
 
-// VERSUS / ORDER — a 5 slide carousel: 4 two-panel comparisons on one theme,
-// then a CTA slide. Each comparison slide is 2 generated panels stacked, so a
-// full carousel is 9 generations (8 panels + 1 CTA scene).
-// VERSUS has two layouts and alternates between them, both supplied by Dre:
-//   stacked — two wide panels one above the other
-//   split   — a vertical split, consequence on the left, cause on the right
-// Alternating stops a profile grid of VERSUS posts reading as one repeated
-// template. Panel aspect follows the layout: 3:2 for stacked, 9:16 for split.
+// ONE SCENE PER POST (editorial redesign, 2026-09-15). The paper layouts show
+// the post's single generated scene as the art card on the first and last slides
+// and as a whole-body Wick card in between, so a post is one generation instead
+// of seven to nine. Every slide still records its rebuild recipe (compositor +
+// scene prompt + text params) so the QA gate can rebuild ONE failing slide;
+// scenes[] is in the SAME ORDER as pathKeys[].
+
+// VERSUS — 4 comparisons on one theme, then the closing slide.
+// Two layouts, both supplied by Dre, alternating so a profile grid of VERSUS
+// posts never reads as one repeated template:
+//   stacked — the two sides one above the other
+//   split   — side by side, consequence on the left, cause on the right
 async function buildComparisonCarousel(c, format, dir, jobIds, layout = "stacked") {
   const split = layout === "split";
+  const total = c.pairs.length + 1;
+  const topic = c.pillar ?? "";
   console.log(`[Wick] ${format} carousel (${layout}): "${c.theme}" (${c.pairs.length} comparisons + CTA)`);
+  const artPrompt = lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "coverTop");
+  const artPath = await scene(artPrompt, dir, "art", "4:5", jobIds);
+  const art = [{ prompt: artPrompt, aspect: "4:5" }];
   const buffers = [];
-  // Every slide records its rebuild recipe (compositor + scene prompts + text
-  // params) so the QA gate can regenerate ONE failing slide instead of binning
-  // the whole post. scenes[] is in the SAME ORDER as pathKeys[].
   const specs = [];
 
   for (let i = 0; i < c.pairs.length; i++) {
     const pair = c.pairs[i];
     console.log(`[Wick]   ${i + 1}/${c.pairs.length}: "${pair.top_label}" / "${pair.bottom_label}"`);
-    const aspect = split ? "9:16" : "3:2";
-    const topPrompt = versusPanelPrompt(pair.top_scene, { owned: true,  expression: pair.top_expression,  seed: i * 2 });
-    const botPrompt = versusPanelPrompt(pair.bottom_scene, { owned: false, expression: pair.bottom_expression, seed: i * 2 + 1 });
-    const topPath = await scene(topPrompt, dir, `p${i}-top`, aspect, jobIds);
-    const botPath = await scene(botPrompt, dir, `p${i}-bot`, aspect, jobIds);
-    buffers.push(split
-      // Left is the consequence, so the reader meets the outcome before the cause.
-      ? await compositeSplitPanel({
-          leftPath: botPath, rightPath: topPath,
-          leftLabel: pair.bottom_label, rightLabel: pair.top_label,
-        })
-      : await compositeTwoPanel({
-          topPath, bottomPath: botPath,
-          topLabel: pair.top_label, bottomLabel: pair.bottom_label,
-        }));
-    specs.push(split
-      ? { c: "compositeSplitPanel", pathKeys: ["leftPath", "rightPath"],
-          scenes: [{ prompt: botPrompt, aspect }, { prompt: topPrompt, aspect }],
-          params: { leftLabel: pair.bottom_label, rightLabel: pair.top_label } }
-      : { c: "compositeTwoPanel", pathKeys: ["topPath", "bottomPath"],
-          scenes: [{ prompt: topPrompt, aspect }, { prompt: botPrompt, aspect }],
-          params: { topLabel: pair.top_label, bottomLabel: pair.bottom_label } });
+    if (split) {
+      const params = { leftLabel: pair.bottom_label, rightLabel: pair.top_label, topic, index: i + 1, total };
+      buffers.push(await compositeSplitPanel({ rightPath: artPath, ...params }));
+      specs.push({ c: "compositeSplitPanel", pathKeys: ["rightPath"], scenes: art, params });
+    } else {
+      const params = { topLabel: pair.top_label, bottomLabel: pair.bottom_label, topic, index: i + 1, total };
+      buffers.push(await compositeTwoPanel({ topPath: artPath, ...params }));
+      specs.push({ c: "compositeTwoPanel", pathKeys: ["topPath"], scenes: art, params });
+    }
   }
 
-  const ctaPrompt = lessonScenePrompt(c.cta_scene, c.cta_expression, 0, "coverTop");
-  const ctaPath = await scene(ctaPrompt, dir, "cta", "4:5", jobIds);
-  buffers.push(await compositeCta({
-    scenePath: ctaPath,
-    closingLine: c.closing_line,
-    sendTo: c.send_to, keyword: c.keyword, resource: c.resource,
-  }));
-  specs.push({ c: "compositeCta", pathKeys: ["scenePath"], scenes: [{ prompt: ctaPrompt, aspect: "4:5" }],
-    params: { closingLine: c.closing_line, sendTo: c.send_to, keyword: c.keyword, resource: c.resource } });
+  const ctaParams = { closingLine: c.closing_line, sendTo: c.send_to, keyword: c.keyword, resource: c.resource, topic, index: total, total };
+  buffers.push(await compositeCta({ scenePath: artPath, ...ctaParams }));
+  specs.push({ c: "compositeCta", pathKeys: ["scenePath"], scenes: art, params: ctaParams });
 
   return { slideBuffers: buffers, slideSpecs: specs, copy: c, format, sub_type: c.sub_type, pillar: c.pillar };
 }
 
-// ORDER — one full-bleed scene per line, then the reveal. Not a comparison.
+// ORDER — one line per slide with the number climbing, then the reveal.
 async function buildOrderCarousel(c, dir, jobIds) {
   console.log(`[Wick] ORDER carousel: "${c.theme}" (${c.lines.length} lines + reveal)`);
+  const total = c.lines.length + 1;
+  const topic = c.pillar ?? "";
+  const artPrompt = lessonScenePrompt(c.lines[0].scene, c.lines[0].expression, 0, "coverTop");
+  const artPath = await scene(artPrompt, dir, "art", "4:5", jobIds);
+  const art = [{ prompt: artPrompt, aspect: "4:5" }];
   const buffers = [];
   const specs = [];
   for (let i = 0; i < c.lines.length; i++) {
     const line = c.lines[i];
     console.log(`[Wick]   ${i + 1}/${c.lines.length}: "${line.label}"`);
-    const pr = lessonScenePrompt(line.scene, line.expression, i, "upper");
-    const p = await scene(pr, dir, `line-${i}`, "4:5", jobIds);
-    buffers.push(await compositeSinglePanel({ scenePath: p, label: line.label }));
-    specs.push({ c: "compositeSinglePanel", pathKeys: ["scenePath"], scenes: [{ prompt: pr, aspect: "4:5" }],
-      params: { label: line.label } });
+    const params = { label: line.label, topic, index: i + 1, total };
+    buffers.push(await compositeSinglePanel({ scenePath: artPath, ...params }));
+    specs.push({ c: "compositeSinglePanel", pathKeys: ["scenePath"], scenes: art, params });
   }
-  const revealPrompt = lessonScenePrompt(c.cta_scene, c.cta_expression, 9, "coverTop");
-  const revealPath = await scene(revealPrompt, dir, "reveal", "4:5", jobIds);
-  buffers.push(await compositeReveal({
-    scenePath: revealPath,
-    revealLine: c.reveal_line,
-    closingLine: c.closing_line,
-    sendTo: c.send_to,
-  }));
-  specs.push({ c: "compositeReveal", pathKeys: ["scenePath"], scenes: [{ prompt: revealPrompt, aspect: "4:5" }],
-    params: { revealLine: c.reveal_line, closingLine: c.closing_line, sendTo: c.send_to } });
+  const revealParams = { revealLine: c.reveal_line, closingLine: c.closing_line, sendTo: c.send_to, topic, index: total, total };
+  buffers.push(await compositeReveal({ scenePath: artPath, ...revealParams }));
+  specs.push({ c: "compositeReveal", pathKeys: ["scenePath"], scenes: art, params: revealParams });
   return { slideBuffers: buffers, slideSpecs: specs, copy: c, format: "ORDER", sub_type: c.sub_type ?? "repeating_formula", pillar: c.pillar };
 }
 
@@ -243,39 +226,30 @@ async function buildLesson(topic, dir, jobIds) {
   const buffers = [];
   const specs = [];
 
+  // One scene: the cover art, reused as the Wick card on every item and on the
+  // checklist closer. The closer turns every item's "how" into a save-worthy list.
   const coverPrompt = lessonScenePrompt(l.cover_scene, l.cover_expression, 0, "coverTop");
   const coverPath = await scene(coverPrompt, dir, "cover", "4:5", jobIds);
-  buffers.push(await compositeLessonCover({ scenePath: coverPath, headline: l.cover_headline }));
-  specs.push({ c: "compositeLessonCover", pathKeys: ["scenePath"], scenes: [{ prompt: coverPrompt, aspect: "4:5" }],
-    params: { headline: l.cover_headline } });
+  const art = [{ prompt: coverPrompt, aspect: "4:5" }];
+  const total = l.items.length + 2;
+  const pill = l.pillar ?? "";
 
-  for (const item of l.items) {
-    // 3:2, NOT 4:5. The item slot is 1080x700 landscape; generating portrait and
-    // cropping to it kept only rows ~65-765 of a 1350-tall frame and sliced off
-    // the wax body, arms and legs, so Wick read as a floating head. Matching the
-    // slot's aspect removes the destructive crop entirely.
-    const itemPrompt = lessonScenePrompt(item.scene, item.expression, item.number);
-    const p = await scene(itemPrompt, dir, `item-${item.number}`, "3:2", jobIds);
-    buffers.push(await compositeLessonItem({
-      scenePath: p, number: item.number, title: item.title,
-      problem: item.problem, solution: item.solution, how: item.how,
-    }));
-    specs.push({ c: "compositeLessonItem", pathKeys: ["scenePath"], scenes: [{ prompt: itemPrompt, aspect: "3:2" }],
-      params: { number: item.number, title: item.title, problem: item.problem, solution: item.solution, how: item.how } });
+  const coverParams = { headline: l.cover_headline, topic: pill, index: 1, total };
+  buffers.push(await compositeLessonCover({ scenePath: coverPath, ...coverParams }));
+  specs.push({ c: "compositeLessonCover", pathKeys: ["scenePath"], scenes: art, params: coverParams });
+
+  for (let k = 0; k < l.items.length; k++) {
+    const item = l.items[k];
+    const params = { number: item.number, title: item.title, problem: item.problem, solution: item.solution, how: item.how,
+      topic: pill, index: k + 2, total };
+    buffers.push(await compositeLessonItem({ scenePath: coverPath, ...params }));
+    specs.push({ c: "compositeLessonItem", pathKeys: ["scenePath"], scenes: art, params });
   }
 
-  // Recap CTA — every item becomes a labelled signpost pointing down the wrong road.
-  const signposts = l.items.map((i) => i.signpost).filter(Boolean);
-  const recapPrompt = lessonScenePrompt(
-    `stands on a city sidewalk at dusk at a five way junction, ${signposts.length} illuminated overhead direction signs crowded above the left hand street all pointing the same way, one clear open street to the right leading toward lit towers, a bus shelter and parked cars framing the junction`
-  , undefined, 0, "upper");
-  const recapPath = await scene(recapPrompt, dir, "recap", "4:5", jobIds);
-  buffers.push(await compositeCta({
-    scenePath: recapPath, closingLine: l.closing_line,
-    sendTo: l.send_to, keyword: l.keyword, resource: l.resource,
-  }));
-  specs.push({ c: "compositeCta", pathKeys: ["scenePath"], scenes: [{ prompt: recapPrompt, aspect: "4:5" }],
-    params: { closingLine: l.closing_line, sendTo: l.send_to, keyword: l.keyword, resource: l.resource } });
+  const ctaParams = { closingLine: l.closing_line, sendTo: l.send_to, keyword: l.keyword, resource: l.resource,
+    steps: l.items.map((it) => it.how).filter(Boolean), topic: pill, index: total, total };
+  buffers.push(await compositeCta({ scenePath: coverPath, ...ctaParams }));
+  specs.push({ c: "compositeCta", pathKeys: ["scenePath"], scenes: art, params: ctaParams });
 
   return { slideBuffers: buffers, slideSpecs: specs, copy: l, format: "LESSON", sub_type: "problem_solution", pillar: l.pillar };
 }
@@ -285,10 +259,10 @@ async function buildLesson(topic, dir, jobIds) {
 // planFormats(): even rotation while any format is under-tested, then weighted
 // by measured shares per like.
 //
-// Cost note: a comparison carousel is 9 generations, COSTUME is 7, LESSON is 7.
-// At ~7 credits per generation (gpt_image_2) a 14 post week is roughly 800 credits;
-// nano_banana_pro is 2 credits and cuts that to ~230. Switch via WICK_IMAGE_MODEL.
-// Dial WICK_POSTS_PER_WEEK down if that outruns the credit budget.
+// Cost note: since the 2026-09-15 editorial redesign VERSUS, ORDER and LESSON are
+// ONE generation per post (plus scene-gate retries); COSTUME and PARABLE still
+// generate per slide. At ~7 credits per generation (gpt_image_2) a 14 post week is
+// roughly 100-150 credits. Switch models via WICK_IMAGE_MODEL.
 
 // Formats that rotate freely across the HYBRID lane. COSTUME and PARABLE are
 // excluded on purpose: they are pinned to MONEY_SYSTEMS and MIND_BEHAVIOUR.
