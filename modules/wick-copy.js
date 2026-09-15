@@ -1240,10 +1240,18 @@ const dollars = (t) => [...String(t ?? "").matchAll(/\$\s?([\d,]+(?:\.\d+)?)/g)]
 export function hookProblems(copy, format, figures = null) {
   if (format !== "LESSON" || !copy?.cover_headline) return [];
   const claims = dollars(copy.cover_headline);
-  if (!claims.length) return [];
   const bodyText = JSON.stringify({ ...copy, cover_headline: undefined }) + " " + (figures ?? "");
   const pool = dollars(bodyText);
   const out = [];
+  // Score points and percentages are factual claims too. "CLOSING ONE CARD COSTS
+  // YOU 50 POINTS" passed with 50 appearing nowhere in the post or its figures.
+  const plain = bodyText.replace(/,/g, "");
+  for (const [, n, unit] of String(copy.cover_headline).matchAll(/(\d[\d,.]*)\s*(%|percent|points?)/gi)) {
+    const v = n.replace(/,/g, "").replace(".", "\\.");
+    if (!new RegExp(`(^|[^\\d.])${v}\\s*(%|percent|points?)`, "i").test(plain)) {
+      out.push(`HOOK: the cover claims ${n} ${unit} but no slide or verified figure states it. Use a number the slides prove, or none.`);
+    }
+  }
   for (const c of claims) {
     const backed = pool.some((n) => Math.abs(n - c) / n <= 0.15);
     if (!backed) {
