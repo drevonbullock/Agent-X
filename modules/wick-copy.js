@@ -164,6 +164,23 @@ four are the archetypes, exactly as he gave them:
   "You are losing $100 a day."
   "What you should do with your first $1,000."   (direction — added 2026-09-12)
 
+  THE PROMISE SHAPES LEAD NOW. Dre, 2026-09-15: "the hooks need to be better...
+  I'm going to show you how to make X amount of dollars... stuff like that."
+  "I'm going to show you how to make $100,000 a year."
+  "I'm going to show you how to make an extra $1,000 a year."
+  "I'm going to show you a better way to save your money."
+  "I'm going to show you how to make $100 a month. 3 steps. Do it tonight."
+  "I'm going to show you how to make $1,000 a month, and get this: it only
+   costs $100. Here's how."
+  The shape: a concrete money outcome the reader wants, per year or per month,
+  then a twist that makes it feel reachable (it only costs $100; 3 steps; do it
+  tonight). Prefer these over the loss shapes. They obey every rule below: the
+  dollar figure is the post's own proven number, rounded, and the claim is
+  literally true for this post. "Build $122K" when $100 a month at 7% for 30
+  years reaches $121,997. "Make an extra $400 a year" when moving $10,000 to a
+  4.20% account earns $382 more. The spoken twist in a reel may end on "here's
+  how"; a cover still drops it (rule d).
+
   The dollar amounts in these templates show the SHAPE of a hook, never the
   number to use. In testing two of three LESSON covers printed "$1,000" copied
   from the template while the posts proved $92,995 and $1,558. The cover's number
@@ -1001,7 +1018,7 @@ Return JSON object:
 {
   "pillar": "Money|Investing|Credit",
   "pillar_link": "the two pillars this wires together",
-  "cover_headline": "ALL CAPS hook from Dre's template, max 10 words, ROUND numbers only ($100/$250/$500/$1,000 — never $289). Shapes: YOU MISSED OUT ON $X LAST WEEK / LET ME SHOW YOU HOW TO SAVE $X PER DAY / YOU ARE LOSING $X A DAY. Mind lane uses hours or nights instead of dollars. No trailing HERE'S HOW. Never a count formula.",
+  "cover_headline": "ALL CAPS hook from Dre's template, max 12 words, ROUND numbers only ($100/$250/$500/$1,000 — never $289). Lead with the promise shapes: I'M GOING TO SHOW YOU HOW TO MAKE $X A YEAR / I'M GOING TO SHOW YOU HOW TO MAKE $X A MONTH / I'M GOING TO SHOW YOU A BETTER WAY TO SAVE YOUR MONEY. Also allowed: YOU MISSED OUT ON $X LAST WEEK / LET ME SHOW YOU HOW TO SAVE $X PER DAY / YOU ARE LOSING $X A DAY. Mind lane uses hours or nights instead of dollars. No trailing HERE'S HOW. Never a count formula.",
   "cover_scene": "One dense sentence: the PRESENT DAY cover scene for Wick, 3-4 named modern objects, setting.",
   "cover_expression": "His expression on the cover, matched to the headline's tone.",
   "items": [
