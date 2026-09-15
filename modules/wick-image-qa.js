@@ -302,7 +302,9 @@ export async function auditQueue({ autoPull = false } = {}) {
       }
     }
 
-    const promoted = r.verdict === "BAD" ? "rejected" : "approved";
+    // A pending post is waiting on Dre's Telegram tap. Passing QA clears it for
+    // his review, never past it: only his approval publishes it.
+    const promoted = r.verdict === "BAD" ? "rejected" : p.status === "pending" ? "pending" : "approved";
     await supabase.from("wick_posts")
       .update({ image_qa: r, image_qa_at: new Date().toISOString(), status: promoted })
       .eq("id", p.id);
