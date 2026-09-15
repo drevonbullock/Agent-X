@@ -15,7 +15,7 @@ const client = new Anthropic();
 //
 // Everything is PRESENT DAY. No philosophy, no philosophers, no antiquity.
 
-export const PILLARS = ["Earn", "Credit", "Grow", "Systems"];
+export const PILLARS = ["Money", "Investing", "Credit"];
 
 // Learned rules from pulled work, fetched fresh each call so a lesson applies to
 // the very next post rather than the next deploy. See modules/wick-lessons.js.
@@ -49,31 +49,17 @@ export async function brandRules() {
 const BRAND_RULES = `
 WICK'S WISDOM — non-negotiable content rules.
 
-THE FOUR PILLARS: Earn, Credit, Grow, Systems. There is no fifth.
-(Pivoted 2026-09-12. Dre chose the wealth-building lane over the behavioural
-one, knowingly and after the trade-offs were put to him.)
+THE THREE PILLARS: Money, Investing, Credit. That is the whole page. Dre,
+2026-09-15: "Just keep it basic. The page teaches about money, investing, and
+credit. That's it."
 
-  EARN    how money is made. Reselling and flipping with the actual blueprint,
-          side income, pricing your own work, finding a path to a first dollar.
-  CREDIT  how money moves before you have it. How a score is built, what good
-          and bad debt actually cost, how leverage multiplies both directions,
-          why the economy runs on credit.
-  GROW    how money compounds. What a rate does over 40 years, how investing
-          mechanically works, why time beats amount.
-  SYSTEMS the operating layer that decides whether any of the above survives
-          contact with a real week.
+  MONEY      how to make money, and how money works.
+  INVESTING  what investing is, how to create investments, and how to make
+             money from investing. Name the funds and the broker: VOO, VTI,
+             SPY, Webull.
+  CREDIT     what credit is, and how to take advantage of credit.
 
-THE INTEGRATION RULE (the most important rule on this page): every post must
-connect TWO pillars and show the wiring between them. Earn creates the capital.
-Credit multiplies it or eats it. Grow compounds what is left. Systems decide
-whether the reader still does any of it in March. Name the link and make the
-reader feel the handoff. A post inside one pillar has failed, however good the
-line sounds.
-
-The wiring is ONE mechanism crossing two pillars, never two lessons stapled
-together. "Reselling profit, put back into more stock, compounds" crosses Earn
-into Grow with one mechanism. "Flip items, then also invest in the market" is
-two mechanisms, and it fails review.
+A post can live inside one pillar. "What is credit?" is a complete post.
 
 TONE (Dre, 2026-08-09: "more simple and motivational, less jargon, make the
 viewer feel motivated to act after seeing a post"). This governs HOW every line
@@ -156,11 +142,8 @@ NAMING RULES:
   d. NEVER name a mechanism you cannot define in ONE plain sentence. If the
      definition needs a paragraph, the topic is too big for one post.
 
-WHAT THIS IS NOT. Education never means lecturing, and it never means naming a
-specific investment, platform or product to buy. Teach the mechanism, show the
-arithmetic both directions, and let the reader make their own call. The page
-is valuable because it explains how the machine works — not because it tells
-anyone which button to press.
+WHAT THIS IS NOT. Education never means lecturing. It means telling the reader
+exactly what to do and exactly what to buy, with the numbers that show why.
 
 HOOKS — DRE'S TEMPLATE, VERBATIM, 2026-08-28. His words: "the hook is okay
 with the numbers, but 'THE TIMER COST YOU $289 THIS YEAR' is a terrible hook.
@@ -343,21 +326,13 @@ THE FORMULA: lead with the number, land on the method. Open on a figure bigger
 or smaller than the reader expects. Show the mechanism that produces it. Give
 them the steps. The number is the hook; the method is the payoff.
 
-THE MECHANISM RULE — REVISED 2026-09-12. This is the guardrail that keeps the
-page valuable AND keeps it out of trouble. Teach the MECHANISM and the MATH,
-including the downside, every time.
-  ALLOWED — how compounding works and what forty years of it actually returns;
-    how a credit score is calculated; how leverage multiplies a gain AND a loss;
-    how to source, price and list a resale item; what an interest rate does to a
-    balance over time; why the economy runs on credit.
-  ALLOWED — structural advice: "pay yourself first", "check the fee before the
-    return", "know your exit number before you buy the inventory".
-  BANNED — naming a specific ticker, fund, broker, platform or product, or any
-    claim about what a named investment will do next. "Buy VOO" and "use this
-    app" are automatic fails. The mechanic is the product, not the pick.
-  ALWAYS — when the topic is debt or investing, the downside gets equal airtime.
-    A post showing only the upside is not teaching, it is selling, and this page
-    is read by people who cannot afford to be sold to.
+TELL THEM WHAT TO DO AND WHAT TO BUY. Dre, 2026-09-15: "you are going to say,
+'Buy VOO, buy VTI, buy SPY, buy these things.' Yes, absolutely, buy these
+things. Not only that, whatever broker you're using, I use [Webull]... The whole
+point is to make money." Name specific funds, stocks and brokers and tell the
+reader to buy them. There is NO rule against recommending an investment or a
+platform on this page, and no post needs a risk warning. What must be right:
+the facts stated about them (a fund's fee, what it holds) and every number.
 
 THE RATE RULE (2026-09-13). Language models are unreliable at compound
 interest, and a wrong compounding figure is the fastest way to lose the Learner,
@@ -379,13 +354,10 @@ followed 6%. So:
      expression, pose, setting, wardrobe, beat. A compounding figure with no
      rate the reader can see counts as a failed figure.
   d. NEVER STATE ONE RATE AND COMPUTE WITH ANOTHER.
-  e. NAME A CONCRETE DOWNSIDE, NOT A HEDGE. "Returns vary" is a shrug. "Some
-     years lose money" is a downside. The reader must learn one specific thing
-     that can actually go wrong.
   When the topic brief carries VERIFIED FIGURES, those numbers override this
   table, and the rates written in them are the rates to state.
   For LOANS and card balances, use the rate the scenario states, and still obey
-  (c), (d) and (e).
+  (c) and (d).
 
 THIS PAGE IS NOT A PHILOSOPHY PAGE. This is the rule that gets broken most, so
 read it twice:
@@ -491,37 +463,15 @@ function topicBrief(topic) {
   // Voice references Dre set per lane. These shape CADENCE and STANCE, never
   // content: never name them, never quote them, never imitate a catchphrase.
   const lane = {
-    EARN_GROW: `This is an EARN into GROW post, the page's main lane. Teach the
-method that makes the money, then show what that money becomes when it is put
-BACK INTO THE SAME METHOD: more inventory, more turns, a higher rate, a second
-client. That is still one mechanism, because the growth is the method repeating.
+    MONEY: `This is a MONEY post: how to make money, or how money works. Concrete
+steps in order, real figures, no hype. The reader can do step one tonight.`,
 
-NEVER turn the second half into stock-market, savings or interest-rate returns.
-In testing a reselling lesson ended on "invest $100 a month at 7%". The inspector
-correctly failed it as a second, unrelated mechanic, and it dragged investing
-disclaimers into a post about flipping. Market investing belongs only in
-GROW_SYSTEMS posts.
+    INVESTING: `This is an INVESTING post: what investing is, how to create an
+investment, or how investing makes money. Name the exact funds and the broker and
+tell the reader to buy them: VOO, VTI, SPY, Webull. Show the real numbers.`,
 
-VOICE: Hormozi's specificity about offers and numbers, said plainly. Concrete
-steps in order, real figures, no hype and no "imagine if". The reader should be
-able to do step one tonight with what they already own.`,
-
-    CREDIT_SYSTEMS: `This is a CREDIT into SYSTEMS post. Show how the machine is
-built, who designed it that way, and who it pays. The reader finishes able to
-predict what the system will do to them next time.
-
-VOICE: Dalio explaining how the machine works. Mechanical, neutral, unhurried.
-Name who profits and let the reader draw their own conclusion. Both directions
-of the arithmetic get shown — this lane covers debt, and a post that shows only
-the upside of borrowing is selling, not teaching.`,
-
-    GROW_SYSTEMS: `This is a GROW into SYSTEMS post. Show the arithmetic of
-compounding and the mechanics of how investing actually functions, then the
-habit that makes it survive a real decade.
-
-VOICE: Buffett explaining it to a beginner. Patient, arithmetic first, plain
-nouns. NEVER name a ticker, fund, broker or platform — the mechanism is the
-product, not the pick. The downside gets equal airtime as the upside, always.`,
+    CREDIT: `This is a CREDIT post: what credit is, or how to take advantage of
+credit. Plain steps and real numbers.`,
   }[topic.lane];
 
   // VERIFIED FIGURES. Computed in code, never by the model. In testing the writer
@@ -537,6 +487,9 @@ this topic. The cover hook may round a figure to a clean number per the hook
 rules; every slide shows the figure exactly as written here. Keep
 each number's MEANING too: if a figure is a profit, never present it as a sale
 price or as money kept from a sale, because that silently deletes the fees.
+Do not add ANY other specific number (a fee, a percentage, a dollar amount, a
+count) unless it is in these figures or arithmetic on them. An invented number
+fails review.
 ${topic.figures}` : "";
 
   // FEEDBACK. Set only on a rewrite, by writeInspected. The writers take nothing
@@ -700,8 +653,8 @@ Reference rhythm only, never copy the content:
 Return JSON object:
 {
   "theme": "short internal name for the theme",
-  "pillar": "the primary pillar: Earn|Credit|Grow|Systems",
-  "pillar_link": "the two pillars this set wires together, e.g. Earn to Grow",
+  "pillar": "the primary pillar: Money|Investing|Credit",
+  "pillar_link": "the two pillars this set wires together, e.g. Money to Investing",
   "sub_type": "owner_vs_owned",
   "hidden_rule": "the rule the whole set reveals, one sentence, and it must name the handoff between the two pillars",
   "pairs": [
@@ -714,7 +667,7 @@ Return JSON object:
       "bottom_expression": "His facial expression in the second panel. Usually the emotional cost: hollow and vacant, anxious, defeated, numb, quietly ashamed, exhausted. Match the feeling of the scene."
     }
   ],
-  "closing_line": "ONE short sentence, max 10 words, landing all four at once. Stop when it lands. EXCEPTION: if the pairs use compounding, interest, a loan or an investment return, this line must instead name a CONCRETE downside, e.g. '7% is not promised. Some years lose money.', and one pair label must state the rate.",
+  "closing_line": "ONE short sentence, max 10 words, landing all four at once. Stop when it lands. If the pairs use compounding or an investment return, one pair label must state the rate.",
   "send_to": "Who to send this post to. One line, max 12 words, naming a RECOGNIZABLE SITUATION, not a personality trait. 'the friend who got a raise and still feels broke' is right. 'someone who needs this' is wrong.",
   "cta_scene": "One dense sentence: a closing PRESENT DAY scene for Wick that visually gathers the theme, 3-4 named modern objects.",
   "cta_expression": "His expression in the closing scene. Usually warm, resolved, quietly hopeful, or knowing."
@@ -733,6 +686,7 @@ Exactly 4 pairs.`,
     bottom_label: stripDashes(p.bottom_label),
   }));
   c.closing_line = stripDashes(c.closing_line);
+  if (c.send_to) c.send_to = stripDashes(c.send_to);
   return c;
 }
 
@@ -774,20 +728,16 @@ Same shape every time. Only the pair of opposites changes.
 Build your own shape for the assigned topic and hold it exactly across all four.
 Escalate: line 1 is the most recognizable, line 4 is the one that stings.
 
-RATES AND RISK ON THE SLIDES (2026-09-13). If the four lines use compounding,
-interest, a loan or an investment return, THE RATE RULE in the brand rules
-governs the numbers. On this format the rate and the risk live on slide 5: the
-reveal_line states the rate ("At 7% a year, time does the work.") and the
-closing_line names a CONCRETE downside ("7% is not promised. Some years lose
-money."). Both obey their word caps. "Returns vary" is a hedge, not a downside,
-and fails.
+RATES ON THE SLIDES. If the four lines use compounding, interest, a loan or an
+investment return, slide 5's reveal_line states the rate ("At 7% a year, time
+does the work.").
 
 If your shape carries a number, every number must actually multiply out. Check it.
 
 Return JSON object:
 {
   "theme": "short internal name",
-  "pillar": "Earn|Credit|Grow|Systems",
+  "pillar": "Money|Investing|Credit",
   "pillar_link": "the two pillars this set wires together",
   "sub_type": "repeating_formula",
   "formula": "the sentence shape you are holding, with the swapped part marked, for internal reference only",
@@ -815,6 +765,7 @@ Exactly 4 lines.`,
   c.lines = (c.lines ?? []).slice(0, 4).map((l) => ({ ...l, label: stripDashes(l.label) }));
   c.reveal_line = stripDashes(c.reveal_line);
   c.closing_line = stripDashes(c.closing_line);
+  if (c.send_to) c.send_to = stripDashes(c.send_to);
   return c;
 }
 
@@ -864,8 +815,8 @@ THE RULES OF THIS FORMAT:
 Return JSON object:
 {
   "theme": "short internal name",
-  "pillar": "Earn|Credit|Grow|Systems",
-  "pillar_link": "the two pillars this story wires together, e.g. Earn to Grow",
+  "pillar": "Money|Investing|Credit",
+  "pillar_link": "the two pillars this story wires together, e.g. Money to Investing",
   "sub_type": "parable",
   "speaker": "the ordinary present day thing that speaks, 2-4 words",
   "hidden_rule": "one sentence, the rule the story reveals",
@@ -897,6 +848,7 @@ Exactly 3 beats.`,
   }));
   c.application = stripDashes(c.application);
   c.closing_line = stripDashes(c.closing_line);
+  if (c.send_to) c.send_to = stripDashes(c.send_to);
   return c;
 }
 
@@ -907,7 +859,7 @@ Exactly 3 beats.`,
 
 export async function writeCostume(topic) {
   if (!topic) throw new Error("writeCostume requires a topic from wick-topics.js");
-  const angle = topic.lane === "CREDIT_SYSTEMS"
+  const angle = topic.lane === "CREDIT"
     ? `Cast the ACTORS IN THE CHAIN. Each role is a party that profits from, designs, or absorbs the cost of this mechanic. The reader should finish the carousel understanding who is paid at every step and by whom.`
     : `Cast the MODES THE READER SWITCHES BETWEEN. Each role is a version of a person that shows up at a different point in this mechanic. One of them is the one that costs them money. Do not label which; let the reader recognize themselves.`;
 
@@ -932,7 +884,7 @@ so is anything that names a historical figure or a philosophy.
 Return JSON object:
 {
   "theme": "short internal name",
-  "pillar": "Earn|Credit|Grow|Systems",
+  "pillar": "Money|Investing|Credit",
   "pillar_link": "the two pillars this wires together",
   "hidden_rule": "one sentence naming what the full cast reveals",
   "roles": [
@@ -963,6 +915,7 @@ Exactly 6 roles.`,
     note: stripDashes(r.note),
   }));
   c.closing_line = stripDashes(c.closing_line);
+  if (c.send_to) c.send_to = stripDashes(c.send_to);
   return c;
 }
 
@@ -1000,7 +953,7 @@ Cover headline rhythm only, write a new one for the assigned topic:
 
 Return JSON object:
 {
-  "pillar": "Earn|Credit|Grow|Systems",
+  "pillar": "Money|Investing|Credit",
   "pillar_link": "the two pillars this wires together",
   "cover_headline": "ALL CAPS hook from Dre's template, max 10 words, ROUND numbers only ($100/$250/$500/$1,000 — never $289). Shapes: YOU MISSED OUT ON $X LAST WEEK / LET ME SHOW YOU HOW TO SAVE $X PER DAY / YOU ARE LOSING $X A DAY. Mind lane uses hours or nights instead of dollars. No trailing HERE'S HOW. Never a count formula.",
   "cover_scene": "One dense sentence: the PRESENT DAY cover scene for Wick, 3-4 named modern objects, setting.",
@@ -1030,11 +983,13 @@ Exactly 5 items.`,
   const l = parseJson(msg.content[0].text);
   l.cover_headline = stripDashes(l.cover_headline).toUpperCase();
   l.closing_line = stripDashes(l.closing_line);
+  if (l.send_to) l.send_to = stripDashes(l.send_to);
   l.items = (l.items ?? []).slice(0, 5).map((it) => ({
     ...it,
     title: stripDashes(it.title),
     problem: stripDashes(it.problem),
     solution: stripDashes(it.solution),
+    how: stripDashes(it.how),
   }));
   return l;
 }
@@ -1091,6 +1046,10 @@ number, attached to the right scenario and person, with the rate stated. A
 number the figures call profit, net, cost, price, balance or total must mean the
 same thing in the copy: presenting a $20 PROFIT as a $20 sale price ("sell one
 item for $20... keep $1,000") silently drops the fees, and FAILS.
+Every OTHER specific number in the copy (a fee, a percentage, a dollar amount, a
+count) must come from these figures or be arithmetic on them. A number that is
+neither, such as "most funds charge 1% or more" or a loan amount the figures
+never mention, is invented and FAILS.
 ${figures}
 ` : ""}
 
@@ -1120,18 +1079,10 @@ FAIL it unless ALL of these hold:
    name the reason exactly as: "rate not stated, a reader cannot check these
    numbers". Do not call the math wrong unless no single rate fits it.
 4. After reading, you can retell the post's point in one plain sentence.
-5. THE GUARDRAIL (added 2026-09-12, the page teaches earning, credit and
-   investing). FAIL if the copy names a specific ticker, fund, ETF, broker,
-   trading app, card, bank product or platform to buy or use, or predicts what
-   any named investment will do. Explaining HOW something works is fine;
-   recommending a named product is a fail.
-6. BOTH DIRECTIONS. This rule exists to stop SELLING. If the post promotes
-   borrowing, leverage or investing, FAIL it unless a concrete risk is stated
-   in the copy itself, not implied and not left for the caption. A risk that is
-   stated and then answered ("7% is not promised. Some years lose money. Start
-   anyway.") PASSES: naming the risk is the requirement, not ending on it. A post
-   whose whole point IS the cost of a debt, fee or trap already states the
-   downside. Do not fail it for lacking a second one.
+5. NAMED FUNDS, STOCKS AND BROKERS ARE THE PAGE'S STYLE. "Buy VOO", "buy VTI",
+   "buy SPY" and naming a broker such as Webull are wanted. NEVER fail a post for
+   recommending a specific investment or platform, and NEVER fail a post for not
+   stating a risk. Only check that the facts stated about them are correct.
 
 Return ONLY JSON:
 {"pass": true|false, "retell": "the point in one sentence, or what confused you",
@@ -1399,7 +1350,7 @@ ${rules}
 Return JSON with EVERY key below present. Do not omit any of them:
 {
   "theme": "short internal name",
-  "pillar": "Earn|Credit|Grow|Systems",
+  "pillar": "Money|Investing|Credit",
   "pillar_link": "the two pillars wired",
   "hidden_rule": "one sentence naming the handoff",
   "labels": ["one per frame, in the same order, ${slots.length} entries"],
@@ -1411,6 +1362,7 @@ ${fields ? fields + "\n" : ""}  "closing_line": "ONE short sentence, max 10 word
   const c = parseJson(msg.content[0].text);
   c.labels = (c.labels ?? []).map(stripDashes);
   c.closing_line = stripDashes(c.closing_line);
+  if (c.send_to) c.send_to = stripDashes(c.send_to);
   return c;
 }
 
@@ -1446,7 +1398,7 @@ present day.
 Return JSON:
 {
   "title": "ALL CAPS, max 6 words, the promise of the sequence",
-  "pillar": "Earn|Credit|Grow|Systems",
+  "pillar": "Money|Investing|Credit",
   "steps": [
     { "rule": "the imperative, max 6 words, no trailing punctuation",
       "why": "the mechanism, max 12 words, starts lowercase, ends with a full stop" }
@@ -1492,7 +1444,7 @@ Reference rhythm ONLY, never reuse this content:
 Return JSON:
 {
   "title_lines": ["line one, max 5 words", "line two, max 5 words"],
-  "pillar": "Earn|Credit|Grow|Systems",
+  "pillar": "Money|Investing|Credit",
   "tiers": [
     { "label": "ONE WORD, ALL CAPS", "stat": "the count, e.g. 5 times or 3 weeks" }
   ],
@@ -1545,7 +1497,7 @@ LANE: ${topic.lane}   HIDDEN RULE: ${topic.hook ?? ""}
 
 Respond with valid JSON only:
 {
-  "pillar": "Earn|Credit|Grow|Systems style pillar pair, e.g. Credit to Grow",
+  "pillar": "Money|Investing|Credit style pillar pair, e.g. Credit to Investing",
   "pillar_link": "ONE plain sentence naming both pillars and the direction of the handoff.",
   "title": "The receipt header. ALL CAPS, max 5 words, naming what is being priced. 'THE REAL PRICE OF BEING NICE' is the shape.",
   "subtitle": "3 to 5 words under the header, like a shop name. Plain and dry.",

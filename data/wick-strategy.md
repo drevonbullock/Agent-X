@@ -92,20 +92,14 @@ terms. Revisit if the demographics endpoint later shows a different reality.
 
 ---
 
-## POSITIONING STATEMENT — confirmed 2026-09-12
+## POSITIONING — 2026-09-15
 
-Rewritten after Dre pivoted the page to wealth building.
-
-> For **people who want to build wealth but were never taught how money
-> actually works**, who need **concrete methods and real arithmetic rather than
-> motivation**, **Wick's Wisdom** provides **how to earn it, how credit moves
-> it, and how compounding grows it — every claim proved with numbers you can
-> check**, and **never names a ticker, platform or product to buy**, because
-> **the mechanics that build wealth were never hidden, just never taught.**
-
-That last clause is the brand promise. The guardrail clause is what keeps it
-from becoming the thousandth finance-guru account: the page explains how the
-machine works and refuses to tell anyone which button to press.
+Dre: "Just keep it basic. The page teaches about money, investing, and credit.
+That's it." The page teaches how to make money and how money works; what
+investing is, how to create investments and how to make money from investing,
+naming funds and brokers and telling people to buy them (VOO, VTI, SPY,
+Webull); and what credit is and how to take advantage of it. Every number is
+real.
 
 ## THE FUNNEL — currently absent
 
