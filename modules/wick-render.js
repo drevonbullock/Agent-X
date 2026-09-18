@@ -1007,3 +1007,6 @@ export function tmpDir(batchId, postId) {
   fs.mkdirSync(d, { recursive: true });
   return d;
 }
+
+// Shared with modules/wick-story.js (the story carousel renderer).
+export { esc, fitJpeg, dataUri, FONTS, renderHtml };

@@ -2,3 +2,7 @@ node_modules/
 out/
 .remotion/
 public/vo/
+
+# Recorded voiceover takes (regenerated per reel, never committed)
+public/vo-paper/
+public/vo-quick/
