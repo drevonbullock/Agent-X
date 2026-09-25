@@ -220,11 +220,28 @@ function crown(ctx, cx, cy, tilt) {
   ctx.restore();
 }
 
+// royal cape hanging behind the wax, ermine hem showing at the sides
+function cape(ctx) {
+  const p = (c) => {
+    c.moveTo(-0.5, -1.36); c.quadraticCurveTo(-0.62, -1.0, -0.8, -0.3);
+    c.quadraticCurveTo(-0.55, -0.22, -0.3, -0.3); c.lineTo(0.3, -0.3);
+    c.quadraticCurveTo(0.55, -0.22, 0.8, -0.3); c.quadraticCurveTo(0.62, -1.0, 0.5, -1.36); c.closePath();
+  };
+  ctx.beginPath(); p(ctx); ctx.fillStyle = "#b9322b"; ctx.fill();
+  hatch(ctx, p, { gap: 0.04, width: 0.012, color: "rgba(60,0,0,0.5)", cy: -0.8, R: 2 });
+  ctx.beginPath(); p(ctx); ctx.lineWidth = LW * 0.8; ctx.lineJoin = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
+  const hem = (c) => { c.moveTo(-0.82, -0.36); c.quadraticCurveTo(-0.55, -0.26, -0.3, -0.34); c.lineTo(0.3, -0.34); c.quadraticCurveTo(0.55, -0.26, 0.82, -0.36);
+    c.lineTo(0.8, -0.24); c.quadraticCurveTo(0.55, -0.14, 0.3, -0.22); c.lineTo(-0.3, -0.22); c.quadraticCurveTo(-0.55, -0.14, -0.8, -0.24); c.closePath(); };
+  ctx.beginPath(); hem(ctx); ctx.fillStyle = "#f4efe2"; ctx.fill(); ctx.lineWidth = LW * 0.7; ctx.stroke();
+  ctx.fillStyle = PAL.ink;
+  for (const x of [-0.7, -0.5, 0.5, 0.7]) { ctx.beginPath(); ctx.ellipse(x, -0.27, 0.018, 0.035, 0, 0, Math.PI * 2); ctx.fill(); }
+}
+
 /**
  * inkWick(ctx, x, y, scale, opts)
  *   face:  key of FACES          look: -1..1 eye direction
  *   armL/armR: hand position in body units, e.g. [0.95, -1.3]
- *   crown: true to wear the king's crown     glow: 0..1
+ *   crown / cape: the king's costume          glow: 0..1
  */
 export function inkWick(ctx, x, y, s, o = {}) {
   const f = FACES[o.face || "happy"], look = o.look || 0, lean = o.lean ?? -0.07;
@@ -234,11 +251,12 @@ export function inkWick(ctx, x, y, s, o = {}) {
   // light: the flame lights the world around him
   if ((o.glow ?? 1) > 0) {
     ctx.save(); ctx.globalCompositeOperation = "screen";
-    const g = ctx.createRadialGradient(0, fcy + 0.2, 0.2, 0, fcy + 0.2, 2.6);
-    g.addColorStop(0, `rgba(255,178,60,${0.34 * (o.glow ?? 1)})`);
-    g.addColorStop(0.45, `rgba(255,150,40,${0.1 * (o.glow ?? 1)})`);
-    g.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = g; ctx.fillRect(-3, -5, 6, 6);
+    const gl = o.glow ?? 1;
+    const g = ctx.createRadialGradient(0, fcy + 0.1, 0.3, 0, fcy + 0.1, 2.2);
+    g.addColorStop(0, `rgba(255,196,80,${0.42 * gl})`);
+    g.addColorStop(0.35, `rgba(255,160,50,${0.16 * gl})`);
+    g.addColorStop(1, "rgba(255,140,40,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, fcy + 0.1, 2.2, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
   // warm pool of light on the ground
@@ -260,6 +278,8 @@ export function inkWick(ctx, x, y, s, o = {}) {
     ctx.fillStyle = "rgba(255,255,255,0.15)";
     ctx.beginPath(); ctx.ellipse(sgn * 0.24, -0.12, 0.08, 0.022, 0, 0, Math.PI * 2); ctx.fill();
   }
+
+  if (o.cape) cape(ctx);
 
   // arms (behind the wax)
   const shL = [-0.46, -1.13], shR = [0.46, -1.13];
@@ -336,5 +356,112 @@ export function title(ctx, text, x, y, size, color = PAL.paperText, align = "cen
 export function label(ctx, text, x, y, size, color = PAL.paperText, align = "center") {
   ctx.save();
   ctx.font = `500 ${size}px Fira`; ctx.textAlign = align; ctx.fillStyle = color; ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+// ---------- hand-drawn line + print grain (the "made by a person" pass) ----------
+// Every art layer is drawn through an SVG displacement filter: a slow wobble so
+// lines aren't ruler-straight, plus fine roughness on the ink edges. Three seeds
+// cycle at eight per second, which gives the line "boil" of hand animation.
+let filtersFor = 0;
+function ensureFilters(k) {
+  if (filtersFor === k) return;
+  document.getElementById("ink-filters")?.remove();
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.id = "ink-filters"; svg.setAttribute("width", "0"); svg.setAttribute("height", "0");
+  svg.style.position = "absolute";
+  svg.innerHTML = [1, 2, 3].map((sd) => `
+    <filter id="ink${sd}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="${(0.009 / k).toFixed(5)}" numOctaves="2" seed="${sd}" result="slow"/>
+      <feDisplacementMap in="SourceGraphic" in2="slow" scale="${(6 * k).toFixed(2)}" xChannelSelector="R" yChannelSelector="G" result="w"/>
+      <feTurbulence type="fractalNoise" baseFrequency="${(0.3 / k).toFixed(4)}" numOctaves="1" seed="${sd + 20}" result="fine"/>
+      <feDisplacementMap in="w" in2="fine" scale="${(1.8 * k).toFixed(2)}" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>`).join("");
+  document.body.appendChild(svg);
+  filtersFor = k;
+}
+
+function grainTexture(W, H, seed = 5) {
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d"), r = rng(seed);
+  const img = g.createImageData(W, H), d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    let v = 128 + (r() - 0.5) * 70;
+    if (r() < 0.004) v = r() < 0.5 ? 40 : 230;                    // riso specks
+    d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  return c;
+}
+
+// stage.frame(bg, t, drawArt, drawText): bg paper → wobbly art → crisp text → grain
+export function makeStage(out) {
+  const W = out.width, H = out.height, k = W / 1920;
+  const art = document.createElement("canvas"); art.width = W; art.height = H;
+  const actx = art.getContext("2d"), octx = out.getContext("2d");
+  const grain = grainTexture(W, H);
+  ensureFilters(k);
+  return {
+    k, W, H,
+    frame(bg, t, drawArt, drawText) {
+      octx.globalCompositeOperation = "source-over"; octx.filter = "none";
+      octx.drawImage(bg, 0, 0);
+      actx.setTransform(1, 0, 0, 1, 0, 0); actx.clearRect(0, 0, W, H);
+      actx.save(); actx.scale(k, k); drawArt(actx); actx.restore();
+      octx.filter = `url(#ink${(Math.floor(t * 8) % 3) + 1})`;
+      octx.drawImage(art, 0, 0);
+      octx.filter = "none";
+      if (drawText) { octx.save(); octx.scale(k, k); drawText(octx); octx.restore(); }
+      octx.save(); octx.globalCompositeOperation = "overlay"; octx.globalAlpha = 0.22;
+      octx.drawImage(grain, 0, 0); octx.restore();
+    },
+  };
+}
+
+// light spilling from beyond something: thin fan of rays
+export function rays(ctx, x, y, n, len, spread, dir, color = "255,205,110", alpha = 0.16, seed = 3) {
+  const r = rng(seed);
+  ctx.save(); ctx.globalCompositeOperation = "screen";
+  for (let i = 0; i < n; i++) {
+    const a = dir + (i / (n - 1) - 0.5) * spread + (r() - 0.5) * 0.08, w = 0.03 + r() * 0.04, L = len * (0.6 + r() * 0.4);
+    const g = ctx.createLinearGradient(x, y, x + Math.cos(a) * L, y + Math.sin(a) * L);
+    g.addColorStop(0, `rgba(${color},${alpha})`); g.addColorStop(1, `rgba(${color},0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(x, y);
+    ctx.lineTo(x + Math.cos(a - w) * L, y + Math.sin(a - w) * L); ctx.lineTo(x + Math.cos(a + w) * L, y + Math.sin(a + w) * L);
+    ctx.closePath(); ctx.fill();
+  }
+  const gg = ctx.createRadialGradient(x, y, 0, x, y, len * 0.45);
+  gg.addColorStop(0, `rgba(${color},${alpha * 3})`); gg.addColorStop(1, `rgba(${color},0)`);
+  ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(x, y, len * 0.45, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+// the Dalio chart stroke: thick sky-blue line, round caps, optional arrowhead
+export function chartLine(ctx, pts, { width = 12, color = PAL.blue, arrow = true } = {}) {
+  ctx.save();
+  ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
+    ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+  }
+  const e = pts[pts.length - 1], p = pts[pts.length - 2];
+  ctx.lineTo(e[0], e[1]);
+  ctx.lineWidth = width; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = color; ctx.stroke();
+  if (arrow) {
+    const a = Math.atan2(e[1] - p[1], e[0] - p[0]), L = width * 3.2;
+    ctx.beginPath();
+    ctx.moveTo(e[0] + Math.cos(a - 2.6) * L, e[1] + Math.sin(a - 2.6) * L); ctx.lineTo(e[0], e[1]);
+    ctx.lineTo(e[0] + Math.cos(a + 2.6) * L, e[1] + Math.sin(a + 2.6) * L); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// tracked small caps, the Dalio kicker line
+export function kicker(ctx, text, x, y, size, color = PAL.blue, track = 0.32) {
+  ctx.save(); ctx.font = `700 ${size}px Serif4`; ctx.fillStyle = color; ctx.textBaseline = "alphabetic";
+  const chars = [...text], ws = chars.map((c) => ctx.measureText(c).width + size * track);
+  let cx = x - ws.reduce((a, b) => a + b, 0) / 2 + size * track / 2;
+  chars.forEach((c, i) => { ctx.fillText(c, cx, y); cx += ws[i]; });
   ctx.restore();
 }

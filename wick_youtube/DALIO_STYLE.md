@@ -41,4 +41,8 @@ thick outline, flat gold + cream, hatch shadow on the flame's left and the wax's
 warm glow so the flame stays the light source. Costumes (crown etc.) may sit on the
 flame for YouTube stories but must never hide the flame tip.
 
-Style frames: `node render.mjs --film dalio-style --stills 0.5,1.5`
+Style frames: `node render.mjs --film dalio-style --stills 0.5,1.5,2.5`
+
+The "made by a person" pass (`makeStage`): all art goes through an SVG displacement
+filter (slow wobble + rough ink edges, three seeds cycling at 8/s for line boil),
+text stays crisp on top, then a print-grain overlay covers everything.
