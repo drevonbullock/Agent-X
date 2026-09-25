@@ -141,6 +141,24 @@ Expressions available (mirror the 3D sheet): happy, calm, curious, focused,
 determined, proud, sombre, weary, alarmed. **Every beat that shows Wick names
 one.**
 
+
+### 6e. Dre's direction after the first 2D test (2026-09-25) — THESE WIN
+
+1. **Wick looks exactly like his renders.** `wick_examples` images and Dre's
+   reference renders are the model. The 2D engine paints him to match them
+   (`engine/lib2d/wickHD.js`): glowing glossy flame with the lighter inner flame,
+   tip left of centre, smirk, cup rim, thick glossy drips, lone droplet,
+   tubular black limbs, big shoes. No redesigns, no flat simplifications.
+   The renders are reference only; they never appear in the video.
+2. **Tell stories. Wick plays every character.** Parables beat lectures. Dress
+   him for the role: the king gets a crown, cape and ermine.
+3. **Interactive, always.** Characters walk, bow, present, gesture, react,
+   laugh, panic. Props pop in and get handled. Something moves every beat.
+4. **Music never fights the voice.** The score is auto-levelled 22 dB under
+   the narration's speech level and ducks further while he talks
+   (`films/king-30/score.mjs`).
+5. **Tests are 30 seconds.**
+
 ### 6b. Palettes
 
 ```
