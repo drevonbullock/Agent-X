@@ -111,15 +111,13 @@ system for the paid layer.
 
 ---
 
-## 6. VISUAL LANGUAGE — CLAY 3D, DRAWN IN CODE
+## 6. VISUAL LANGUAGE — FLAT 2D, DRAWN IN CODE
 
-**Updated 2026-09-25:** the render style is three.js clay miniature (soft clay
-materials, warm key light, bloom, tilt-shift depth of field, film grain), not
-flat vectors. Wick is built from geometry in `engine/lib/wick.js` to match
-`wick_examples/00_character_sheet.png`. The palettes, scene vocabulary and 9:16
-rule below still apply; read "flat" as "clay".
+**Clarified by Dre 2026-09-25:** production is plain JavaScript drawing on an HTML
+canvas. three.js is a later upgrade. The 1-minute test in `engine/` used three.js
+only as a capability demo (clay Wick built from geometry).
 
-Everything is drawn by code (plain JavaScript + three.js, no Remotion). No per shot AI
+Everything is drawn by code (plain JavaScript Canvas 2D, no Remotion). No per shot AI
 images. That is what makes 150 minutes of footage affordable and keeps Wick on
 model forever.
 

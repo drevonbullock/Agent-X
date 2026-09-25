@@ -13,10 +13,9 @@ Written 2026-09-25. Companion files:
 
 **Recommendation: animation drawn entirely in code. Chosen by Dre 2026-09-25.**
 
-**Update, same day:** Dre steered from flat 2D to **three.js clay 3D**, the look
-Opus 5.5 creators are shipping on X, with Wick modeled in code from his character
-sheet. Everything below about why code-drawn wins still holds. Only the render
-style moved from flat vectors to a clay miniature.
+**Update, same day:** production stays **plain JavaScript on a canvas** (flat 2D).
+A three.js clay version was built for the 1-minute test to show what's possible,
+and three.js is the planned upgrade path later, not the default now.
 
 What people gravitate toward in explainers, and why:
 
@@ -96,12 +95,18 @@ of each script changes.
 
 ## 4. THE ENGINE — HOW A SCRIPT BECOMES A VIDEO
 
-**Decision (Dre, 2026-09-25): all code. Plain JavaScript + three.js, no Remotion,
-no Higgsfield.** It matches what creators on X are shipping with Opus 5.5: three.js
-clay scenes with ambient light, bloom and tilt-shift depth of field, every frame a
-pure function of time, captured headless into an MP4.
+**Decision (Dre, 2026-09-25): all code, plain JavaScript on an HTML canvas.** No
+Remotion, no Higgsfield. **three.js comes later**, as an upgrade once the plain-JS
+pipeline is running. The 1-minute test was built in three.js only to show the
+ceiling of what code can draw (clay materials, bloom, tilt-shift). It is a
+capability demo, not the production default.
 
-Built and proven on the 1-minute test (`wick_youtube/engine/`):
+Production default: Canvas 2D (flat, the Kurzgesagt / After Skool look from §1),
+same harness: every frame a pure function of time, captured headless into an MP4.
+The test engine's harness, synth and render script carry over unchanged. Only the
+drawing layer (`lib/wick.js`, `lib/post.js`) gets a Canvas 2D twin.
+
+What exists now (`wick_youtube/engine/`, three.js test):
 
 ```
 engine/
@@ -126,7 +131,8 @@ expression, and can never drift. A pasted image can only slide around (the
 | Tool | Job | Needed? |
 |---|---|---|
 | Claude | Scripts, scene code, score code | Yes |
-| three.js | Every frame | Yes |
+| Plain JavaScript (Canvas 2D) | Every frame, production default | Yes |
+| three.js | Upgrade path later; used for the 1-min capability test | Later |
 | ElevenLabs | Narrator VO only (voice: Alex, deep warm narrator). ~$0.15 per minute of narration | Yes |
 | Music + SFX | Synthesized in code (`lib/synth.mjs`) | No outside tool. Suno optional later for hero tracks |
 | OpenRouter | Only if a scene needs a texture or reference code can't draw. Test film used none | Optional |
