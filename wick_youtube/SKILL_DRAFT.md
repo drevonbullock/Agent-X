@@ -121,4 +121,9 @@ boil always run on live seconds. Pass both to the stage.
 - 2026-09-25: Dre wants the Clawd-video montages (zooming, galaxies, dense motion graphics)
   built into the episodes. First pass: films/wick-montage, a particle journey (grain → galaxy →
   sunflower → murmuration → compounding curve) using 1,100 particles that morph with staggered easing.
+- 2026-09-25: "Make it better" on the montage, so v2: no muddy crossfades (use flash, iris or speed
+  lines instead); added a nautilus world as an infinite zoom (log spiral, camera turns and zooms
+  exactly as fast as the shell grows); galaxy tilts in 3D and gets sucked into a flaring core;
+  light runs along the sunflower's seed spirals; sun and hills at sunset; Dalio grid under the
+  curve; camera shake on the aha burst.
 - Voice: ElevenLabs is out. Pending Dre: record his own VO (recommended) or a Mac `say` placeholder.
