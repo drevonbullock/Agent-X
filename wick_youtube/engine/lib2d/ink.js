@@ -84,15 +84,32 @@ const B = -0.47;          // bottom of the wax
 const FH = 1.52, FW = 1.2, SINK = 0.12;
 const LW = 0.05;          // outline weight
 
+// eyes: oval | wide | happy | down | half | squint | shut | star | dollar | wink | tear
+// mouth: smile (curve<0 = frown) | smirk | o | O | laugh | grin | wavy | flat | teeth
+// brow: + raises the inner ends (worry), - lowers them (anger). browL/browR raise one side.
+// The flame is an emotion channel too: flare (size), glow, flick (flicker speed).
 export const FACES = {
-  happy:      { eye: 1, brow: 0, browY: 0, mouth: "smile", mw: 0.16, curve: 0.08 },
-  calm:       { eye: 1, lids: "down", brow: 0, browY: 0.01, mouth: "smile", mw: 0.1, curve: 0.04 },
-  curious:    { eye: 1.1, brow: 0.1, browY: -0.04, mouth: "o", mw: 0.04 },
-  proud:      { eye: 1, lids: "half", brow: -0.08, browY: 0.02, mouth: "smirk", mw: 0.14, curve: 0.06 },
-  determined: { eye: 0.95, brow: -0.3, browY: 0.02, mouth: "smile", mw: 0.1, curve: 0.03 },
-  alarmed:    { eye: 1.25, brow: 0.32, browY: -0.06, mouth: "o", mw: 0.065 },
-  sombre:     { eye: 0.95, brow: 0.28, browY: 0, mouth: "smile", mw: 0.1, curve: -0.05 },
+  happy:      { eyes: "oval", brow: 0, mouth: "smile", mw: 0.16, curve: 0.08 },
+  joy:        { eyes: "happy", brow: 0.05, browY: -0.03, mouth: "laugh", mw: 0.2, blush: 1, flare: 1.08, glow: 1.2 },
+  calm:       { eyes: "down", brow: 0, browY: 0.01, mouth: "smile", mw: 0.1, curve: 0.04 },
+  curious:    { eyes: "oval", eye: 1.1, brow: 0.1, browY: -0.05, mouth: "o", mw: 0.04 },
+  thinking:   { eyes: "oval", lookX: -0.8, lookY: -0.9, brow: 0, browL: 0.06, browR: -0.03, mouth: "smirk", mw: 0.1, curve: 0.01 },
+  skeptical:  { eyes: "half", brow: -0.05, browL: 0.08, mouth: "flat", mw: 0.1 },
+  proud:      { eyes: "half", brow: -0.08, browY: 0.02, mouth: "smirk", mw: 0.14, curve: 0.06, flare: 1.04 },
+  determined: { eyes: "oval", eye: 0.95, brow: -0.3, browY: 0.02, mouth: "smile", mw: 0.1, curve: 0.02 },
+  wink:       { eyes: "wink", brow: 0, browR: 0.04, mouth: "grin", mw: 0.17, curve: 0.06 },
+  starstruck: { eyes: "star", brow: 0.12, browY: -0.05, mouth: "laugh", mw: 0.18, blush: 1, flare: 1.14, glow: 1.4, flick: 1.6 },
+  money:      { eyes: "dollar", brow: 0.1, browY: -0.04, mouth: "grin", mw: 0.2, curve: 0.08, flare: 1.1, glow: 1.3 },
+  alarmed:    { eyes: "wide", eye: 1.1, brow: 0.32, browY: -0.06, mouth: "O", mw: 0.065, flare: 1.1, flick: 2.2 },
+  shocked:    { eyes: "wide", eye: 1.3, brow: 0.36, browY: -0.1, mouth: "O", mw: 0.1, flare: 1.2, glow: 1.3, flick: 2.8 },
+  worried:    { eyes: "oval", brow: 0.3, mouth: "wavy", mw: 0.13, flare: 0.95, flick: 1.8 },
+  grimace:    { eyes: "squint", brow: 0.22, mouth: "teeth", mw: 0.2, flick: 1.5 },
+  sad:        { eyes: "tear", brow: 0.34, mouth: "smile", mw: 0.11, curve: -0.06, flare: 0.88, glow: 0.55 },
+  weary:      { eyes: "half", lid: 0.62, brow: 0.2, mouth: "smile", mw: 0.09, curve: -0.03, flare: 0.9, glow: 0.7 },
+  angry:      { eyes: "squint", brow: -0.5, browY: 0.03, mouth: "teeth", mw: 0.16, flare: 1.08, flick: 2 },
 };
+FACES.sombre = FACES.sad;
+FACES.laugh = FACES.joy;
 
 function flamePath(ctx, cx, cy, W, H, lean) {
   const n = 72, R = [], L = [];
@@ -158,50 +175,106 @@ function mitten(ctx, x, y, dir, side) {
   ctx.restore();
 }
 
-function face(ctx, fx, f, look) {
-  const eyeY = T - 0.46, dx = 0.125, ex = look * 0.03;
-  // eyes
-  for (const s of [-1, 1]) {
-    const x = fx + s * dx + ex, rx = 0.058 * f.eye, ry = 0.085 * f.eye;
-    if (f.lids === "shut") {
-      ctx.beginPath(); ctx.moveTo(x - rx * 1.2, eyeY + ry * 0.1); ctx.quadraticCurveTo(x, eyeY + ry * 0.45, x + rx * 1.2, eyeY + ry * 0.1);
-      ctx.lineWidth = 0.028; ctx.lineCap = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
-      continue;
-    }
-    if (f.lids === "down") {
-      ctx.beginPath(); ctx.ellipse(x, eyeY, rx * 1.1, ry * 0.5, 0, 0.15, Math.PI - 0.15);
-      ctx.lineWidth = 0.028; ctx.lineCap = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
-      continue;
-    }
-    ctx.fillStyle = PAL.ink;
-    ctx.beginPath(); ctx.ellipse(x, eyeY, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+function face(ctx, fx, f, look, t) {
+  const eyeY = T - 0.46, dx = 0.125, lx = (f.lookX ?? look) * 0.03, ly = (f.lookY || 0) * 0.025;
+  const ink = (w) => { ctx.lineWidth = w; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = PAL.ink; };
+  const E = f.eye || 1, rx = 0.058 * E, ry = 0.085 * E;
+  const oval = (x, y, clipTop) => {
+    ctx.save();
+    if (clipTop != null) { ctx.beginPath(); ctx.rect(x - 1, clipTop, 2, 1); ctx.clip(); }
+    ctx.fillStyle = PAL.ink; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#fff";
-    ctx.beginPath(); ctx.arc(x + rx * 0.35, eyeY - ry * 0.4, rx * 0.36, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x - rx * 0.3, eyeY + ry * 0.4, rx * 0.15, 0, Math.PI * 2); ctx.fill();
-    if (f.lids === "half") {                                       // heavy lid: a flat top edge
-      ctx.fillStyle = PAL.gold;
-      ctx.fillRect(x - rx * 1.3, eyeY - ry * 1.3, rx * 2.6, ry * 0.95);
-      ctx.beginPath(); ctx.moveTo(x - rx * 1.15, eyeY - ry * 0.35); ctx.lineTo(x + rx * 1.15, eyeY - ry * 0.35);
-      ctx.lineWidth = 0.024; ctx.strokeStyle = PAL.ink; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x + rx * 0.35, y - ry * 0.4, rx * 0.36, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x - rx * 0.3, y + ry * 0.4, rx * 0.15, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  };
+  for (const s of [-1, 1]) {
+    const x = fx + s * dx + lx, y = eyeY + ly;
+    const kind = f.eyes === "wink" ? (s < 0 ? "happy" : "oval") : f.lids === "shut" ? "shut" : (f.eyes || (f.lids === "down" ? "down" : f.lids === "half" ? "half" : "oval"));
+    if (kind === "oval") oval(x, y);
+    else if (kind === "tear") {
+      oval(x, y);
+      const k = ((t * 0.7) % 1), ty = y + ry * 1.2 + k * 0.28;
+      if (s > 0) { ctx.save(); ctx.globalAlpha = 1 - k; sweat(ctx, x + rx * 0.6, ty, 0.05, 0); ctx.restore(); }
+    } else if (kind === "half") {
+      const lid = y - ry + ry * 2 * (f.lid ?? 0.42);
+      oval(x, y, lid);
+      ctx.beginPath(); ctx.moveTo(x - rx * 1.25, lid + 0.004); ctx.lineTo(x + rx * 1.25, lid - 0.004); ink(0.026); ctx.stroke();
+    } else if (kind === "squint") {
+      ctx.save(); ctx.beginPath(); ctx.rect(x - 1, y - ry * 0.35, 2, ry * 0.8); ctx.clip();
+      ctx.fillStyle = PAL.ink; ctx.beginPath(); ctx.ellipse(x, y, rx * 1.1, ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      ctx.beginPath(); ctx.moveTo(x - rx * 1.3, y - ry * 0.35 + s * f.brow * -0.03); ctx.lineTo(x + rx * 1.3, y - ry * 0.35 - s * f.brow * -0.03); ink(0.026); ctx.stroke();
+    } else if (kind === "happy") {
+      ctx.beginPath(); ctx.moveTo(x - rx * 1.3, y + ry * 0.35); ctx.quadraticCurveTo(x, y - ry * 0.95, x + rx * 1.3, y + ry * 0.35); ink(0.034); ctx.stroke();
+    } else if (kind === "down") {
+      ctx.beginPath(); ctx.ellipse(x, y, rx * 1.1, ry * 0.5, 0, 0.15, Math.PI - 0.15); ink(0.028); ctx.stroke();
+    } else if (kind === "shut") {
+      ctx.beginPath(); ctx.moveTo(x - rx * 1.2, y + ry * 0.1); ctx.quadraticCurveTo(x, y + ry * 0.45, x + rx * 1.2, y + ry * 0.1); ink(0.028); ctx.stroke();
+    } else if (kind === "wide") {
+      ctx.fillStyle = "#fffaf0"; ctx.beginPath(); ctx.ellipse(x, y, rx * 1.35, ry * 1.2, 0, 0, Math.PI * 2); ctx.fill(); ink(0.02); ctx.stroke();
+      const jig = Math.sin(t * 40 + s) * 0.004;
+      ctx.fillStyle = PAL.ink; ctx.beginPath(); ctx.arc(x + lx * 0.6 + jig, y + ly * 0.6, rx * 0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x + lx * 0.6 + rx * 0.18, y + ly * 0.6 - rx * 0.18, rx * 0.16, 0, Math.PI * 2); ctx.fill();
+    } else if (kind === "star") {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(t * 3) * 0.15); ctx.scale(1 + 0.08 * Math.sin(t * 9), 1 + 0.08 * Math.sin(t * 9));
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, r = i % 2 ? 0.04 : 0.1; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+      ctx.closePath(); ctx.fillStyle = "#fff6d0"; ctx.fill(); ink(0.018); ctx.stroke(); ctx.restore();
+    } else if (kind === "dollar") {
+      ctx.save(); ctx.translate(x, y + 0.01); ctx.scale(1 + 0.06 * Math.sin(t * 8), 1 + 0.06 * Math.sin(t * 8));
+      ctx.font = "900 0.24px Serif4"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.lineWidth = 0.03; ctx.lineJoin = "round"; ctx.strokeStyle = PAL.ink; ctx.strokeText("$", 0, 0);
+      ctx.fillStyle = "#3f9a45"; ctx.fillText("$", 0, 0); ctx.restore();
     }
   }
-  // brows: positive tilt raises the inner ends (worry), negative lowers them (resolve)
+  // brows
   for (const s of [-1, 1]) {
-    const x = fx + s * dx + ex * 0.6, y = eyeY - 0.14 + f.browY;
+    const tilt = f.brow || 0, raise = (s < 0 ? f.browL : f.browR) || 0;
+    const x = fx + s * dx + lx * 0.6, y = eyeY - 0.14 * (f.eye || 1) + (f.browY || 0) - raise + ly * 0.5;
     ctx.beginPath();
-    ctx.moveTo(x - s * 0.06, y - f.brow * 0.06);
-    ctx.quadraticCurveTo(x, y - 0.03, x + s * 0.06, y + f.brow * 0.06);
-    ctx.lineWidth = 0.024; ctx.lineCap = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
+    ctx.moveTo(x - s * 0.06, y - tilt * 0.06);
+    ctx.quadraticCurveTo(x, y - 0.03, x + s * 0.06, y + tilt * 0.06);
+    ink(0.024); ctx.stroke();
+  }
+  // cheeks
+  if (f.blush) {
+    ctx.fillStyle = "rgba(232,86,58,0.42)";
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(fx + s * 0.25, eyeY + 0.13, 0.065, 0.032, 0, 0, Math.PI * 2); ctx.fill(); }
   }
   // mouth
-  const my = T - 0.24, mx = fx + ex * 0.8;
-  ctx.strokeStyle = PAL.ink; ctx.fillStyle = PAL.ink; ctx.lineWidth = 0.026; ctx.lineCap = "round";
-  if (f.mouth === "o") {
-    ctx.beginPath(); ctx.ellipse(mx, my + 0.01, f.mw * 0.8, f.mw, 0, 0, Math.PI * 2); ctx.fill();
-  } else if (f.mouth === "smirk") {
-    ctx.beginPath(); ctx.moveTo(mx - f.mw / 2, my); ctx.quadraticCurveTo(mx + f.mw * 0.1, my + f.curve * 1.2, mx + f.mw / 2, my - 0.035); ctx.stroke();
-  } else {
-    ctx.beginPath(); ctx.moveTo(mx - f.mw / 2, my); ctx.quadraticCurveTo(mx, my + f.curve * 2, mx + f.mw / 2, my); ctx.stroke();
+  const my = T - 0.24, mx = fx + lx * 0.8, w = f.mw || 0.12;
+  ctx.fillStyle = PAL.ink; ink(0.026);
+  const openMouth = (depth, teeth, tongue) => {
+    const p = (c) => { c.moveTo(mx - w / 2, my - 0.015); c.quadraticCurveTo(mx, my + 0.005, mx + w / 2, my - 0.015); c.quadraticCurveTo(mx + w * 0.4, my + depth, mx, my + depth); c.quadraticCurveTo(mx - w * 0.4, my + depth, mx - w / 2, my - 0.015); c.closePath(); };
+    ctx.beginPath(); p(ctx); ctx.fillStyle = "#4a1c12"; ctx.fill();
+    ctx.save(); ctx.beginPath(); p(ctx); ctx.clip();
+    if (tongue) { ctx.fillStyle = "#e0655a"; ctx.beginPath(); ctx.ellipse(mx, my + depth, w * 0.3, depth * 0.45, 0, 0, Math.PI * 2); ctx.fill(); }
+    if (teeth) { ctx.fillStyle = "#fffaf0"; ctx.fillRect(mx - w, my - 0.03, w * 2, depth * 0.38); }
+    ctx.restore();
+    ctx.beginPath(); p(ctx); ink(0.022); ctx.stroke();
+  };
+  switch (f.mouth) {
+    case "o": ctx.beginPath(); ctx.ellipse(mx, my + 0.01, w * 0.8, w, 0, 0, Math.PI * 2); ctx.fillStyle = PAL.ink; ctx.fill(); break;
+    case "O":
+      ctx.beginPath(); ctx.ellipse(mx, my + 0.02, w * 0.75, w * 1.05, 0, 0, Math.PI * 2); ctx.fillStyle = "#4a1c12"; ctx.fill(); ink(0.022); ctx.stroke(); break;
+    case "laugh": openMouth(0.13, false, true); break;
+    case "grin": openMouth(0.085, true, false); break;
+    case "teeth": {
+      const h = 0.07;
+      ctx.beginPath(); ctx.roundRect(mx - w / 2, my - h / 2, w, h, 0.025); ctx.fillStyle = "#fffaf0"; ctx.fill(); ink(0.022); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(mx - w / 2, my); ctx.lineTo(mx + w / 2, my);
+      for (let i = 1; i < 4; i++) { const x = mx - w / 2 + (w * i) / 4; ctx.moveTo(x, my - h / 2); ctx.lineTo(x, my + h / 2); }
+      ink(0.012); ctx.stroke(); break;
+    }
+    case "wavy":
+      ctx.beginPath();
+      for (let i = 0; i <= 16; i++) { const k = i / 16, x = mx - w / 2 + w * k, y = my + Math.sin(k * Math.PI * 3 + t * 6) * 0.014; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ink(0.024); ctx.stroke(); break;
+    case "flat": ctx.beginPath(); ctx.moveTo(mx - w / 2, my); ctx.lineTo(mx + w / 2, my + 0.004); ink(0.026); ctx.stroke(); break;
+    case "smirk":
+      ctx.beginPath(); ctx.moveTo(mx - w / 2, my); ctx.quadraticCurveTo(mx + w * 0.1, my + (f.curve || 0.05) * 1.2, mx + w / 2, my - 0.035); ink(0.026); ctx.stroke(); break;
+    default:
+      ctx.beginPath(); ctx.moveTo(mx - w / 2, my); ctx.quadraticCurveTo(mx, my + (f.curve ?? 0.06) * 2, mx + w / 2, my); ink(0.026); ctx.stroke();
   }
 }
 
@@ -252,10 +325,12 @@ export function inkWick(ctx, x, y, s, o = {}) {
   const t = o.t ?? 0, seed = o.seed || 0, look = o.look || 0;
   let f = FACES[o.face || "happy"];
   // alive: the flame sways and breathes, the eyes blink every few seconds
-  const lean = (o.lean ?? -0.07) + (o.t != null ? 0.035 * Math.sin(t * 3.1 + seed) + 0.015 * Math.sin(t * 7.3 + seed * 2) : 0);
-  const fh = FH * (1 + (o.t != null ? 0.022 * Math.sin(t * 5.7 + seed) : 0));
+  const fl = f.flick || 1, flare = o.flare ?? f.flare ?? 1;
+  const lean = (o.lean ?? -0.07) + (o.t != null ? 0.035 * fl * Math.sin(t * 3.1 * fl + seed) + 0.015 * fl * Math.sin(t * 7.3 * fl + seed * 2) : 0);
+  const fh = FH * flare * (1 + (o.t != null ? 0.022 * fl * Math.sin(t * 5.7 * fl + seed) : 0));
+  const fw = FW * (1 + (flare - 1) * 0.55);
   const blink = o.blink || (o.t != null && ((t * 0.9 + seed * 1.7) % 3.3) < 0.12);
-  if (blink && f.lids !== "down") f = { ...f, lids: "shut" };
+  if (blink && f.eyes !== "down" && f.eyes !== "happy") f = { ...f, lids: "shut", eyes: undefined };
   const fcx = 0, fcy = T + SINK - fh / 2;
   const sq = o.sq || 0, dy = o.dy || 0;
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
@@ -269,7 +344,7 @@ export function inkWick(ctx, x, y, s, o = {}) {
   // light: the flame lights the world around him
   if ((o.glow ?? 1) > 0) {
     ctx.save(); ctx.globalCompositeOperation = "screen";
-    const gl = o.glow ?? 1;
+    const gl = (o.glow ?? 1) * (f.glow ?? 1);
     const g = ctx.createRadialGradient(0, fcy + 0.1, 0.3, 0, fcy + 0.1, 2.2);
     g.addColorStop(0, `rgba(255,196,80,${0.42 * gl})`);
     g.addColorStop(0.35, `rgba(255,160,50,${0.16 * gl})`);
@@ -322,17 +397,17 @@ export function inkWick(ctx, x, y, s, o = {}) {
   ctx.save();
   ctx.beginPath(); ctx.moveTo(-3, -6); ctx.lineTo(3, -6); ctx.lineTo(3, T); ctx.lineTo(0.5, T);
   ctx.ellipse(0, T, 0.5, 0.1, 0, 0, Math.PI, false); ctx.lineTo(-3, T); ctx.closePath(); ctx.clip();
-  ctx.beginPath(); flamePath(ctx, fcx, fcy, FW, fh, lean); ctx.fillStyle = PAL.gold; ctx.fill();
-  ctx.beginPath(); flamePath(ctx, fcx + 0.07, fcy + 0.2, FW * 0.62, fh * 0.64, lean * 0.6); ctx.fillStyle = PAL.goldCore; ctx.fill();
-  ctx.save(); ctx.beginPath(); flamePath(ctx, fcx, fcy, FW, fh, lean); ctx.clip();
+  ctx.beginPath(); flamePath(ctx, fcx, fcy, fw, fh, lean); ctx.fillStyle = PAL.gold; ctx.fill();
+  ctx.beginPath(); flamePath(ctx, fcx + 0.07, fcy + 0.2, fw * 0.62, fh * 0.64, lean * 0.6); ctx.fillStyle = PAL.goldCore; ctx.fill();
+  ctx.save(); ctx.beginPath(); flamePath(ctx, fcx, fcy, fw, fh, lean); ctx.clip();
   hatch(ctx, (c) => { c.moveTo(-0.7, fcy - 1); c.quadraticCurveTo(-0.14, fcy, -0.36, T + 0.1); c.lineTo(-0.9, T + 0.1); c.closePath(); },
     { gap: 0.04, width: 0.013, color: "rgba(170,80,0,0.6)", cy: fcy, R: 2 });
   // one gloss stroke, upper left, inside the flame
   ctx.beginPath(); ctx.ellipse(fcx - 0.1, fcy + 0.05, 0.3, 0.5, 0.12, Math.PI * 1.12, Math.PI * 1.38);
   ctx.lineWidth = 0.035; ctx.lineCap = "round"; ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.stroke();
   ctx.restore();
-  face(ctx, fcx + 0.02, f, look);
-  ctx.beginPath(); flamePath(ctx, fcx, fcy, FW, fh, lean); ctx.lineWidth = LW; ctx.lineJoin = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
+  face(ctx, fcx + 0.02, f, look, t);
+  ctx.beginPath(); flamePath(ctx, fcx, fcy, fw, fh, lean); ctx.lineWidth = LW; ctx.lineJoin = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
   ctx.restore();
 
   // melted drips over the rim
@@ -449,6 +524,8 @@ function grainTexture(W, H, seed = 5) {
 // A scene is { bg, art(ctx), text(ctx), cam: {x, y, z, r} }. Rendering one:
 // bg paper → art through the ink filter → crisp text → print grain.
 // The camera puts world point (x, y) at screen centre, zoomed z, rotated r.
+// Two clocks: t is choreography time (handed to art/text/over), live is real
+// seconds (line boil). They differ when a film plays its choreography slower.
 export function makeStage(out) {
   const W = out.width, H = out.height, k = W / 1920;
   const mk = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
@@ -460,13 +537,13 @@ export function makeStage(out) {
     if (!cam) return;
     c.translate(960, 540); c.rotate(cam.r || 0); c.scale(cam.z || 1, cam.z || 1); c.translate(-(cam.x ?? 960), -(cam.y ?? 540));
   };
-  function render(target, sc, t) {
+  function render(target, sc, t, live = t) {
     const g = target.getContext("2d");
     g.save(); g.globalCompositeOperation = "source-over"; g.filter = "none"; g.globalAlpha = 1;
     g.drawImage(sc.bg, 0, 0);
     actx.setTransform(1, 0, 0, 1, 0, 0); actx.clearRect(0, 0, W, H);
     actx.save(); camT(actx, sc.cam); sc.art(actx, t); actx.restore();
-    g.filter = `url(#ink${(Math.floor(t * 12) % 3) + 1})`;
+    g.filter = `url(#ink${(Math.floor(live * 12) % 3) + 1})`;
     g.drawImage(art, 0, 0);
     g.filter = "none";
     if (sc.text) { g.save(); camT(g, sc.cam); sc.text(g, t); g.restore(); }
@@ -476,12 +553,12 @@ export function makeStage(out) {
   }
   return {
     k, W, H,
-    frame(sc, t) { render(out, sc, t); },
+    frame(sc, t, live = t) { render(out, sc, t, live); },
     // Dalio's hatch-in: the next scene arrives as diagonal strokes that thicken,
     // sweeping left to right, until they close up solid. p: 0..1
-    hatchIn(from, to, p, t) {
-      render(out, from, t);
-      render(other, to, t);
+    hatchIn(from, to, p, t, live = t) {
+      render(out, from, t, live);
+      render(other, to, t, live);
       const m = mask.getContext("2d");
       m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = "source-over"; m.clearRect(0, 0, W, H);
       const gap = 26 * k, ang = -1.05, dx = Math.cos(ang), dy = Math.sin(ang), R = Math.hypot(W, H);
@@ -562,5 +639,25 @@ export function kicker(ctx, text, x, y, size, color = PAL.blue, track = 0.32, al
   const chars = [...text], ws = chars.map((c) => ctx.measureText(c).width + size * track);
   let cx = x - ws.reduce((a, b) => a + b, 0) / 2 + size * track / 2;
   chars.forEach((c, i) => { ctx.fillText(c, cx, y); cx += ws[i]; });
+  ctx.restore();
+}
+
+// The "aha" burst (from the Clawd reference videos): pencil lines shoot out from
+// behind a character with a few sketched rings. k: 0..1 over the moment.
+export function burst(ctx, x, y, k, { r0 = 120, r1 = 900, n = 46, color = "rgba(240,235,220,0.5)", seed = 4 } = {}) {
+  if (k <= 0 || k >= 1) return;
+  const r = rng(seed), grow = 1 - Math.pow(1 - k, 3), fade = 1 - Math.pow(k, 3);
+  ctx.save(); ctx.strokeStyle = color; ctx.globalAlpha = fade; ctx.lineCap = "round";
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + (r() - 0.5) * 0.12, a0 = r0 * (0.8 + r() * 0.6);
+    const a1 = a0 + (r1 - a0) * grow * (0.35 + r() * 0.65), skip = r() < 0.25;
+    if (skip) continue;
+    ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * (a0 + (a1 - a0) * 0.35 * grow), y + Math.sin(a) * (a0 + (a1 - a0) * 0.35 * grow));
+    ctx.lineTo(x + Math.cos(a) * a1, y + Math.sin(a) * a1);
+    ctx.lineWidth = 1 + r() * 2.2; ctx.stroke();
+  }
+  for (const [f, w] of [[0.35, 2], [0.62, 1.4], [0.9, 1]]) {
+    ctx.beginPath(); ctx.arc(x, y, r0 + (r1 * f - r0) * grow, 0, Math.PI * 2); ctx.lineWidth = w; ctx.stroke();
+  }
   ctx.restore();
 }
