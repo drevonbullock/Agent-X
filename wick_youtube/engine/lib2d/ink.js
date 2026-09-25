@@ -334,6 +334,7 @@ export function inkWick(ctx, x, y, s, o = {}) {
   const fcx = 0, fcy = T + SINK - fh / 2;
   const sq = o.sq || 0, dy = o.dy || 0;
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  if (o.flip) ctx.scale(-1, 1);                    // face the other way
   // ground shadow shrinks as he leaves the ground
   const air = 1 - Math.min(0.5, Math.abs(dy) * 0.5);
   ctx.fillStyle = "rgba(0,0,0,0.28)";
@@ -371,12 +372,18 @@ export function inkWick(ctx, x, y, s, o = {}) {
 
   if (o.cape) cape(ctx);
 
-  // arms (behind the wax)
-  const shL = [-0.46, -1.13], shR = [0.46, -1.13];
-  const hL = o.armL || [-0.74, -0.62], hR = o.armR || [0.74, -0.62];
-  const dL = hose(ctx, shL, hL, -0.12), dR = hose(ctx, shR, hR, 0.12);
-  mitten(ctx, hL[0], hL[1], dL, -1);
-  mitten(ctx, hR[0], hR[1], dR, 1);
+  // arms: [handX, handY, elbow bend, in front of the body?]. Legacy armL/armR still work.
+  const arms = o.arms || pose(t, [[0, "rest"]]);
+  const A = {
+    L: o.armL ? [o.armL[0], o.armL[1], -0.12, false] : arms.L,
+    R: o.armR ? [o.armR[0], o.armR[1], 0.12, false] : arms.R,
+  };
+  const drawArm = (side) => {
+    const [hx, hy, bend] = A[side], sh = [side === "L" ? -0.46 : 0.46, -1.13];
+    const d = hose(ctx, sh, [hx, hy], bend);
+    mitten(ctx, hx, hy, d, side === "L" ? -1 : 1);
+  };
+  for (const sd of ["L", "R"]) if (!A[sd][3]) drawArm(sd);
 
   // wax body: flat fill, flat shadow on the right, hatch over the shadow
   ctx.beginPath(); bodyPath(ctx); ctx.fillStyle = PAL.wax; ctx.fill();
@@ -414,9 +421,45 @@ export function inkWick(ctx, x, y, s, o = {}) {
   ctx.beginPath(); dripPath(ctx); ctx.fillStyle = PAL.waxLight; ctx.fill();
   ctx.lineWidth = LW * 0.7; ctx.lineJoin = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
 
+  for (const sd of ["L", "R"]) if (A[sd][3]) drawArm(sd);
   if (o.crown) crown(ctx, fcx + 0.24 + lean * 0.4, fcy - 0.1 + (o.crownBob || 0), 0.38 + (o.crownTilt || 0));
   if (o.emote && (o.emoteK ?? 1) > 0.01) emote(ctx, o.emote, 0.95, fcy - 0.55, backOut(o.emoteK ?? 1), t);
   ctx.restore();
+}
+
+// ---------- body language ----------
+// Hand position (body units), elbow bend, and whether the arm crosses in front.
+export const POSES = {
+  rest:    { L: [-0.6, -0.5, 0.1, 0],   R: [0.6, -0.5, -0.1, 0] },
+  hips:    { L: [-0.5, -0.8, 0.42, 1],  R: [0.5, -0.8, -0.42, 1] },
+  crossed: { L: [0.26, -0.93, -0.12, 1], R: [-0.26, -0.87, 0.12, 1] },
+  chin:    { L: [0.22, -0.86, -0.1, 1], R: [0.3, -1.42, 0.3, 1] },
+  shrug:   { L: [-0.86, -1.3, -0.3, 0], R: [0.86, -1.3, 0.3, 0] },
+  wave:    { L: [-0.6, -0.5, 0.1, 0],   R: [0.78, -1.95, -0.18, 0] },
+  present: { L: [-0.6, -0.5, 0.1, 0],   R: [1.02, -1.02, 0.18, 0] },
+  point:   { L: [-0.6, -0.5, 0.1, 0],   R: [1.05, -1.4, 0.12, 0] },
+  cheer:   { L: [-0.88, -1.66, -0.12, 0], R: [0.88, -1.66, 0.12, 0] },
+  scratch: { L: [-0.6, -0.5, 0.1, 0],   R: [0.52, -1.95, 0.35, 0] },
+  reach:   { L: [-0.6, -0.5, 0.1, 0],   R: [1.0, -0.62, -0.1, 0] },
+};
+// pose(t, [[t0, 'rest'], [t1, 'point'], ...]) → arms for inkWick({arms}).
+// Each change springs in over ~0.35 s with overshoot; rest sways, wave waves,
+// scratch scratches, present bobs like he's talking.
+export function pose(t, keys) {
+  let i = 0;
+  while (i + 1 < keys.length && t >= keys[i + 1][0]) i++;
+  const cur = POSES[keys[i][1]], prev = POSES[(keys[i - 1] || keys[i])[1]];
+  const k = i === 0 ? 1 : backOut((t - keys[i][0]) / 0.35);
+  const mix = (a, b) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k), (k > 0.5 ? b : a)[3]];
+  const out = { L: mix(prev.L, cur.L), R: mix(prev.R, cur.R) }, name = keys[i][1];
+  for (const sd of ["L", "R"]) {
+    const s = sd === "L" ? -1 : 1, a = out[sd], atRest = POSES[name][sd][1] > -0.6;
+    if (atRest) { a[0] += 0.035 * Math.sin(t * 1.7 + s); a[1] += 0.02 * Math.sin(t * 2.3 + s * 2); }
+  }
+  if (name === "wave") out.R[0] += 0.13 * Math.sin(t * 9) * k;
+  if (name === "scratch") { out.R[0] += 0.03 * Math.sin(t * 26); out.R[1] += 0.02 * Math.cos(t * 26); }
+  if (name === "present") out.R[1] += 0.06 * Math.sin(t * 5.5);
+  return out;
 }
 
 // reaction marks by the head, in body units
