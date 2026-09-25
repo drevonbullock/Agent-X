@@ -139,4 +139,7 @@ boil always run on live seconds. Pass both to the stage.
 - 2026-09-25: Episode 01 script audited before recording: B15's Earth-sized heap broke the
   true-scale rule (it's a ~6.2 km heap next to Everest); a promised "free calculator" doesn't exist
   and was removed; other candles became Wick in costume; B20 now uses the montage.
+- 2026-09-25: The montage work was a quality bar, not a template. Dre gives FREE REIN on when to use a
+  montage in an episode (not every video). When one is used, it must come out at the approved v4
+  level first time (films/wick-montage is the reference), with no rounds of iteration.
 - Voice: ElevenLabs is out. Pending Dre: record his own VO (recommended) or a Mac `say` placeholder.
