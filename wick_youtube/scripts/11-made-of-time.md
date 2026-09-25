@@ -8,7 +8,7 @@ alt_titles:
   - "What a Roman Millionaire Knew About Your Paycheck"
 thumbnail: "Wick holding a sneaker whose price tag reads '15 HOURS' instead of dollars. Text: THE REAL PRICE."
 runtime_target: "9:00"
-narration_words: 0
+narration_words: 1358
 ---
 
 # Your Money Is Made of Your Life
@@ -158,7 +158,7 @@ SFX: coin
 **B23** · `ZOOM` · music: resolve
 VO: In the United States, life expectancy is now about seventy nine years. That is roughly four thousand one hundred weeks. The writer Oliver Burkeman put it bluntly. The average human lifespan is absurdly, terrifyingly, insultingly short. Every purchase comes out of that pile.
 VISUAL: Start tight on one small square. Pull back: it is one week in a grid 52 squares wide and 79 rows tall, labeled "1 row = 1 year". The top third of the grid is already filled in with ink (weeks lived). Wick stands small at the grid's edge, calm, looking at the blank rows below.
-ON-SCREEN: 79 years ≈ 4,100 weeks
+ON-SCREEN: 79 years: about 4,100 weeks
 
 **B24** · `TEXT` · music: resolve
 VO: So here is the idea underneath all of this. You don't spend money. You spend the hours it cost. Money is just the receipt. It is the slip of paper that records how much life you handed over.
@@ -199,7 +199,7 @@ ON-SCREEN: The paper wage is a nicer story.
 **B30** · `STAGE` · music: resolve
 VO: So here is one thing to do tonight. Calculate your real hourly wage, once. Take your take home pay, and subtract what the job costs you. Then divide by every hour the job really takes. There is a free calculator in the description that does the math for you.
 VISUAL: Wick at his kitchen table, focused, with a pencil and a sheet showing three boxes: "TAKE HOME", "MINUS JOB COSTS", "DIVIDED BY REAL HOURS". He fills each box, draws a circle around the answer, and taps it twice with the pencil.
-ON-SCREEN: (Pay − job costs) ÷ real hours
+ON-SCREEN: (Pay minus job costs) ÷ real hours
 SFX: paper
 
 **B31** · `STAGE` · music: resolve
@@ -241,7 +241,14 @@ Get the free real hourly wage calculator linked below. Every number and quote in
 
 **Chapters:**
 ```
-CHAPTERS_PLACEHOLDER
+0:00 Cold open
+0:45 A Letter About Time
+2:38 The Wage on Paper
+4:09 The Hidden Hours
+5:07 Prices in Hours
+6:22 Four Thousand Weeks
+7:26 The Real Price Tag
+8:17 Your Real Wage
 ```
 (timestamps are estimates at 155 wpm; refreshed after VO is recorded)
 

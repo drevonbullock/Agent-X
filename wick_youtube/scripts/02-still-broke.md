@@ -8,7 +8,7 @@ alt_titles:
   - "Where Your Raise Actually Goes"
 thumbnail: "Wick in a glowing scarlet robe standing in a room where every piece of furniture has a price tag; text: WHERE'D IT GO?"
 runtime_target: "9:00"
-narration_words: 1378
+narration_words: 1376
 ---
 
 # Why You're Still Broke After Every Raise
@@ -97,7 +97,7 @@ SFX: whoosh
 
 **B14** · `QUOTE` · music: history
 VO: He wrote a whole essay about it, half joking and half not. In one translation, he says: I was the absolute master of my old dressing gown. I have become the slave of the new one.
-VISUAL: Flat silhouette portrait of Diderot in an eighteenth century wig, three quarter profile. The quote writes itself on in marker beside him. On the word "slave", the scarlet robe in a small inset tugs Wick along like a leash.
+VISUAL: Flat silhouette portrait of Diderot in an eighteenth century wig, three quarter profile. The quote writes itself on in marker beside him. On the word "slave", the scarlet robe in a small inset tugs Wick (alarmed) along like a leash.
 ON-SCREEN: "The slave of the new one."
 
 **B15** · `TEXT` · music: wonder
@@ -279,13 +279,13 @@ VISUAL: Wick (calm) in the scarlet robe sits back down in his old straw chair, p
 ```
 0:00 Cold open
 0:29 Wick's Three Raises
-2:25 The Red Robe
-3:27 The Treadmill
-4:56 The Ratchet
-6:06 What You Don't See
-7:09 The Turn
-7:37 Payoff
-8:26 First step
+2:24 The Red Robe
+3:26 The Treadmill
+4:55 The Ratchet
+6:05 What You Don't See
+7:08 The Turn
+7:36 Payoff
+8:25 First step
 ```
 (timestamps are estimates at 155 wpm; refreshed after VO is recorded)
 

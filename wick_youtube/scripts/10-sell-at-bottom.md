@@ -8,7 +8,7 @@ alt_titles:
   - "The Tulip Crash Myth and the Mistake We Still Make"
 thumbnail: "Wick, alarmed, clutching a wilted tulip while a red chart line dives behind him. Text: SOLD. THEN IT ROSE."
 runtime_target: "9:15"
-narration_words: 0
+narration_words: 1454
 ---
 
 # Why Everyone Sells at the Bottom
@@ -248,7 +248,14 @@ The free crash plan worksheet is linked below. Every number in this video is sou
 
 **Chapters:**
 ```
-CHAPTERS_PLACEHOLDER
+0:00 Cold open
+0:52 The Red Morning
+1:34 The Tulip Truth
+3:06 Twice the Pain
+4:27 The Crashes That Came Back
+6:53 Impatient to Patient
+7:46 The Golden Tiles
+8:43 Your Crash Plan
 ```
 (timestamps are estimates at 155 wpm; refreshed after VO is recorded)
 

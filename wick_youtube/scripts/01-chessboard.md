@@ -71,7 +71,7 @@ ON-SCREEN: Adding vs doubling
 
 **B09** · `COUNTER` · music: wonder
 VO: At first, the king looks right. The tenth square needs five hundred and twelve grains. Add up the first ten squares and it's barely a thousand. A handful.
-VISUAL: A counter labeled "Grains owed" ticks 1, 3, 7, 15, 31 ... up to 1,023 while squares 1 to 10 fill in sequence. The treasurer pours the whole total into Wick's cupped mitten hands. It fits, with room to spare.
+VISUAL: A counter labeled "Grains owed" ticks 1, 3, 7, 15, 31 ... up to 1,023 while squares 1 to 10 fill in sequence. The treasurer pours the whole total into the cupped mitten hands of Wick (calm). It fits, with room to spare.
 ON-SCREEN: 10 squares: 1,023 grains
 
 **B10** · `STACK` · music: wonder
@@ -133,7 +133,7 @@ SFX: coin
 
 **B20** · `FLOW` · music: warm
 VO: Here's how it grows. Those companies earn money, and they grow in value. That growth gets added to Wick's pile. Next year, the growth earns growth of its own. That's compounding. Earning returns on your returns.
-VISUAL: Flow diagram: Wick → basket → coins pop out of the basket and loop back in. Each time around, the loop arrow gets thicker. A small coin rides on top of a bigger coin, then a smaller coin appears riding on top of it. Label writes on: "returns on returns".
+VISUAL: Flow diagram: a small Wick (focused) icon, then an arrow to the basket, then coins pop out of the basket and loop back in. Each time around, the loop arrow gets thicker. A small coin rides on top of a bigger coin, then a smaller coin appears riding on top of it. Label writes on: "returns on returns".
 ON-SCREEN: Compounding = returns on your returns
 
 **B21** · `CHART_LINE` · music: warm
@@ -164,7 +164,7 @@ ON-SCREEN: $96,000 in, ~$494,000 at 65
 
 **B26** · `TEXT` · music: wonder
 VO: That's his chessboard. But there's a second Wick in this story. And he's about to learn what the king learned.
-VISUAL: Marker write on. A second Wick silhouette pops in beside the words with a soft pop, then fills in with color.
+VISUAL: Marker write on. A second Wick silhouette pops in beside the words with a soft pop, then fills in with color: Wick (calm), hands behind his back, whistling.
 ON-SCREEN: Meet the second Wick.
 SFX: pop
 
@@ -223,7 +223,7 @@ ON-SCREEN: $24,000 in beats $72,000 in
 
 **B37** · `CHART_LINE` · music: resolve
 VO: Ten years of doing a little beat thirty years of doing a lot. Not because he was smarter. Because his money reached the second half of the board.
-VISUAL: Two lines. Hammock Wick's line rises early, then keeps curving upward on its own after age 35 as a dashed segment labeled "no new money". Late Wick's line starts at 35 and chases it, finishing just below. The chessboard grid ghosts in behind, with the midline marked "second half".
+VISUAL: Two lines. Hammock Wick's line rises early, then keeps curving upward on its own after age 35 as a dashed segment labeled "no new money". Late Wick's line starts at 35 and chases it, finishing just below. Tiny avatars ride the line ends: hammock Wick (happy) and late Wick (weary). The chessboard grid ghosts in behind, with the midline marked "second half".
 ON-SCREEN: The early start did the work.
 
 **B38** · `TEXT` · music: resolve
