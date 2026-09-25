@@ -146,4 +146,12 @@ boil always run on live seconds. Pass both to the stage.
   (illusion framing, rich vs poor, scale, emotional parables). Video 1 = The Illusion of Money (Yap).
 - Voice (updated 2026-09-25): ElevenLabs IS allowed again, via the ElevenLabs Creative connector, voice
   **Adam** (premade "Adam - Dominant, Firm", voice_id pNInz6obpgDQGcFmaJgB), model **eleven_v3** (Dre switched from v2 on 2026-09-25).
-  Test 30 s (the cold open) before voicing the whole script. Pending Dre: record his own VO (recommended) or a Mac `say` placeholder.
+  Test 30 s (the cold open) before voicing the whole script.
+- 2026-09-25: Voice changed to **Owen – Documentary & Educational** (voice_id ABW47xCXNNaOhg24REDc) on
+  eleven_v3. Dre asked for "a voice fit for explainer videos" and picked Owen take 3 over Adam. Voice the
+  script in sections (one take each, about 600 credits per 600 characters), and download the takes
+  with creative_get_flow_run_status → media[].url.
+- 2026-09-25: **Every YouTube video gets SFX and music.** This overrides the IG reel "no music/SFX" rule.
+  Music is an ElevenLabs music bed (eleven_music_v2) per mood section, sitting ~22 dB under the voice and
+  ducked while he talks. SFX (eleven_text_to_sound_v2) land on on-screen hits: splashes, thunder,
+  paint slaps, whooshes on dives, chimes on reveals. Pending Dre: record his own VO (recommended) or a Mac `say` placeholder.
