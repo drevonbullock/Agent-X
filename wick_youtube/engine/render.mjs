@@ -24,7 +24,9 @@ const W = Math.round(1920 * SCALE / 2) * 2, H = Math.round(1080 * SCALE / 2) * 2
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const OUTDIR = path.join(ROOT, "out", FILM);
 fs.mkdirSync(OUTDIR, { recursive: true });
-const FFMPEG = process.env.FFMPEG || "ffmpeg";
+// ffmpeg: $FFMPEG, else the pip imageio-ffmpeg static build if present, else PATH
+const IMAGEIO_FF = "/usr/local/lib/python3.11/dist-packages/imageio_ffmpeg/binaries/ffmpeg-linux-x86_64-v7.0.2";
+const FFMPEG = process.env.FFMPEG || (fs.existsSync(IMAGEIO_FF) ? IMAGEIO_FF : "ffmpeg");
 
 const MIME = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json",
   ".woff2": "font/woff2", ".png": "image/png", ".jpg": "image/jpeg", ".wav": "audio/wav", ".mp3": "audio/mpeg" };
