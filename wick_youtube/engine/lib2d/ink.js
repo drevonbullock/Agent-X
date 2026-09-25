@@ -6,7 +6,7 @@
 // render). Proportions are measured off wick_examples/00_character_sheet.png.
 // Units: body width = 1. Origin = ground under the feet. y is DOWN.
 // Locked: the wax level never changes; the flame is the light source.
-import { rng } from "./ease.js";
+import { rng, clamp, lerp, smooth, backOut } from "./ease.js";
 
 export const PAL = {
   navy: "#17213a", green: "#2d4536", mustard: "#8a6a2b",
@@ -163,6 +163,11 @@ function face(ctx, fx, f, look) {
   // eyes
   for (const s of [-1, 1]) {
     const x = fx + s * dx + ex, rx = 0.058 * f.eye, ry = 0.085 * f.eye;
+    if (f.lids === "shut") {
+      ctx.beginPath(); ctx.moveTo(x - rx * 1.2, eyeY + ry * 0.1); ctx.quadraticCurveTo(x, eyeY + ry * 0.45, x + rx * 1.2, eyeY + ry * 0.1);
+      ctx.lineWidth = 0.028; ctx.lineCap = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
+      continue;
+    }
     if (f.lids === "down") {
       ctx.beginPath(); ctx.ellipse(x, eyeY, rx * 1.1, ry * 0.5, 0, 0.15, Math.PI - 0.15);
       ctx.lineWidth = 0.028; ctx.lineCap = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
@@ -244,9 +249,22 @@ function cape(ctx) {
  *   crown / cape: the king's costume          glow: 0..1
  */
 export function inkWick(ctx, x, y, s, o = {}) {
-  const f = FACES[o.face || "happy"], look = o.look || 0, lean = o.lean ?? -0.07;
-  const fcx = 0, fcy = T + SINK - FH / 2;
+  const t = o.t ?? 0, seed = o.seed || 0, look = o.look || 0;
+  let f = FACES[o.face || "happy"];
+  // alive: the flame sways and breathes, the eyes blink every few seconds
+  const lean = (o.lean ?? -0.07) + (o.t != null ? 0.035 * Math.sin(t * 3.1 + seed) + 0.015 * Math.sin(t * 7.3 + seed * 2) : 0);
+  const fh = FH * (1 + (o.t != null ? 0.022 * Math.sin(t * 5.7 + seed) : 0));
+  const blink = o.blink || (o.t != null && ((t * 0.9 + seed * 1.7) % 3.3) < 0.12);
+  if (blink && f.lids !== "down") f = { ...f, lids: "shut" };
+  const fcx = 0, fcy = T + SINK - fh / 2;
+  const sq = o.sq || 0, dy = o.dy || 0;
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  // ground shadow shrinks as he leaves the ground
+  const air = 1 - Math.min(0.5, Math.abs(dy) * 0.5);
+  ctx.fillStyle = "rgba(0,0,0,0.28)";
+  ctx.beginPath(); ctx.ellipse(0.02, 0.005, 0.62 * air * (1 + sq * 0.6), 0.075 * air, 0, 0, Math.PI * 2); ctx.fill();
+  // squash and stretch pivot on the feet
+  ctx.translate(0, dy); ctx.rotate(o.rot || 0); ctx.scale(1 + sq * 0.6, 1 - sq);
 
   // light: the flame lights the world around him
   if ((o.glow ?? 1) > 0) {
@@ -265,9 +283,6 @@ export function inkWick(ctx, x, y, s, o = {}) {
   pool.addColorStop(0, `rgba(255,170,60,${0.22 * (o.glow ?? 1)})`); pool.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = pool; ctx.beginPath(); ctx.ellipse(0, 0, 1.2, 0.22, 0, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
-  // ground shadow
-  ctx.fillStyle = "rgba(0,0,0,0.28)";
-  ctx.beginPath(); ctx.ellipse(0.02, 0.005, 0.62, 0.075, 0, 0, Math.PI * 2); ctx.fill();
 
   // legs + shoes
   for (const sgn of [-1, 1]) {
@@ -307,9 +322,9 @@ export function inkWick(ctx, x, y, s, o = {}) {
   ctx.save();
   ctx.beginPath(); ctx.moveTo(-3, -6); ctx.lineTo(3, -6); ctx.lineTo(3, T); ctx.lineTo(0.5, T);
   ctx.ellipse(0, T, 0.5, 0.1, 0, 0, Math.PI, false); ctx.lineTo(-3, T); ctx.closePath(); ctx.clip();
-  ctx.beginPath(); flamePath(ctx, fcx, fcy, FW, FH, lean); ctx.fillStyle = PAL.gold; ctx.fill();
-  ctx.beginPath(); flamePath(ctx, fcx + 0.07, fcy + 0.2, FW * 0.62, FH * 0.64, lean * 0.6); ctx.fillStyle = PAL.goldCore; ctx.fill();
-  ctx.save(); ctx.beginPath(); flamePath(ctx, fcx, fcy, FW, FH, lean); ctx.clip();
+  ctx.beginPath(); flamePath(ctx, fcx, fcy, FW, fh, lean); ctx.fillStyle = PAL.gold; ctx.fill();
+  ctx.beginPath(); flamePath(ctx, fcx + 0.07, fcy + 0.2, FW * 0.62, fh * 0.64, lean * 0.6); ctx.fillStyle = PAL.goldCore; ctx.fill();
+  ctx.save(); ctx.beginPath(); flamePath(ctx, fcx, fcy, FW, fh, lean); ctx.clip();
   hatch(ctx, (c) => { c.moveTo(-0.7, fcy - 1); c.quadraticCurveTo(-0.14, fcy, -0.36, T + 0.1); c.lineTo(-0.9, T + 0.1); c.closePath(); },
     { gap: 0.04, width: 0.013, color: "rgba(170,80,0,0.6)", cy: fcy, R: 2 });
   // one gloss stroke, upper left, inside the flame
@@ -317,15 +332,49 @@ export function inkWick(ctx, x, y, s, o = {}) {
   ctx.lineWidth = 0.035; ctx.lineCap = "round"; ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.stroke();
   ctx.restore();
   face(ctx, fcx + 0.02, f, look);
-  ctx.beginPath(); flamePath(ctx, fcx, fcy, FW, FH, lean); ctx.lineWidth = LW; ctx.lineJoin = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
+  ctx.beginPath(); flamePath(ctx, fcx, fcy, FW, fh, lean); ctx.lineWidth = LW; ctx.lineJoin = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
   ctx.restore();
 
   // melted drips over the rim
   ctx.beginPath(); dripPath(ctx); ctx.fillStyle = PAL.waxLight; ctx.fill();
   ctx.lineWidth = LW * 0.7; ctx.lineJoin = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
 
-  if (o.crown) crown(ctx, fcx + 0.24, fcy - 0.1, 0.38);
+  if (o.crown) crown(ctx, fcx + 0.24 + lean * 0.4, fcy - 0.1 + (o.crownBob || 0), 0.38 + (o.crownTilt || 0));
+  if (o.emote && (o.emoteK ?? 1) > 0.01) emote(ctx, o.emote, 0.95, fcy - 0.55, backOut(o.emoteK ?? 1), t);
   ctx.restore();
+}
+
+// reaction marks by the head, in body units
+function emote(ctx, kind, x, y, k, t) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
+  if (kind === "!" || kind === "?") {
+    ctx.rotate(0.12 + Math.sin(t * 9) * 0.04);
+    ctx.font = "900 0.9px Serif4"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.lineJoin = "round"; ctx.lineWidth = 0.12; ctx.strokeStyle = PAL.ink; ctx.strokeText(kind, 0, 0);
+    ctx.fillStyle = PAL.cream; ctx.fillText(kind, 0, 0);
+  } else if (kind === "sweat") {
+    for (const [dx, dy, r, s] of [[-0.05, 0, -0.5, 0.11], [0.2, 0.2, -0.3, 0.08], [-1.8, 0.05, 0.5, 0.1]]) sweat(ctx, dx, dy + Math.sin(t * 8 + dx) * 0.03, s, r);
+  } else if (kind === "spark") {
+    sparkle(ctx, 0, 0, 0.22); sparkle(ctx, 0.28, 0.3, 0.12);
+  }
+  ctx.restore();
+}
+
+// Mood over time. keys = [[t0, face], [t1, face, emote], ...]. Never snaps:
+// at each change the eyes shut for a beat, the body squashes then springs
+// back ("the take"), and the emote pops in and fades out.
+export function mood(t, keys) {
+  let i = 0;
+  while (i + 1 < keys.length && t >= keys[i + 1][0]) i++;
+  const [t0, face, em] = keys[i], lt = t - t0;
+  const next = keys[i + 1];
+  const changing = i > 0 && lt < 0.6;
+  return {
+    face,
+    blink: (i > 0 && lt < 0.1) || (next && next[0] - t < 0.06),
+    sq: changing ? 0.16 * Math.exp(-lt * 7) * Math.cos(lt * 20) : 0,
+    emote: em, emoteK: em ? clamp(lt / 0.28) * (1 - clamp((lt - 1.3) / 0.3)) : 0,
+  };
 }
 
 // ---------- small FX ----------
@@ -346,23 +395,26 @@ export function sparkle(ctx, x, y, r, color = "#fff6d0") {
 }
 
 // ---------- type ----------
-export function title(ctx, text, x, y, size, color = PAL.paperText, align = "center") {
+export function title(ctx, text, x, y, size, color = PAL.paperText, align = "center", pop = 1, alpha = 1) {
+  if (pop <= 0.001 || alpha <= 0) return;
   ctx.save();
+  ctx.translate(x, y); ctx.scale(backOut(pop), backOut(pop)); ctx.translate(-x, -y); ctx.globalAlpha = alpha;
   ctx.font = `900 ${size}px Serif4`; ctx.textAlign = align; ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.fillText(text, x + size * 0.03, y + size * 0.04);
   ctx.fillStyle = color; ctx.fillText(text, x, y);
   ctx.restore();
 }
-export function label(ctx, text, x, y, size, color = PAL.paperText, align = "center") {
-  ctx.save();
+export function label(ctx, text, x, y, size, color = PAL.paperText, align = "center", pop = 1) {
+  if (pop <= 0.001) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(backOut(pop), backOut(pop)); ctx.translate(-x, -y);
   ctx.font = `500 ${size}px Fira`; ctx.textAlign = align; ctx.fillStyle = color; ctx.fillText(text, x, y);
   ctx.restore();
 }
 
 // ---------- hand-drawn line + print grain (the "made by a person" pass) ----------
 // Every art layer is drawn through an SVG displacement filter: a slow wobble so
-// lines aren't ruler-straight, plus fine roughness on the ink edges. Three seeds
-// cycle at eight per second, which gives the line "boil" of hand animation.
+// lines aren't ruler-straight (fixed, so shapes never swim), plus fine roughness
+// on the ink edges whose seed cycles 12x a second: the "boil" of hand animation.
 let filtersFor = 0;
 function ensureFilters(k) {
   if (filtersFor === k) return;
@@ -372,10 +424,10 @@ function ensureFilters(k) {
   svg.style.position = "absolute";
   svg.innerHTML = [1, 2, 3].map((sd) => `
     <filter id="ink${sd}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="${(0.009 / k).toFixed(5)}" numOctaves="2" seed="${sd}" result="slow"/>
+      <feTurbulence type="fractalNoise" baseFrequency="${(0.009 / k).toFixed(5)}" numOctaves="2" seed="7" result="slow"/>
       <feDisplacementMap in="SourceGraphic" in2="slow" scale="${(6 * k).toFixed(2)}" xChannelSelector="R" yChannelSelector="G" result="w"/>
       <feTurbulence type="fractalNoise" baseFrequency="${(0.3 / k).toFixed(4)}" numOctaves="1" seed="${sd + 20}" result="fine"/>
-      <feDisplacementMap in="w" in2="fine" scale="${(1.8 * k).toFixed(2)}" xChannelSelector="R" yChannelSelector="G"/>
+      <feDisplacementMap in="w" in2="fine" scale="${(2 * k).toFixed(2)}" xChannelSelector="R" yChannelSelector="G"/>
     </filter>`).join("");
   document.body.appendChild(svg);
   filtersFor = k;
@@ -394,62 +446,108 @@ function grainTexture(W, H, seed = 5) {
   return c;
 }
 
-// stage.frame(bg, t, drawArt, drawText): bg paper → wobbly art → crisp text → grain
+// A scene is { bg, art(ctx), text(ctx), cam: {x, y, z, r} }. Rendering one:
+// bg paper → art through the ink filter → crisp text → print grain.
+// The camera puts world point (x, y) at screen centre, zoomed z, rotated r.
 export function makeStage(out) {
   const W = out.width, H = out.height, k = W / 1920;
-  const art = document.createElement("canvas"); art.width = W; art.height = H;
-  const actx = art.getContext("2d"), octx = out.getContext("2d");
-  const grain = grainTexture(W, H);
+  const mk = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
+  const art = mk(), actx = art.getContext("2d"), octx = out.getContext("2d");
+  const other = mk(), mask = mk(), grain = grainTexture(W, H);
   ensureFilters(k);
+  const camT = (c, cam) => {
+    c.scale(k, k);
+    if (!cam) return;
+    c.translate(960, 540); c.rotate(cam.r || 0); c.scale(cam.z || 1, cam.z || 1); c.translate(-(cam.x ?? 960), -(cam.y ?? 540));
+  };
+  function render(target, sc, t) {
+    const g = target.getContext("2d");
+    g.save(); g.globalCompositeOperation = "source-over"; g.filter = "none"; g.globalAlpha = 1;
+    g.drawImage(sc.bg, 0, 0);
+    actx.setTransform(1, 0, 0, 1, 0, 0); actx.clearRect(0, 0, W, H);
+    actx.save(); camT(actx, sc.cam); sc.art(actx, t); actx.restore();
+    g.filter = `url(#ink${(Math.floor(t * 12) % 3) + 1})`;
+    g.drawImage(art, 0, 0);
+    g.filter = "none";
+    if (sc.text) { g.save(); camT(g, sc.cam); sc.text(g, t); g.restore(); }
+    if (sc.over) { g.save(); g.scale(k, k); sc.over(g, t); g.restore(); }   // screen-space: flashes, wipes
+    g.globalCompositeOperation = "overlay"; g.globalAlpha = 0.22; g.drawImage(grain, 0, 0);
+    g.restore();
+  }
   return {
     k, W, H,
-    frame(bg, t, drawArt, drawText) {
-      octx.globalCompositeOperation = "source-over"; octx.filter = "none";
-      octx.drawImage(bg, 0, 0);
-      actx.setTransform(1, 0, 0, 1, 0, 0); actx.clearRect(0, 0, W, H);
-      actx.save(); actx.scale(k, k); drawArt(actx); actx.restore();
-      octx.filter = `url(#ink${(Math.floor(t * 8) % 3) + 1})`;
-      octx.drawImage(art, 0, 0);
-      octx.filter = "none";
-      if (drawText) { octx.save(); octx.scale(k, k); drawText(octx); octx.restore(); }
-      octx.save(); octx.globalCompositeOperation = "overlay"; octx.globalAlpha = 0.22;
-      octx.drawImage(grain, 0, 0); octx.restore();
+    frame(sc, t) { render(out, sc, t); },
+    // Dalio's hatch-in: the next scene arrives as diagonal strokes that thicken,
+    // sweeping left to right, until they close up solid. p: 0..1
+    hatchIn(from, to, p, t) {
+      render(out, from, t);
+      render(other, to, t);
+      const m = mask.getContext("2d");
+      m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = "source-over"; m.clearRect(0, 0, W, H);
+      const gap = 26 * k, ang = -1.05, dx = Math.cos(ang), dy = Math.sin(ang), R = Math.hypot(W, H);
+      m.lineCap = "round"; m.strokeStyle = "#000";
+      for (let d = -R; d < R; d += gap) {
+        const cx = W / 2 - dy * d, cy = H / 2 + dx * d;
+        const u = (cx / W + (1 - cy / H) * 0.35) / 1.35;                 // where this stroke sits in the sweep
+        const q = clamp((p * 1.6 - u * 0.6) / 1);
+        if (q <= 0) continue;
+        m.lineWidth = gap * 1.15 * smooth(q) + 1.5 * k;
+        m.beginPath(); m.moveTo(cx - dx * R, cy - dy * R); m.lineTo(cx + dx * R, cy + dy * R); m.stroke();
+      }
+      m.globalCompositeOperation = "source-in"; m.drawImage(other, 0, 0);
+      octx.save(); octx.globalCompositeOperation = "source-over"; octx.drawImage(mask, 0, 0); octx.restore();
     },
   };
 }
 
-// light spilling from beyond something: thin fan of rays
-export function rays(ctx, x, y, n, len, spread, dir, color = "255,205,110", alpha = 0.16, seed = 3) {
-  const r = rng(seed);
-  ctx.save(); ctx.globalCompositeOperation = "screen";
-  for (let i = 0; i < n; i++) {
-    const a = dir + (i / (n - 1) - 0.5) * spread + (r() - 0.5) * 0.08, w = 0.03 + r() * 0.04, L = len * (0.6 + r() * 0.4);
-    const g = ctx.createLinearGradient(x, y, x + Math.cos(a) * L, y + Math.sin(a) * L);
-    g.addColorStop(0, `rgba(${color},${alpha})`); g.addColorStop(1, `rgba(${color},0)`);
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.moveTo(x, y);
-    ctx.lineTo(x + Math.cos(a - w) * L, y + Math.sin(a - w) * L); ctx.lineTo(x + Math.cos(a + w) * L, y + Math.sin(a + w) * L);
-    ctx.closePath(); ctx.fill();
+// Draw-on helpers: p = 0..1 of the stroke drawn.
+export function drawRect(ctx, x, y, w, h, p) {
+  if (p <= 0) return;
+  const L = 2 * (w + h);
+  ctx.save(); ctx.setLineDash([L * clamp(p), L + 1]); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.stroke(); ctx.restore();
+}
+export function drawRing(ctx, x, y, rx, ry, p, start = -Math.PI / 2) {
+  if (p <= 0) return;
+  ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, start, start + Math.PI * 2 * clamp(p)); ctx.stroke();
+}
+// Catmull-Rom through the points, dense enough to cut at any length
+export function smoothPts(pts, per = 12) {
+  const out = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    for (let j = 0; j < per; j++) {
+      const t = j / per, t2 = t * t, t3 = t2 * t;
+      out.push([0, 1].map((a) => 0.5 * (2 * p1[a] + (-p0[a] + p2[a]) * t + (2 * p0[a] - 5 * p1[a] + 4 * p2[a] - p3[a]) * t2 + (-p0[a] + 3 * p1[a] - 3 * p2[a] + p3[a]) * t3)));
+    }
   }
-  const gg = ctx.createRadialGradient(x, y, 0, x, y, len * 0.45);
-  gg.addColorStop(0, `rgba(${color},${alpha * 3})`); gg.addColorStop(1, `rgba(${color},0)`);
-  ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(x, y, len * 0.45, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
+  out.push(pts[pts.length - 1]);
+  return out;
+}
+function cut(pts, p) {
+  const L = [0];
+  for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const want = L[L.length - 1] * clamp(p), res = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    if (L[i] <= want) { res.push(pts[i]); continue; }
+    const f = (want - L[i - 1]) / (L[i] - L[i - 1] || 1);
+    res.push([lerp(pts[i - 1][0], pts[i][0], f), lerp(pts[i - 1][1], pts[i][1], f)]);
+    break;
+  }
+  return res;
 }
 
-// the Dalio chart stroke: thick sky-blue line, round caps, optional arrowhead
-export function chartLine(ctx, pts, { width = 12, color = PAL.blue, arrow = true } = {}) {
+// the Dalio chart stroke: thick sky-blue line, round caps, arrowhead that pops
+// in once the line arrives. p = how much of it is drawn.
+export function chartLine(ctx, pts, { width = 12, color = PAL.blue, arrow = true, p = 1 } = {}) {
+  if (p <= 0) return;
+  const dense = cut(smoothPts(pts), p);
   ctx.save();
-  ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
-  for (let i = 1; i < pts.length - 1; i++) {
-    const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
-    ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
-  }
-  const e = pts[pts.length - 1], p = pts[pts.length - 2];
-  ctx.lineTo(e[0], e[1]);
+  ctx.beginPath(); dense.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
   ctx.lineWidth = width; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = color; ctx.stroke();
-  if (arrow) {
-    const a = Math.atan2(e[1] - p[1], e[0] - p[0]), L = width * 3.2;
+  const ak = backOut((p - 0.94) / 0.06);
+  if (arrow && p > 0.94 && dense.length > 2) {
+    const e = dense[dense.length - 1], q = dense[Math.max(0, dense.length - 4)];
+    const a = Math.atan2(e[1] - q[1], e[0] - q[0]), L = width * 3.2 * ak;
     ctx.beginPath();
     ctx.moveTo(e[0] + Math.cos(a - 2.6) * L, e[1] + Math.sin(a - 2.6) * L); ctx.lineTo(e[0], e[1]);
     ctx.lineTo(e[0] + Math.cos(a + 2.6) * L, e[1] + Math.sin(a + 2.6) * L); ctx.stroke();
@@ -458,8 +556,9 @@ export function chartLine(ctx, pts, { width = 12, color = PAL.blue, arrow = true
 }
 
 // tracked small caps, the Dalio kicker line
-export function kicker(ctx, text, x, y, size, color = PAL.blue, track = 0.32) {
-  ctx.save(); ctx.font = `700 ${size}px Serif4`; ctx.fillStyle = color; ctx.textBaseline = "alphabetic";
+export function kicker(ctx, text, x, y, size, color = PAL.blue, track = 0.32, alpha = 1) {
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.font = `700 ${size}px Serif4`; ctx.fillStyle = color; ctx.textBaseline = "alphabetic";
   const chars = [...text], ws = chars.map((c) => ctx.measureText(c).width + size * track);
   let cx = x - ws.reduce((a, b) => a + b, 0) / 2 + size * track / 2;
   chars.forEach((c, i) => { ctx.fillText(c, cx, y); cx += ws[i]; });

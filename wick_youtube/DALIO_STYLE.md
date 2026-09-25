@@ -41,8 +41,22 @@ thick outline, flat gold + cream, hatch shadow on the flame's left and the wax's
 warm glow so the flame stays the light source. Costumes (crown etc.) may sit on the
 flame for YouTube stories but must never hide the flame tip.
 
-Style frames: `node render.mjs --film dalio-style --stills 0.5,1.5,2.5`
+Motion study (10 s, silent): `node render.mjs --film dalio-motion`
+Check motion by eye: `node render.mjs --film dalio-motion --scale 0.5 --sheet 0.5,1,2,3.1,5,6.2,7,9 --cols 4`
 
 The "made by a person" pass (`makeStage`): all art goes through an SVG displacement
 filter (slow wobble + rough ink edges, three seeds cycling at 8/s for line boil),
 text stays crisp on top, then a print-grain overlay covers everything.
+
+## Animation grammar (borrowed from JohnHeibel/PDoomVideo, reimplemented)
+
+- **Moods never snap** (`mood(t, keys)`): eyes shut for a beat, the body squashes and
+  springs back, an emote ("!", "?", sweat, spark) pops in and fades.
+- **Always alive**: auto-blink every ~3.3 s, flame sways and breathes, idle squash.
+- **Overshoot** on everything that appears (`backOut`); keyframes via `kf()`.
+- **Camera never parks**: pushes, pulls, dives; zoom interpolated in log space.
+- **Motivated transitions**: dive into an object and it becomes the next scene;
+  Dalio's hatch-in (`stage.hatchIn`) between chapters.
+- **Contact sheets** (`--sheet`) to check motion before rendering video.
+- Not adopted: p5.brush watercolour (about 2.5 s/frame, so hours per episode). Our pipeline
+  runs about 0.05 s/frame on the Mac GPU.

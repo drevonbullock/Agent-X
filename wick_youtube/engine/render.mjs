@@ -39,8 +39,11 @@ const server = http.createServer((req, res) => {
 await new Promise((r) => server.listen(0, r));
 const port = server.address().port;
 
+// Mac: the real GPU (Metal via ANGLE). Elsewhere (cloud boxes) fall back to SwiftShader.
 const browser = await chromium.launch({
-  args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-sandbox"],
+  args: process.platform === "darwin"
+    ? ["--use-angle=metal", "--ignore-gpu-blocklist", "--enable-gpu-rasterization"]
+    : ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-sandbox"],
 });
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") console.log("[page]", m.text()); });
@@ -50,8 +53,23 @@ await page.waitForFunction(() => window.READY === true, null, { timeout: 120000 
 const { duration, fps } = await page.evaluate(() => window.FILM);
 
 const b64 = (d) => Buffer.from(d.split(",")[1], "base64");
-const stills = arg("stills");
-if (stills) {
+const stills = arg("stills"), sheet = arg("sheet");
+if (sheet) {
+  // contact sheet: several times on one image, for checking motion by eye
+  //   node render.mjs --film x --sheet 0,0.5,1,1.5 --cols 4
+  const times = sheet.split(",").map(Number), cols = +arg("cols", 4);
+  const tmp = fs.mkdtempSync(path.join(OUTDIR, "sheet-"));
+  const t0 = Date.now();
+  for (const [i, t] of times.entries()) {
+    await page.evaluate((t) => window.renderAt(t), t);
+    fs.writeFileSync(path.join(tmp, `f_${String(i).padStart(3, "0")}.jpg`), b64(await page.evaluate(() => window.grab("image/jpeg", 0.9))));
+  }
+  const rows = Math.ceil(times.length / cols), f = path.join(OUTDIR, arg("name", "sheet") + ".jpg");
+  await new Promise((r) => spawn(FFMPEG, ["-y", "-loglevel", "error", "-i", path.join(tmp, "f_%03d.jpg"),
+    "-vf", `scale=640:-1,pad=iw+4:ih+4:2:2:black,tile=${cols}x${rows}`, "-frames:v", "1", f], { stdio: "inherit" }).on("close", r));
+  fs.rmSync(tmp, { recursive: true });
+  console.log("sheet", f, `${((Date.now() - t0) / times.length).toFixed(0)} ms/frame`, "times:", times.join(" "));
+} else if (stills) {
   for (const t of stills.split(",").map(Number)) {
     await page.evaluate((t) => window.renderAt(t), t);
     const f = path.join(OUTDIR, `still_${String(t).replace(".", "_")}.png`);

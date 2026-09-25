@@ -23,3 +23,17 @@ export function camPath(keys) {
     return { x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), z: lerp(a.z, b.z, k) };
   };
 }
+// overshoot and settle: things pop in slightly past their size, then land
+export const backOut = (k) => { k = clamp(k); const s = 1.9; return 1 + (s + 1) * Math.pow(k - 1, 3) + s * Math.pow(k - 1, 2); };
+export const elasticOut = (k) => { k = clamp(k); return k === 0 || k === 1 ? k : Math.pow(2, -10 * k) * Math.sin((k * 10 - 0.75) * (2 * Math.PI / 3)) + 1; };
+// keyframes: kf(t, [[t0, v0], [t1, v1], ...], ease). Values may be numbers or arrays.
+export function kf(t, keys, e = smooth) {
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let i = 1; i < keys.length; i++) {
+    if (t < keys[i][0]) {
+      const [a, va] = keys[i - 1], [b, vb] = keys[i], k = e((t - a) / (b - a));
+      return Array.isArray(va) ? va.map((v, j) => lerp(v, vb[j], k)) : lerp(va, vb, k);
+    }
+  }
+  return keys[keys.length - 1][1];
+}
