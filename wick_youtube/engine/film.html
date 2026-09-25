@@ -7,6 +7,9 @@
   @font-face { font-family: Fredoka; font-weight: 600; src: url(node_modules/@fontsource/fredoka/files/fredoka-latin-600-normal.woff2); }
   @font-face { font-family: Fredoka; font-weight: 700; src: url(node_modules/@fontsource/fredoka/files/fredoka-latin-700-normal.woff2); }
   @font-face { font-family: Marker; src: url(node_modules/@fontsource/permanent-marker/files/permanent-marker-latin-400-normal.woff2); }
+  @font-face { font-family: Serif4; font-weight: 700; src: url(node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-700-normal.woff2); }
+  @font-face { font-family: Serif4; font-weight: 900; src: url(node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-900-normal.woff2); }
+  @font-face { font-family: Fira; font-weight: 500; src: url(node_modules/@fontsource/fira-sans/files/fira-sans-latin-500-normal.woff2); }
   html, body { margin: 0; background: #000; overflow: hidden; }
   canvas#out { display: block; width: 100vw; height: auto; }
 </style>
@@ -21,7 +24,7 @@
   // ?play=1 plays it live in any browser for a quick look.
   const q = new URLSearchParams(location.search);
   const W = +q.get("w") || 1920, H = +q.get("h") || 1080;
-  await Promise.all(["600 40px Fredoka", "700 40px Fredoka", "40px Marker"].map((f) => document.fonts.load(f)));
+  await Promise.all(["600 40px Fredoka", "700 40px Fredoka", "40px Marker", "700 40px Serif4", "900 40px Serif4", "500 40px Fira"].map((f) => document.fonts.load(f)));
   const mod = await import(`./films/${q.get("film")}/film.js`);
   const film = await mod.create({ W, H, out: document.getElementById("out") });
   window.FILM = { duration: film.duration, fps: film.fps || 30 };
