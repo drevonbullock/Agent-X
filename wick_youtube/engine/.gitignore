@@ -1,3 +1,4 @@
 out/
 node_modules/
 films/*/mix.wav
+films/*/audio/vo_raw.mp3
