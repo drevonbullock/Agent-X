@@ -164,7 +164,7 @@ export async function create({ W, H, out }) {
     if (rig.ribbon) { // a pulse of light travelling along the golden ribbon
       const path = [[120, 540], [250, 380], [420, 282], [600, 215], [800, 140], [1000, 22]];
       for (let q = 0; q < 3; q++) {
-        const u = ((t - 21.8) * 0.9 + q * 0.33) % 1, seg2 = u * (path.length - 1), i = Math.min(path.length - 2, Math.floor(seg2)), f2 = seg2 - i;
+        const u = ((((t - 21.8) * 0.9 + q * 0.33) % 1) + 1) % 1, seg2 = u * (path.length - 1), i = Math.min(path.length - 2, Math.floor(seg2)), f2 = seg2 - i;
         const x = lerp(path[i][0], path[i + 1][0], f2), y = lerp(path[i][1], path[i + 1][1], f2);
         const gr = g.createRadialGradient(x * K, y * K, 0, x * K, y * K, 90 * K); gr.addColorStop(0, "rgba(255,225,150,0.55)"); gr.addColorStop(1, "rgba(255,200,100,0)");
         g.fillStyle = gr; g.beginPath(); g.arc(x * K, y * K, 90 * K, 0, 7); g.fill();
