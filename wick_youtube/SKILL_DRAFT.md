@@ -142,4 +142,8 @@ boil always run on live seconds. Pass both to the stage.
 - 2026-09-25: The montage work was a quality bar, not a template. Dre gives FREE REIN on when to use a
   montage in an episode (not every video). When one is used, it must come out at the approved v4
   level first time (films/wick-montage is the reference), with no rounds of iteration.
-- Voice: ElevenLabs is out. Pending Dre: record his own VO (recommended) or a Mac `say` placeholder.
+- 2026-09-25: Dre picked the next 10 videos (SLATE_V2.md): story/parable titles built on what gets views
+  (illusion framing, rich vs poor, scale, emotional parables). Video 1 = The Illusion of Money (Yap).
+- Voice (updated 2026-09-25): ElevenLabs IS allowed again, via the ElevenLabs Creative connector, voice
+  **Adam** (premade "Adam - Dominant, Firm", voice_id pNInz6obpgDQGcFmaJgB), eleven_multilingual_v2.
+  Test 30 s (the cold open) before voicing the whole script. Pending Dre: record his own VO (recommended) or a Mac `say` placeholder.
