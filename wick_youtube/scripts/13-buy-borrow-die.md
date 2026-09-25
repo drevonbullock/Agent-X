@@ -8,7 +8,7 @@ alt_titles:
   - "A $24 Billion Gain and Almost No Income Tax. How?"
 thumbnail: "Wick holding a padlocked tower of share certificates while a bag of cash floats out of it on a string; text: BORROW, DON'T SELL"
 runtime_target: "9:15"
-narration_words: 1395
+narration_words: 1400
 ---
 
 # Why the Rich Borrow Money They Don't Need
@@ -89,7 +89,7 @@ ON-SCREEN: ProPublica, June 2021
 SFX: paper, thud
 
 **B12** · `COUNTER` · music: tension
-VO: Over those same five years, the twenty five richest Americans grew about four hundred and one billion dollars richer. They paid about thirteen point six billion in federal income tax. ProPublica called that a true tax rate of three point four percent.
+VO: In those same five years, twenty fourteen to twenty eighteen, the twenty five richest Americans grew about four hundred and one billion dollars richer. They paid about thirteen point six billion in federal income tax. ProPublica called that a true tax rate of three point four percent.
 VISUAL: Two counters side by side. "Wealth growth, top 25" rolls to $401B. "Federal income tax" rolls to $13.6B. Then a larger stamp drops between them: 3.4%. Below, a row of 25 tiny candle figures in top hats stand shoulder to shoulder; one checks a pocket watch, one yawns.
 ON-SCREEN: $401B growth. $13.6B tax. 3.4%.
 SFX: tick, thud
@@ -267,11 +267,11 @@ ON-SCREEN: Wick's Wisdom
 0:00 Cold open: a $24 billion gain
 0:51 Income versus gains
 1:52 Step 1: Buy
-3:03 Step 2: Borrow
-4:20 Step 3: Die
-5:59 Own what grows
-6:48 The door that's open to you
-8:28 Your first step
+3:05 Step 2: Borrow
+4:22 Step 3: Die
+6:01 Own what grows
+6:50 The door that's open to you
+8:30 Your first step
 ```
 (timestamps are estimates at 155 wpm; refreshed after VO is recorded)
 

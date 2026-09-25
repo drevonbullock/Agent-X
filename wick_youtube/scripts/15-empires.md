@@ -8,7 +8,7 @@ alt_titles:
   - "The 500 Year Debt Pattern Ray Dalio Found"
 thumbnail: "A flat parchment map with three coins (guilder, pound, dollar) in a row, the first two cracked; Wick at a tiny kitchen table in the corner holding a bill; text: SAME PATTERN"
 runtime_target: "9:00"
-narration_words: 0
+narration_words: 1353
 ---
 
 # Every Empire Goes Broke the Same Way
@@ -123,7 +123,7 @@ ON-SCREEN: UK debt peaked ~270% of GDP
 **B17** · `COUNTER` · music: tension
 VO: In nineteen forty nine, the pound was officially cut from four dollars and three cents to two dollars and eighty cents. In nineteen sixty seven, it was cut again, to two dollars and forty cents. These cuts are called devaluations. Dalio notes it took two of them before the pound fully lost its crown.
 VISUAL: A counter labeled "One pound in dollars" drops from $4.03 to $2.80 with a year stamp "1949", pauses, then drops again to $2.40 with a stamp "1967". A small flat crown sitting on the counter tips over on the second drop and rolls off screen.
-ON-SCREEN: $4.03 → $2.80 (1949) → $2.40 (1967)
+ON-SCREEN: $4.03, then $2.80 (1949), then $2.40 (1967)
 SFX: thud, thud
 
 **B18** · `TEXT` · music: history
@@ -225,7 +225,23 @@ ON-SCREEN: Wick's Wisdom
 
 ## SHORTS
 
-SHORTS_PLACEHOLDER
+### S1 · "How the Dutch Lost the World's Money"
+- **Beats:** B13 → B15   (~50s)
+- **Cold open VO (new line, Short only):** In the seventeen eighties, the most trusted money on earth ran out of gold to back it.
+- **Payoff line:** "The guilder stopped feeling like a safe place to keep value, and the world moved toward the British pound."
+- **9:16 notes:** Top third: ON-SCREEN dates ("1780: the company starts losing money", "4th Anglo Dutch War, 1780 to 1784", "Not enough gold") plus the pinned credit "Framework: Ray Dalio". Middle third: the map cropped to a tall strip from Amsterdam down to the sea battle; the PRINT machine drawn tall, with the empty vault shelf below it. Bottom third: captions.
+
+### S2 · "Every Time You Borrow, You Start a Cycle"
+- **Beats:** B09 → B10   (~41s)
+- **Cold open VO (new line, Short only):** Every loan you take is quietly a message to your future self.
+- **Payoff line:** "Borrow to live beyond what you produce, and the bill just waits."
+- **9:16 notes:** Top third: "Every borrow starts a cycle. (Dalio)" then "Borrowing pulls spending forward." Middle third: the Future you / Today you flow rotated vertically (Future you on top handing the coin down); the spending hump and dip drawn as a vertical wave; the tree branch and party hat branch stacked. Bottom third: captions.
+
+### S3 · "Your Kitchen Table Is a Tiny Empire"
+- **Beats:** B21 → B23   (~52s)
+- **Cold open VO (new line, Short only):** Empires go broke the same way families do, and it starts with a pile of envelopes.
+- **Payoff line:** "And the family reaches for its own version of the printing press. A new card to pay the old one."
+- **9:16 notes:** Top third: "Spoken for before it arrives", then "Illustrative: 20% becomes 50%", then "New debt to pay old debt". Middle third: the paycheck and envelope stack drawn tall; the two B22 counters stacked vertically instead of side by side; the spinning card wheel centered. Bottom third: captions plus a small tag "Illustrative numbers" during B22.
 
 ---
 
@@ -237,7 +253,14 @@ SHORTS_PLACEHOLDER
 
 **Chapters:**
 ```
-CHAPTERS_PLACEHOLDER
+0:00 Cold open: a run on the bank
+0:45 The world's money
+2:00 Borrowing tomorrow
+3:12 The guilder and the pound
+4:49 Wick's house
+6:20 The same fall
+7:09 A pattern, not a prophecy
+7:59 Your first step
 ```
 (timestamps are estimates at 155 wpm; refreshed after VO is recorded)
 
@@ -257,4 +280,5 @@ CHAPTERS_PLACEHOLDER
 7. Short term debt cycle about 5 to 8 years; long term debt cycle about 75 to 100 years; "Every time you borrow, you create a cycle"; borrowing pulls spending forward; three rules of thumb, including "Don't have debt rise faster than income because your debt burdens will eventually crush you." — [Ray Dalio, How the Economic Machine Works (2013), full transcript via Hedge Fund Alpha](https://hedgefundalpha.com/education/ray-dalio-economic-machine/) and [economicprinciples.org](https://www.economicprinciples.org/)
 8. US dollar share of allocated foreign exchange reserves 57.13% in 2026 Q1 (56.42% in 2025 Q4). — [IMF, Currency Composition of Official Foreign Exchange Reserves (COFER) data brief](https://data.imf.org/en/news/imf%20data%20brief%20july%201) and [IMF COFER dataset](https://data.imf.org/en/datasets/IMF.STA:COFER)
 9. Debt to income ratio = monthly debt payments ÷ gross monthly income; CFPB example: $2,000 of payments on $6,000 of gross monthly income = 33%. — [Consumer Financial Protection Bureau, "What is a debt-to-income ratio?"](https://www.consumerfinance.gov/ask-cfpb/what-is-a-debt-to-income-ratio-en-1791/)
-10. Wick's household arc is an illustrative story, not data.
+10. Reserve currency status lets the issuing country borrow more than it otherwise could (Dalio's framework). — [Ray Dalio, Chapter 1 (as above)](https://www.linkedin.com/pulse/chapter-1-big-picture-tiny-nutshell-ray-dalio) and [Ray Dalio, "Chapter 3: The Changing Value of Money"](https://www.linkedin.com/pulse/changing-value-money-ray-dalio)
+11. Illustrative math (not sourced data, labeled on screen): $1,200 ÷ $6,000 = 20%; $3,300 ÷ $6,600 = 50%. Wick's household arc is an illustrative story, not data.

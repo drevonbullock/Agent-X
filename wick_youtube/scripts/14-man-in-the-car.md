@@ -150,9 +150,9 @@ ON-SCREEN: The Millionaire Next Door, 1996
 SFX: paper
 
 **B22** · `CHART_BAR` · music: warm
-VO: Here's what they found. Only about one in four millionaires, twenty three point five percent, drove a car from the current model year. And more than half had never paid more than thirty thousand dollars for a vehicle. Those are nineteen nineties dollars, but still.
+VO: Here's what they found. Only about one in four millionaires, twenty three point five percent, owned a car from the current model year. And more than half had never paid more than thirty thousand dollars for a vehicle. Those are nineteen nineties dollars, but still.
 VISUAL: A bar chart builds: one short amber bar labeled "Current model year car: 23.5%" next to a tall ink bar for the rest. Then a second pair: "Never paid over $30,000: more than half". A tiny "1990s dollars" footnote tag hangs off the axis. Background gag: a millionaire candle leans on an old flat station wagon, whistling.
-ON-SCREEN: Only 23.5% drove a current year car
+ON-SCREEN: Only 23.5% owned a current year car
 
 **B23** · `COUNTER` · music: warm
 VO: Stanley surveyed again for a later book, Stop Acting Rich, in two thousand nine. The median price millionaires paid for their most recent car was thirty one thousand three hundred sixty seven dollars. Median means the middle one. Half paid more, half paid less.
@@ -249,7 +249,7 @@ ON-SCREEN: Wick's Wisdom
 - **Beats:** B22 → B24   (~54s)
 - **Cold open VO (new line, Short only):** Most millionaires don't drive what you think.
 - **Payoff line:** "And money that's kept is invisible by nature."
-- **9:16 notes:** Top third: the stat lines ("Only 23.5% drove a current year car", "2009 median: $31,367"). Middle third: bar chart rotated to horizontal bars stacked vertically; the row of cars in B23 becomes a vertical column with the middle car circled; B24 split becomes top vs bottom, flashy candle above, sweater candle with the see through vault below. Bottom third: captions.
+- **9:16 notes:** Top third: the stat lines ("Only 23.5% owned a current year car", "2009 median: $31,367"). Middle third: bar chart rotated to horizontal bars stacked vertically; the row of cars in B23 becomes a vertical column with the middle car circled; B24 split becomes top vs bottom, flashy candle above, sweater candle with the see through vault below. Bottom third: captions.
 
 ---
 
