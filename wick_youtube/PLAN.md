@@ -11,8 +11,12 @@ Written 2026-09-25. Companion files:
 
 ## 1. THE VERDICT ON STYLE
 
-**Recommendation: flat 2D animation, drawn entirely in code, with a flat redraw
-of Wick. Chosen by Dre 2026-09-25.**
+**Recommendation: animation drawn entirely in code. Chosen by Dre 2026-09-25.**
+
+**Update, same day:** Dre steered from flat 2D to **three.js clay 3D**, the look
+Opus 5.5 creators are shipping on X, with Wick modeled in code from his character
+sheet. Everything below about why code-drawn wins still holds. Only the render
+style moved from flat vectors to a clay miniature.
 
 What people gravitate toward in explainers, and why:
 
@@ -92,44 +96,45 @@ of each script changes.
 
 ## 4. THE ENGINE — HOW A SCRIPT BECOMES A VIDEO
 
-**Recommendation: build on Remotion (already in `wick-video/`), not raw HTML
-canvas.** Remotion is a React tool that renders frame-accurate video. Creators on
-X drawing "plain JavaScript on a canvas" get the same drawing power. Remotion
-adds what they hand-roll: audio sync, timelines, and rendering both 16:9 and 9:16
-from one scene definition. We already have it installed and have shipped
-`ExplainerFilm.tsx` with it.
+**Decision (Dre, 2026-09-25): all code. Plain JavaScript + three.js, no Remotion,
+no Higgsfield.** It matches what creators on X are shipping with Opus 5.5: three.js
+clay scenes with ambient light, bloom and tilt-shift depth of field, every frame a
+pure function of time, captured headless into an MP4.
+
+Built and proven on the 1-minute test (`wick_youtube/engine/`):
 
 ```
-script .md ──parse──> film JSON (beats, scenes, VO, music, SFX)
-     │
-     ├─ ElevenLabs TTS with word timestamps ──> each beat's exact duration
-     ├─ Music bed per chapter (Suno library, 6 tracks)
-     ├─ SFX cues (ElevenLabs, generated once, cached)
-     │
-     └─> Remotion
-           ├─ FlatWick rig  (SVG: 9 expressions, poses, costumes below the neck)
-           ├─ 15 scene components (STAGE, COUNTER, CHART_LINE, MAP, ZOOM ...)
-           │     each with a 16:9 AND a 9:16 layout
-           ├─ Composition "LongForm"   1920×1080 → 8–10 min MP4
-           └─ Composition "Short"      1080×1920 → 3 per video, captions burned in
+engine/
+  film.html            one page; ?play=1 previews live in any browser
+  render.mjs           headless Chromium → frame-by-frame capture → ffmpeg MP4
+  lib/wick.js          WICK BUILT FROM GEOMETRY: teardrop flame (lathe + outline hull),
+                       drip-wax body, rubber-hose limbs, mittens, 9 sheet expressions,
+                       blinks, poses (stand / sit / throne), costumes below the neck
+  lib/post.js          bloom → tilt-shift → grade (warmth, vignette, grain)
+  lib/util.js          easing, seeded random, clay materials, camera paths
+  lib/synth.mjs        score + SFX synthesized in code (pads, plucks, bells, pops,
+                       whooshes, marker squeaks, thuds, coins) + reverb + WAV writer
+  films/<name>/film.js     the shots, beat sheet, overlays for one video
+  films/<name>/score.mjs   that video's music + SFX cues + VO ducking mix
 ```
 
-**Where each tool fits:**
+**Why build Wick from geometry instead of pasting his images:** the images are
+reference, not footage. A code Wick walks, sits, points, blinks and changes
+expression, and can never drift. A pasted image can only slide around (the
+"wobbling sticker" problem from 2026-09-04).
 
 | Tool | Job | Needed? |
 |---|---|---|
-| Claude (this session) | Scripts, engine code, scene code | Yes |
-| ElevenLabs | Narrator VO + word timestamps + SFX | Yes. Already wired in `scripts/wick-film-build.js` |
-| Suno | 6 music beds, made by hand once | Yes, but manual. Suno has no public API (only a partner program since July 2026) |
-| OpenRouter | The ONLY outside image source. Used where code can't draw it well: thumbnail concepts, paper/grain texture plates, the occasional reference portrait traced into a flat QUOTE silhouette | Light use. The flat style is ~95% code. `OPENROUTER_API_KEY` is already read by `scripts/wick-render-reel.js` (the Seedance hero clip), but it's not in `.env.example` and not in this cloud session. Add it to the environment before any render session that needs images |
-| Higgsfield | **Not used anywhere in this pipeline** (Dre, 2026-09-25: "all code and or OpenRouter") | No |
+| Claude | Scripts, scene code, score code | Yes |
+| three.js | Every frame | Yes |
+| ElevenLabs | Narrator VO only (voice: Alex, deep warm narrator). ~$0.15 per minute of narration | Yes |
+| Music + SFX | Synthesized in code (`lib/synth.mjs`) | No outside tool. Suno optional later for hero tracks |
+| OpenRouter | Only if a scene needs a texture or reference code can't draw. Test film used none | Optional |
+| Higgsfield / Remotion | Not used | No |
 
-**Rough cost per video:** ~1,400 narration words ≈ 8,000–9,000 ElevenLabs
-characters, plus ~3 short Shorts cold opens. 15 videos ≈ 130k characters.
-Check that against your ElevenLabs plan's monthly credits before the batch.
-Everything else is free: code rendering, cached SFX, owned music beds.
-
----
+**Render cost:** ~2–4 s per frame on this cloud box (software WebGL). A 9-minute
+video is ~16,000 frames ≈ 8–15 hours here; on a machine with a GPU it drops to
+well under an hour. Money cost per video ≈ $1.30 of ElevenLabs narration. That's it.
 
 ## 5. THE PLAN — STEPS, OWNERS, TIMELINES
 
@@ -137,11 +142,11 @@ Everything else is free: code rendering, cached SFX, owned music beds.
 |---|---|---|---|---|
 | 1 | Plan, style bible, slate, 15 scripts, Shorts map | Claude | **Today, 9/25** | Files in `wick_youtube/`, pushed |
 | 2 | Read scripts 01–03. Mark anything that doesn't sound like Wick | Dre | By Sun 9/28 | Notes in chat |
-| 3 | Pick the narrator voice. Claude pulls 3 candidates from your ElevenLabs library, reading the same cold open | Claude pulls, Dre picks | Next session | One voice ID locked for the channel |
-| 4 | Make 6 music beds in Suno: `wonder`, `tension`, `history`, `warm`, `resolve`, `cosmic`. Instrumental, 2–3 min, loopable | Dre | By Sun 9/28 | 6 MP3s in `wick-video/public/music/` |
+| 3 | Lock the narrator voice. The test uses **Alex (deep, warm audiobook narrator)**. Keep it or name another | Dre | After watching the test | One voice ID locked for the channel |
+| 4 | Music: the test score is synthesized in code (`lib/synth.mjs`), no Suno needed. Optional: make 1–2 Suno hero tracks later if the code score feels thin | Claude (code) / Dre (optional Suno) | Ongoing | Score approved on the test |
 | 5 | Confirm the Wick's Wisdom YouTube channel exists, and that the YouTube OAuth in `.env` points at it (not your personal channel) | Dre | By Sun 9/28 | Channel ID shared |
-| 6 | Build the engine: script parser, FlatWick rig, 15 scene components (both layouts), VO sync, captions | Claude | Sessions 2–3 (week of 9/29) | `node scripts/wick-yt-build.js 01` renders a draft |
-| 7 | **Pilot:** render 01-chessboard long form + its 3 Shorts | Claude | End of week of 9/29 | 3 MP4s. Dre reviews |
+| 6 | Grow the engine from the test: script parser (beats → shot list), reusable scene kit (MAP, TIMELINE, CHART, COUNTER, CROWD...), auto beat timing from VO silence detection, 9:16 re-layout for Shorts | Claude | Sessions 2–3 (week of 9/29) | `node render.mjs --film 01-chessboard` renders the full 9 min |
+| 7 | **Pilot:** render 01-chessboard long form + its 3 Shorts. The 1-minute test (done 9/25) is its opening | Claude | End of week of 9/29 | 4 MP4s. Dre reviews |
 | 8 | One style revision pass on the pilot, then lock the look | Dre + Claude | Within 2 days of pilot | Style frozen |
 | 9 | Long-form uploader (extend `distributors/youtube-shorts.js`) + route through the existing `review_queue` so nothing posts without your tap | Claude | Same week as pilot | Approve → uploads with chapters and description |
 | 10 | Production run: **2 long videos a week** (Tue + Fri), **1 Short a day** | Engine renders, Dre approves | Oct 7 → mid-Nov | 15 long + 45 Shorts live |
@@ -149,8 +154,9 @@ Everything else is free: code rendering, cached SFX, owned music beds.
 | 12 | Build the lead magnet (goal-to-daily-number calculator) so the "free calculator in the description" line is true | Claude | Before video 1 goes live | Link works |
 
 **Critical path:** step 12 has to exist before video 1 publishes, or every
-script's close points at nothing. Step 4 (music) blocks the pilot. Everything
-else can run in parallel.
+script's close points at nothing. Render time is the other constraint: software
+WebGL here is ~2–4 s/frame, so full 9-minute renders should run on your Mac (GPU)
+or a Railway worker, not in this cloud session.
 
 ---
 

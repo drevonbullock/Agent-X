@@ -1,0 +1,11 @@
+{
+  "name": "wick-engine",
+  "private": true,
+  "type": "module",
+  "description": "Wick's Wisdom film engine: plain JavaScript + three.js, every frame drawn in code, captured headless, encoded with ffmpeg.",
+  "dependencies": {
+    "@fontsource/fredoka": "^5.3.0",
+    "@fontsource/permanent-marker": "^5.3.0",
+    "three": "^0.180.0"
+  }
+}
