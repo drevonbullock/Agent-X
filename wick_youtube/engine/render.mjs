@@ -39,9 +39,10 @@ const server = http.createServer((req, res) => {
 await new Promise((r) => server.listen(0, r));
 const port = server.address().port;
 
-const browser = await chromium.launch({
-  args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-sandbox"],
-});
+// Linux cloud boxes have no GPU -> software GL (slow). On a Mac, use the real GPU.
+const browser = await chromium.launch(process.platform === "darwin"
+  ? { args: ["--ignore-gpu-blocklist", "--enable-gpu-rasterization"] }
+  : { args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-sandbox"] });
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") console.log("[page]", m.text()); });
 page.on("pageerror", (e) => console.log("[page error]", e.message));

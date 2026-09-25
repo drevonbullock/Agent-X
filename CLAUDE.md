@@ -291,3 +291,9 @@ On Railway the `worker` process runs `node index.js`; `nixpacks.toml` provisions
 - Brand accent color `#FF6B00` (orange); watermark `@DrevonBullock • Bullock Consulting Group`.
 - Cadence and caps are derived from Supabase counts at runtime — there is no local counter file.
 - `README.md` is end-user marketing copy and is partially stale (mentions DALL-E/Imagen 3, LinkedIn-only). Treat this file (CLAUDE.md) as the source of truth for architecture.
+
+## Wick's Wisdom YouTube (active work, branch claude/wicks-wisdom-video-plan-1uu7th)
+Long-form Wick's Wisdom explainers built entirely in code live in `wick_youtube/`.
+**Start every session on that work by reading `wick_youtube/HANDOFF.md`.** It holds
+Dre's hard rules (all code, no Higgsfield or Remotion, Wick must match his reference
+art, 30-second tests first), what's done, and the next steps.
