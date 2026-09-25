@@ -126,4 +126,9 @@ boil always run on live seconds. Pass both to the stage.
   exactly as fast as the shell grows); galaxy tilts in 3D and gets sucked into a flaring core;
   light runs along the sunflower's seed spirals; sun and hills at sunset; Dalio grid under the
   curve; camera shake on the aha burst.
+- 2026-09-25: "Make it better again, fine details" → v3 detail pass. Rule: every world gets
+  3 layers of life (background texture that moves, a hero object with micro-detail, a small
+  visitor or story beat), and every transition gets punctuation (shockwave rings, rays,
+  ticks, sparks, hatch-in). Petals scatter, never fade. Dust motes everywhere. Label charts
+  in plain words ("slow...", "then fast", "time", "money").
 - Voice: ElevenLabs is out. Pending Dre: record his own VO (recommended) or a Mac `say` placeholder.
