@@ -8,7 +8,7 @@ alt_titles:
   - "Why 10 Years of Investing Beats 30"
 thumbnail: "Tiny Wick on the first square of a night-sky chessboard while the far corner square erupts into a golden mountain of grain; text: 1 GRAIN."
 runtime_target: "9:00"
-narration_words: 1327
+narration_words: 1312
 ---
 
 # The Chessboard That Bankrupted a King
@@ -18,6 +18,10 @@ narration_words: 1327
 **The loop:** How can ten years of doing a little beat thirty years of doing a lot?
 
 **The turn:** The first squares look like nothing, and that is exactly why people quit. Time is the one ingredient you can't buy later.
+
+**Casting (Dre's rule: Wick plays every role, in costume):** the Inventor is plain Wick. King Wick wears a crown and red cape. Treasurer Wick wears spectacles. Jester Wick wears a jester hat. Servant Wicks wear aprons, and Guard Wicks wear helmets. The face, flame and wax never change; only the costume does. The flame tip always shows.
+
+**Look:** Dalio ink style (`wick_youtube/DALIO_STYLE.md`) with the Clawd-style motion from `engine/films/wick-montage`. Navy = story, green = how money works, mustard = history.
 
 ---
 
@@ -50,7 +54,7 @@ SFX: paper
 
 **B05** · `STAGE` · music: wonder
 VO: It goes like this. A clever man invents the game of chess. The king loves it so much that he offers the inventor any reward he wants. Gold. Land. A palace.
-VISUAL: A flat palace hall in NIGHT palette with warm hanging lamps. Wick (proud) in a simple tunic presents a chessboard to a round, big bellied king candle on a throne. The king's flame flares with delight. Servant candles march in carrying a treasure chest, a scroll with a tiny drawn field on it, and a toy sized palace, lining them up in front of Wick.
+VISUAL: A flat palace hall in NIGHT palette with warm hanging lamps. Wick (proud), the Inventor, in a simple tunic, presents a chessboard to King Wick on a throne. The king's flame flares with delight (joy). Servant Wicks march in carrying a treasure chest, a scroll with a tiny drawn field on it, and a toy sized palace, lining them up in front of Wick.
 
 **B06** · `STAGE` · music: wonder
 VO: The inventor waves it all away. He asks for grain. One grain on the first square. Two on the second. Four on the third. Double it on every square, all sixty four of them.
@@ -60,7 +64,7 @@ SFX: tick
 
 **B07** · `STAGE` · music: wonder
 VO: The king laughs. He thinks the inventor is a fool. He tells his treasurer to fetch a small bag of wheat and be done with it.
-VISUAL: The king candle rocks back laughing, flame wobbling side to side. A skinny treasurer candle in spectacles trots off with a tiny sack labeled "WHEAT (small)". Wick (calm) waits with his hands folded. Background gag: a jester candle in the corner covers his mouth and slowly shakes his head.
+VISUAL: King Wick (joy) rocks back laughing, flame wobbling side to side. Treasurer Wick in spectacles trots off with a tiny sack labeled "WHEAT (small)". Wick (calm) waits with his hands folded. Background gag: Jester Wick in the corner covers his mouth and slowly shakes his head.
 
 **B08** · `SPLIT` · music: wonder
 VO: The king's mistake is the most human mistake there is. He did the math the way our brains like to do it. By adding. But the board wasn't adding. It was multiplying.
@@ -105,7 +109,7 @@ SFX: tick
 
 **B15** · `ZOOM` · music: wonder
 VO: How much is that? A grain of wheat weighs a tiny fraction of a gram. Even if you pick a small grain, the whole pile would weigh over seven hundred billion tonnes.
-VISUAL: Start on one grain sitting on a little kitchen scale that reads "0.04 g". Zoom out past a barn, a town, a mountain range, until the golden pile towers over a flat Earth that sits beside it like a marble.
+VISUAL: Start on one grain sitting on a little kitchen scale that reads "0.04 g". Then one continuous zoom out at TRUE scale: the golden heap swells past Wick, swallows a barn and a castle, punches up through the clouds, and stops about six kilometres high, most of the way up Everest, which stands beside it at its real height. Stars appear as we reach the edge of the sky. (Math: 18.4 quintillion grains × 0.04 g ≈ 738 billion tonnes ≈ 0.95 trillion m³ of wheat; piled at a 27° slope that is a cone about 6,170 m tall. Built already as the heap montage in `films/dalio-motion`; switch its constants to 0.04 g.)
 ON-SCREEN: 700+ billion tonnes
 SFX: whoosh
 
@@ -116,7 +120,7 @@ ON-SCREEN: ~1,000 years of world harvests
 
 **B17** · `SPLIT` · music: history
 VO: The legend ends differently depending on who tells it. In some versions, the king makes the inventor his advisor. In others, he has him killed, which is one way to settle a debt.
-VISUAL: Two storybook panels. Left: Wick (proud) in a tall advisor's robe standing beside the throne. Right: Wick (alarmed) being walked by two guard candles toward a heavy door. The door swings shut before anything is shown. The right panel quietly fades.
+VISUAL: Two storybook panels. Left: Wick (proud) in a tall advisor's robe standing beside the throne. Right: Wick (alarmed) being walked by two Guard Wicks toward a heavy door. The door swings shut before anything is shown. The right panel quietly fades.
 
 **B18** · `TEXT` · music: wonder
 VO: Either way, the lesson is the same. The first half of the board looked like nothing. All the power lived in the second half. So what does the board look like when the grains are dollars?
@@ -133,7 +137,7 @@ SFX: coin
 
 **B20** · `FLOW` · music: warm
 VO: Here's how it grows. Those companies earn money, and they grow in value. That growth gets added to Wick's pile. Next year, the growth earns growth of its own. That's compounding. Earning returns on your returns.
-VISUAL: Flow diagram: a small Wick (focused) icon, then an arrow to the basket, then coins pop out of the basket and loop back in. Each time around, the loop arrow gets thicker. A small coin rides on top of a bigger coin, then a smaller coin appears riding on top of it. Label writes on: "returns on returns".
+VISUAL: THE MONTAGE (`films/wick-montage`, about 21 s). Wick studies one gold coin (hand on chin, then reach, then the aha burst). The camera dives into it, and it opens into a spiral galaxy. The stars get sucked into the core and a nautilus grows chamber after chamber. An iris opens on a sunflower whose seed spirals light up. The seeds lift off as a flock at sunset and land as the compounding curve ("slow... then fast"), and Wick waves. VO sits over the first half; let the music carry the rest. Swap the grain at the start for a coin so it reads as money.
 ON-SCREEN: Compounding = returns on your returns
 
 **B21** · `CHART_LINE` · music: warm
@@ -149,7 +153,7 @@ SFX: coin
 
 **B23** · `COUNTER` · music: warm
 VO: After one year, Wick has put in two thousand four hundred dollars. And his growth? About seventy six dollars. That's the first square. He could have bought a nice dinner with it. It looks like nothing because it nearly is nothing.
-VISUAL: Two counters side by side: "You put in: $2,400" and "Growth: $76". Wick (weary) holds the $76 up between two mitten fingers like a single grain. Background gag: his cat, a tiny candle curled on the couch, yawns.
+VISUAL: Two counters side by side: "You put in: $2,400" and "Growth: $76". Wick (weary) holds the $76 up between two mitten fingers like a single grain. Background gag: a tiny tea light curled on the couch like a cat, yawns.
 ON-SCREEN: Year 1 growth: $76
 
 **B24** · `CHART_BAR` · music: warm
@@ -198,7 +202,7 @@ VISUAL: Back to the night sky. The chessboard floats again, only its first row f
 
 **B32** · `STAGE` · music: cosmic
 VO: Think about what the first years actually feel like. You give up real things. A dinner out. A weekend trip. And the account barely moves. So your brain does what the king's did. It looks at the squares it can see, and it laughs.
-VISUAL: Wick (weary) at a restaurant window at night, nose near the glass, watching friends laugh at a table inside. He looks down at his phone: a tiny number. Cut to him walking home under a streetlight. Background gag: a billboard behind him shows the king candle laughing, with the tagline "Why bother?"
+VISUAL: Wick (weary) at a restaurant window at night, nose near the glass, watching friends laugh at a table inside. He looks down at his phone: a tiny number. Cut to him walking home under a streetlight. Background gag: a billboard behind him shows King Wick laughing, with the tagline "Why bother?"
 
 **B33** · `COSMIC` · music: cosmic
 VO: Compounding does its best work at the end. But it only reaches the end if you give it the beginning. You can earn more money later. You can save harder later. You can't buy back the years.
@@ -234,7 +238,7 @@ ON-SCREEN: 10 boring years, started early
 ## FIRST STEP + CLOSE
 
 **B39** · `STAGE` · music: resolve
-VO: So here's one thing you can do tonight. Set up one small automatic transfer into savings or investing, timed for the day you get paid. Any amount. The amount can grow later. The start date can't move. If you want to see your own board, the free calculator is in the description.
+VO: So here's one thing you can do tonight. Set up one small automatic transfer into savings or investing, timed for the day you get paid. Any amount. The amount can grow later. The start date can't move.
 VISUAL: Wick (determined) at his kitchen table at night taps one button on his phone. A single gold grain drops out of the phone onto a chessboard printed on his placemat and lands on square one with a soft glow.
 ON-SCREEN: Tonight: one automatic transfer.
 SFX: chime
@@ -274,8 +278,6 @@ VISUAL: Pull back from the placemat, out through the window, up into the night s
 > The same math runs on your money, and it explains why ten years of investing a little can beat thirty years of investing a lot.
 >
 > In this video: the legend of the wheat and the chessboard (and how old it really is), why doubling looks like nothing and then outruns everything, what compounding actually is, and what happens to three versions of Wick who start investing at different ages. All dollar examples use clearly stated assumptions: $200 a month and 7% a year after inflation, roughly the long run average of the US stock market since 1928. Past returns don't guarantee future ones.
->
-> Free calculator to see your own chessboard: [link]
 >
 > Education, not financial advice. Every number is sourced below.
 

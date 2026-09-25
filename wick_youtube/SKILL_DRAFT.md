@@ -131,4 +131,12 @@ boil always run on live seconds. Pass both to the stage.
   visitor or story beat), and every transition gets punctuation (shockwave rings, rays,
   ticks, sparks, hatch-in). Petals scatter, never fade. Dust motes everywhere. Label charts
   in plain words ("slow...", "then fast", "time", "money").
+- 2026-09-25: The sunflower "looks weak": thin, spaced petals and a sparse bed. Fixed to match the
+  reference: the disk is about half the flower and packed solid (2,300 seeds under the particles),
+  with broad overlapping petals in two layers and green bracts. The bee had one eye, so it was
+  rebuilt with two big eyes, fuzz, stripes, four wings and legs, and it faces where it flies.
+  Check the reference at full size before designing an object.
+- 2026-09-25: Episode 01 script audited before recording: B15's Earth-sized heap broke the
+  true-scale rule (it's a ~6.2 km heap next to Everest); a promised "free calculator" doesn't exist
+  and was removed; other candles became Wick in costume; B20 now uses the montage.
 - Voice: ElevenLabs is out. Pending Dre: record his own VO (recommended) or a Mac `say` placeholder.

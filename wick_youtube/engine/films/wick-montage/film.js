@@ -51,7 +51,7 @@ export async function create({ W, H, out }) {
     const rr = Math.hypot(dx, dy) * (1 - k), th = Math.atan2(dy, dx) + k * 2.5;
     return [960 + rr * Math.cos(th), 540 + rr * Math.sin(th)];
   };
-  const SUN_C = 10.2;
+  const SUN_C = 7.6;                                   // disk ≈ half the flower, like the real thing
   const sunflower = (p, t) => {
     const f = p.n / N, k = easeOut(seg(t, T_SUN + 0.1 + f * 0.45, T_SUN + 0.8 + f * 0.45));
     const rr = SUN_C * Math.sqrt(p.n) * k, th = p.n * GOLDEN + t * 0.06 + (1 - k) * 2;
@@ -67,7 +67,7 @@ export async function create({ W, H, out }) {
   const CURVE = (s) => [250 + 1380 * s, 880 - 640 * (Math.pow(2, s * 6) - 1) / 63];
   const curve = (p) => { const [x, y] = CURVE(p.cs); return [x + p.cj * 0.5, y + p.cj * 0.5]; };
   const morph = (a, b, t, t0, dur, spread, p) => { const k = easeInOut(clamp((t - t0 - p.d * spread) / dur)); return [k, [lerp(a[0], b[0], k), lerp(a[1], b[1], k)]]; };
-  const seedCol = (p) => (p.n < 90 ? "#9bb83e" : p.n < 330 ? "#6b4a16" : "#2e1807");
+  const seedCol = (p) => (p.n < 70 ? "#b3b84a" : p.n < 180 ? "#7d6a22" : p.n < 520 ? "#4a2a0c" : "#2a1405");
 
   function particle(p, t) {
     if (t < T_SUCK) return { xy: galaxy(p, t), col: p.gcol, sz: p.gsz, glow: 1 };
@@ -76,7 +76,7 @@ export async function create({ W, H, out }) {
     if (t < T_FLOCK) {
       // light runs along one family of the seed spirals
       const m = ((t - T_SUN) * 9) % 34, dd = Math.min(Math.abs((p.n % 34) - m), 34 - Math.abs((p.n % 34) - m)), lit = Math.exp(-dd * dd * 0.35);
-      return { xy: sunflower(p, t), col: mixHex(seedCol(p), "#ffd45c", lit * 0.85 * seg(t, T_SUN + 1.2, T_SUN + 1.6)), sz: 4.2 + lit, seed: 1 };
+      return { xy: sunflower(p, t), col: mixHex(seedCol(p), "#ffd45c", lit * 0.85 * seg(t, T_SUN + 1.2, T_SUN + 1.6)), sz: 3.5 + lit * 0.8, seed: 1 };
     }
     if (t < T_CURVE) { const [k, xy] = morph(sunflower(p, t), flock(p, t), t, T_FLOCK, 0.8, 0.45, p); return { xy, col: mixHex(seedCol(p), "#241827", k), sz: 4.2 - k * 1.2, bird: k, seed: 1 - k, trail: k > 0.04 && k < 0.7 ? morph(sunflower(p, t - 0.05), flock(p, t - 0.05), t - 0.05, T_FLOCK, 0.8, 0.45, p)[1] : null }; }
     const [k, xy] = morph(flock(p, t), curve(p), t, T_CURVE, 0.8, 0.4, p);
@@ -294,33 +294,66 @@ export async function create({ W, H, out }) {
     c.restore();
   }
 
-  // ---- sunflower petals + disk ----
+  // ---- sunflower: packed seed bed, green bracts, two layers of wide overlapping petals ----
+  const bedSeeds = Array.from({ length: 2300 }, (_, i) => { const q = rng(3000 + i); return [i + 1, q()]; });
   function sunflowerDressing(c, t) {
-    const Rd = SUN_C * Math.sqrt(N) + 8, leave = smooth(seg(t, T_FLOCK, T_FLOCK + 0.7));
+    const Rd = SUN_C * Math.sqrt(N) + 6, leave = smooth(seg(t, T_FLOCK, T_FLOCK + 0.7));
     const disk = seg(t, T_SUN + 0.05, T_SUN + 0.5) * (1 - leave);
     if (disk <= 0 && t < T_SUN + 0.5) return;
-    c.save(); c.globalAlpha = 1 - smooth(seg(leave, 0.6, 1));
-    for (const [ring, n, L, off, col] of [[0, 34, 150, 0, "#e9a114"], [1, 34, 128, Math.PI / 34, PAL.gold]]) {
+    const rot = t * 0.06;
+    // green bracts first, peeking between the petals
+    const bk = backOut(seg(t, T_SUN + 0.55, T_SUN + 0.9));
+    if (bk > 0) {
+      c.save(); c.globalAlpha = 1 - smooth(seg(leave, 0.3, 0.8));
+      for (let j = 0; j < 22; j++) {
+        const a = (j / 22) * TAU + rot + 0.07, L = (Rd * 0.62) * bk * (0.85 + 0.2 * Math.sin(j * 3.1));
+        c.save(); c.translate(960 + Math.cos(a) * (Rd - 8), 540 + Math.sin(a) * (Rd - 8)); c.rotate(a);
+        const br = (k) => { k.moveTo(0, -18); k.quadraticCurveTo(L * 0.6, -14, L, 0); k.quadraticCurveTo(L * 0.6, 14, 0, 18); k.closePath(); };
+        c.beginPath(); br(c); c.fillStyle = j % 2 ? "#4f8a3a" : "#3f7431"; c.fill();
+        hatch(c, (k) => { k.moveTo(0, 0); k.quadraticCurveTo(L * 0.6, 14, L, 0); k.lineTo(0, 18); k.closePath(); }, { gap: 5, width: 1, color: "rgba(10,40,10,0.45)", cx: L / 2, cy: 0, R: L });
+        c.beginPath(); br(c); c.lineWidth = 2.2; c.strokeStyle = PAL.ink; c.stroke();
+        c.restore();
+      }
+      c.restore();
+    }
+    // two rings of broad petals: the back ring longer and deeper orange, the front ring brighter
+    for (const [ring, n, L, Wd, off, base, tip] of [[0, 28, Rd * 0.95, 64, Math.PI / 28, "#e08a0e", "#f2a91a"], [1, 28, Rd * 0.82, 60, 0, "#f3b516", "#ffd84a"]]) {
       for (let j = 0; j < n; j++) {
-        const t0 = T_SUN + 0.75 + j * 0.013 + ring * 0.08, k = backOut(seg(t, t0, t0 + 0.35)) * (1 - leave * 0.4);
+        const t0 = T_SUN + 0.7 + j * 0.011 + ring * 0.12, k = backOut(seg(t, t0, t0 + 0.4));
         if (k <= 0) continue;
-        const a = off + (j / n) * TAU + t * 0.06 + leave * (j % 2 ? 0.6 : -0.6);
-        const l = L * k * (0.92 + 0.12 * Math.sin(j * 2.3)) * (1 + 0.03 * Math.sin(LIVE * 2 + j));
+        const a = off + (j / n) * TAU + rot, var1 = Math.sin(j * 2.3 + ring), curl = (1 - clamp(k)) * 0.5 + 0.05 * var1;
+        const l = L * k * (0.93 + 0.1 * var1) * (1 + 0.025 * Math.sin(LIVE * 2 + j)), w = Wd * clamp(k) * (0.9 + 0.12 * Math.cos(j * 1.7));
         const gust = leave * (0.7 + 0.6 * ((j * 37 + ring * 11) % 17) / 17), spin = gust * (((j * 13) % 7) - 3) * 1.2;
-        c.save(); c.translate(960 + Math.cos(a) * (Rd - 12 + gust * 520) + gust * 380, 540 + Math.sin(a) * (Rd - 12 + gust * 520) + gust * gust * 260); c.rotate(a + spin);
-        const petal = (k2) => { k2.moveTo(0, 0); k2.quadraticCurveTo(l * 0.45, -21, l, 0); k2.quadraticCurveTo(l * 0.45, 21, 0, 0); };
-        c.beginPath(); petal(c); c.fillStyle = col; c.fill();
-        hatch(c, (k2) => { k2.moveTo(0, 0); k2.quadraticCurveTo(l * 0.45, 21, l, 0); k2.closePath(); }, { gap: 5, width: 1, color: "rgba(150,80,0,0.45)", cx: l / 2, cy: 0, R: l });
-        c.beginPath(); petal(c); c.lineWidth = 2.4; c.strokeStyle = PAL.ink; c.stroke();
-        c.beginPath(); c.moveTo(8, 0); c.lineTo(l * 0.8, 0); c.lineWidth = 1.2; c.strokeStyle = "rgba(150,80,0,0.6)"; c.stroke();
+        c.save();
+        c.globalAlpha = 1 - smooth(seg(leave, 0.6, 1));
+        c.translate(960 + Math.cos(a) * (Rd - 26 + gust * 520) + gust * 380, 540 + Math.sin(a) * (Rd - 26 + gust * 520) + gust * gust * 260);
+        c.rotate(a + curl + spin);
+        const petal = (k2) => { k2.moveTo(0, -w * 0.28); k2.bezierCurveTo(l * 0.3, -w * 0.62, l * 0.72, -w * 0.5, l, -w * 0.04); k2.bezierCurveTo(l * 0.74, w * 0.46, l * 0.3, w * 0.58, 0, w * 0.28); k2.closePath(); };
+        const g = c.createLinearGradient(0, 0, l, 0); g.addColorStop(0, base); g.addColorStop(1, tip);
+        c.beginPath(); petal(c); c.fillStyle = g; c.fill();
+        hatch(c, (k2) => { k2.moveTo(0, 0); k2.bezierCurveTo(l * 0.3, w * 0.1, l * 0.7, w * 0.08, l, -w * 0.04); k2.bezierCurveTo(l * 0.74, w * 0.46, l * 0.3, w * 0.58, 0, w * 0.28); k2.closePath(); },
+          { gap: 5, width: 1.1, color: "rgba(160,70,0,0.42)", cx: l / 2, cy: 0, R: l });
+        c.beginPath(); petal(c); c.lineWidth = 2.6; c.lineJoin = "round"; c.strokeStyle = PAL.ink; c.stroke();
+        c.strokeStyle = "rgba(150,75,0,0.55)"; c.lineWidth = 1.3;
+        for (const [v, e] of [[0, 0.86], [-0.2, 0.62], [0.2, 0.62]]) { c.beginPath(); c.moveTo(l * 0.08, w * v * 0.5); c.quadraticCurveTo(l * 0.45, w * v, l * e, w * v * 0.6); c.stroke(); }
         c.restore();
       }
     }
-    c.restore();
+    // the bed: a dark disk packed solid with seeds, green-gold at the heart
     if (disk > 0) {
-      c.save(); c.globalAlpha = disk; c.beginPath(); c.arc(960, 540, Rd * easeOut(seg(t, T_SUN + 0.05, T_SUN + 0.6)), 0, TAU);
-      const dg = c.createRadialGradient(960, 540, 0, 960, 540, Rd); dg.addColorStop(0, "#c9b24a"); dg.addColorStop(0.3, "#a0782a"); dg.addColorStop(1, "#7a4e1a");
-      c.fillStyle = dg; c.fill(); c.lineWidth = 3; c.strokeStyle = PAL.ink; c.stroke(); c.restore();
+      const R = Rd * easeOut(seg(t, T_SUN + 0.05, T_SUN + 0.6));
+      c.save(); c.globalAlpha = disk; c.beginPath(); c.arc(960, 540, R, 0, TAU);
+      const dg = c.createRadialGradient(960, 540, 0, 960, 540, Rd); dg.addColorStop(0, "#c2bd52"); dg.addColorStop(0.22, "#6e5a1c"); dg.addColorStop(0.5, "#3a200a"); dg.addColorStop(1, "#1e0e04");
+      c.fillStyle = dg; c.fill();
+      c.save(); c.clip();
+      const c2 = SUN_C * Math.sqrt(N / bedSeeds.length);
+      for (const [n, v] of bedSeeds) {
+        const rr = c2 * Math.sqrt(n), th = n * GOLDEN + rot, x = 960 + rr * Math.cos(th), y = 540 + rr * Math.sin(th), f = rr / Rd;
+        c.fillStyle = f < 0.18 ? (v < 0.5 ? "#d6d06a" : "#a8a444") : f < 0.4 ? (v < 0.5 ? "#6b5418" : "#57400f") : (v < 0.5 ? "#2c1506" : "#3d1f09");
+        c.beginPath(); c.ellipse(x, y, 2.6, 1.9, th, 0, TAU); c.fill();
+      }
+      c.restore();
+      c.lineWidth = 3.2; c.strokeStyle = PAL.ink; c.stroke(); c.restore();
     }
   }
 
@@ -334,13 +367,58 @@ export async function create({ W, H, out }) {
     c.restore();
   }
 
+  // ---- the bee: faces where it flies, two big eyes, fuzz, stripes, four wings ----
+  function drawBee(c, x, y, face, tilt) {
+    const flap = Math.sin(LIVE * 60), ink = PAL.ink;
+    c.save(); c.translate(x, y); c.scale(face * 2.2, 2.2); c.rotate(tilt * face);
+    // back wings, then legs
+    c.fillStyle = "rgba(225,240,255,0.55)"; c.strokeStyle = ink; c.lineWidth = 1.2;
+    for (const [dx, sz, ph] of [[-4, 1, 0], [2, 0.8, 0.6]]) {
+      c.save(); c.translate(dx, -9); c.rotate(-0.5 - 0.55 * Math.sin(LIVE * 60 + ph)); c.beginPath(); c.ellipse(0, -9 * sz, 6 * sz, 11 * sz, 0.2, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(0, -1); c.lineTo(0, -16 * sz); c.lineWidth = 0.7; c.stroke(); c.restore();
+    }
+    c.lineWidth = 1.6; c.lineCap = "round";
+    for (const lx of [-5, 0, 5]) { c.beginPath(); c.moveTo(lx, 8); c.quadraticCurveTo(lx - 2, 13, lx + 1, 16 + Math.sin(LIVE * 9 + lx) * 1.2); c.stroke(); }
+    // body: fuzz halo, yellow, two curved stripes, stinger
+    c.fillStyle = "#f7c21e";
+    c.beginPath(); c.ellipse(-2, 0, 15, 11, 0, 0, TAU); c.fill();
+    c.save(); c.beginPath(); c.ellipse(-2, 0, 15, 11, 0, 0, TAU); c.clip();
+    c.fillStyle = "#2a1a10";
+    for (const sx of [-10, -2]) { c.beginPath(); c.ellipse(sx, 0, 3.2, 13, 0.15, 0, TAU); c.fill(); }
+    c.fillStyle = "rgba(255,255,255,0.35)"; c.beginPath(); c.ellipse(0, -6, 8, 2.5, -0.1, 0, TAU); c.fill();
+    c.restore();
+    c.beginPath(); c.ellipse(-2, 0, 15, 11, 0, 0, TAU); c.lineWidth = 1.8; c.strokeStyle = ink; c.stroke();
+    c.lineWidth = 0.9; for (let i = 0; i < 26; i++) { const a = (i / 26) * TAU; c.beginPath(); c.moveTo(-2 + Math.cos(a) * 15, Math.sin(a) * 11); c.lineTo(-2 + Math.cos(a) * 17.5, Math.sin(a) * 13); c.stroke(); }
+    c.beginPath(); c.moveTo(-16.5, -1.5); c.lineTo(-22, 0.5); c.lineTo(-16.5, 2.5); c.closePath(); c.fillStyle = ink; c.fill();
+    // head with two big eyes and a smile
+    c.beginPath(); c.arc(12, -3, 8.5, 0, TAU); c.fillStyle = "#2a1a10"; c.fill(); c.lineWidth = 1.8; c.stroke();
+    for (const [ex, er] of [[10.2, 3.2], [15.6, 2.8]]) {
+      c.beginPath(); c.arc(ex, -5, er, 0, TAU); c.fillStyle = "#fffaf0"; c.fill();
+      c.beginPath(); c.arc(ex + 0.9, -4.6, er * 0.52, 0, TAU); c.fillStyle = ink; c.fill();
+      c.beginPath(); c.arc(ex + 1.4, -5.6, er * 0.2, 0, TAU); c.fillStyle = "#fff"; c.fill();
+    }
+    c.beginPath(); c.arc(13.5, -0.5, 2.4, 0.2, Math.PI - 0.4); c.lineWidth = 1.1; c.strokeStyle = "#f7c21e"; c.stroke();
+    // antennae
+    c.strokeStyle = ink; c.lineWidth = 1.3;
+    for (const [ax, sway] of [[10, 0], [15, 1]]) { const w = Math.sin(LIVE * 6 + sway) * 1.5; c.beginPath(); c.moveTo(ax, -10); c.quadraticCurveTo(ax + 1 + w, -17, ax + 5 + w, -19); c.stroke(); c.beginPath(); c.arc(ax + 5 + w, -19, 1.6, 0, TAU); c.fillStyle = ink; c.fill(); }
+    // front wings on top
+    c.fillStyle = "rgba(235,246,255,0.7)"; c.strokeStyle = ink; c.lineWidth = 1.2;
+    for (const [dx, sz, ph] of [[0, 1.15, 0.3], [5, 0.9, 0.9]]) {
+      c.save(); c.translate(dx, -10); c.rotate(-0.25 - 0.6 * Math.sin(LIVE * 60 + ph)); c.beginPath(); c.ellipse(0, -9 * sz, 6.5 * sz, 11 * sz, -0.15, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(0, -1); c.quadraticCurveTo(2, -10 * sz, 0, -17 * sz); c.lineWidth = 0.7; c.stroke(); c.restore();
+    }
+    // motion blur swooshes under the wings
+    c.strokeStyle = "rgba(255,255,255,0.5)"; c.lineWidth = 1; for (const r2 of [19, 23]) { c.beginPath(); c.arc(2, -12, r2, -2.4, -1.4); c.stroke(); }
+    c.restore();
+  }
+
   // ---- details that sit in front of the particles ----
   const beePath = (s) => [960 + 560 * Math.sin(s * 1.3) * Math.cos(s * 0.4) + (1 - clamp(s)) * 900, 520 + 230 * Math.sin(s * 2.6) - 60 * Math.cos(s * 0.9)];
   function frontDetails(c, t) {
     // florets: a ring of tiny flowers where the seeds meet the petals
     const fk = seg(t, T_SUN + 0.6, T_SUN + 1.0) * (1 - seg(t, T_FLOCK, T_FLOCK + 0.4));
     if (fk > 0) {
-      const Rd = SUN_C * Math.sqrt(N) + 2;
+      const Rd = SUN_C * Math.sqrt(N) + 4;
       c.save(); c.globalAlpha = fk;
       for (let i = 0; i < 96; i++) {
         const a = (i / 96) * TAU + t * 0.06, rr = Rd - 6 * (i % 2), x = 960 + Math.cos(a) * rr, y = 540 + Math.sin(a) * rr, s2 = 4 + (i % 3);
@@ -357,15 +435,7 @@ export async function create({ W, H, out }) {
       c.save(); c.setLineDash([3, 9]); c.lineWidth = 2; c.strokeStyle = "rgba(60,30,10,0.55)"; c.beginPath();
       for (let q = Math.max(0, s - 0.9); q <= s; q += 0.01) c.lineTo(...beePath(q));
       c.stroke(); c.restore();
-      c.save(); c.translate(bx, by + 4 * Math.sin(LIVE * 14)); c.rotate(dir); c.scale(1.9, 1.9); const flap = Math.abs(Math.sin(LIVE * 55));
-      c.fillStyle = "rgba(235,245,255,0.8)"; c.strokeStyle = PAL.ink; c.lineWidth = 1.5;
-      for (const sgn of [-1, 1]) { c.beginPath(); c.ellipse(-2, sgn * 9 * flap, 10, 6 * flap + 1, sgn * 0.4, 0, TAU); c.fill(); c.stroke(); }
-      c.beginPath(); c.ellipse(0, 0, 15, 10, 0, 0, TAU); c.fillStyle = "#f5c33b"; c.fill();
-      c.save(); c.clip(); c.fillStyle = PAL.ink; for (const x of [-7, 1]) c.fillRect(x, -12, 4.5, 24); c.restore();
-      c.lineWidth = 2.2; c.stroke();
-      c.beginPath(); c.moveTo(-15, 0); c.lineTo(-21, 0); c.stroke();
-      c.fillStyle = PAL.ink; c.beginPath(); c.arc(11, -3, 1.8, 0, TAU); c.fill();
-      c.restore();
+      drawBee(c, bx, by + 4 * Math.sin(LIVE * 14), nx >= bx ? 1 : -1, clamp((ny - by) * 3, -0.35, 0.35));
     }
     // a few big birds close to the camera, crossing the sunset
     const bw = seg(t, T_FLOCK + 0.5, T_FLOCK + 0.9) * (t < T_CURVE + 0.5 ? 1 : 0);
