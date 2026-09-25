@@ -9,7 +9,7 @@ alt_titles:
 thumbnail: "Wick in a tiny diving helmet, staring up at a giant stone wheel on the ocean floor; text: IS MONEY REAL?"
 runtime_target: "8:30"
 narration_words: 1167
-voice: "ElevenLabs, Adam"
+voice: "ElevenLabs eleven_v3, Adam (pNInz6obpgDQGcFmaJgB)"
 ---
 
 # The Illusion of Money

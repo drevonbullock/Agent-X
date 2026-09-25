@@ -145,5 +145,5 @@ boil always run on live seconds. Pass both to the stage.
 - 2026-09-25: Dre picked the next 10 videos (SLATE_V2.md): story/parable titles built on what gets views
   (illusion framing, rich vs poor, scale, emotional parables). Video 1 = The Illusion of Money (Yap).
 - Voice (updated 2026-09-25): ElevenLabs IS allowed again, via the ElevenLabs Creative connector, voice
-  **Adam** (premade "Adam - Dominant, Firm", voice_id pNInz6obpgDQGcFmaJgB), eleven_multilingual_v2.
+  **Adam** (premade "Adam - Dominant, Firm", voice_id pNInz6obpgDQGcFmaJgB), model **eleven_v3** (Dre switched from v2 on 2026-09-25).
   Test 30 s (the cold open) before voicing the whole script. Pending Dre: record his own VO (recommended) or a Mac `say` placeholder.
