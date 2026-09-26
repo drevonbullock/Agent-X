@@ -3,7 +3,7 @@
 // everyone on real ground, labels never on top of objects. Times are absolute.
 import { rng, seg, smooth, easeOut, easeIn, easeInOut, backOut, lerp, clamp } from "../../lib2d/ease.js";
 import { PAL, paper, hatch, inkWick, mood, pose, sweat, sparkle, title, label, makeStage, chartLine, drawRing, burst } from "../../lib2d/ink.js";
-import { stone, coin, bill, phone, hourglass, canoe, waves } from "../../lib2d/props.js";
+import { stone, coin, bill, phone, hourglass, canoe, sailship, waves } from "../../lib2d/props.js";
 import { camKF, pk, popAt, arrowV, person, checkBubble, hut, palm, lei, card, island, serif, headband, coat } from "../../lib2d/scene.js";
 
 const TAU = Math.PI * 2;
@@ -181,15 +181,41 @@ export async function create({ W, H, out }) {
 
   // =================== CH4 · the stranger with a steamship (201.8 → 265.4) ===================
   // beach world: the wreck on the reef, the trade; then the ocean map (routes, counters); then the green board
-  const ch4BeachCam = [[201.8, 1200, 540, 0.95], [210.2, 1600, 540, 1.0], [213.8, 1600, 540, 1.0]];
+  const ch4BeachCam = [[201.8, 1150, 540, 0.9], [210.2, 1600, 540, 1.0], [213.8, 1600, 540, 1.0]];
   function ch4Beach(c, t) {
-    daySky(c, -1600, G); c.fillStyle = "#2d8aa0"; c.fillRect(-3000, G - 120, 3800, 1700); waves(c, G - 110, LIVE, "rgba(255,255,255,0.4)");
-    // the wreck sits out on the reef, in the water, not on the sand
-    c.save(); c.translate(560, G - 130); c.rotate(-0.28); c.fillStyle = "#5a3b20"; c.beginPath(); c.moveTo(-260, 0); c.lineTo(260, 0); c.lineTo(200, 90); c.lineTo(-200, 90); c.closePath(); c.fill(); c.lineWidth = 4; c.strokeStyle = PAL.ink; c.stroke(); c.fillRect(-10, -260, 16, 260); c.restore();
-    c.fillStyle = "#e8d29a"; c.beginPath(); c.moveTo(800, G + 40); c.quadraticCurveTo(1000, G, 1200, G); c.lineTo(9000, G); c.lineTo(9000, G + 1600); c.lineTo(800, G + 1600); c.closePath(); c.fill(); c.lineWidth = 4; c.strokeStyle = PAL.ink; c.beginPath(); c.moveTo(800, G + 40); c.quadraticCurveTo(1000, G, 1200, G); c.lineTo(9000, G); c.stroke();
+    // side view with a real horizon: sky, an even band of sea, the wreck out on the reef, one level beach in front
+    const HZ = G - 280, WL = G - 90, WX = 600;
+    daySky(c, -1600, HZ);
+    const sea = c.createLinearGradient(0, HZ, 0, G); sea.addColorStop(0, "#1f6f8a"); sea.addColorStop(1, "#46a9b8");
+    const ripples = (y0, y1) => { c.save(); c.strokeStyle = "rgba(255,255,255,0.3)"; c.lineWidth = 2.5; for (let y = HZ + 24, j = 0; y < G - 8; y += 34, j++) { if (y < y0 || y >= y1) continue; c.beginPath(); for (let x = -600; x <= 3600; x += 30) c.lineTo(x, y + (2 + j * 0.8) * Math.sin(x * 0.012 + LIVE * 1.2 + j * 1.7)); c.stroke(); } c.restore(); };
+    c.fillStyle = sea; c.fillRect(-3000, HZ, 14000, G - HZ); c.lineWidth = 3; c.strokeStyle = PAL.ink; c.beginPath(); c.moveTo(-3000, HZ); c.lineTo(11000, HZ); c.stroke();
+    ripples(0, WL);
+    // gulls over the wreck
+    c.save(); c.strokeStyle = PAL.ink; c.lineWidth = 3.5; c.lineCap = "round"; for (let i = 0; i < 3; i++) { const gx = 700 + i * 260 + 60 * Math.sin(LIVE * 0.4 + i * 2), gy = 180 + i * 60 + 20 * Math.sin(LIVE * 0.7 + i), fl = 14 * Math.sin(LIVE * 6 + i * 1.3); c.beginPath(); c.moveTo(gx - 26, gy - fl); c.quadraticCurveTo(gx - 10, gy - 14, gx, gy); c.quadraticCurveTo(gx + 10, gy - 14, gx + 26, gy - fl); c.stroke(); } c.restore();
+    // the wreck: a three-master run aground on the reef, heeling toward the shore
+    sailship(c, WX, WL - 22, 620, LIVE, { wreck: true, heel: 0.1 + 0.012 * Math.sin(LIVE * 0.9) });
+    c.fillStyle = sea; c.fillRect(-3000, WL, 14000, G - WL);   // the near water hides her keel (same gradient, no seam)
+    // reef rocks and the surf breaking on them; a bigger wave on "shipwrecked"
+    c.fillStyle = "#3a3a2c"; for (const [rx, rw, rh] of [[WX - 330, 70, 34], [WX - 250, 46, 22], [WX + 300, 80, 30], [WX + 380, 40, 18]]) { c.beginPath(); c.moveTo(rx - rw, WL + 6); c.lineTo(rx - rw * 0.4, WL - rh); c.lineTo(rx + rw * 0.2, WL - rh * 0.6); c.lineTo(rx + rw, WL + 6); c.closePath(); c.fill(); c.lineWidth = 3; c.strokeStyle = PAL.ink; c.stroke(); }
+    c.save(); c.fillStyle = "rgba(255,255,255,0.85)"; for (let i = 0; i < 9; i++) { const ph = (LIVE * 0.8 + i * 0.37) % 1, fx = WX - 360 + i * 90, r = 10 + 18 * Math.sin(ph * Math.PI); c.globalAlpha = 0.8 * Math.sin(ph * Math.PI); c.beginPath(); c.ellipse(fx, WL + 4, r * 1.8, r * 0.45, 0, Math.PI, TAU); c.fill(); } c.restore();
+    const crash = seg(t, 207.1, 208.1); if (crash > 0 && crash < 1) burst(c, WX - 200, WL, crash, { r0: 20, r1: 240, n: 18, color: "rgba(255,255,255,0.9)" });
+    ripples(WL, G);
+    // the beach: one level line, wet sand at the edge, foam sliding up and back
+    c.fillStyle = "#e8d29a"; c.fillRect(-3000, G, 14000, 1600); c.fillStyle = "#cdb47c"; c.fillRect(-3000, G, 14000, 26);
+    const reach = 5 * Math.sin(LIVE * 1.1);
+    c.save(); c.fillStyle = "rgba(255,255,255,0.9)"; c.beginPath(); c.moveTo(-3000, G - 8 + reach); for (let x = -3000; x <= 11000; x += 40) c.lineTo(x, G + 4 + reach + 4 * Math.sin(x * 0.03 + LIVE * 2)); c.lineTo(11000, G - 8 + reach); c.closePath(); c.fill(); c.restore();
+    c.lineWidth = 4; c.strokeStyle = PAL.ink; c.beginPath(); c.moveTo(-3000, G); c.lineTo(11000, G); c.stroke();
+    // what washed up with him: a barrel and a plank
+    c.save(); c.translate(820, G - 44); c.rotate(-0.2); c.fillStyle = "#8a5d33"; c.beginPath(); c.roundRect(-34, -44, 68, 88, 18); c.fill(); c.lineWidth = 4; c.strokeStyle = PAL.ink; c.stroke(); c.lineWidth = 5; c.strokeStyle = "#3a3a2c"; c.beginPath(); c.moveTo(-34, -22); c.lineTo(34, -22); c.moveTo(-34, 22); c.lineTo(34, 22); c.stroke(); c.restore();
+    c.save(); c.translate(640, G - 10); c.rotate(0.06); c.fillStyle = "#a07444"; c.fillRect(-90, -10, 180, 20); c.lineWidth = 3; c.strokeStyle = PAL.ink; c.strokeRect(-90, -10, 180, 20); c.restore();
     palm(c, 2350, G, 330, LIVE, 1); hut(c, 2650, G, 300);
     const cx = lerp(1000, 1250, easeOut(seg(t, 202.6, 205.5)));
+    // his footprints up from the water's edge
+    c.fillStyle = "rgba(120,90,50,0.45)"; for (let fx = 930, j = 0; fx < cx - 50; fx += 48, j++) { c.beginPath(); c.ellipse(fx, G + 14 + (j % 2) * 12, 12, 5, 0, 0, TAU); c.fill(); }
     W1(c, cx, 170, t, [[0, "weary"], [210.5, "curious"], [212.9, "starstruck", "spark"]], [[0, "rest"], [210.5, "chin"], [212.9, "cheer"]], { seed: 3, ...walkO(t, 202.6, 205.5) }); coat(c, cx, G, 170, "captain");
+    // who he is: a name card in the sky above him, gone before the idea bubble
+    const nk = pk(t, 206.0) * (1 - seg(t, 209.9, 210.3));
+    popAt(c, 1260, G - 610, nk, (g) => { card(g, 0, 0, 540, 190); serif(g, "David O'Keefe", 0, -34, 54, "#1b2440"); if (t > 208.4) { g.save(); g.globalAlpha = seg(t, 208.4, 208.8); serif(g, "sea captain · Yap, 1870s", 0, 38, 34, "#8a2f2a"); g.restore(); } });
     // what he watched: a stone changing hands without moving
     stone(c, 1950, G - 120, 120);
     W1(c, 1750, 130, t, [[0, "happy"]], [[0, "reach"]], { seed: 5, flip: false }); W1(c, 2160, 130, t, [[0, "happy"]], [[0, "reach"]], { seed: 6, flip: true });

@@ -182,5 +182,14 @@ boil always run on live seconds. Pass both to the stage.
   that looks like it's floating; boards and whiteboards line up with the furniture they sit on (easel
   centred on the table); the brand is a small bottom-right watermark on every frame, never over Wick;
   every video ends with a lower-third "Subscribe for more money stories like this" CTA (visual only).
+- 2026-09-26: Dre flagged the CH4 beach at 3:23: "that separation looks crazy... the boat doesn't even
+  look like a boat, there's no sail." RULES FROM THIS: a side-view beach is sky, then an even band of sea
+  from a real horizon line, then ONE level sand line in front with wet sand and foam. Never a water
+  rectangle that ends in a hard vertical edge beside sand at a different height. Boats must read as
+  boats at any size: hull with planks, masts, sails, rigging (props.js `sailship`, with a wreck mode that
+  tears the sails, snaps a mast and holes the hull). Canoes are Micronesian outriggers with a crab-claw
+  sail (props.js `canoe`). Things in the water sit IN it: redraw the near water over the keel, with
+  foam where it meets rocks. Also swept the map labels (PALAU, "≈ 250 miles", "no rock like this here")
+  off the islands and the route line.
 - Speed: an episode is data-driven. align.py gives word timings, each chapter is one canvas with camera
   keyframes and word-timed pop-ins, and renders run in 10 parallel chunks joined with an ffmpeg xfade.

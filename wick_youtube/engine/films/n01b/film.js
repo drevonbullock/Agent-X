@@ -225,9 +225,9 @@ export async function create({ W, H, out }) {
     const boardUp = (t > C.giant - 0.7 && t < C.wild + 0.2) || t > C.journey - 0.4;
     if (!boardUp) for (const [x, y, , , , n] of land) label(c, n, x, y + 10, 46, "#12301a", "center", seg(t, C.pacific - 0.3, C.pacific + 0.3));
     if (!boardUp) title(c, "PACIFIC OCEAN", 3300, 1500, 90, "rgba(225,242,255,0.6)", "center", seg(t, C.pacific, C.pacific + 0.5));
-    label(c, "PALAU", PALAU[0] - 20, PALAU[1] + 90, 50, "#fff6e0", "center", seg(t, C.palau - 0.2, C.palau + 0.2));
-    label(c, "no rock like this here", YAP[0] + 170, YAP[1] + 30, 34, "#ffe1d6", "center", seg(t, C.wild + 1.1, C.wild + 1.5));
-    if (t > C.miles) title(c, "≈ 250 miles", 2420, 1420, 60, "#fff6e0", "center", seg(t, C.miles + 0.3, C.miles + 0.7));
+    label(c, "PALAU", PALAU[0] + 55, PALAU[1] + 75, 50, "#fff6e0", "left", seg(t, C.palau - 0.2, C.palau + 0.2));
+    label(c, "no rock like this here", YAP[0] + 215, YAP[1] - 50, 34, "#ffe1d6", "left", seg(t, C.wild + 1.1, C.wild + 1.5));
+    if (t > C.miles) title(c, "≈ 250 miles", 2490, 1465, 60, "#fff6e0", "left", seg(t, C.miles + 0.3, C.miles + 0.7));
     const carve = seg(t, C.months, C.floated);
     if (carve > 0 && carve < 1) { const m = 1 + Math.floor(carve * 6); title(c, `month ${m}`, PALAU[0] - 260, PALAU[1] - 120, 54, "#fff6e0"); }
     if (t > C.giant - 0.3 && t < C.wild) { title(c, "How big is rai?", 3300, 270, 70, "#1b2440", "center", seg(t, C.giant - 0.3, C.giant + 0.1)); label(c, "fits in a hand", 2880, 920, 38, "#1b2440", "center", seg(t, C.hand - 0.3, C.hand)); label(c, "12 ft across", 3300, 920, 38, "#1b2440", "center", seg(t, C.twelve, C.twelve + 0.3)); label(c, "≈ 4 tons", 3790, 920, 38, "#1b2440", "center", seg(t, C.car, C.car + 0.3)); }
