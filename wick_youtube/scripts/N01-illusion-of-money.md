@@ -228,13 +228,40 @@ VISUAL: Back underwater. The giant stone rests in the sand, light shafts driftin
 
 ## YOUTUBE PACKAGE
 
-**Description (first 2 lines show above the fold):**
-> On a tiny Pacific island, a family stayed rich for generations from a giant stone wheel that sat at the bottom of the sea.
-> It's a true story, and it explains exactly how the money in your bank account works, and the one thing it can never buy more of.
->
-> In this video: the stone money of Yap, the stone that sank, the black crosses that made an island poor overnight, the sea captain who flooded the island with stones, what money really is, and why the real price of anything is measured in hours of your life.
->
-> Education, not financial advice. Every fact is sourced below.
+**Description (final, 2026-09-26; first 2 lines show above the fold; chapters from the VO section starts):**
+```
+A family on a tiny Pacific island stayed rich for generations from a giant stone that sat at the bottom of the sea.
+It's a true story, and it shows how the money in your bank account really works, and the one thing money can never buy more of.
+
+Chapters
+0:00 A fortune at the bottom of the sea
+0:39 The island of stone money
+1:51 The stone that sank
+2:33 The black crosses
+3:22 The sea captain with a steamship
+4:25 So what is money, really?
+5:25 What things really cost
+6:23 One thing to do tonight
+
+Every fact in this video is real, and the sources are below.
+Education, not financial advice.
+
+Subscribe for more money stories like this.
+
+Sources
+1. The sunken stone and the black crosses: William Henry Furness III, The Island of Stone Money (1910)
+https://archive.org/stream/IslandOfStoneMoney/island%20of%20stone%20money_djvu.txt
+Retold by Milton Friedman: https://miltonfriedman.hoover.org/objects/56723/the-island-of-stone-money
+2. Where the stones came from, how big and heavy they were, how many there were: Bank of Canada Museum
+https://www.bankofcanadamuseum.ca/2024/07/rai-big-money/
+Federal Reserve Bank of Cleveland: https://www.clevelandfed.org/-/media/project/clevelandfedtenant/clevelandfedsite/publications/economic-commentary/2004/ec-20040201-island-money-pdf.pdf
+3. Stone money is still used today: https://en.wikipedia.org/wiki/Rai_stones
+4. David O'Keefe, the sea captain: https://en.wikipedia.org/wiki/David_O%27Keefe_(ship_captain)
+5. Prices since 2000: Federal Reserve Bank of Minneapolis
+https://www.minneapolisfed.org/about-us/monetary-policy/inflation-calculator/consumer-price-index-1913-
+
+#money #personalfinance #history
+```
 
 **Pinned comment:** Divide your last paycheck by the hours it took to earn it. What's one thing you bought recently that cost more hours than you thought?
 
