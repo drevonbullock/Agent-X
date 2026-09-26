@@ -280,10 +280,11 @@ function face(ctx, fx, f, look, t) {
 
 function crown(ctx, cx, cy, tilt) {
   ctx.save(); ctx.translate(cx, cy); ctx.rotate(tilt);
-  const w = 0.34, h = 0.13;
+  const w = 0.4, h = 0.12;
   const p = (c) => {
-    c.moveTo(-w, 0); c.lineTo(-w, -h); c.lineTo(-w - 0.03, -h - 0.2); c.lineTo(-w * 0.45, -h - 0.02);
-    c.lineTo(0, -h - 0.26); c.lineTo(w * 0.45, -h - 0.02); c.lineTo(w + 0.03, -h - 0.2);
+    c.moveTo(-w, 0); c.lineTo(-w, -h); c.lineTo(-w - 0.04, -h - 0.2); c.lineTo(-w * 0.55, -h - 0.03);
+    c.lineTo(-w * 0.3, -h - 0.17); c.lineTo(-w * 0.12, -h - 0.02); c.lineTo(w * 0.12, -h - 0.02);
+    c.lineTo(w * 0.3, -h - 0.17); c.lineTo(w * 0.55, -h - 0.03); c.lineTo(w + 0.04, -h - 0.2);
     c.lineTo(w, -h); c.lineTo(w, 0); c.closePath();
   };
   ctx.beginPath(); p(ctx); ctx.fillStyle = "#f4c542"; ctx.fill();
@@ -292,7 +293,7 @@ function crown(ctx, cx, cy, tilt) {
   ctx.beginPath(); p(ctx); ctx.lineWidth = 0.035; ctx.lineJoin = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
   ctx.fillStyle = "#d8352a";
   ctx.beginPath(); ctx.arc(0, -h * 0.55, 0.045, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  for (const [x, y] of [[-w - 0.03, -h - 0.2], [0, -h - 0.26], [w + 0.03, -h - 0.2]]) {
+  for (const [x, y] of [[-w - 0.04, -h - 0.2], [-w * 0.3, -h - 0.17], [w * 0.3, -h - 0.17], [w + 0.04, -h - 0.2]]) {
     ctx.fillStyle = "#fff1b8"; ctx.beginPath(); ctx.arc(x, y, 0.035, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 0.025; ctx.stroke();
   }
   ctx.restore();
@@ -362,12 +363,15 @@ export function inkWick(ctx, x, y, s, o = {}) {
 
   // legs + shoes
   for (const sgn of [-1, 1]) {
-    ctx.beginPath(); ctx.moveTo(sgn * 0.2, B + 0.02); ctx.lineTo(sgn * 0.225, -0.1);
+    // walk: o.walk is a phase in cycles; each foot swings forward and lifts, opposite to the other
+    const ph = o.walk != null ? Math.sin((o.walk + (sgn < 0 ? 0 : 0.5)) * Math.PI * 2) : 0;
+    const fx = o.walk != null ? ph * 0.16 : 0, lift = o.walk != null ? Math.max(0, Math.cos((o.walk + (sgn < 0 ? 0 : 0.5)) * Math.PI * 2)) * 0.09 : 0;
+    ctx.beginPath(); ctx.moveTo(sgn * 0.2, B + 0.02); ctx.lineTo(sgn * 0.225 + fx, -0.1 - lift);
     ctx.lineWidth = 0.09; ctx.lineCap = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
     ctx.fillStyle = PAL.ink;
-    ctx.beginPath(); ctx.ellipse(sgn * 0.27, -0.075, 0.19, 0.095, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(sgn * 0.27 + fx, -0.075 - lift, 0.19, 0.095, fx * 0.8, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "rgba(255,255,255,0.15)";
-    ctx.beginPath(); ctx.ellipse(sgn * 0.24, -0.12, 0.08, 0.022, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(sgn * 0.24 + fx, -0.12 - lift, 0.08, 0.022, 0, 0, Math.PI * 2); ctx.fill();
   }
 
   if (o.cape) cape(ctx);
@@ -422,7 +426,7 @@ export function inkWick(ctx, x, y, s, o = {}) {
   ctx.lineWidth = LW * 0.7; ctx.lineJoin = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
 
   for (const sd of ["L", "R"]) if (A[sd][3]) drawArm(sd);
-  if (o.crown) crown(ctx, fcx + 0.24 + lean * 0.4, fcy - 0.1 + (o.crownBob || 0), 0.38 + (o.crownTilt || 0));
+  if (o.crown) crown(ctx, fcx + lean * 0.35, fcy - 0.3 + (o.crownBob || 0), (o.crownTilt || 0) * 0.3);
   if (o.emote && (o.emoteK ?? 1) > 0.01) emote(ctx, o.emote, 0.95, fcy - 0.55, backOut(o.emoteK ?? 1), t);
   ctx.restore();
 }
@@ -597,6 +601,12 @@ export function makeStage(out) {
   return {
     k, W, H,
     frame(sc, t, live = t) { render(out, sc, t, live); },
+    // plain crossfade between two scenes (p: 0..1), for zoom-dissolves between canvases
+    mix(from, to, p, t, live = t) {
+      render(out, from, t, live);
+      render(other, to, t, live);
+      octx.save(); octx.globalAlpha = clamp(p); octx.drawImage(other, 0, 0); octx.restore();
+    },
     // Dalio's hatch-in: the next scene arrives as diagonal strokes that thicken,
     // sweeping left to right, until they close up solid. p: 0..1
     hatchIn(from, to, p, t, live = t) {

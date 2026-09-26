@@ -155,3 +155,19 @@ boil always run on live seconds. Pass both to the stage.
   Music is an ElevenLabs music bed (eleven_music_v2) per mood section, sitting ~22 dB under the voice and
   ducked while he talks. SFX (eleven_text_to_sound_v2) land on on-screen hits: splashes, thunder,
   paint slaps, whooshes on dives, chimes on reveals. Pending Dre: record his own VO (recommended) or a Mac `say` placeholder.
+
+- 2026-09-26: **N01 first full cut REJECTED ("awful, boring").** Style was good; everything else failed:
+  one reused island backdrop so Wicks stood ON the sea and stones lined up in the water; 10–20 s static
+  scenes with idle loops (the loops show); hard cuts with a dip to black between every beat; the tilted
+  side crown read as floating; Wicks bunched in rows with no acting. Root cause: rushed to a 10-minute
+  deadline and dropped the montage-level bar. RULES FROM THIS:
+  1. Dre prefers **infographics**: maps with routes drawing, size comparisons with measuring arrows,
+     counters, timelines, ledgers, equations, charts. Wick is a guide, not the whole frame.
+  2. **Something new builds every 2–3 s, synced to the narrator's exact words** (word timestamps from
+     ElevenLabs speech-to-text), never a static beat with only idle motion.
+  3. **One continuous canvas per chapter**, with camera moves and object morphs between ideas. No cuts to black.
+  4. Characters always stand on real ground (beach, floor, path), never on water. No props in the sea
+     unless the scene is literally underwater.
+  5. Costumes sit centred on the flame (crown around the tip), never off to the side.
+  6. No row of identical Wicks. Every character on screen is doing something different.
+  7. Never trade the bar for a deadline. Send the first 1–2 minutes for approval, then build out.
