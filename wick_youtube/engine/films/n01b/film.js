@@ -6,6 +6,7 @@
 import { rng, seg, smooth, easeOut, easeIn, easeInOut, backOut, lerp, clamp } from "../../lib2d/ease.js";
 import { PAL, paper, hatch, inkWick, mood, pose, sweat, sparkle, title, label, makeStage, chartLine, drawRing, burst } from "../../lib2d/ink.js";
 import { stone, coin, phone, canoe, waves } from "../../lib2d/props.js";
+import { watermark } from "../n01c/film.js";
 
 const TAU = Math.PI * 2;
 let LIVE = 0;
@@ -27,8 +28,8 @@ function arrowV(c, x, y0, y1, lab, col = "#f3f7fb") {  // dimension arrow with e
   for (const [yy, d] of [[y0, 1], [y1, -1]]) { c.beginPath(); c.moveTo(x, yy); c.lineTo(x - 10, yy + 16 * d); c.lineTo(x + 10, yy + 16 * d); c.closePath(); c.fill(); }
   c.restore();
 }
-function person(c, x, y, h, dashed = true) {   // a plain human outline for scale
-  c.save(); c.translate(x, y); c.strokeStyle = "rgba(243,247,251,0.9)"; c.lineWidth = 4; if (dashed) c.setLineDash([12, 9]);
+function person(c, x, y, h, dashed = true, col = "rgba(243,247,251,0.9)") {   // a plain human outline for scale
+  c.save(); c.translate(x, y); c.strokeStyle = col; c.lineWidth = dashed ? 4 : 7; if (dashed) c.setLineDash([12, 9]);
   const u = h / 8; c.beginPath(); c.arc(0, -7 * u, u, 0, TAU); c.moveTo(0, -6 * u); c.lineTo(0, -3 * u); c.moveTo(-1.6 * u, -5 * u); c.lineTo(0, -5.4 * u); c.lineTo(1.6 * u, -5 * u); c.moveTo(0, -3 * u); c.lineTo(-1.1 * u, 0); c.moveTo(0, -3 * u); c.lineTo(1.1 * u, 0); c.stroke(); c.restore();
 }
 function checkBubble(c, x, y, k, ch = "✓") {
@@ -200,8 +201,8 @@ export async function create({ W, H, out }) {
     if (bk > 0) {
       card(c, 3300, 560, 1560, 760, "#efe9d6");
       c.save(); c.strokeStyle = "rgba(27,36,64,0.5)"; c.lineWidth = 3; c.beginPath(); c.moveTo(2560, 860); c.lineTo(4040, 860); c.stroke(); c.restore();
-      popAt(c, 2880, 800, pk(t, C.hand - 0.6), (g) => { stone(g, 0, 0, 34); g.fillStyle = PAL.ink; g.beginPath(); g.ellipse(-14, 50, 70, 30, 0.1, 0, TAU); g.fill(); });
-      popAt(c, 3300, 860, pk(t, C.twelve - 0.4), (g) => { stone(g, 0, -240, 230); person(g, -380, 0, 160, false); });
+      popAt(c, 2880, 826, pk(t, C.hand - 0.6), (g) => { stone(g, 0, 0, 34); });
+      popAt(c, 3300, 860, pk(t, C.twelve - 0.4), (g) => { stone(g, 0, -240, 230); person(g, -380, 0, 160, false, "#1b2440"); });
       const bal = seg(t, C.car + 0.3, C.car + 1.3), tilt = -0.28 * easeOut(bal);
       popAt(c, 3790, 800, pk(t, C.car - 0.3), (g) => { g.save(); g.lineWidth = 6; g.strokeStyle = PAL.ink; g.beginPath(); g.moveTo(0, 60); g.lineTo(0, -120); g.stroke(); g.fillStyle = PAL.ink; g.beginPath(); g.moveTo(-40, 60); g.lineTo(40, 60); g.lineTo(0, 20); g.closePath(); g.fill(); g.translate(0, -120); g.rotate(tilt); g.beginPath(); g.moveTo(-190, 0); g.lineTo(190, 0); g.stroke();
         stone(g, -160, -70, 60); g.fillStyle = "#c0392b"; g.beginPath(); g.roundRect(100, -70, 130, 50, 16); g.fill(); g.stroke(); g.fillStyle = PAL.ink; for (const wx of [125, 205]) { g.beginPath(); g.arc(wx, -18, 16, 0, TAU); g.fill(); } g.restore(); });
@@ -245,11 +246,11 @@ export async function create({ W, H, out }) {
     palm(c, 300, G, 360, LIVE, 1); palm(c, 1700, G, 300, LIVE, 2); palm(c, 3500, G, 380, LIVE, 3); palm(c, 5400, G, 340, LIVE, 4);
     hut(c, 2300, G, 300);
     // 1) pushing the stone: it will not move
-    stone(c, 1120, G - 205, 200);
+    stone(c, 1120, G - 200, 200);
     const strain = t < C.carry + 1.2;
     inkWick(c, strain ? 830 : 760, G, 190, { ...mood(t, [[0, "determined"], [C.think + 1.2, "grimace", "sweat"], [C.carry + 1.2, "weary"]]), arms: pose(t, [[0, "reach"], [C.carry + 1.2, "shrug"]]), t: LIVE, rot: strain ? 0.16 : 0, sq: strain ? 0.03 * Math.sin(LIVE * 18) : 0, seed: 1 });
     // 2) the ownership network: the stone stays, the record changes
-    stone(c, 2800, G - 180, 175);
+    stone(c, 2800, G - 175, 175);
     const flip = seg(t, C.changed + 0.8, C.changed + 1.3), sx = Math.abs(Math.cos(flip * Math.PI));
     popAt(c, 2800, 330, pk(t, C.changed - 0.6), (g) => { g.save(); g.scale(Math.max(0.05, sx), 1); card(g, 0, 0, 430, 130); serif(g, flip < 0.5 ? "OWNER: FAMILY A" : "OWNER: FAMILY B", 0, 8, 40); g.restore(); });
     if (t > C.changed - 1) { inkWick(c, 2520, G, 150, { ...mood(t, [[0, "happy"]]), arms: pose(t, [[0, "reach"]]), t: LIVE, seed: 4 }); inkWick(c, 3080, G, 150, { ...mood(t, [[0, "curious"], [C.changed + 1.3, "joy"]]), arms: pose(t, [[0, "reach"]]), t: LIVE, flip: true, seed: 5 }); }
@@ -266,16 +267,16 @@ export async function create({ W, H, out }) {
     });
     // 3) today: stones along a path by the meeting house; a ceremony carries one in
     hut(c, 4700, G, 460);
-    for (let i = 0; i < 6; i++) { stone(c, 3950 + i * 150 - (i > 2 ? 0 : 0), G - 120 - (i % 2) * 14, 110 - (i % 3) * 14, { tilt: 0.75 }); }
+    for (const [x, r] of [[3860, 105], [4130, 70], [4330, 125], [5230, 90]]) stone(c, x, G - r, r, { tilt: 0.75 });
     const walk = seg(t, C.ceremonies - 0.3, C.ceremonies + 3.4), wx = lerp(5900, 4950, easeOut(walk));
     if (walk > 0) {
       c.save(); c.lineWidth = 10; c.strokeStyle = "#5a3b20"; c.beginPath(); c.moveTo(wx - 170, G - 330); c.lineTo(wx + 170, G - 330); c.stroke(); c.restore();
-      stone(c, wx, G - 250, 70);
+      stone(c, wx, G - 250, 70, { shadow: false });
       for (const [dx, s, f, sd] of [[-170, 140, "joy", 11], [170, 140, "happy", 12]]) { inkWick(c, wx + dx, G, s, { face: f, arms: pose(t, [[0, "cheer"]]), t: LIVE, flip: true, seed: sd, walk: walk < 1 ? t * 1.6 + (dx > 0 ? 0.25 : 0) : null, dy: walk < 1 ? -0.035 * Math.abs(Math.sin(t * 1.6 * TAU)) : 0 }); lei(c, wx + dx, G, s); }
     }
   }
   function vilText(c, t) {
-    label(c, "≈ 4 tons", 1120, 520, 52, "#1b2440", "center", seg(t, C.think + 0.8, C.think + 1.2) * (1 - seg(t, C.changed - 1, C.changed - 0.6)));
+    label(c, "≈ 4 tons", 1120, 430, 52, "#1b2440", "center", seg(t, C.think + 0.8, C.think + 1.2) * (1 - seg(t, C.changed - 1, C.changed - 0.6)));
     title(c, "Owned, not moved", 2800, 150, 70, "#1b2440", "center", seg(t, C.stayed + 0.4, C.stayed + 0.8) * (1 - seg(t, C.still - 0.6, C.still - 0.2)));
     title(c, "Everyone simply knew", 2800, 1010, 56, "#1b2440", "center", seg(t, C.knew + 0.2, C.knew + 0.6));
     title(c, "Still used today", 4500, 150, 70, "#1b2440", "center", seg(t, C.still + 0.5, C.still + 0.9));
@@ -287,7 +288,7 @@ export async function create({ W, H, out }) {
     open: (t) => ({ bg: P.navy, cam: camKF(openCam, t), art: (c) => openArt(c, t), text: (c) => openText(c, t) }),
     map: (t) => ({ bg: P.ocean, cam: camKF(mapCam, t), art: (c) => mapArt(c, t), text: (c) => mapText(c, t) }),
     vil: (t) => ({ bg: P.navy, cam: camKF(vilCam, t), art: (c) => vilArt(c, t), text: (c) => vilText(c, t),
-      over: (c) => { const f = seg(t, END - 1.2, END); if (f > 0) { c.fillStyle = `rgba(8,10,20,${f})`; c.fillRect(0, 0, 1920, 1080); } } }),
+      }),
   };
   // screen-space depth gauge while we're underwater
   const gauge = (t, sc) => ({ ...sc, over: (c) => { const cam = camKF(openCam, t); const d = clamp(cam.y / (SEA - 380)); const a = clamp(Math.min(cam.y / 300, 1)) * (1 - seg(t, C.not, C.not + 1)); if (a <= 0) return; c.save(); c.globalAlpha = a; c.strokeStyle = "#f3f7fb"; c.fillStyle = "#f3f7fb"; c.lineWidth = 4; c.beginPath(); c.moveTo(90, 160); c.lineTo(90, 920); c.stroke(); for (let i = 0; i <= 10; i++) { c.beginPath(); c.moveTo(90, 160 + i * 76); c.lineTo(i % 5 ? 108 : 124, 160 + i * 76); c.stroke(); } c.beginPath(); c.moveTo(80, 160 + 760 * d); c.lineTo(52, 146 + 760 * d); c.lineTo(52, 174 + 760 * d); c.closePath(); c.fill(); c.font = "500 26px Fira"; c.fillText("surface", 130, 168); c.fillText("seabed", 130, 928); c.restore(); } });
@@ -302,6 +303,7 @@ export async function create({ W, H, out }) {
       else if (t < tVil) stage.frame(scene.map(t), t);
       else if (t < tVil + 0.7) stage.hatchIn(scene.map(t), scene.vil(t), seg(t, tVil, tVil + 0.7), t);
       else stage.frame(scene.vil(t), t);
+      watermark(out, t);
     },
   };
 }

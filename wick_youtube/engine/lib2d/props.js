@@ -3,9 +3,10 @@ import { rng, clamp } from "./ease.js";
 import { PAL, hatch } from "./ink.js";
 const TAU = Math.PI * 2;
 // ---------- props ----------
-export function stone(c, x, y, r, { tilt = 0.82, cross = 0, glow = 0 } = {}) {
+export function stone(c, x, y, r, { tilt = 0.82, cross = 0, glow = 0, shadow = true } = {}) {
+  // stands on the ground: the wheel's bottom (y + r) is the contact point, and the shadow hugs it
   c.save(); c.translate(x, y);
-  c.fillStyle = "rgba(0,0,0,0.3)"; c.beginPath(); c.ellipse(r * 0.1, r * 1.02, r * 0.9, r * 0.12, 0, 0, TAU); c.fill();
+  if (shadow) { c.fillStyle = "rgba(0,0,0,0.28)"; c.beginPath(); c.ellipse(r * 0.12, r * 0.985, r * tilt * 1.15, r * 0.06, 0, 0, TAU); c.fill(); }
   const disc = (k) => { k.ellipse(0, 0, r * tilt, r, 0, 0, TAU); };
   c.fillStyle = "#b9b09a"; c.beginPath(); c.ellipse(r * 0.08, 0, r * tilt, r, 0, 0, TAU); c.fill();           // thickness
   c.beginPath(); disc(c); c.fillStyle = "#d8cfb8"; c.fill();

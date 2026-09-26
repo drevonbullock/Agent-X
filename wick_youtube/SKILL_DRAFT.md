@@ -175,3 +175,12 @@ boil always run on live seconds. Pass both to the stage.
   approved episode format: infographic boards and maps, builds synced to words (align.py), continuous
   camera per canvas, characters on real ground. Map fix Dre asked for: islands must be green and
   island-shaped (sandy beach edge, reef ring, palm dots), never tan pebbles, on a BLUE ocean, not brown.
+- 2026-09-26: Dre's polish rules, now consistent across every episode:
+  labels never overlap objects or characters (e.g. "≈ 4 tons" goes above the stone); no stray shapes
+  (the black blob under the small stone was removed); scale figures are solid dark ink on light boards;
+  stones stand on the ground with the shadow at the contact point, scattered and separate, never a row
+  that looks like it's floating; boards and whiteboards line up with the furniture they sit on (easel
+  centred on the table); the brand is a small bottom-right watermark on every frame, never over Wick;
+  every video ends with a lower-third "Subscribe for more money stories like this" CTA (visual only).
+- Speed: an episode is data-driven. align.py gives word timings, each chapter is one canvas with camera
+  keyframes and word-timed pop-ins, and renders run in 10 parallel chunks joined with an ffmpeg xfade.
