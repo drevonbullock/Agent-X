@@ -171,3 +171,7 @@ boil always run on live seconds. Pass both to the stage.
   5. Costumes sit centred on the flame (crown around the tip), never off to the side.
   6. No row of identical Wicks. Every character on screen is doing something different.
   7. Never trade the bar for a deadline. Send the first 1–2 minutes for approval, then build out.
+- 2026-09-26: **N01 rebuilt opening (films/n01b) = "WAYYY BETTER, you absolutely got it."** This is the
+  approved episode format: infographic boards and maps, builds synced to words (align.py), continuous
+  camera per canvas, characters on real ground. Map fix Dre asked for: islands must be green and
+  island-shaped (sandy beach edge, reef ring, palm dots), never tan pebbles, on a BLUE ocean, not brown.

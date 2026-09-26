@@ -52,6 +52,17 @@ function lei(c, x, y, s) {   // flower garland resting on the wax rim
   for (let i = 0; i < 9; i++) { const a = Math.PI * (0.1 + 0.8 * i / 8); c.beginPath(); c.arc(x - Math.cos(a) * s * 0.5, y - s * 1.3 + Math.sin(a) * s * 0.16, s * 0.07, 0, TAU); c.fillStyle = ["#e8563a", "#f7c21e", "#f28bb5"][i % 3]; c.fill(); c.lineWidth = 2; c.strokeStyle = PAL.ink; c.stroke(); }
 }
 function card(c, x, y, w, h, fill = "#efe9d6") { c.save(); c.fillStyle = "rgba(0,0,0,0.25)"; c.fillRect(x - w / 2 + 10, y - h / 2 + 12, w, h); c.fillStyle = fill; c.fillRect(x - w / 2, y - h / 2, w, h); c.lineWidth = 5; c.strokeStyle = PAL.ink; c.strokeRect(x - w / 2, y - h / 2, w, h); c.beginPath(); c.arc(x, y - h / 2 + 4, 10, 0, TAU); c.fillStyle = "#c0392b"; c.fill(); c.stroke(); c.restore(); }
+function island(c, x, y, r, { seed = 1, ex = 1, rot = 0, palms = 0, reef = true } = {}) {
+  const q = rng(seed), s1 = q() * 6, s2 = q() * 6, s3 = q() * 6, s4 = q() * 6;
+  const shape = (k, f) => { k.beginPath(); for (let a = 0; a <= TAU + 0.01; a += 0.06) { const rr = r * f * (1 + 0.24 * Math.sin(2 * a + s1) + 0.14 * Math.sin(3 * a + s2) + 0.08 * Math.sin(7 * a + s3) + 0.04 * Math.sin(13 * a + s4)); k.lineTo(Math.cos(a) * rr * ex, Math.sin(a) * rr); } k.closePath(); };
+  c.save(); c.translate(x, y); c.rotate(rot);
+  if (reef) { shape(c, 1.45); c.fillStyle = "rgba(150,225,235,0.35)"; c.fill(); c.setLineDash([6, 8]); c.lineWidth = Math.max(1.5, r * 0.03); c.strokeStyle = "rgba(235,250,255,0.6)"; c.stroke(); c.setLineDash([]); }
+  shape(c, 1.1); c.fillStyle = "#ead7a0"; c.fill(); c.lineWidth = Math.max(2.5, r * 0.035); c.strokeStyle = PAL.ink; c.stroke();
+  shape(c, 0.95); c.fillStyle = "#5f9a45"; c.fill();
+  hatch(c, (k) => shape(k, 0.95), { gap: Math.max(4, r * 0.06), width: Math.max(1, r * 0.012), color: "rgba(20,60,20,0.35)", cx: r * 0.3, cy: r * 0.3, R: r * 2 });
+  for (let i = 0; i < palms; i++) { const a = q() * TAU, d = q() * r * 0.6, px = Math.cos(a) * d * ex, py = Math.sin(a) * d; c.fillStyle = "#2f6b2f"; c.beginPath(); c.arc(px, py, r * 0.07, 0, TAU); c.fill(); c.strokeStyle = "#5a3b20"; c.lineWidth = Math.max(1.5, r * 0.018); c.beginPath(); c.moveTo(px, py); c.lineTo(px + r * 0.02, py + r * 0.1); c.stroke(); }
+  c.restore();
+}
 function serif(c, txt, x, y, size, col = "#1b2440", align = "center") { c.save(); c.font = `900 ${size}px Serif4`; c.textAlign = align; c.textBaseline = "middle"; c.fillStyle = col; c.fillText(txt, x, y); c.restore(); }
 
 export async function create({ W, H, out }) {
@@ -63,7 +74,7 @@ export async function create({ W, H, out }) {
   ["taller", "sank", "nobody", "generations", "not", "spend", "everyone", "strange", "end", "bank", "learn", "yap", "group", "unlike", "giant", "hand", "twelve", "car", "wild", "carved", "palau", "miles", "sailed", "months", "floated", "journey", "hard", "risked", "carry", "changed", "stayed", "knew", "ceremonies", "oldest"].forEach((w) => (C[w] = cue(w)));
   C.pacific = cue("pacific", C.group); C.story = cue("story", C.risked); C.think = cue("think", C.story); C.still = cue("still", C.knew);
   const END = 112.2;
-  const P = { navy: paper(W, H, PAL.navy, 11), mustard: paper(W, H, PAL.mustard, 31), green: paper(W, H, PAL.green, 23) };
+  const P = { navy: paper(W, H, PAL.navy, 11), mustard: paper(W, H, PAL.mustard, 31), green: paper(W, H, PAL.green, 23), ocean: paper(W, H, "#2b6f98", 41) };
 
   // =============== OPEN: ocean column + village beach (one world) ===============
   // surface at y 0; seabed at y 2600; the island shore begins at x 2300
@@ -154,25 +165,25 @@ export async function create({ W, H, out }) {
     [C.floated + 2.2, 2330, 1400, 1.2], [C.journey + 0.3, 1250, 470, 1.05], [C.think - 0.6, 1250, 470, 1.08]];
   function mapArt(c, t) {
     // sea hatch + coastlines + labels
-    c.save(); c.strokeStyle = "rgba(70,50,20,0.18)"; c.lineWidth = 1.5; for (let y = -400; y < 2800; y += 36) { c.beginPath(); for (let x = -600; x < 4600; x += 40) c.lineTo(x, y + 6 * Math.sin(x * 0.01 + y)); c.stroke(); } c.restore();
-    for (const [x, y, rx, ry, rot] of land) { c.save(); c.translate(x, y); c.rotate(rot); c.beginPath(); for (let a = 0; a <= TAU; a += 0.2) { const r = 1 + 0.12 * Math.sin(a * 5 + x) + 0.07 * Math.sin(a * 11 + y); c.lineTo(Math.cos(a) * rx * r, Math.sin(a) * ry * r); } c.closePath(); c.fillStyle = "#c9a45a"; c.fill(); c.lineWidth = 5; c.strokeStyle = PAL.ink; c.stroke(); c.restore(); }
+    c.save(); c.strokeStyle = "rgba(210,240,255,0.16)"; c.lineWidth = 1.5; for (let y = -400; y < 2800; y += 36) { c.beginPath(); for (let x = -600; x < 4600; x += 40) c.lineTo(x, y + 6 * Math.sin(x * 0.01 + y)); c.stroke(); } c.restore();
+    for (const [x, y, rx, ry, rot] of land) island(c, x, y, ry, { seed: x + y, ex: rx / ry, rot, palms: 0, reef: false });
     const chains = [[3350, 760, 0, -1, 7, 60], [2750, 1250, 1, 0.1, 9, 110], [1700, 1650, 1, 0.3, 5, 90]];
-    for (const [x0, y0, dx, dy, n, step] of chains) for (let i = 0; i < n; i++) { const q = rng(x0 + i); c.beginPath(); c.ellipse(x0 + i * dx * step + q() * 30, y0 + i * dy * step - (dx ? q() * 50 : 0), 10 + q() * 10, 7 + q() * 5, q(), 0, TAU); c.fillStyle = "#c9a45a"; c.fill(); c.lineWidth = 2.5; c.strokeStyle = PAL.ink; c.stroke(); }
+    for (const [x0, y0, dx, dy, n, step] of chains) for (let i = 0; i < n; i++) { const q = rng(x0 + i); island(c, x0 + i * dx * step + q() * 30, y0 + i * dy * step - (dx ? q() * 50 : 0), 12 + q() * 10, { seed: x0 + i * 7, ex: 1 + q() * 0.6, rot: q() * 3 }); }
     // Yap: a small cluster
-    for (const [dx, dy, r] of [[0, 0, 26], [22, 28, 16], [-18, 30, 12], [8, -30, 10]]) { c.beginPath(); c.ellipse(YAP[0] + dx, YAP[1] + dy, r, r * 0.7, 0.5, 0, TAU); c.fillStyle = "#c9a45a"; c.fill(); c.lineWidth = 3; c.strokeStyle = PAL.ink; c.stroke(); }
+    island(c, YAP[0], YAP[1], 30, { seed: 7, ex: 0.7, rot: 0.5, palms: 6 }); island(c, YAP[0] + 26, YAP[1] + 30, 14, { seed: 8, rot: 1, palms: 2, reef: false }); island(c, YAP[0] - 20, YAP[1] + 32, 10, { seed: 9, reef: false });
     c.strokeStyle = "#f3f7fb"; c.lineWidth = 5; drawRing(c, YAP[0], YAP[1], 80, 70, easeOut(seg(t, C.yap, C.yap + 0.8)));
     const yp = 1 + 0.08 * Math.sin(LIVE * 4); c.beginPath(); c.arc(YAP[0], YAP[1], 110 * yp, 0, TAU); c.lineWidth = 2; c.strokeStyle = "rgba(243,247,251,0.4)"; c.stroke();
     // compass rose
-    c.save(); c.translate(3700, 1950); c.rotate(0.05 * Math.sin(LIVE * 0.5)); c.fillStyle = "#1b2440"; for (let i = 0; i < 4; i++) { c.rotate(Math.PI / 2); c.beginPath(); c.moveTo(0, -110); c.lineTo(18, 0); c.lineTo(-18, 0); c.closePath(); c.fill(); } c.restore(); serif(c, "N", 3700, 1810, 44);
+    c.save(); c.translate(3700, 1950); c.rotate(0.05 * Math.sin(LIVE * 0.5)); c.fillStyle = "#fff6e0"; for (let i = 0; i < 4; i++) { c.rotate(Math.PI / 2); c.beginPath(); c.moveTo(0, -110); c.lineTo(18, 0); c.lineTo(-18, 0); c.closePath(); c.fill(); } c.restore(); serif(c, "N", 3700, 1810, 44, "#fff6e0");
     // Palau
     const pk2 = pk(t, C.palau - 0.3);
-    popAt(c, PALAU[0], PALAU[1], pk2, (g) => { for (const [dx, dy, r] of [[0, 0, 30], [-26, 30, 14], [24, -26, 12]]) { g.beginPath(); g.ellipse(dx, dy, r, r * 0.6, -0.6, 0, TAU); g.fillStyle = "#c9a45a"; g.fill(); g.lineWidth = 3; g.strokeStyle = PAL.ink; g.stroke(); } });
+    popAt(c, PALAU[0], PALAU[1], pk2, (g) => { island(g, 0, 0, 34, { seed: 21, ex: 0.55, rot: -0.6, palms: 5 }); island(g, -30, 40, 13, { seed: 22, reef: false }); island(g, 26, -34, 11, { seed: 23, reef: false }); });
     // "no stone like this on Yap": limestone chunk, crossed out, beside Yap
     popAt(c, YAP[0] + 160, YAP[1] - 60, pk(t, C.wild + 0.9), (g) => { g.beginPath(); g.moveTo(-40, 20); g.lineTo(-30, -24); g.lineTo(10, -36); g.lineTo(40, -6); g.lineTo(30, 26); g.closePath(); g.fillStyle = "#d8cfb8"; g.fill(); g.lineWidth = 4; g.strokeStyle = PAL.ink; g.stroke(); g.strokeStyle = "#c0392b"; g.lineWidth = 9; g.beginPath(); g.moveTo(-50, -44); g.lineTo(50, 40); g.moveTo(50, -44); g.lineTo(-50, 40); g.stroke(); });
     // the route: dashed line draws Palau → Yap
     const rk = easeInOut(seg(t, C.miles - 0.4, C.miles + 1.0));
     const route = (f) => [lerp(PALAU[0], YAP[0], f) + 90 * Math.sin(f * Math.PI), lerp(PALAU[1], YAP[1], f)];
-    if (rk > 0) { c.save(); c.setLineDash([18, 12]); c.lineWidth = 6; c.strokeStyle = "#1b2440"; c.beginPath(); for (let f = 0; f <= rk; f += 0.02) c.lineTo(...route(f)); c.stroke(); c.restore(); }
+    if (rk > 0) { c.save(); c.setLineDash([18, 12]); c.lineWidth = 6; c.strokeStyle = "#fff6e0"; c.beginPath(); for (let f = 0; f <= rk; f += 0.02) c.lineTo(...route(f)); c.stroke(); c.restore(); }
     // canoe out (Yap → Palau), months of carving, then the raft home with the stone
     const out = easeInOut(seg(t, C.sailed, C.months - 0.1));
     if (out > 0 && out < 1) { const [x, y] = route(1 - out); canoe(c, x, y, 110, LIVE); }
@@ -209,15 +220,15 @@ export async function create({ W, H, out }) {
     }
   }
   function mapText(c, t) {
-    if (!((t > C.giant - 0.7 && t < C.wild + 0.2) || t > C.journey - 0.4)) label(c, "YAP", YAP[0], YAP[1] - 110, 56, "#1b2440", "center", seg(t, C.yap + 0.2, C.yap + 0.6));
+    if (!((t > C.giant - 0.7 && t < C.wild + 0.2) || t > C.journey - 0.4)) label(c, "YAP", YAP[0], YAP[1] - 110, 56, "#fff6e0", "center", seg(t, C.yap + 0.2, C.yap + 0.6));
     const boardUp = (t > C.giant - 0.7 && t < C.wild + 0.2) || t > C.journey - 0.4;
-    if (!boardUp) for (const [x, y, , , , n] of land) label(c, n, x, y + 10, 46, "#5a3b20", "center", seg(t, C.pacific - 0.3, C.pacific + 0.3));
-    if (!boardUp) title(c, "PACIFIC OCEAN", 3300, 1500, 90, "rgba(90,60,20,0.55)", "center", seg(t, C.pacific, C.pacific + 0.5));
-    label(c, "PALAU", PALAU[0] - 20, PALAU[1] + 90, 50, "#1b2440", "center", seg(t, C.palau - 0.2, C.palau + 0.2));
-    label(c, "no rock like this here", YAP[0] + 170, YAP[1] + 30, 34, "#8a2f2a", "center", seg(t, C.wild + 1.1, C.wild + 1.5));
-    if (t > C.miles) title(c, "≈ 250 miles", 2420, 1420, 60, "#1b2440", "center", seg(t, C.miles + 0.3, C.miles + 0.7));
+    if (!boardUp) for (const [x, y, , , , n] of land) label(c, n, x, y + 10, 46, "#12301a", "center", seg(t, C.pacific - 0.3, C.pacific + 0.3));
+    if (!boardUp) title(c, "PACIFIC OCEAN", 3300, 1500, 90, "rgba(225,242,255,0.6)", "center", seg(t, C.pacific, C.pacific + 0.5));
+    label(c, "PALAU", PALAU[0] - 20, PALAU[1] + 90, 50, "#fff6e0", "center", seg(t, C.palau - 0.2, C.palau + 0.2));
+    label(c, "no rock like this here", YAP[0] + 170, YAP[1] + 30, 34, "#ffe1d6", "center", seg(t, C.wild + 1.1, C.wild + 1.5));
+    if (t > C.miles) title(c, "≈ 250 miles", 2420, 1420, 60, "#fff6e0", "center", seg(t, C.miles + 0.3, C.miles + 0.7));
     const carve = seg(t, C.months, C.floated);
-    if (carve > 0 && carve < 1) { const m = 1 + Math.floor(carve * 6); title(c, `month ${m}`, PALAU[0] - 260, PALAU[1] - 120, 54, "#1b2440"); }
+    if (carve > 0 && carve < 1) { const m = 1 + Math.floor(carve * 6); title(c, `month ${m}`, PALAU[0] - 260, PALAU[1] - 120, 54, "#fff6e0"); }
     if (t > C.giant - 0.3 && t < C.wild) { title(c, "How big is rai?", 3300, 270, 70, "#1b2440", "center", seg(t, C.giant - 0.3, C.giant + 0.1)); label(c, "fits in a hand", 2880, 920, 38, "#1b2440", "center", seg(t, C.hand - 0.3, C.hand)); label(c, "12 ft across", 3300, 920, 38, "#1b2440", "center", seg(t, C.twelve, C.twelve + 0.3)); label(c, "≈ 4 tons", 3790, 920, 38, "#1b2440", "center", seg(t, C.car, C.car + 0.3)); }
     if (t > C.journey - 0.2) { title(c, "Where the value came from", 1250, 290, 60, "#1b2440", "center", seg(t, C.journey, C.journey + 0.4)); label(c, "far", 700, 600, 36, "#1b2440", "center", seg(t, C.hard, C.hard + 0.3)); label(c, "dangerous", 1060, 600, 36, "#1b2440", "center", seg(t, C.risked, C.risked + 0.3)); label(c, "hard work", 1420, 600, 36, "#1b2440", "center", seg(t, C.story - 0.9, C.story - 0.6)); label(c, "VALUE", 1820, 600, 44, "#8a5d10", "center", seg(t, C.story, C.story + 0.3)); }
   }
@@ -274,7 +285,7 @@ export async function create({ W, H, out }) {
 
   const scene = {
     open: (t) => ({ bg: P.navy, cam: camKF(openCam, t), art: (c) => openArt(c, t), text: (c) => openText(c, t) }),
-    map: (t) => ({ bg: P.mustard, cam: camKF(mapCam, t), art: (c) => mapArt(c, t), text: (c) => mapText(c, t) }),
+    map: (t) => ({ bg: P.ocean, cam: camKF(mapCam, t), art: (c) => mapArt(c, t), text: (c) => mapText(c, t) }),
     vil: (t) => ({ bg: P.navy, cam: camKF(vilCam, t), art: (c) => vilArt(c, t), text: (c) => vilText(c, t),
       over: (c) => { const f = seg(t, END - 1.2, END); if (f > 0) { c.fillStyle = `rgba(8,10,20,${f})`; c.fillRect(0, 0, 1920, 1080); } } }),
   };
