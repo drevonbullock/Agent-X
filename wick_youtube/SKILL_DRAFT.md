@@ -1,3 +1,7 @@
+> **ARCHIVED 2026-09-26.** This draft became the installed skill `~/.claude/skills/wick-explainer-video/`
+> (SKILL.md + references/ + scripts/). The lessons log now lives in `references/lessons-log.md` there.
+> Some rules below are out of date (e.g. "no ElevenLabs"). Don't edit this file; edit the skill.
+
 ---
 name: wick-explainer-video
 description: Build Wick's Wisdom YouTube explainers (16:9 episodes, 9:16 Shorts) as all-code animation in the Dalio "Changing World Order" ink style with Clawd/PDoomVideo-grade motion. Use for any Wick video, explainer, episode, Short, style frame, motion test, expression, transition, montage or render in ~/Agent-X/wick_youtube. Also use when Dre sends reference videos or repos for the Wick video look. Carries the lessons log; append to it after every round of Dre's feedback.
