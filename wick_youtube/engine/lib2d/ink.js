@@ -368,10 +368,27 @@ export function inkWick(ctx, x, y, s, o = {}) {
     const fx = o.walk != null ? ph * 0.16 : 0, lift = o.walk != null ? Math.max(0, Math.cos((o.walk + (sgn < 0 ? 0 : 0.5)) * Math.PI * 2)) * 0.09 : 0;
     ctx.beginPath(); ctx.moveTo(sgn * 0.2, B + 0.02); ctx.lineTo(sgn * 0.225 + fx, -0.1 - lift);
     ctx.lineWidth = 0.09; ctx.lineCap = "round"; ctx.strokeStyle = PAL.ink; ctx.stroke();
+    if (o.boots) {   // boots instead of shoes: "cheap" (thin, sole splits open at the toe) or "good" (oiled leather)
+      const cheap = o.boots === "cheap", bx = sgn * 0.27 + fx, by = -0.075 - lift, split = cheap ? (o.split ?? 0.5) * (0.5 + lift * 5) : 0;
+      ctx.lineWidth = 0.03; ctx.strokeStyle = PAL.ink; ctx.lineJoin = "round";
+      ctx.fillStyle = cheap ? "#8a7a66" : "#5a3418";
+      ctx.beginPath(); ctx.roundRect(bx - 0.13, by - 0.27, 0.26, 0.26, 0.05); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(bx + sgn * 0.03, by, 0.2, 0.1, fx * 0.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = cheap ? "#4a4038" : "#2a1d12";
+      ctx.save(); ctx.translate(bx + sgn * 0.03, by + 0.07);
+      if (split > 0.02) { const tx = sgn * 0.21; ctx.beginPath(); ctx.moveTo(-sgn * 0.21, -0.01); ctx.lineTo(-sgn * 0.05, 0.02); ctx.lineTo(tx, 0.02 + split * 0.09); ctx.lineTo(tx, -0.01); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#15110d"; ctx.beginPath(); ctx.moveTo(-sgn * 0.03, 0.0); ctx.lineTo(tx, 0.0); ctx.lineTo(tx, 0.01 + split * 0.08); ctx.closePath(); ctx.fill(); }
+      else { ctx.fillRect(-0.21, -0.01, 0.42, 0.04); }
+      ctx.restore();
+      if (cheap) { ctx.strokeStyle = "rgba(30,20,10,0.5)"; ctx.lineWidth = 0.018; ctx.beginPath(); ctx.moveTo(bx - 0.06, by - 0.2); ctx.lineTo(bx - 0.02, by - 0.12); ctx.moveTo(bx + 0.05, by - 0.18); ctx.lineTo(bx + 0.02, by - 0.08); ctx.stroke(); }
+      else { ctx.fillStyle = "rgba(255,230,190,0.35)"; ctx.beginPath(); ctx.ellipse(bx - 0.03, by - 0.18, 0.04, 0.07, 0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#e8d29a"; ctx.lineWidth = 0.018; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(bx - 0.06, by - 0.23 + k * 0.06); ctx.lineTo(bx + 0.06, by - 0.2 + k * 0.06); ctx.stroke(); } }
+    } else {
     ctx.fillStyle = PAL.ink;
     ctx.beginPath(); ctx.ellipse(sgn * 0.27 + fx, -0.075 - lift, 0.19, 0.095, fx * 0.8, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "rgba(255,255,255,0.15)";
     ctx.beginPath(); ctx.ellipse(sgn * 0.24 + fx, -0.12 - lift, 0.08, 0.022, 0, 0, Math.PI * 2); ctx.fill();
+    }
   }
 
   if (o.cape) cape(ctx);

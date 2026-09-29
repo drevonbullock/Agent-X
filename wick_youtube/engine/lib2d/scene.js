@@ -72,10 +72,24 @@ export function headband(c, x, y, s, dy = 0) {
 // coat over the lower wax (official = navy with a red sash, captain = dark blue with gold buttons)
 export function coat(c, x, y, s, kind = "official", dy = 0) {
   const top = y + (dy - 1.08) * s, bot = y + (dy - 0.5) * s;
-  c.save(); c.fillStyle = kind === "captain" ? "#1f2d4a" : "#2b3342";
+  c.save(); c.fillStyle = kind === "captain" ? "#1f2d4a" : kind === "guard" ? "#223257" : "#2b3342";
   c.beginPath(); c.moveTo(x - 0.52 * s, top); c.lineTo(x + 0.52 * s, top); c.lineTo(x + 0.53 * s, bot); c.quadraticCurveTo(x, bot + 0.09 * s, x - 0.53 * s, bot); c.closePath(); c.fill();
   c.lineWidth = 0.045 * s; c.strokeStyle = PAL.ink; c.stroke();
   if (kind === "official") { c.strokeStyle = "#c0392b"; c.lineWidth = 0.1 * s; c.beginPath(); c.moveTo(x - 0.45 * s, top + 0.04 * s); c.lineTo(x + 0.45 * s, bot - 0.05 * s); c.stroke(); }
-  c.fillStyle = "#f7c21e"; for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(x + (kind === "captain" ? 0 : -0.25 * s), top + (0.12 + i * 0.16) * s, 0.04 * s, 0, TAU); c.fill(); }
+  if (kind === "guard") {   // night-guard uniform: silver badge, shoulder patch, buttons
+    c.fillStyle = "#cfd6de"; c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = (i % 2 ? 0.045 : 0.1) * s; c.lineTo(x - 0.24 * s + Math.cos(a) * r, top + 0.22 * s + Math.sin(a) * r); } c.closePath(); c.fill(); c.lineWidth = 0.02 * s; c.strokeStyle = PAL.ink; c.stroke();
+    c.fillStyle = "#c9a45a"; c.beginPath(); c.roundRect(x + 0.32 * s, top + 0.06 * s, 0.14 * s, 0.1 * s, 0.02 * s); c.fill(); c.stroke();
+    c.fillStyle = "#cfd6de"; for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(x + 0.06 * s, top + (0.13 + i * 0.15) * s, 0.03 * s, 0, TAU); c.fill(); }
+  } else { c.fillStyle = "#f7c21e"; for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(x + (kind === "captain" ? 0 : -0.25 * s), top + (0.12 + i * 0.16) * s, 0.04 * s, 0, TAU); c.fill(); } }
+  c.restore();
+}
+// a knitted scarf at the wax rim, tail hanging down one side (Dee's red scarf)
+export function scarf(c, x, y, s, col = "#c0392b", dy = 0, t = 0) {
+  const ry = y + (dy - 1.12) * s, sway = 0.03 * Math.sin(t * 2.2);
+  c.save(); c.fillStyle = col; c.lineWidth = 0.035 * s; c.strokeStyle = PAL.ink;
+  c.beginPath(); c.roundRect(x - 0.56 * s, ry - 0.07 * s, 1.12 * s, 0.16 * s, 0.07 * s); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(x + 0.22 * s, ry + 0.05 * s); c.lineTo(x + 0.4 * s, ry + 0.05 * s); c.lineTo(x + (0.44 + sway) * s, ry + 0.52 * s); c.lineTo(x + (0.26 + sway) * s, ry + 0.52 * s); c.closePath(); c.fill(); c.stroke();
+  c.strokeStyle = "rgba(0,0,0,0.25)"; c.lineWidth = 0.015 * s; for (let k = -4; k <= 4; k++) { c.beginPath(); c.moveTo(x + k * 0.12 * s, ry - 0.06 * s); c.lineTo(x + k * 0.12 * s, ry + 0.08 * s); c.stroke(); }
+  c.fillStyle = col; for (let k = 0; k < 4; k++) c.fillRect(x + (0.27 + k * 0.045 + sway) * s, ry + 0.52 * s, 0.02 * s, 0.08 * s);
   c.restore();
 }

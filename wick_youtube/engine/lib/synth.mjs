@@ -163,3 +163,24 @@ export function writeWav(file, buf) {
   }
   fs.writeFileSync(file, data);
 }
+
+// wet boot step: a low sucking gurgle (falling bandpass on noise) with a short watery pop on top
+export function squelch(buf, t0, vol = 0.3, seed = 12) {
+  const r = rng(seed), bp = biquad("bp", 900, 4), lp = biquad("lp", 500), n = Math.ceil(0.32 * SR), i0 = Math.floor(t0 * SR);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR; if (i % 32 === 0) bp.set(900 - 650 * Math.min(1, t / 0.2) + 120 * Math.sin(t * 90));
+    const gur = bp(r() * 2 - 1) * Math.exp(-t * 9) * (0.6 + 0.4 * Math.sin(t * 160)) * 4;
+    const pop = Math.sin(2 * Math.PI * (220 - 300 * t) * t) * Math.exp(-t * 40);
+    const s = (gur + lp(pop) * 2) * vol; add(buf, i0 + i, s, s * 0.92);
+  }
+}
+// steady rain: pink-ish filtered noise with random droplet ticks; fades in/out over 1 s
+export function rainBed(buf, t0, t1, vol = 0.05, seed = 21) {
+  const r = rng(seed), lp = biquad("lp", 5200), hp = biquad("hp", 400), n = Math.ceil((t1 - t0) * SR), i0 = Math.floor(t0 * SR);
+  let b = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / SR, env = Math.min(1, t, (t1 - t0) - t); b = 0.98 * b + 0.02 * (r() * 2 - 1);
+    let s = hp(lp(r() * 2 - 1 + b * 3)) * 0.8; if (r() < 0.0009) s += (r() * 2 - 1) * 2.5;
+    s *= vol * Math.max(0, env); add(buf, i0 + i, s, s * (0.9 + 0.1 * Math.sin(t)));
+  }
+}

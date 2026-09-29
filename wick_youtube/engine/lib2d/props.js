@@ -1,4 +1,5 @@
-// Shared ink-style props for Wick episodes: rai stone, coin, bill, phone, hourglass, canoe, sailship, waves.
+// Shared ink-style props for Wick episodes: rai stone, coin, bill, phone, hourglass, canoe, sailship, waves,
+// boot, rain, puddle, jar.
 import { rng, clamp } from "./ease.js";
 import { PAL, hatch } from "./ink.js";
 const TAU = Math.PI * 2;
@@ -157,3 +158,58 @@ export function waves(c, y, t, col = "rgba(190,230,255,0.35)") {
   c.restore();
 }
 
+
+// A side-view boot, toe to the right, sole on y. cheap: thin grey-brown with a split sole that opens (split 0..1);
+// good: dark oiled leather, stitched welt, laces, a shine.
+export function boot(c, x, y, s, { cheap = false, split = 0, flip = false, crack = 0 } = {}) {
+  c.save(); c.translate(x, y); if (flip) c.scale(-1, 1); c.lineJoin = "round"; c.lineCap = "round";
+  const lw = Math.max(1.5, s * 0.05);
+  const upper = () => { c.beginPath(); c.moveTo(-0.45 * s, -1.2 * s); c.lineTo(-0.02 * s, -1.2 * s); c.quadraticCurveTo(0.02 * s, -0.62 * s, 0.25 * s, -0.5 * s);
+    c.quadraticCurveTo(0.72 * s, -0.42 * s, 0.78 * s, -0.16 * s); c.lineTo(0.8 * s, 0); c.lineTo(-0.5 * s, 0); c.quadraticCurveTo(-0.55 * s, -0.6 * s, -0.45 * s, -1.2 * s); c.closePath(); };
+  // the sole: a heel and a toe piece; the cheap one gapes open at the toe
+  const gap = split * 0.22 * s;
+  c.fillStyle = cheap ? "#4a4038" : "#2a1d12";
+  c.beginPath(); c.moveTo(-0.52 * s, 0); c.lineTo(0.82 * s, 0); c.lineTo(0.84 * s, 0.1 * s + gap); c.lineTo(0.1 * s, 0.1 * s + gap * 0.3); c.lineTo(-0.52 * s, 0.12 * s); c.closePath(); c.fill(); c.lineWidth = lw; c.strokeStyle = PAL.ink; c.stroke();
+  if (gap > 0.5) { c.fillStyle = "#1a1410"; c.beginPath(); c.moveTo(0.1 * s, 0.02 * s); c.lineTo(0.8 * s, 0.02 * s); c.lineTo(0.82 * s, 0.02 * s + gap); c.closePath(); c.fill(); }
+  upper(); c.fillStyle = cheap ? "#8a7a66" : "#5a3418"; c.fill(); c.lineWidth = lw; c.strokeStyle = PAL.ink; c.stroke();
+  c.save(); upper(); c.clip();
+  if (cheap) { c.strokeStyle = "rgba(40,30,20,0.55)"; c.lineWidth = lw * 0.7; for (let k = 0; k < 5; k++) { c.beginPath(); c.moveTo((-0.3 + k * 0.2) * s, -0.3 * s); c.lineTo((-0.22 + k * 0.2) * s, -0.12 * s); c.stroke(); }
+    if (crack > 0) { c.strokeStyle = PAL.ink; c.lineWidth = lw * 0.8; c.beginPath(); c.moveTo(0.3 * s, -0.48 * s); c.lineTo(0.38 * s, -0.36 * s); c.lineTo(0.33 * s, -0.26 * s); c.lineTo(0.42 * s, -0.14 * s * crack); c.stroke(); } }
+  else { c.fillStyle = "rgba(255,230,190,0.28)"; c.beginPath(); c.ellipse(0.45 * s, -0.33 * s, 0.2 * s, 0.05 * s, -0.2, 0, TAU); c.fill();
+    c.strokeStyle = "#c9a45a"; c.setLineDash([s * 0.05, s * 0.04]); c.lineWidth = lw * 0.5; c.beginPath(); c.moveTo(-0.48 * s, -0.08 * s); c.lineTo(0.76 * s, -0.08 * s); c.stroke(); c.setLineDash([]); }
+  c.restore();
+  // laces
+  c.strokeStyle = cheap ? "#d8cfb8" : "#e8d29a"; c.lineWidth = lw * 0.6; for (let k = 0; k < 4; k++) { const yy = (-1.05 + k * 0.17) * s; c.beginPath(); c.moveTo(-0.08 * s, yy); c.lineTo(0.08 * s + k * 0.02 * s, yy + 0.08 * s); c.stroke(); }
+  c.restore();
+}
+// rain over a world rectangle; deterministic from t
+export function rain(c, x0, y0, w, h, t, { n = 220, col = "rgba(200,215,235,0.45)", slant = 0.18, speed = 1400, len = 36 } = {}) {
+  c.save(); c.strokeStyle = col; c.lineWidth = 2; c.lineCap = "round"; c.beginPath();
+  for (let i = 0; i < n; i++) { const q = rng(i + 7), px = q() * w, py = q() * h, sp = speed * (0.8 + q() * 0.4);
+    const y = y0 + ((py + t * sp) % h), x = x0 + ((px + (y - y0) * slant) % w); c.moveTo(x, y); c.lineTo(x - len * slant, y - len); }
+  c.stroke(); c.restore();
+}
+// a puddle on the ground (y = ground) with rain rings; splash 0..1 throws a crown of drops
+export function puddle(c, x, y, w, t, { splash = 0 } = {}) {
+  c.save(); c.fillStyle = "rgba(90,120,150,0.55)"; c.beginPath(); c.ellipse(x, y + 4, w / 2, w * 0.08, 0, 0, TAU); c.fill();
+  c.strokeStyle = "rgba(220,235,250,0.55)"; c.lineWidth = 2;
+  for (let i = 0; i < 4; i++) { const ph = (t * 0.9 + i * 0.27) % 1, q = rng(i + 3), rx = x + (q() - 0.5) * w * 0.6; c.globalAlpha = 1 - ph; c.beginPath(); c.ellipse(rx, y + 4, 6 + ph * 40, (6 + ph * 40) * 0.16, 0, 0, TAU); c.stroke(); }
+  c.globalAlpha = 1;
+  if (splash > 0 && splash < 1) { c.fillStyle = "rgba(200,225,245,0.9)"; for (let i = 0; i < 9; i++) { const a = Math.PI + (i / 8) * Math.PI, r = splash * w * 0.35; c.beginPath(); c.arc(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.9 - splash * (1 - splash) * 60, 5 * (1 - splash) + 2, 0, TAU); c.fill(); } }
+  c.restore();
+}
+// a glass savings jar on y (its base), label on the front, fill 0..1 of coins
+export function jar(c, x, y, h, { fill = 0, label = "" } = {}) {
+  const w = h * 0.7; c.save(); c.translate(x, y); c.lineJoin = "round";
+  c.fillStyle = "rgba(0,0,0,0.22)"; c.beginPath(); c.ellipse(0, 2, w * 0.55, h * 0.05, 0, 0, TAU); c.fill();
+  const body = () => { c.beginPath(); c.roundRect(-w / 2, -h * 0.86, w, h * 0.86, w * 0.16); };
+  body(); c.fillStyle = "rgba(200,230,240,0.35)"; c.fill();
+  if (fill > 0) { c.save(); body(); c.clip(); c.fillStyle = PAL.gold; c.fillRect(-w / 2, -h * 0.86 * fill, w, h * 0.86 * fill); c.fillStyle = PAL.goldDeep;
+    for (let i = 0; i < 12; i++) { const q = rng(i + 11); c.beginPath(); c.ellipse((q() - 0.5) * w * 0.8, -h * 0.86 * fill * q(), w * 0.1, w * 0.035, 0, 0, TAU); c.fill(); } c.restore(); }
+  body(); c.lineWidth = Math.max(2, h * 0.03); c.strokeStyle = PAL.ink; c.stroke();
+  c.fillStyle = "#8a6a2b"; c.beginPath(); c.roundRect(-w * 0.42, -h, w * 0.84, h * 0.14, h * 0.03); c.fill(); c.stroke();
+  c.fillStyle = "rgba(255,255,255,0.45)"; c.fillRect(-w * 0.36, -h * 0.74, w * 0.08, h * 0.5);
+  if (label) { c.fillStyle = "#efe9d6"; c.beginPath(); c.roundRect(-w * 0.4, -h * 0.55, w * 0.8, h * 0.22, 4); c.fill(); c.lineWidth = Math.max(1.5, h * 0.015); c.stroke();
+    c.fillStyle = PAL.ink; c.font = `900 ${h * 0.13}px Serif4`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(label, 0, -h * 0.44); }
+  c.restore();
+}
