@@ -15,7 +15,7 @@ export async function create({ W, H, out }) {
   const words = await (await fetch("films/n02/words.json")).json();
   const cue = (w, after = 0) => (words.find((x) => x.w === w && x.t >= after) || { t: 0 }).t;
   const C = {};
-  ["morning", "raining", "boot", "again", "squelches", "people", "choices", "enough", "works", "dee", "job", "dry", "question", "years", "guess",
+  ["morning", "raining", "cold", "boot", "again", "squelches", "people", "choices", "working", "enough", "works", "dee", "job", "dry", "question", "years", "guess",
     "answer", "laziness", "novel", "pratchett", "guard", "earned", "month", "good", "apart", "therefore", "after", "hundred", "twice", "wet", "key",
     "expensive", "trap", "everywhere", "real", "tax", "follow", "tuesday"].forEach((w) => (C[w] = cue(w)));
   C.pay = cue("pay", C.job); C.rain2 = cue("rain", C.pay); C.tenB = cue("ten", C.question); C.fiftyB = cue("fifty", C.question);
@@ -50,6 +50,14 @@ export async function create({ W, H, out }) {
       c.save(); c.globalCompositeOperation = "screen"; const gl = c.createRadialGradient(lx + 60, G - 490, 0, lx + 60, G - 490, 260); gl.addColorStop(0, "rgba(255,220,150,0.45)"); gl.addColorStop(1, "rgba(0,0,0,0)"); c.fillStyle = gl; c.beginPath(); c.arc(lx + 60, G - 490, 260, 0, TAU); c.fill();
       c.fillStyle = "rgba(255,225,160,0.07)"; c.beginPath(); c.moveTo(lx + 45, G - 488); c.lineTo(lx + 75, G - 488); c.lineTo(lx + 230, G); c.lineTo(lx - 110, G); c.closePath(); c.fill(); c.restore();
     }
+    // a flickering neon sign, and steam rising from a sidewalk grate
+    const on = rng(Math.floor(LIVE * 10))() > 0.12 ? 1 : 0.25;
+    c.save(); c.fillStyle = "#1a1f2c"; c.beginPath(); c.roundRect(580, G - 470, 170, 90, 14); c.fill(); c.lineWidth = 4; c.strokeStyle = PAL.ink; c.stroke();
+    c.globalCompositeOperation = "screen"; const ng = c.createRadialGradient(665, G - 425, 0, 665, G - 425, 190); ng.addColorStop(0, `rgba(255,95,162,${0.35 * on})`); ng.addColorStop(1, "rgba(0,0,0,0)"); c.fillStyle = ng; c.beginPath(); c.arc(665, G - 425, 190, 0, TAU); c.fill(); c.restore();
+    c.save(); c.font = "900 62px Serif4"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = on > 0.5 ? "#ff8cc0" : "#6b3a55"; c.fillText("24H", 665, G - 423); c.restore();
+    c.fillStyle = "#1a1f2c"; c.fillRect(1400, G + 8, 110, 22); c.strokeStyle = "#5a6275"; c.lineWidth = 3; for (let k = 0; k < 6; k++) { c.beginPath(); c.moveTo(1410 + k * 18, G + 10); c.lineTo(1410 + k * 18, G + 28); c.stroke(); }
+    c.save(); for (let i = 0; i < 6; i++) { const ph = (LIVE * 0.3 + i / 6) % 1, sx = 1455 + 40 * Math.sin(ph * 4 + i), sy = G - ph * 340, r = 50 + ph * 110;
+      const sg = c.createRadialGradient(sx, sy, 0, sx, sy, r); sg.addColorStop(0, `rgba(215,225,240,${0.16 * Math.sin(ph * Math.PI)})`); sg.addColorStop(1, "rgba(215,225,240,0)"); c.fillStyle = sg; c.beginPath(); c.arc(sx, sy, r, 0, TAU); c.fill(); } c.restore();
     // the guard hut: lit window, and on the shelf inside, Dee's jar (the setup)
     c.fillStyle = "#3b4a6b"; c.fillRect(2520, G - 420, 360, 420); c.lineWidth = 5; c.strokeStyle = PAL.ink; c.strokeRect(2520, G - 420, 360, 420);
     c.fillStyle = "#26314d"; c.beginPath(); c.moveTo(2490, G - 420); c.lineTo(2910, G - 420); c.lineTo(2880, G - 470); c.lineTo(2520, G - 470); c.closePath(); c.fill(); c.stroke();
@@ -88,10 +96,41 @@ export async function create({ W, H, out }) {
     const qk = pk(t, C.years + 0.3) * (mode === "tax" ? 0 : 1 - seg(t, C.answer - 0.3, C.answer));
     popAt(c, bx + bw / 2 + 110, by + 10 + 8 * Math.sin(LIVE * 4), qk, (g) => serif(g, "?", 0, 0, 170, GOLD));
   }
+  // a car hisses past on the wet road (the camera is pulling back while it crosses)
+  const CAR0 = 4.6;
+  function car(c, t) {
+    const k = seg(t, CAR0, CAR0 + 3.2); if (k <= 0 || k >= 1) return; const x = lerp(-700, 3400, k), y = G + 175;
+    c.save(); c.globalCompositeOperation = "screen"; c.fillStyle = "rgba(255,240,190,0.16)"; c.beginPath(); c.moveTo(x + 250, y - 70); c.lineTo(x + 1100, y - 150); c.lineTo(x + 1100, y + 40); c.closePath(); c.fill();
+    const tl = c.createRadialGradient(x - 250, y - 70, 0, x - 250, y - 70, 90); tl.addColorStop(0, "rgba(255,60,50,0.55)"); tl.addColorStop(1, "rgba(0,0,0,0)"); c.fillStyle = tl; c.beginPath(); c.arc(x - 250, y - 70, 90, 0, TAU); c.fill(); c.restore();
+    c.fillStyle = "#171c2a"; c.beginPath(); c.moveTo(x - 260, y - 30); c.lineTo(x - 250, y - 95); c.lineTo(x - 120, y - 105); c.lineTo(x - 60, y - 165); c.lineTo(x + 120, y - 165); c.lineTo(x + 180, y - 105); c.lineTo(x + 255, y - 90); c.lineTo(x + 262, y - 30); c.closePath(); c.fill(); c.lineWidth = 4; c.strokeStyle = PAL.ink; c.stroke();
+    c.fillStyle = "rgba(245,201,106,0.35)"; c.beginPath(); c.moveTo(x - 45, y - 152); c.lineTo(x + 110, y - 152); c.lineTo(x + 160, y - 108); c.lineTo(x - 95, y - 108); c.closePath(); c.fill();
+    c.fillStyle = "#ffe6a8"; c.fillRect(x + 240, y - 88, 18, 14); c.fillStyle = "#ff5040"; c.fillRect(x - 258, y - 86, 12, 14);
+    for (const wx of [x - 150, x + 150]) { c.fillStyle = "#0c0f18"; c.beginPath(); c.arc(wx, y - 22, 40, 0, TAU); c.fill(); c.fillStyle = "#5a6275"; c.beginPath(); c.arc(wx, y - 22, 14, 0, TAU); c.fill();
+      c.fillStyle = "rgba(190,215,240,0.5)"; for (let i = 0; i < 7; i++) { const q = rng(i + Math.floor(LIVE * 20)); c.beginPath(); c.arc(wx - 50 - q() * 90, y - 10 - q() * 50, 3 + q() * 5, 0, TAU); c.fill(); } }
+  }
+  // the wrong belief: neighbours in lit windows look down and judge; their thought bubbles show a shopping bag and a couch
+  function judges(c, t) {
+    const gone = 1 - seg(t, C.works - 0.1, C.works + 0.25); if (gone <= 0) return;
+    [[1330, 400, C.people - 0.2, C.choices, "bag"], [2050, 340, C.people + 0.3, C.working, "couch"]].forEach(([x, y, t0, tb, icon]) => {
+      const wk2 = seg(t, t0, t0 + 0.4) * gone; if (wk2 <= 0.01) return;
+      c.save(); c.translate(x, y); c.scale(1.5, 1.5); c.translate(-x, -y);
+      c.save(); c.globalAlpha = wk2; c.fillStyle = "#f5c96a"; c.fillRect(x - 34, y - 44, 68, 88); c.lineWidth = 4; c.strokeStyle = PAL.ink; c.strokeRect(x - 34, y - 44, 68, 88);
+      c.fillStyle = "#1a1f2c"; const lean = 6 * Math.sin(LIVE * 1.4 + x); c.beginPath(); c.arc(x + lean, y - 6, 15, 0, TAU); c.fill(); c.beginPath(); c.ellipse(x + lean, y + 40, 26, 22, 0, Math.PI, TAU); c.fill();
+      c.fillStyle = "#e8d29a"; c.fillRect(x - 34, y - 44, 12, 88); c.fillRect(x + 22, y - 44, 12, 88); c.restore();
+      const bk = pk(t, tb) * gone; if (t > C.works - 0.1 && t < C.works + 0.5) burst(c, x + 80, y - 140, seg(t, C.works - 0.1, C.works + 0.4), { r0: 10, r1: 90, n: 10, color: "rgba(243,236,214,0.9)" });
+      popAt(c, x + 80, y - 140, bk, (g) => { g.fillStyle = CREAM; g.lineWidth = 4; g.strokeStyle = PAL.ink; g.beginPath(); g.ellipse(0, 0, 82, 62, 0, 0, TAU); g.fill(); g.stroke();
+        for (const [dx, dy, r] of [[-60, 62, 12], [-78, 86, 7]]) { g.beginPath(); g.arc(dx, dy, r, 0, TAU); g.fill(); g.stroke(); }
+        if (icon === "bag") { g.fillStyle = "#c0392b"; g.beginPath(); g.moveTo(-28, -14); g.lineTo(28, -14); g.lineTo(34, 34); g.lineTo(-34, 34); g.closePath(); g.fill(); g.stroke(); g.beginPath(); g.arc(0, -14, 16, Math.PI, TAU); g.stroke(); serif(g, "$", 0, 12, 34, CREAM); }
+        else { g.fillStyle = "#6b7ea6"; g.beginPath(); g.roundRect(-44, -6, 88, 36, 8); g.fill(); g.stroke(); g.beginPath(); g.roundRect(-38, -26, 76, 24, 8); g.fill(); g.stroke(); g.beginPath(); g.roundRect(-54, -14, 16, 44, 6); g.fill(); g.stroke(); g.beginPath(); g.roundRect(38, -14, 16, 44, 6); g.fill(); g.stroke(); serif(g, "z", 50, -40, 24, "#1b2440"); } });
+      c.restore();
+    });
+  }
   function streetArt(c, t, mode) {
     cityBack(c);
     puddle(c, 1000, G, 250, LIVE, { splash: mode === "open" ? seg(t, 0.15 + 0.75 / 1.3, 0.15 + 0.75 / 1.3 + 0.7) : 0 }); puddle(c, 1900, G, 200, LIVE + 0.5);
-    const wx = mode === "open" ? WX(t) : 1700, wWalk = mode === "open" && ((t > 0.15 && t < 0.9) || (t > 2.6 && t < 10.2));
+    if (mode === "open") { car(c, t); judges(c, t); }
+    const shiver = mode === "open" ? seg(t, C.cold - 0.1, C.cold + 0.2) * (1 - seg(t, C.cold + 1.1, C.cold + 1.6)) : 0;
+    const wx = (mode === "open" ? WX(t) : 1700) + 4 * shiver * Math.sin(LIVE * 70), wWalk = mode === "open" && ((t > 0.15 && t < 0.9) || (t > 2.6 && t < 10.2));
     const wPhase = t < 1 ? (t - 0.15) * 1.3 : t * 1.15;   // a weary trudge, ~2.3 steps a second
     // flashlight beam while he walks his beat
     const beam = mode === "open" ? 1 - seg(t, C.works - 0.4, C.works) : 0;
@@ -174,8 +213,13 @@ export async function create({ W, H, out }) {
     const mk = pk(t, C.pay2 - 0.4) * (1 - seg(t, C.cheapB - 0.3, C.cheapB)); if (mk > 0) { c.save(); c.globalAlpha *= mk;
       c.fillStyle = "#8fbf9a"; c.fillRect(700, 520, 38 * 9, 34); c.fillStyle = GOLD; c.fillRect(700, 580, 50 * 9, 34); serif(c, "a month's pay  $38", 700 + 38 * 9 + 20, 537, 36, CREAM, "left"); serif(c, "good boots  $50", 700 + 50 * 9 + 20, 597, 36, CREAM, "left"); c.restore(); }
     // Wick: a new cheap pair every year; each old pair cracks and turns grey
-    pairT.forEach((t0, i) => { if (t < t0) return; const dead = i < 9 && t > (pairT[i + 1] ?? 1e9); const x = LX + 20 + i * YR;
-      popAt(c, x, WY, pk(t, t0, 0.3), (g) => { g.save(); if (dead) g.globalAlpha *= 0.45; boot(g, 0, 0, 58, { cheap: true, split: dead ? 1 : 0.2, crack: dead ? 1 : 0 }); g.restore(); });
+    // the pile of dead pairs grows between the lanes ("a little mountain"): 4 + 3 + 2
+    const PILE = [[720, 0], [800, 0], [880, 0], [960, 0], [760, 1], [840, 1], [920, 1], [800, 2], [880, 2]];
+    pairT.forEach((t0, i) => { if (t < t0) return; const tNext = pairT[i + 1] ?? 1e9, dead = i < 9 && t > tNext; const x = LX + 20 + i * YR;
+      if (!dead) popAt(c, x, WY, pk(t, t0, 0.3), (g) => boot(g, 0, 0, 58, { cheap: true, split: 0.2 }));
+      else { const f = easeInOut(seg(t, tNext, tNext + 0.55)), [px, row] = PILE[i], py = 655 - row * 52;
+        const bx = lerp(x, px, f), by = lerp(WY, py, f) - 160 * Math.sin(f * Math.PI);
+        c.save(); c.translate(bx, by); c.rotate(f * (i % 2 ? 2.4 : -2.2) * (f < 1 ? 1 : 0) + (f >= 1 ? (i % 2 ? 0.25 : -0.2) : 0)); c.globalAlpha *= f >= 1 ? 0.9 : 1; boot(c, 0, 0, 52, { cheap: true, split: 1, crack: 1 }); c.restore(); }
       const bk = easeOut(seg(t, t0 + 0.1, t0 + 0.5)); c.fillStyle = dead ? "rgba(160,150,130,0.6)" : "#a08a70"; c.fillRect(LX + i * YR + 2, WY + 12, (YR - 4) * bk, 18); });
     if (t > C.season + 0.4 && t < pairT[1]) burst(c, LX + YR, WY + 20, seg(t, C.season + 0.4, C.season + 0.9), { r0: 6, r1: 40, n: 8, color: "rgba(243,236,214,0.9)" });
     // the empty wallet by his name when he can't find fifty at once
