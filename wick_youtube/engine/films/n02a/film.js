@@ -123,7 +123,7 @@ export async function create({ W, H, out }) {
         if (kind === "brain") { g.fillStyle = "#e8a5b8"; for (const [bx, by, r] of [[-18, -8, 22], [10, -14, 24], [20, 10, 20], [-12, 14, 20]]) { g.beginPath(); g.arc(bx, by, r, 0, TAU); g.fill(); } g.strokeStyle = PAL.ink; g.lineWidth = 3; g.beginPath(); g.moveTo(0, -30); g.quadraticCurveTo(-8, 0, 4, 28); g.stroke(); serif(g, "z", 46, -30, 26, "#1b2440"); serif(g, "z", 60, -48, 20, "#1b2440"); }
         if (kind === "door") { g.fillStyle = "#6b4a2a"; g.fillRect(-26, -44, 52, 88); g.fillStyle = "#ffe6a8"; g.fillRect(-26, -44, 52 * 0.45, 88); g.strokeStyle = PAL.ink; g.lineWidth = 3; g.strokeRect(-26, -44, 52, 88); }
       }));
-      const bd = seg(t, C.cheapA, C.cheapA + 0.45); if (bd > 0 && gone > 0) { c.save(); c.globalAlpha = gone; boot(c, 2140, lerp(-200, 255, easeIn(bd)), 56, { cheap: true, split: 0.7 }); c.restore(); if (bd >= 1) burst(c, 2140, 255, seg(t, C.cheapA + 0.45, C.cheapA + 0.9), { r0: 10, r1: 70, n: 10, color: "rgba(243,236,214,0.9)" }); }
+      const bd = seg(t, C.cheapA, C.cheapA + 0.45); if (bd > 0 && gone > 0) { c.save(); c.globalAlpha = gone; boot(c, 2130, lerp(-200, 378, easeIn(bd)), 42, { cheap: true, split: 0.7 }); c.restore(); if (bd >= 1) burst(c, 2140, 378, seg(t, C.cheapA + 0.45, C.cheapA + 0.9), { r0: 10, r1: 70, n: 10, color: "rgba(243,236,214,0.9)" }); }
     }
     rain(c, 200, -900, 3400, 1800, LIVE, { n: t > C.rain2 && t < C.dry && mode === "open" ? 900 : 600 });
   }
