@@ -90,9 +90,9 @@ export async function create({ W, H, out }) {
   }
   function streetArt(c, t, mode) {
     cityBack(c);
-    puddle(c, 1000, G, 250, LIVE, { splash: mode === "open" ? seg(t, 0.55, 1.25) : 0 }); puddle(c, 1900, G, 200, LIVE + 0.5);
+    puddle(c, 1000, G, 250, LIVE, { splash: mode === "open" ? seg(t, 0.15 + 0.75 / 1.3, 0.15 + 0.75 / 1.3 + 0.7) : 0 }); puddle(c, 1900, G, 200, LIVE + 0.5);
     const wx = mode === "open" ? WX(t) : 1700, wWalk = mode === "open" && ((t > 0.15 && t < 0.9) || (t > 2.6 && t < 10.2));
-    const wPhase = t < 1 ? (t - 0.15) * 1.3 : t * 1.7;
+    const wPhase = t < 1 ? (t - 0.15) * 1.3 : t * 1.15;   // a weary trudge, ~2.3 steps a second
     // flashlight beam while he walks his beat
     const beam = mode === "open" ? 1 - seg(t, C.works - 0.4, C.works) : 0;
     if (beam > 0) { c.save(); c.globalCompositeOperation = "screen"; c.fillStyle = `rgba(255,240,180,${0.12 * beam})`; c.beginPath(); c.moveTo(wx + 100, G - 85); c.lineTo(wx + 820, G - 10); c.lineTo(wx + 820, G - 230); c.closePath(); c.fill(); c.restore(); }
@@ -102,7 +102,7 @@ export async function create({ W, H, out }) {
     coat(c, wx, G, 170, "guard");
     const dx = mode === "open" ? DX(t) : 2100, dWalk = mode === "open" && t > C.dee - 1.8 && t < C.dee + 0.4;
     if (mode !== "open" || t > C.dee - 1.8) {
-      wk(c, dx, 165, t, [[0, "calm"], [C.dry, "happy"], [C.question, "curious"]], [[0, "rest"], [C.dry, "hips"]], { seed: 7, flip: true, boots: "good", ...(dWalk ? { walk: t * 1.7, dy: -0.035 * Math.abs(Math.sin(t * 1.7 * TAU)) } : {}) });
+      wk(c, dx, 165, t, [[0, "calm"], [C.dry, "happy"], [C.question, "curious"]], [[0, "rest"], [C.dry, "hips"]], { seed: 7, flip: true, boots: "good", ...(dWalk ? { walk: t * 1.15, dy: -0.035 * Math.abs(Math.sin(t * 1.15 * TAU)) } : {}) });
       coat(c, dx, G, 165, "guard"); scarf(c, dx, G, 165, "#c0392b", 0, LIVE);
     }
     // "Dee's feet are dry": a glint on her boots, drips on his

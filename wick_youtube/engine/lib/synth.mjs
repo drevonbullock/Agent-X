@@ -184,3 +184,27 @@ export function rainBed(buf, t0, t1, vol = 0.05, seed = 21) {
     s *= vol * Math.max(0, env); add(buf, i0 + i, s, s * (0.9 + 0.1 * Math.sin(t)));
   }
 }
+
+// recorded/generated samples (foley): decode any audio file to 44.1k stereo floats, find its loudest moment
+import { execFileSync } from "child_process";
+export function loadSample(file) {
+  const raw = execFileSync("ffmpeg", ["-v", "error", "-i", file, "-f", "f32le", "-ac", "2", "-ar", String(SR), "-"], { maxBuffer: 1 << 28 });
+  const f = new Float32Array(raw.buffer, raw.byteOffset, raw.byteLength / 4), n = f.length / 2, l = new Float32Array(n), r = new Float32Array(n);
+  let pk = 0, pi = 0; for (let i = 0; i < n; i++) { l[i] = f[2 * i]; r[i] = f[2 * i + 1]; const a = Math.abs(l[i]) + Math.abs(r[i]); if (a > pk) { pk = a; pi = i; } }
+  return { l, r, n, peak: pk / 2, peakT: pi / SR };
+}
+// place a sample; by default its loudest moment lands exactly on t0 (a footstep's impact on the frame the foot lands)
+export function sample(buf, t0, smp, vol = 1, { pan = 0, alignPeak = true, fadeIn = 0.004, fadeOut = 0.05 } = {}) {
+  const i0 = Math.floor((t0 - (alignPeak ? smp.peakT : 0)) * SR), gl = vol * (1 - Math.max(0, pan)), gr = vol * (1 + Math.min(0, pan));
+  const fi = Math.max(1, fadeIn * SR), fo = Math.max(1, fadeOut * SR);
+  for (let i = 0; i < smp.n; i++) { const env = Math.min(1, i / fi, (smp.n - i) / fo); add(buf, i0 + i, smp.l[i] * gl * env, smp.r[i] * gr * env); }
+}
+// lay a loopable ambience end to end across [t0, t1] with short crossfades and soft ends
+export function ambience(buf, t0, t1, smp, vol = 0.5, xf = 0.5) {
+  const step = smp.n / SR - xf; let k = 0;
+  for (let t = t0; t < t1; t += step, k++) {
+    const i0 = Math.floor(t * SR), fx = xf * SR;
+    for (let i = 0; i < smp.n; i++) { const tt = t + i / SR; if (tt > t1) break; const env = Math.min(1, (k === 0 ? 1 : i / fx), (smp.n - i) / fx) * Math.min(1, (tt - t0) / 1.0, (t1 - tt) / 1.0);
+      add(buf, i0 + i, smp.l[i] * vol * env, smp.r[i] * vol * env); }
+  }
+}
