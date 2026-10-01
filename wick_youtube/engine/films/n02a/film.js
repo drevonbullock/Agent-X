@@ -4,7 +4,7 @@
 import { rng, seg, smooth, easeOut, easeIn, easeInOut, backOut, lerp, clamp } from "../../lib2d/ease.js";
 import { PAL, paper, inkWick, mood, pose, sweat, sparkle, makeStage, burst } from "../../lib2d/ink.js";
 import { boot, rain, puddle, jar, coin } from "../../lib2d/props.js";
-import { camKF, pk, popAt, person, card, serif, coat, scarf } from "../../lib2d/scene.js";
+import { camSmooth as camKF, pk, popAt, person, card, serif, coat, scarf } from "../../lib2d/scene.js";
 import { watermark } from "../../lib2d/brand.js";
 const TAU = Math.PI * 2, G = 900, CREAM = "#f3ecd6", RED = "#e0402a", GOLD = "#f7b21b";
 let LIVE = 0;
@@ -213,13 +213,9 @@ export async function create({ W, H, out }) {
     const mk = pk(t, C.pay2 - 0.4) * (1 - seg(t, C.cheapB - 0.3, C.cheapB)); if (mk > 0) { c.save(); c.globalAlpha *= mk;
       c.fillStyle = "#8fbf9a"; c.fillRect(700, 520, 38 * 9, 34); c.fillStyle = GOLD; c.fillRect(700, 580, 50 * 9, 34); serif(c, "a month's pay  $38", 700 + 38 * 9 + 20, 537, 36, CREAM, "left"); serif(c, "good boots  $50", 700 + 50 * 9 + 20, 597, 36, CREAM, "left"); c.restore(); }
     // Wick: a new cheap pair every year; each old pair cracks and turns grey
-    // the pile of dead pairs grows between the lanes ("a little mountain"): 4 + 3 + 2
-    const PILE = [[720, 0], [800, 0], [880, 0], [960, 0], [760, 1], [840, 1], [920, 1], [800, 2], [880, 2]];
-    pairT.forEach((t0, i) => { if (t < t0) return; const tNext = pairT[i + 1] ?? 1e9, dead = i < 9 && t > tNext; const x = LX + 20 + i * YR;
-      if (!dead) popAt(c, x, WY, pk(t, t0, 0.3), (g) => boot(g, 0, 0, 58, { cheap: true, split: 0.2 }));
-      else { const f = easeInOut(seg(t, tNext, tNext + 0.55)), [px, row] = PILE[i], py = 655 - row * 52;
-        const bx = lerp(x, px, f), by = lerp(WY, py, f) - 160 * Math.sin(f * Math.PI);
-        c.save(); c.translate(bx, by); c.rotate(f * (i % 2 ? 2.4 : -2.2) * (f < 1 ? 1 : 0) + (f >= 1 ? (i % 2 ? 0.25 : -0.2) : 0)); c.globalAlpha *= f >= 1 ? 0.9 : 1; boot(c, 0, 0, 52, { cheap: true, split: 1, crack: 1 }); c.restore(); }
+    // Wick: a new cheap pair every year; each old pair stays in its year slot, cracked and greyed
+    pairT.forEach((t0, i) => { if (t < t0) return; const dead = i < 9 && t > (pairT[i + 1] ?? 1e9); const x = LX + 20 + i * YR;
+      popAt(c, x, WY, pk(t, t0, 0.3), (g) => { g.save(); if (dead) g.globalAlpha *= 0.45; boot(g, 0, 0, 58, { cheap: true, split: dead ? 1 : 0.2, crack: dead ? 1 : 0 }); g.restore(); });
       const bk = easeOut(seg(t, t0 + 0.1, t0 + 0.5)); c.fillStyle = dead ? "rgba(160,150,130,0.6)" : "#a08a70"; c.fillRect(LX + i * YR + 2, WY + 12, (YR - 4) * bk, 18); });
     if (t > C.season + 0.4 && t < pairT[1]) burst(c, LX + YR, WY + 20, seg(t, C.season + 0.4, C.season + 0.9), { r0: 6, r1: 40, n: 8, color: "rgba(243,236,214,0.9)" });
     // the empty wallet by his name when he can't find fifty at once
@@ -251,8 +247,6 @@ export async function create({ W, H, out }) {
     const wv = pairT.filter((t0) => t >= t0).length * 10, dv = t > C.fiftyG ? 50 : 0;
     serif(c, money(wv), 1720, WY - 10, 84, t > C.hundred ? GOLD : CREAM); serif(c, money(dv), 1720, DY - 10, 84, CREAM);
     popAt(c, 1720, WY + 90, pk(t, C.twice), (g) => { g.rotate(-0.15); g.strokeStyle = RED; g.lineWidth = 7; g.beginPath(); g.arc(0, 0, 54, 0, TAU); g.stroke(); serif(g, "×2", 0, 4, 52, RED); });
-    const dk = seg(t, C.wet, C.wet + 0.6); if (dk > 0 && dk < 1) { c.fillStyle = "#a9d4f2"; c.beginPath(); c.ellipse(1720, lerp(80, WY - 60, easeIn(dk)), 12, 18, 0, 0, TAU); c.fill(); }
-    if (t > C.wet + 0.6) burst(c, 1720, WY - 60, seg(t, C.wet + 0.6, C.wet + 1.0), { r0: 8, r1: 50, n: 8, color: "rgba(169,212,242,0.9)" });
     c.restore();
   }
   const boardCam = [[C.good - 0.3, 960, 560, 1.0], [C.after, 960, 540, 1.04], [C.key, 960, 560, 1.0], [C.everywhere, 960, 540, 0.96], [C.real, 960, 540, 0.95]];
@@ -267,7 +261,7 @@ export async function create({ W, H, out }) {
   const order = [["street", 0], ["book", C.novel - 1.2], ["board", C.good - 0.3], ["street2", C.real - 0.3]];
   const TR = 0.7;
   return {
-    duration: END, fps: 30, out,
+    duration: END, fps: 60, out,
     renderAt(t) {
       LIVE = t;
       let i = 0; while (i + 1 < order.length && t >= order[i + 1][1]) i++;

@@ -38,7 +38,7 @@ for (let i = 0; i < 10; i++) tick(b, C.tenYears - 0.2 + i * 0.1, 0.06, 2200, i);
 // every cheap pair: a pop and a register tick; the old pair cracks
 const pairT = [C.cheapB, C.therefore + 0.6, C.again2, C.again3, C.again4]; for (let i = 5; i < 10; i++) pairT.push(C.again4 + 0.45 + (C.hundred - 0.35 - C.again4 - 0.45) * (i - 5) / 4);
 pairT.forEach((t, i) => { pop(b, t, 0.28, 900, 300); tick(b, t + 0.08, 0.12, 4200, i + 20); if (i) tick(b, t + 0.02, 0.1, 1200, i + 40); });
-pop(b, C.fiftyD, 0.2); coins(b, C.hundred, 0.08); thud(b, C.twice, 0.35); tick(b, C.wet + 0.6, 0.2, 1800, 3);
+pop(b, C.fiftyD, 0.2); coins(b, C.hundred, 0.08); thud(b, C.twice, 0.35);
 // the key: the tag splits into coins, snaps back, slams down; the lock; the icons
 whoosh(b, C.key - 0.1, 0.6, 0.1); for (let i = 0; i < 5; i++) coins(b, C.expensive - 0.1 + i * 0.05, 0.03, i);
 whoosh(b, C.all - 0.4, 0.4, 0.14, 1200, 400, 4); thud(b, C.all + 0.35, 0.6); thud(b, C.all + 0.5, 0.3); tick(b, C.trap, 0.2, 900, 5);

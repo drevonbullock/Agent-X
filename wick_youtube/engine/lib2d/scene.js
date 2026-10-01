@@ -93,3 +93,20 @@ export function scarf(c, x, y, s, col = "#c0392b", dy = 0, t = 0) {
   c.fillStyle = col; for (let k = 0; k < 4; k++) c.fillRect(x + (0.27 + k * 0.045 + sway) * s, ry + 0.52 * s, 0.02 * s, 0.08 * s);
   c.restore();
 }
+// smooth camera: one continuous path through the keys (monotone cubic per axis, zoom in log space). It only comes to
+// rest at the first and last key and where a key repeats (a hold), so it glides through every move instead of
+// stopping at each key the way camKF's per-segment easing does. Use this for new episodes.
+export function camSmooth(keys, t) {
+  if (t <= keys[0][0]) return { x: keys[0][1], y: keys[0][2], z: keys[0][3] };
+  const L = keys[keys.length - 1]; if (t >= L[0]) return { x: L[1], y: L[2], z: L[3] };
+  let i = 0; while (i + 1 < keys.length && t >= keys[i + 1][0]) i++;
+  const T = keys.map((k) => k[0]), n = keys.length;
+  const axis = (vals) => {
+    const d = [], m = new Array(n).fill(0);
+    for (let j = 0; j < n - 1; j++) d.push((vals[j + 1] - vals[j]) / Math.max(1e-6, T[j + 1] - T[j]));
+    for (let j = 1; j < n - 1; j++) { if (d[j - 1] * d[j] <= 0) continue; const h0 = T[j] - T[j - 1], h1 = T[j + 1] - T[j]; m[j] = 3 * (h0 + h1) / ((2 * h1 + h0) / d[j - 1] + (h1 + 2 * h0) / d[j]); }
+    const h = T[i + 1] - T[i], s = (t - T[i]) / h, s2 = s * s, s3 = s2 * s;
+    return (2 * s3 - 3 * s2 + 1) * vals[i] + (s3 - 2 * s2 + s) * h * m[i] + (-2 * s3 + 3 * s2) * vals[i + 1] + (s3 - s2) * h * m[i + 1];
+  };
+  return { x: axis(keys.map((k) => k[1])), y: axis(keys.map((k) => k[2])), z: Math.exp(axis(keys.map((k) => Math.log(k[3])))) };
+}
