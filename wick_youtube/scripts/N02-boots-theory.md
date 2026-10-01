@@ -270,7 +270,7 @@ Hook: "Same farmers, same brains. They did better on tests after payday." B18 �
 - B · "BROKE TAX" — Wick in the rain, water pouring through a split sole, a receipt unrolling to the floor.
 - C · "NOT LAZY" — Wick asleep on his feet at the guard hut, 50 HRS punch card, red ring on the card.
 
-**Description (about + what it teaches):**
+**Description (final; chapters are the real VO section starts):**
 ```
 Two people. Same job, same hours, same pay. One stays broke no matter how hard he works.
 
@@ -282,6 +282,15 @@ In this video you'll learn:
 • What money stress does to your brain
 • How the poverty trap works, step by step
 • The $10 a week habit that breaks the loop
+
+Chapters
+0:00 Two night guards, same pay
+0:48 The boots theory
+1:51 The broke tax
+3:38 It's not laziness
+5:06 How the trap works
+5:43 The way out
+6:36 Your first step tonight
 
 Subscribe for more money stories like this.
 
