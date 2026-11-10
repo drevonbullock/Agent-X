@@ -300,7 +300,13 @@ async function main() {
         req.on("end", async () => {
           try {
             const parsed = JSON.parse(body);
-            await handleInstagramWebhook(parsed);
+            // The IG account is Spare Earth now, not Agent X. Its comments must
+            // never get an AI-automation auto-reply, so this is opt-in. It is not
+            // keyed to BRAND_PLATFORMS: instagram stays listed there so the token
+            // manager keeps the IG token alive for the Spare Earth queue.
+            if (process.env.IG_AUTO_REPLY === "true") {
+              await handleInstagramWebhook(parsed);
+            }
           } catch (err) {
             console.error(`[Webhook] IG parse/handle failed: ${err.message}`);
           }

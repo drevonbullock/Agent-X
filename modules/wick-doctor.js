@@ -210,16 +210,8 @@ export async function runDoctor({ quiet = false } = {}) {
   const r = await diagnose();
   const text = render(r);
   console.log(text);
-
-  // Alert on anything wrong. Silence is what let a week pass.
-  if (!quiet && r.problems.length) {
-    try {
-      const { alertWick } = await import("./wick-telegram.js");
-      await alertWick(text);
-    } catch (err) {
-      console.warn(`[Doctor] alert failed: ${err.message}`);
-    }
-  }
+  // The doctor's report is mostly Higgsfield login checks, so it no longer goes
+  // to Telegram (Dre, 2026-11-10). It stays in the logs.
   return r;
 }
 
