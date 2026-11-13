@@ -49,7 +49,8 @@ Typical mapping:
 ## Hard rules
 
 - **Wax level never changes.** Identical in every image, forever. First drift a viewer notices.
-- **Costuming below the neck only.** Robes and drapes on the wax body, props in mitten hands, headgear resting beside him on the ground. **Nothing ever goes on the flame head** — it is the recognition anchor.
+- **Costuming below the neck only** for the carousels. Robes and drapes on the wax body, props in mitten hands.
+- **UPDATED 2026-09-25 (Dre), YouTube story videos:** Wick plays every character in a parable, and costumes that sell the role go ON him, including headgear on the flame ("dress him up if he's a king, put a crown on him"). The face, flame shape and wax body never change; only the costume does.
 - **The flame is the light source.** In cold-lit scenes cold light may compete, but amber always wins his face. He never reads as a grey blob.
 - **He appears in both panels** of any two-panel post. He is the constant; the world changes.
 

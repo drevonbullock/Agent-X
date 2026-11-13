@@ -139,7 +139,8 @@ test-*.js  run-reel.js   Ad-hoc manual test entry points (not part of the schedu
 
 ## Platforms & Schedule (all EST)
 - **LinkedIn** — 4x/day: 8am image, 12pm news image, 4pm text, 8pm image. Single images only, no carousels, no video.
-- **Instagram** — 5x/day: 10am news card, 12pm/2pm/6pm carousels (animated video cover + image slides), 8pm news card.
+- **Instagram** — the IG account is now **Spare Earth (@thespareearth)**, the What-If science page, not Agent X. It posts finished reels from Supabase `scheduled_reels` at **10am and 5pm ET** (2/day). `publishDueReels()` in `modules/spare-earth-queue.js` runs every 10 min, posts at most one due row per tick, never two within 4h, and does NOT log to `posts`. Own kill switch: `SPARE_EARTH_PAUSED=true` (independent of `POSTING_PAUSED`). Posted/failed notices go to the main Telegram chat. CLI: `node modules/spare-earth-queue.js` (list) / `--check <n>` (uploads a test container, never publishes). The IG comment auto-reply is off unless `IG_AUTO_REPLY=true`. Keep `instagram` in `BRAND_PLATFORMS`: the token manager only refreshes tokens for listed platforms.
+- **Wick's Wisdom — retired.** All Wick crons are gated behind `WICK_ENABLED=true` (default off). Higgsfield login/CLI problems are log-only; they no longer go to Telegram (Dre, 2026-11-10).
 - **LinkedIn** — 1x/day: single conversation-starter text post at 9:30am ET (golden hour). Frequency cut from 7x to 1x on 2026-07-29 for engagement (LinkedIn suppresses flooders). Seed-comment + comment auto-reply are coded but GATED behind LINKEDIN_COMMENT_API=true — socialActions needs LinkedIn's gated Community Management API (w_member_social returns 403).
 - **Threads** — 4x/day at :30 offsets. Text by default; carousel every 3rd post.
 - **Video — one daily cadence for the whole system.** `runVideo()` (7pm cron) is the ONLY place video renders. It builds one clip, then `enqueueVideo()` parks it in `review_queue` (pending). On approval it cross-posts to **all enabled platforms** (LinkedIn, Instagram, Threads) plus TikTok/YouTube Shorts where tokens are set — `videoTargets()` in `index.js`. Images and written posts auto-publish; video never does.
@@ -157,6 +158,7 @@ Tables (`supabase/schema.sql`):
 - `platform_performance` — per-platform learning aggregates (best `format`/`post_type` by avg engagement score), recomputed by `analytics/learn.js`.
 - `experiments` — A/B variant pairs + decided winner. Posts carry `experiment_id`/`variant`.
 - `optimization_state` — per `(platform, post_type)`: current `champion_variant`, `mode` (exploit|explore), `underperform_streak`, rolling `baseline_score`. Drives the adaptive creative loop.
+- `scheduled_reels` — Spare Earth IG reels with a `publish_at` time. `status` queued|posting|posted|failed|held; `media_id`/`post_url`/`posted_at` filled on publish. `unique (platform, n)`.
 - `review_queue` — rendered videos awaiting human approval. `targets` (jsonb platform list), `video_url` (public Supabase URL), `status` (pending|approved|rejected|posted). Approved rows publish to all targets, then flip to `posted`.
 - `competitor_insights` — Claude-vision analysis of competitors' top IG posts (one row per analyzed post, deduped by `permalink`). `analysis` holds the extracted accent/background/font/layout/hook.
 - `design_themes` — themes synthesized from competitor analysis (`id` like `comp_<username>`, `theme` jsonb matching IMAGE_THEMES). `active` rows are loaded into the variant pool at runtime so the optimizer can A/B them as challengers.
@@ -291,3 +293,9 @@ On Railway the `worker` process runs `node index.js`; `nixpacks.toml` provisions
 - Brand accent color `#FF6B00` (orange); watermark `@DrevonBullock • Bullock Consulting Group`.
 - Cadence and caps are derived from Supabase counts at runtime — there is no local counter file.
 - `README.md` is end-user marketing copy and is partially stale (mentions DALL-E/Imagen 3, LinkedIn-only). Treat this file (CLAUDE.md) as the source of truth for architecture.
+
+## Wick's Wisdom YouTube (active work, branch claude/wicks-wisdom-video-plan-1uu7th)
+Long-form Wick's Wisdom explainers built entirely in code live in `wick_youtube/`.
+**Start every session on that work by reading `wick_youtube/HANDOFF.md`.** It holds
+Dre's hard rules (all code, no Higgsfield or Remotion, Wick must match his reference
+art, 30-second tests first), what's done, and the next steps.

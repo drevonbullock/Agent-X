@@ -331,28 +331,10 @@ export async function runWeeklyBatch({ versus, order, formats, rotating = "auto"
   }
 
   if (!hfAvailable()) {
-    // LOUD, not silent. This branch is ALWAYS taken on Railway (no Higgsfield
-    // CLI there), so a quiet return here meant the weekly carousel batch no-opped
-    // every Sunday and the queue drained with nobody told. See alertWick.
-    const msg = "[Wick] SKIPPED: higgsfield CLI not available on this host. No carousel batch was built.";
+    // This branch is ALWAYS taken on Railway (no Higgsfield CLI there). It logs
+    // only; the Telegram alert was removed 2026-11-10 at Dre's request.
+    const msg = "[Wick] SKIPPED: higgsfield CLI not available on this host. No carousel batch was built. Check the cause with: node modules/wick-doctor.js";
     console.error(msg);
-    try {
-      const { alertWick } = await import("./wick-telegram.js");
-      // This text used to assert "Railway cannot build batches" -- but the alert
-      // also fires on the MAC when the probe fails, and on 2026-08-22 a relaunch
-      // loop sent it 10+ times for a login that was fine. Say only what is known,
-      // and only PAGE when supply is actually short: Railway hits this path every
-      // scheduled batch by design (its CLI cannot run), and a daily siren about
-      // expected behaviour trains Dre to ignore the siren.
-      const { count } = await supabase.from("wick_posts")
-        .select("*", { count: "exact", head: true })
-        .in("status", ["approved", "pending", "qa_pending"]).is("pulled_at", null);
-      if ((count ?? 0) < 4) {
-        await alertWick("🚨 WICK BATCH COULD NOT GENERATE ART\n\nThe Higgsfield CLI probe failed on this host and the queue is down to " + (count ?? 0) + " post(s).\n\nCheck the real cause with:\n  node modules/wick-doctor.js");
-      } else {
-        console.log(`[Wick] CLI unavailable on this host, but the queue holds ${count} post(s) — not paging.`);
-      }
-    } catch { /* alerting must never mask the skip */ }
     return { skipped: true, reason: "higgsfield-cli-unavailable" };
   }
   // Pull in everything learned from previous pulls and failed image QA before a

@@ -18,11 +18,16 @@ import { isHiggsfieldCliAvailable } from "./agent/generate-higgsfield.js";
 import { checkRls } from "./modules/rls-guard.js";
 import { ensureHiggsfieldAuth, keepAlive } from "./modules/higgsfield-auth.js";
 import { runDoctor } from "./modules/wick-doctor.js";
+import { publishDueReels } from "./modules/spare-earth-queue.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
 
   const paused = () => process.env.POSTING_PAUSED === "true";
+  // Wick's Wisdom is RETIRED (replaced by Spare Earth). Its crons stay in the
+  // code but only run with WICK_ENABLED=true, so unpausing Agent X can never
+  // post Wick money content on the Spare Earth account.
+  const wickOn = () => process.env.WICK_ENABLED === "true";
 
   // Load competitor-derived design themes into the variant pool at startup.
   loadDynamicThemes().catch((err) => console.warn(`[Scheduler] loadDynamicThemes failed: ${err.message}`));
@@ -78,12 +83,21 @@ export function startScheduler() {
   // its own batch pipeline (modules/wicks-wisdom.js) + human approval gate.
   // Same IG account and token; different content system entirely.
 
-  // ── WICK'S WISDOM — 2 posts/day at 9am and 12pm ET ───────────────────────
+  // ── SPARE EARTH — What-If reels, 10am and 5pm ET ─────────────────────────
+  // The IG account is @thespareearth now. Finished reels wait in Supabase
+  // scheduled_reels with a publish_at; this posts at most one due reel per tick.
+  // Its own kill switch (SPARE_EARTH_PAUSED), NOT POSTING_PAUSED.
+  cron.schedule("*/10 * * * *", async () => {
+    try { await publishDueReels(); }
+    catch (err) { console.error(`[Scheduler] Spare Earth queue failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  // ── WICK'S WISDOM (retired) — 2 posts/day at 9am and 12pm ET ─────────────
   // Each slot publishes the oldest APPROVED post whose format differs from the
   // last one published, so the feed alternates styles instead of running four
   // VERSUS carousels back to back.
   const wickPublish = (label) => async () => {
-    if (paused()) { console.log(`[Scheduler] PAUSED — Wick ${label} skipped`); return; }
+    if (!wickOn() || paused()) return;
     console.log(`[${new Date().toISOString()}] Wick: ${label}`);
     try { await publishNextApproved(); }
     catch (err) { console.error(`[Scheduler] Wick ${label} failed: ${err.message}`); }
@@ -97,6 +111,7 @@ export function startScheduler() {
   // each week is written against a fresh brief. A failure keeps the last brief.
   cron.schedule("30 4 * * 0", async () => {
     try {
+      if (!wickOn()) return;
       const { refreshTrendBrief } = await import("./modules/wick-trends.js");
       await refreshTrendBrief();
     } catch (err) { console.error(`[Scheduler] Wick trend refresh failed: ${err.message}`); }
@@ -104,7 +119,7 @@ export function startScheduler() {
 
   // ── WICK'S WISDOM — build next weekly batch Sunday 6am (QUEUED, never posted) ──
   cron.schedule("0 6 * * 0", async () => {
-    if (paused()) return;
+    if (!wickOn() || paused()) return;
     try { await runWeeklyBatch(); }
     catch (err) { console.error(`[Scheduler] Wick batch failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
@@ -115,6 +130,7 @@ export function startScheduler() {
   // retries anything with no telegram_sent_at. NOT gated on paused(): pausing
   // publishing should not stop Dre seeing what was built.
   cron.schedule("*/5 * * * *", async () => {
+    if (!wickOn()) return;
     try {
       await deliverPendingPosts();
       await deliverPendingReels();
@@ -128,6 +144,7 @@ export function startScheduler() {
   // hands, Wick absent entirely). None of it was detectable without looking.
   // Auto-pulls anything BAD and teaches the image prompts from the failure.
   cron.schedule("0 7 * * *", async () => {
+    if (!wickOn()) return;
     try {
       const { auditQueue } = await import("./modules/wick-image-qa.js");
       await auditQueue({ autoPull: true });
@@ -145,6 +162,7 @@ export function startScheduler() {
     // SYMPTOM: the cause was a dead Higgsfield login, and the old check never
     // looked at auth, so it reported "queue empty, build a batch on your Mac"
     // every day for a week while the real answer was "re-run auth login".
+    if (!wickOn()) return;
     try { await runDoctor(); }
     catch (err) { console.error(`[Scheduler] Wick doctor failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
@@ -171,7 +189,7 @@ export function startScheduler() {
   // Reels draw only from the two 10% lanes, so this runs before the carousel
   // batch claims the week's topics out of the same registry.
   cron.schedule("0 5 * * 0", async () => {
-    if (paused()) { console.log("[Scheduler] PAUSED — Wick reel batch skipped"); return; }
+    if (!wickOn() || paused()) return;
     console.log(`[${new Date().toISOString()}] Wick: weekly reel batch`);
     try { await runWeeklyReels(); }
     catch (err) { console.error(`[Scheduler] Wick reel batch failed: ${err.message}`); }
@@ -314,7 +332,7 @@ export function startScheduler() {
     // Wick lives in wick_posts, which runAnalyticsCycle never touches, so its
     // shares/saves would stay at zero. The brand optimises for shares, so this
     // is the one metric that has to be real.
-    try { await syncWickMetrics(); }
+    if (wickOn()) try { await syncWickMetrics(); }
     catch (err) { console.error(`[Scheduler] Wick metrics sync failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
@@ -334,8 +352,9 @@ export function startScheduler() {
   console.log("Scheduler active — all times EST:");
   console.log(`  BRAND_PLATFORMS: ${process.env.BRAND_PLATFORMS ?? "(not set — defaulting to linkedin only)"}`);
   console.log("  LinkedIn  : 1x/day — 9:30am conversation starter + seed comment + 20-min auto-reply");
-  console.log("  Instagram : Wick's Wisdom — 9:00am + 12:00pm daily (approved only, styles alternate)");
-  console.log("  Threads   : 7x/day — 5 text (casual starters) + 2 news (9:30am, 5:30pm)");
+  console.log(`  Instagram : Spare Earth — queued What-If reels, 10:00am + 5:00pm (${process.env.SPARE_EARTH_PAUSED === "true" ? "PAUSED" : "on"})`);
+  console.log(`  Wick      : retired (${wickOn() ? "WICK_ENABLED=true, crons ON" : "crons off"})`);
+  console.log("  Threads   : 7x/day — all text");
   console.log("  Video     : 9:00pm daily — one render, all platforms, held for review");
   console.log("  Leads     : every hour (repeat engager detection → Telegram + GHL)");
   console.log("  Var queue : every 30 minutes (crash-safe job queue)");
