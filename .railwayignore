@@ -1,3 +1,5 @@
 .env
 node_modules
 log.json
+# Film-production workspace (~1 GB). Built on the Mac, never read by the server.
+wick_youtube

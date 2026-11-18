@@ -271,6 +271,12 @@ export async function pollTelegramApprovals() {
         continue;
       }
       try {
+        // Spare Earth: a plain message right after a Pull is the note for the
+        // next build. Returns null for anything else, so commands work as before.
+        const { captureRejectNote } = await import("./spare-earth-review.js");
+        const noted = await captureRejectNote(u.message.text);
+        if (noted) { await tg("sendMessage", { chat_id: from, text: noted }); continue; }
+
         const { runCommand } = await import("./wick-commands.js");
         const reply = await runCommand(u.message.text);
         if (reply) await tg("sendMessage", { chat_id: from, text: reply, parse_mode: "Markdown" });
@@ -282,6 +288,23 @@ export async function pollTelegramApprovals() {
     }
 
     const cq = u.callback_query;
+
+    // ── Spare Earth final-cut review (se:approve:<id> / se:reject:<id>) ─────
+    // Only the owner's chat may approve: an approval schedules a public post.
+    if (cq?.data?.startsWith("se:")) {
+      if (String(cq.message?.chat?.id) !== owner) {
+        console.warn(`[WickTG] ignoring Spare Earth tap from unauthorised chat ${cq.message?.chat?.id}`);
+        continue;
+      }
+      try {
+        const { handleReviewTap } = await import("./spare-earth-review.js");
+        await handleReviewTap(cq);
+      } catch (err) {
+        console.warn(`[WickTG] Spare Earth tap failed: ${err.message}`);
+      }
+      continue;
+    }
+
     if (!cq?.data?.startsWith("wick:") && !cq?.data?.startsWith("reel:")) continue;
 
     const [kind, action, id] = cq.data.split(":");

@@ -163,10 +163,7 @@ export async function ensureHiggsfieldAuth({ force = false } = {}) {
   } catch (err) {
     console.error(`[HF] CLI rejected the stored credentials: ${String(err.message).slice(0, 140)}`);
     console.error("[HF] Re-run `higgsfield auth login` on the Mac, then `node modules/higgsfield-auth.js --push`.");
-    try {
-      const { alertWick } = await import("./wick-telegram.js");
-      await alertWick("🔑 HIGGSFIELD LOGIN EXPIRED\n\nRailway cannot generate art until it is refreshed.\n\nOn your Mac run:\n  higgsfield auth login\n  node modules/higgsfield-auth.js --push");
-    } catch { /* alerting must never mask the failure */ }
+    // No Telegram alert. Dre, 2026-11-10: remove Higgsfield alerts from Telegram.
     return false;
   }
 
@@ -244,23 +241,11 @@ export async function keepAlive() {
   return { ok: true, hoursLeft: (expiryMs(after) - Date.now()) / 3600000, refreshed: true };
 }
 
-// One alert, one wording, everywhere. Never call this an outage: the CLI failing
-// while higgsfield.ai and the MCP connector both work means the LOGIN is dead,
-// not the service.
+// Log only. Never call this an outage: the CLI failing while higgsfield.ai and
+// the MCP connector both work means the LOGIN is dead, not the service.
+// The Telegram alert was removed 2026-11-10 at Dre's request.
 async function warnLoginDead(detail) {
-  console.error(`[HF] LOGIN IS DEAD (${detail})`);
-  try {
-    const { alertWick } = await import("./wick-telegram.js");
-    await alertWick(
-      "🔑 HIGGSFIELD LOGIN EXPIRED\n\n" +
-      "This is NOT an outage. Higgsfield is fine, the saved login died.\n" +
-      "No art can be generated until you re-auth.\n\n" +
-      "On your Mac:\n" +
-      "  higgsfield auth login\n" +
-      "  node modules/higgsfield-auth.js --push\n\n" +
-      "The queue keeps draining until then."
-    );
-  } catch { /* alerting must never mask the failure */ }
+  console.error(`[HF] LOGIN IS DEAD (${detail}). Fix on the Mac: higgsfield auth login, then node modules/higgsfield-auth.js --push`);
 }
 
 // ─── CLI ─────────────────────────────────────────────────────────────────────

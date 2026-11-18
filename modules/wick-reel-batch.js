@@ -120,15 +120,10 @@ export async function runWeeklyReels({ count } = {}) {
   }
 
   if (!hfAvailable()) {
-    // LOUD, not silent. This branch is ALWAYS taken on Railway (no Higgsfield
-    // CLI there), so a quiet return here meant the weekly reel batch no-opped
-    // every Sunday and the queue drained with nobody told. See alertWick.
+    // This branch is ALWAYS taken on Railway (no Higgsfield CLI there). It logs
+    // only; the Telegram alert was removed 2026-11-10 at Dre's request.
     const msg = "[WickReels] SKIPPED: higgsfield CLI not available on this host. No reel batch was built.";
     console.error(msg);
-    try {
-      const { alertWick } = await import("./wick-telegram.js");
-      await alertWick("🚨 WICK REEL BATCH DID NOT RUN\n\nThe Higgsfield CLI is not available on this host, so no art could be generated. Railway cannot build batches.\n\nRun it on your Mac to refill the queue.");
-    } catch { /* alerting must never mask the skip */ }
     return { skipped: true, reason: "higgsfield-cli-unavailable" };
   }
   if (!fs.existsSync(path.join(process.cwd(), SUIT))) {

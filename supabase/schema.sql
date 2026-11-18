@@ -296,3 +296,44 @@ REVOKE ALL ON FUNCTION public.rls_audit()          FROM public, anon, authentica
 REVOKE ALL ON FUNCTION public.rls_protect(TEXT)    FROM public, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rls_audit()       TO service_role;
 GRANT EXECUTE ON FUNCTION public.rls_protect(TEXT) TO service_role;
+
+-- ─── SPARE EARTH POSTING QUEUE (2026-11-10) ──────────────────────────────────
+-- Finished What-If reels for @thespareearth, each with a publish time (10am and
+-- 5pm ET). modules/spare-earth-queue.js posts one due row per 10-minute tick.
+-- Status: queued → posting (claimed) → posted | failed (3 tries) | held
+-- (interrupted mid-post; check Instagram before setting it back to queued).
+-- Kept OUT of `posts` on purpose, so Agent X's learning loops never train on
+-- science reels.
+create table if not exists public.scheduled_reels (
+  id bigint generated always as identity primary key,
+  n text not null,
+  title text not null,
+  platform text not null default 'instagram',
+  video_url text not null,
+  cover_url text,
+  caption text not null,
+  publish_at timestamptz not null,
+  status text not null default 'queued'
+    check (status in ('queued','posting','posted','failed','held')),
+  attempts int not null default 0,
+  media_id text,
+  post_url text,
+  error text,
+  claimed_at timestamptz,
+  posted_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique (platform, n)
+);
+create index if not exists scheduled_reels_due_idx on public.scheduled_reels (status, publish_at);
+alter table public.scheduled_reels enable row level security;
+
+-- ── Spare Earth final-cut review (2026-11-18) ────────────────────────────────
+-- A finished reel arrives as 'pending_review'. Approve on Telegram → 'queued'
+-- with the next open slot. Pull → 'rejected', and review_note carries what was
+-- wrong into the next build. Safe to re-run.
+alter table public.scheduled_reels drop constraint if exists scheduled_reels_status_check;
+alter table public.scheduled_reels add constraint scheduled_reels_status_check
+  check (status in ('pending_review','queued','posting','posted','failed','held','rejected'));
+alter table public.scheduled_reels add column if not exists telegram_sent_at timestamptz;
+alter table public.scheduled_reels add column if not exists reviewed_at timestamptz;
+alter table public.scheduled_reels add column if not exists review_note text;
