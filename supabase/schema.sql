@@ -326,3 +326,14 @@ create table if not exists public.scheduled_reels (
 );
 create index if not exists scheduled_reels_due_idx on public.scheduled_reels (status, publish_at);
 alter table public.scheduled_reels enable row level security;
+
+-- ── Spare Earth final-cut review (2026-11-18) ────────────────────────────────
+-- A finished reel arrives as 'pending_review'. Approve on Telegram → 'queued'
+-- with the next open slot. Pull → 'rejected', and review_note carries what was
+-- wrong into the next build. Safe to re-run.
+alter table public.scheduled_reels drop constraint if exists scheduled_reels_status_check;
+alter table public.scheduled_reels add constraint scheduled_reels_status_check
+  check (status in ('pending_review','queued','posting','posted','failed','held','rejected'));
+alter table public.scheduled_reels add column if not exists telegram_sent_at timestamptz;
+alter table public.scheduled_reels add column if not exists reviewed_at timestamptz;
+alter table public.scheduled_reels add column if not exists review_note text;

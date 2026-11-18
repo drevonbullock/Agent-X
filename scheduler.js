@@ -19,6 +19,7 @@ import { checkRls } from "./modules/rls-guard.js";
 import { ensureHiggsfieldAuth, keepAlive } from "./modules/higgsfield-auth.js";
 import { runDoctor } from "./modules/wick-doctor.js";
 import { publishDueReels } from "./modules/spare-earth-queue.js";
+import { sendPendingReviews } from "./modules/spare-earth-review.js";
 import supabase from "./supabase/client.js";
 
 export function startScheduler() {
@@ -90,6 +91,15 @@ export function startScheduler() {
   cron.schedule("*/10 * * * *", async () => {
     try { await publishDueReels(); }
     catch (err) { console.error(`[Scheduler] Spare Earth queue failed: ${err.message}`); }
+  }, { timezone: "America/New_York" });
+
+  // ── SPARE EARTH REVIEW — send finished cuts to Telegram for Approve / Pull ─
+  // A new reel arrives as status pending_review. Nothing posts until Dre taps
+  // Approve, which gives it the next open 10am / 5pm slot. Taps are picked up
+  // by the Telegram poll below.
+  cron.schedule("*/2 * * * *", async () => {
+    try { await sendPendingReviews(); }
+    catch (err) { console.error(`[Scheduler] Spare Earth review send failed: ${err.message}`); }
   }, { timezone: "America/New_York" });
 
   // ── WICK'S WISDOM (retired) — 2 posts/day at 9am and 12pm ET ─────────────
